@@ -14,10 +14,11 @@ from showcase.dto.application import (
     ProjectApplicationReadDTO,
     ProjectApplicationListDTO,
 )
+from showcase.dto.available_actions import AvailableActionsDTO
 from showcase.domain.application import ProjectApplicationDomain
 from showcase.domain.capabilities import ApplicationCapabilities
 from showcase.repositories.application import ProjectApplicationRepository
-from showcase.services.status import StatusServiceFactory
+from showcase.models import ApplicationStatus
 
 User = get_user_model()
 
@@ -32,7 +33,6 @@ class ProjectApplicationService:
     
     def __init__(self):
         self.repository = ProjectApplicationRepository()
-        self.status_service = StatusServiceFactory.create_status_manager()
     
     @transaction.atomic
     def submit_application(self, dto: ProjectApplicationCreateDTO, user: User):
@@ -57,13 +57,7 @@ class ProjectApplicationService:
         # 4. Создаем заявку (Repository)
         application = self.repository.create(dto, user, initial_status)
         
-        # 5. Логируем создание и выполняем переходы (StatusService)
-        application, status_log = self.status_service.create_application_with_log(
-            application=application,
-            actor=user
-        )
-        
-        return application, status_log
+        return application
     
     @transaction.atomic
     def approve_application(self, application_id: int, approver: User):
@@ -91,15 +85,11 @@ class ProjectApplicationService:
         if not can_change:
             raise ValueError(error)
         
-        # 4. Меняем статус (StatusService)
-        application, status_log = self.status_service.change_status_with_log(
-            application=application,
-            new_status='approved',
-            actor=approver,
-            comments=[]
-        )
+        # 4. Меняем статус
+        application.status = ApplicationStatus.objects.get(code='approved')
+        application.save()
         
-        return application, status_log
+        return application
     
     @transaction.atomic
     def reject_application(self, application_id: int, rejector: User, reason: str = ""):
@@ -127,16 +117,11 @@ class ProjectApplicationService:
         if not can_change:
             raise ValueError(error)
         
-        # 4. Меняем статус (StatusService)
-        comments = [{'field': 'rejection_reason', 'text': reason}] if reason else []
-        application, status_log = self.status_service.change_status_with_log(
-            application=application,
-            new_status='rejected',
-            actor=rejector,
-            comments=comments
-        )
+        # 4. Меняем статус
+        application.status = ApplicationStatus.objects.get(code='rejected')
+        application.save()
         
-        return application, status_log
+        return application
     
     @transaction.atomic
     def request_changes(self, application_id: int, requester: User, comments: list):
@@ -164,18 +149,19 @@ class ProjectApplicationService:
         if not can_change:
             raise ValueError(error)
         
-        # 4. Меняем статус (StatusService)
-        application, status_log = self.status_service.change_status_with_log(
-            application=application,
-            new_status='created',
-            actor=requester,
-            comments=comments
-        )
+        # 4. Меняем статус
+        application.status = ApplicationStatus.objects.get(code='created')
+        application.save()
         
-        return application, status_log
+        return application
     
     @transaction.atomic
-    def update_application(self, application_id: int, dto: ProjectApplicationUpdateDTO, updater: User):
+    def update_application(
+        self, 
+        application_id: int, 
+        dto: ProjectApplicationUpdateDTO, 
+        updater: User
+    ):
         """
         Бизнес-операция: обновление заявки.
         """
@@ -319,3 +305,96 @@ class ProjectApplicationService:
         
         # 2. Получаем QuerySet (Repository)
         return self.repository.get_all_applications_queryset()
+    
+    def get_available_actions(self, application_id: int, user: User) -> AvailableActionsDTO:
+        """
+        Бизнес-операция: получение доступных действий для заявки.
+        
+        Args:
+            application_id: ID заявки
+            user: Пользователь, запрашивающий действия
+            
+        Returns:
+            AvailableActionsDTO: DTO с доступными действиями
+        """
+        # 1. Получаем заявку (Repository)
+        try:
+            application = self.repository.get_by_id_simple(application_id)
+        except ObjectDoesNotExist:
+            raise ValueError(f"Заявка с ID {application_id} не найдена")
+        
+        # 2. Получаем роль пользователя
+        user_role = user.role.code if user.role else 'user'
+        current_status = application.status.code
+        
+        # 3. Определяем доступные действия
+        available_actions = []
+        
+        # Проверяем права на approve/reject
+        if self._has_approve_reject_permissions(
+            application, user, current_status, user_role
+        ):
+            # Добавляем approve
+            available_actions.append({
+                'action': 'approve',
+                'label': 'Одобрить',
+                'config': {'status_code': 'approved'}
+            })
+            
+            # Добавляем reject
+            available_actions.append({
+                'action': 'reject',
+                'label': 'Отклонить',
+                'config': {'status_code': 'rejected'}
+            })
+        
+        return AvailableActionsDTO.from_actions_list(available_actions)
+    
+    def _has_approve_reject_permissions(
+        self,
+        application,
+        user,
+        current_status: str,
+        user_role: str
+    ) -> bool:
+        """
+        Проверяет, имеет ли пользователь права на действия approve/reject
+        согласно бизнес-правилам.
+        """
+        # Правило 1: Если статус заявки await_department
+        if current_status == 'await_department':
+            # 1.1 Если роль department_validator, institute_validator
+            if user_role in ['department_validator', 'institute_validator']:
+                # Проверяем, есть ли подразделение пользователя в причастных
+                return self._is_user_department_involved(application, user)
+            
+            # 1.2 Роли cpds, admin - всегда доступны
+            elif user_role in ['cpds', 'admin']:
+                return True
+        
+        # Правило 2: Если статус заявки await_institute
+        elif current_status == 'await_institute':
+            # 2.1 Если роль institute_validator
+            if user_role == 'institute_validator':
+                # Проверяем, есть ли подразделение пользователя в причастных
+                return self._is_user_department_involved(application, user)
+            
+            # 2.2 Роли cpds, admin - всегда доступны
+            elif user_role in ['cpds', 'admin']:
+                return True
+        
+        return False
+    
+    def _is_user_department_involved(self, application, user) -> bool:
+        """
+        Проверяет, есть ли подразделение пользователя в причастных подразделениях заявки.
+        """
+        if not hasattr(user, 'department') or not user.department:
+            return False
+        
+        # Получаем причастные подразделения заявки
+        involved_departments = application.involved_departments.all()
+        
+        # Проверяем, есть ли подразделение пользователя в списке причастных
+        return involved_departments.filter(id=user.department.id).exists()
+    

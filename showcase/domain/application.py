@@ -152,8 +152,8 @@ class ProjectApplicationDomain:
         if application_author_id == user_id:
             return True
         
-        # Бизнес-правило: админы и модераторы имеют доступ ко всем заявкам
-        if user_role in ['admin', 'moderator']:
+        # Бизнес-правило: админы, модераторы и валидаторы имеют доступ ко всем заявкам
+        if user_role in ['admin', 'moderator', 'cpds', 'department_validator', 'institute_validator']:
             return True
         
         # Бизнес-правило: обычные пользователи видят только свои заявки

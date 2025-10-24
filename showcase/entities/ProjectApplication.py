@@ -226,7 +226,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
     def retrieve(self, request, pk=None):
         """
         GET /api/project-applications/{id}/
-        Получение заявки по ID
+        Получение заявки по ID с доступными действиями
         """
         try:
             # Получаем заявку через сервис
@@ -234,7 +234,17 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
             # Преобразуем в DTO
             response_dto = self.service.get_application_dto(application)
-            return Response(response_dto.to_dict())
+            response_data = response_dto.to_dict()
+            
+            # Добавляем доступные действия
+            try:
+                available_actions_dto = self.service.get_available_actions(int(pk), request.user)
+                response_data.update(available_actions_dto.to_dict())
+            except Exception:
+                # Если не удалось получить действия, не прерываем выполнение
+                response_data['available_actions'] = []
+            
+            return Response(response_data)
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
