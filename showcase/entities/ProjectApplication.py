@@ -16,8 +16,6 @@ from showcase.models import ProjectApplication
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
-    ProjectApplicationReadDTO,
-    ProjectApplicationListDTO,
 )
 from showcase.services.application_service import ProjectApplicationService
 
@@ -171,7 +169,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             dto = serializer.save()
             
             # 3. Вызов сервиса (вся логика там)
-            application, status_log = self.service.submit_application(dto, request.user)
+            application = self.service.submit_application(dto, request.user)
             
             # 4. Сериализация ответа
             response_dto = self.service.get_application_dto(application)
@@ -220,7 +218,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception as e:
+        except Exception:
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def retrieve(self, request, pk=None):
@@ -318,7 +316,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         Одобрение заявки
         """
         try:
-            application, log = self.service.approve_application(
+            self.service.approve_application(
                 application_id=int(pk),
                 approver=request.user
             )
@@ -338,7 +336,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         """
         try:
             reason = request.data.get('reason', '')
-            application, log = self.service.reject_application(
+            self.service.reject_application(
                 application_id=int(pk),
                 rejector=request.user,
                 reason=reason
@@ -359,7 +357,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         """
         try:
             comments = request.data.get('comments', [])
-            application, log = self.service.request_changes(
+            self.service.request_changes(
                 application_id=int(pk),
                 requester=request.user,
                 comments=comments
@@ -390,7 +388,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception as e:
+        except Exception:
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['get'])
@@ -408,7 +406,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception as e:
+        except Exception:
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # Методы для совместимости со старыми тестами
@@ -428,7 +426,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception as e:
+        except Exception:
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['get'])
@@ -452,7 +450,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception as e:
+        except Exception:
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['post'])
@@ -470,7 +468,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             dto = serializer.save()
             
             # 3. Вызов сервиса (передаем None как пользователя для неавторизованных)
-            application, status_log = self.service.submit_application(dto, None)
+            application = self.service.submit_application(dto, None)
             
             # 4. Сериализация ответа
             response_dto = self.service.get_application_dto(application)
