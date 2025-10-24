@@ -158,25 +158,6 @@ class ProjectApplicationAPITestCase(TestCase):
         self.assertEqual(len(resp.data), 1)
         self.assertEqual(resp.data[0]["id"], my_app.id)
 
-    def test_change_status_creates_status_log(self):
-        """change_status меняет статус и создаёт лог, возвращая сериализованный лог (201)."""
-        in_progress = ApplicationStatus.objects.create(
-            code="in_progress", name="В работе", position=2, is_active=True
-        )
-        app = ProjectApplication.objects.create(
-            title="На смену статуса",
-            company="Компания",
-            status=self.status,
-            author=self.user,
-        )
-        url = reverse("project-application-change-status", args=[app.id])
-        payload = {"status_code": in_progress.code, "comments": [{"field": "status", "text": "Старт"}]}
-        resp = self.client.post(url, payload, format="json")
-        self.assertEqual(resp.status_code, 201)
-        # Проверим структуру лога
-        self.assertIn("id", resp.data)
-        self.assertIn("from_status", resp.data)
-        self.assertIn("to_status", resp.data)
 
     def test_status_logs_returns_list(self):
         """status_logs возвращает список логов изменения статусов заявки."""
@@ -235,22 +216,6 @@ class ProjectApplicationAPITestCase(TestCase):
         resp = client.post(url, payload, format="json")
         self.assertEqual(resp.status_code, 201)
 
-    def test_change_status_bulk_with_comment_string(self):
-        """bulk change_status по application_id с одиночным comment."""
-        in_progress = ApplicationStatus.objects.create(
-            code="ip_bulk", name="В работе bulk", position=3, is_active=True
-        )
-        app = ProjectApplication.objects.create(
-            title="Bulk",
-            company="Компания",
-            status=self.status,
-            author=self.user,
-        )
-        url = reverse("project-application-change-status-bulk")
-        payload = {"application_id": app.id, "status_code": in_progress.code, "comment": "Причина"}
-        resp = self.client.post(url, payload, format="json")
-        self.assertEqual(resp.status_code, 201)
-        self.assertIn("comments", resp.data)
 
     def test_my_in_work_filters_involved_and_excludes_final(self):
         """my_in_work возвращает причастные заявки и исключает approved/rejected."""

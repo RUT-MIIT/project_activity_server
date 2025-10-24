@@ -12,10 +12,7 @@
 - **POST** `/showcase/project-applications/simple/` - простое создание заявки без авторизации (AllowAny)
 
 #### Система статусов и логов:
-- **POST** `/showcase/project-applications/{id}/change_status/` - изменение статуса с логом
 - **GET** `/showcase/project-applications/{id}/status_logs/` - получение логов изменений статуса
-- **POST** `/showcase/project-applications/{id}/add_comment/` - добавление комментария к логу
-- **GET** `/showcase/project-applications/{id}/current_status_info/` - информация о текущем статусе
 
 ### 2. Справочники
 - **GET** `/showcase/institutes/` - список институтов
@@ -178,19 +175,6 @@ POST /showcase/project-applications/simple/
 
 ## Система статусов и логов
 
-### Изменение статуса заявки с логом
-**POST** `/showcase/project-applications/{id}/change_status/`
-```json
-{
-  "status_code": "IN_REVIEW",
-  "comments": [
-    {
-      "field": "status_change",
-      "text": "Заявка передана на рассмотрение экспертам"
-    }
-  ]
-}
-```
 
 ### Получение логов изменения статуса
 **GET** `/showcase/project-applications/{id}/status_logs/`
@@ -219,32 +203,7 @@ POST /showcase/project-applications/simple/
 ]
 ```
 
-### Добавление комментария к логу
-**POST** `/showcase/project-applications/{id}/add_comment/`
-```json
-{
-  "field": "additional_info",
-  "text": "Дополнительная информация по заявке"
-}
-```
 
-### Информация о текущем статусе
-**GET** `/showcase/project-applications/{id}/current_status_info/`
-
-Ответ:
-```json
-{
-  "status": {
-    "code": "IN_REVIEW",
-    "name": "На рассмотрении"
-  },
-  "last_change": "2024-01-15T10:30:00Z",
-  "actor": {
-    "id": 1,
-    "name": "Иванов Иван Иванович"
-  }
-}
-```
 
 ## Дополнительные возможности ViewSet
 

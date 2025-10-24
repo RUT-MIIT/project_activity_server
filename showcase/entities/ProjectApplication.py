@@ -16,6 +16,8 @@ from showcase.models import ProjectApplication
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
+    ProjectApplicationReadDTO,
+    ProjectApplicationListDTO,
 )
 from showcase.services.application_service import ProjectApplicationService
 
@@ -181,7 +183,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         except PermissionError as e:
             # Обработка ошибок прав доступа
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             # Обработка прочих ошибок
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
@@ -218,7 +220,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def retrieve(self, request, pk=None):
@@ -236,7 +238,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
     def update(self, request, pk=None):
@@ -266,7 +268,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({'errors': error_msg}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
     def partial_update(self, request, pk=None):
@@ -296,8 +298,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({'errors': error_msg}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Произошла неизвестная ошибка'}, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
@@ -315,7 +317,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
+        except Exception as e:
             return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
     @action(detail=True, methods=['post'])
@@ -336,7 +338,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
+        except Exception as e:
             return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
     @action(detail=True, methods=['post'])
@@ -357,7 +359,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
+        except Exception as e:
             return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
     @action(detail=False, methods=['get'])
@@ -378,7 +380,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['get'])
@@ -396,7 +398,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # Методы для совместимости со старыми тестами
@@ -406,7 +408,18 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         if not request.user.is_authenticated:
             # Для неавторизованных пользователей возвращаем пустой список
             return Response([])
-        return self.list(request)
+        
+        try:
+            # Получаем все заявки пользователя без пагинации
+            queryset = self.get_queryset()
+            applications = list(queryset)
+            list_dtos = [self.service.get_application_list_dto(app) for app in applications]
+            return Response([dto.to_dict() for dto in list_dtos])
+            
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['get'])
     def my_in_work(self, request):
@@ -429,7 +442,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['post'])
@@ -460,33 +473,6 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             # Обработка прочих ошибок
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    @action(detail=True, methods=['post'])
-    def change_status(self, request, pk=None):
-        """POST /api/project-applications/{id}/change_status/"""
-        try:
-            status_code = request.data.get('status_code')
-            if not status_code:
-                return Response({'error': 'status_code is required'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            if status_code == 'approved':
-                application, log = self.service.approve_application(int(pk), request.user)
-            elif status_code == 'rejected':
-                reason = request.data.get('reason', '')
-                application, log = self.service.reject_application(int(pk), request.user, reason)
-            else:
-                # Для других статусов используем общий метод
-                application = self.service.get_application(int(pk), request.user)
-                # Здесь нужно добавить логику для других статусов
-                return Response({'error': f'Status {status_code} not implemented'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            return Response({'status': status_code, 'message': f'Status changed to {status_code}'}, status=status.HTTP_200_OK)
-            
-        except PermissionError as e:
-            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
-            return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
     @action(detail=True, methods=['get'])
     def status_logs(self, request, pk=None):
@@ -504,40 +490,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             } for log in logs])
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
-    @action(detail=True, methods=['get'])
-    def current_status_info(self, request, pk=None):
-        """GET /api/project-applications/{id}/current_status_info/"""
-        try:
-            application = self.service.get_application(int(pk), request.user)
-            return Response({
-                'status': application.status.code if application.status else None,
-                'status_name': application.status.name if application.status else None,
-            })
-        except PermissionError as e:
-            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
-    @action(detail=True, methods=['post'])
-    def add_comment(self, request, pk=None):
-        """POST /api/project-applications/{id}/add_comment/"""
-        try:
-            application = self.service.get_application(int(pk), request.user)
-            # Здесь нужно добавить логику для добавления комментариев
-            return Response({'message': 'Comment added'}, status=status.HTTP_200_OK)
-        except PermissionError as e:
-            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
-    @action(detail=False, methods=['post'])
-    def change_status_bulk(self, request):
-        """POST /api/project-applications/change_status_bulk/"""
-        try:
-            # Здесь нужно добавить логику для массового изменения статусов
-            return Response({'message': 'Bulk status change completed'}, status=status.HTTP_200_OK)
-        except Exception:
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
