@@ -1,14 +1,9 @@
 from pathlib import Path
 from datetime import timedelta
 import os
-from dotenv import load_dotenv
-from corsheaders.defaults import default_headers, default_methods
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-# Load environment variables from .env
-load_dotenv()
 
 
 # Quick-start development settings - unsuitable for production
@@ -34,7 +29,6 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
-    "django_filters",
     "rest_framework_simplejwt",
     "drf_yasg",
     "accounts",
@@ -129,10 +123,6 @@ USE_TZ = True
 
 STATIC_URL = "static/"
 
-# Media files (user uploads)
-MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
-
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
@@ -144,11 +134,6 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     ),
     "DEFAULT_PERMISSION_CLASSES": ("rest_framework.permissions.IsAuthenticated",),
-    "DEFAULT_FILTER_BACKENDS": (
-        "django_filters.rest_framework.DjangoFilterBackend",
-    ),
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "PAGE_SIZE": 20,
 }
 
 # Кастомная модель пользователя
@@ -162,39 +147,13 @@ SIMPLE_JWT = {
 
 CORS_ALLOW_ALL_ORIGINS = True
 
-# Разрешаем нестандартный заголовок, который присылает фронтенд (например, 'body')
-CORS_ALLOW_HEADERS = list(default_headers) + [
-    "body",
-]
-
-# Явно укажем методы, обрабатываемые CORS preflight (по умолчанию и так разрешены)
-CORS_ALLOW_METHODS = list(default_methods)
-
-
 # Email settings
-# По умолчанию сохраняем письма в файлы (удобно для локальной отладки)
-EMAIL_BACKEND = os.getenv(
-    "EMAIL_BACKEND",
-    "django.core.mail.backends.filebased.EmailBackend",
-)
-EMAIL_FILE_PATH = BASE_DIR / "sent_emails"
-
-# Если выбран SMTP-бэкенд, корректно приводим типы и параметры
-if EMAIL_BACKEND.endswith("smtp.EmailBackend"):
-    EMAIL_HOST = os.getenv("EMAIL_HOST", "")
-    EMAIL_PORT = int(os.getenv("EMAIL_PORT", "465"))
-    EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL", "true").lower() == "true"
-    EMAIL_USE_TLS = os.getenv("EMAIL_USE_TLS", "false").lower() == "true"
-    # Нельзя одновременно SSL и TLS
-    if EMAIL_USE_SSL and EMAIL_USE_TLS:
-        EMAIL_USE_TLS = False
-    EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER", "")
-    EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD", "")
-    EMAIL_TIMEOUT = int(os.getenv("EMAIL_TIMEOUT", "20"))
-
-SERVER_EMAIL = os.getenv("EMAIL_HOST_USER", "no-reply@example.com")
-DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER", "no-reply@example.com")
+EMAIL_BACKEND = os.getenv("EMAIL_BACKEND")
+EMAIL_HOST = os.getenv("EMAIL_HOST")
+EMAIL_PORT = os.getenv("EMAIL_PORT")
+EMAIL_USE_SSL = os.getenv("EMAIL_USE_SSL")
+EMAIL_HOST_USER = os.getenv("EMAIL_HOST_USER")
+EMAIL_HOST_PASSWORD = os.getenv("EMAIL_HOST_PASSWORD")
+SERVER_EMAIL = os.getenv("EMAIL_HOST_USER")
+DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER")
 FRONT_END = os.environ.get("FRONT_END", "http://localhost:3000")
-
-
-SWAGGER_USE_COMPAT_RENDERERS = False

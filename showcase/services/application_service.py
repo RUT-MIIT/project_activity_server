@@ -6,7 +6,6 @@
 
 from django.db import transaction
 from django.contrib.auth import get_user_model
-from django.core.exceptions import ObjectDoesNotExist
 
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
@@ -42,13 +41,14 @@ class ProjectApplicationService:
         Координирует Domain, Repository и StatusService.
         """
         # 1. Валидация (Domain)
-        user_role = user.role.code if user and user.role else 'user'
-        validation = ApplicationCapabilities.submit_application(dto, user_role)
+        validation = ApplicationCapabilities.submit_application(dto, user.role.code if user.role else 'user')
         if not validation.is_valid:
             raise ValueError(validation.errors)
         
         # 2. Определяем начальный статус (Domain)
-        initial_status = ProjectApplicationDomain.calculate_initial_status(user_role)
+        initial_status = ProjectApplicationDomain.calculate_initial_status(
+            user.role.code if user.role else 'user'
+        )
         
         # 3. Определяем необходимость консультации (Domain)
         needs_consultation = ProjectApplicationDomain.should_require_consultation(dto)
@@ -180,19 +180,14 @@ class ProjectApplicationService:
         Бизнес-операция: обновление заявки.
         """
         # 1. Получаем заявку (Repository)
-        try:
-            application = self.repository.get_by_id_simple(application_id)
-        except ObjectDoesNotExist:
-            raise ValueError(f"Заявка с ID {application_id} не найдена")
+        application = self.repository.get_by_id_simple(application_id)
         
         # 2. Проверка прав и валидация (Domain)
-        user_role = updater.role.code if updater.role else 'user'
-        author_id = application.author.id if application.author else 0
         validation, can_update, error = ApplicationCapabilities.update_application(
             dto,
             application.status.code,
-            user_role,
-            author_id,
+            updater.role.code if updater.role else 'user',
+            application.author.id if application.author else 0,
             updater.id
         )
         if not can_update:
@@ -240,37 +235,6 @@ class ProjectApplicationService:
         
         return applications
     
-    def get_user_applications_queryset(self, user: User):
-        """
-        Бизнес-операция: получение QuerySet заявок пользователя для пагинации.
-        """
-        # 1. Проверка прав (Domain)
-        can_list, error = ApplicationCapabilities.list_applications(
-            user.role.code if user.role else 'user'
-        )
-        if not can_list:
-            raise PermissionError(error)
-        
-        # 2. Получаем QuerySet (Repository)
-        return self.repository.filter_by_user_queryset(user)
-    
-    def get_user_in_work_applications(self, user: User):
-        """
-        Бизнес-операция: получение заявок в работе пользователя.
-        Заявки, где пользователь причастен и статус не approved/rejected.
-        """
-        # 1. Проверка прав (Domain)
-        can_list, error = ApplicationCapabilities.list_applications(
-            user.role.code if user.role else 'user'
-        )
-        if not can_list:
-            raise PermissionError(error)
-        
-        # 2. Получаем заявки в работе (Repository)
-        applications = self.repository.filter_in_work_by_user(user)
-        
-        return applications
-    
     def get_application_dto(self, application) -> ProjectApplicationReadDTO:
         """
         Преобразование модели в DTO для чтения.
@@ -308,14 +272,3 @@ class ProjectApplicationService:
         applications = self.repository.get_recent_applications(limit)
         
         return applications
-    
-    def get_all_applications_queryset(self, user: User):
-        """
-        Бизнес-операция: получение QuerySet всех заявок для пагинации.
-        """
-        # 1. Проверка прав (Domain)
-        if not user.role or user.role.code not in ['admin', 'moderator']:
-            raise PermissionError("Недостаточно прав для просмотра всех заявок")
-        
-        # 2. Получаем QuerySet (Repository)
-        return self.repository.get_all_applications_queryset()

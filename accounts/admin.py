@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, Department, RegistrationRequest, Role
+from .models import User, Department
 
 
 @admin.register(User)
@@ -13,15 +13,14 @@ class UserAdmin(BaseUserAdmin):
         "middle_name",
         "role",
         "department",
-        "phone",
         "is_staff",
     )
     list_filter = ("role", "is_staff", "is_active", "department")
-    search_fields = ("email", "first_name", "last_name", "middle_name", "phone")
+    search_fields = ("email", "first_name", "last_name", "middle_name")
     ordering = ("id",)
     readonly_fields = ("date_joined",)
     fieldsets = (
-        (None, {"fields": ("email","phone", "password")}),
+        (None, {"fields": ("email", "password")}),
         (
             "Персональная информация",
             {
@@ -60,7 +59,6 @@ class UserAdmin(BaseUserAdmin):
                     "middle_name",
                     "role",
                     "department",
-                    "phone",
                     "password1",
                     "password2",
                 ),
@@ -74,30 +72,3 @@ class DepartmentAdmin(admin.ModelAdmin):
     list_display = ("id", "name", "short_name", "parent")
     search_fields = ("name", "short_name")
     list_filter = ("parent",)
-
-
-@admin.register(RegistrationRequest)
-class RegistrationRequestAdmin(admin.ModelAdmin):
-    list_display = (
-        "id",
-        "last_name",
-        "first_name",
-        "middle_name",
-        "email",
-        "department",
-        "reason",
-        "status",
-        "actor",
-        "created_at",
-        "updated_at",
-    )
-    list_filter = ("status", "department", "created_at")
-    search_fields = ("email", "last_name", "first_name", "middle_name", "phone", "reason")
-
-
-@admin.register(Role)
-class RoleAdmin(admin.ModelAdmin):
-    list_display = ("code", "name", "requires_department", "is_active")
-    search_fields = ("code", "name")
-    list_filter = ("is_active", "requires_department")
-    ordering = ("code",)

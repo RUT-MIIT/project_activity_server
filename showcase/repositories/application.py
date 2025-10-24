@@ -31,18 +31,18 @@ class ProjectApplicationRepository:
             title=dto.title,
             company=dto.company,
             author=author,
-            author_lastname=dto.author_lastname or "",
-            author_firstname=dto.author_firstname or "",
-            author_middlename=dto.author_middlename or "",
-            author_email=dto.author_email or "",
-            author_phone=dto.author_phone or "",
-            author_role=dto.author_role or "",
-            author_division=dto.author_division or "",
+            author_lastname=dto.author_lastname,
+            author_firstname=dto.author_firstname,
+            author_middlename=dto.author_middlename,
+            author_email=dto.author_email,
+            author_phone=dto.author_phone,
+            author_role=dto.author_role,
+            author_division=dto.author_division,
             company_contacts=dto.company_contacts,
             project_level=dto.project_level,
-            problem_holder=dto.problem_holder or "",
-            goal=dto.goal or "",
-            barrier=dto.barrier or "",
+            problem_holder=dto.problem_holder,
+            goal=dto.goal,
+            barrier=dto.barrier,
             existing_solutions=dto.existing_solutions,
             context=dto.context,
             stakeholders=dto.stakeholders,
@@ -104,50 +104,6 @@ class ProjectApplicationRepository:
             .order_by('-creation_date')
         )
     
-    def filter_by_user_queryset(self, user: User):
-        """
-        Получение QuerySet заявок пользователя для пагинации.
-        
-        Возвращает QuerySet вместо списка для поддержки пагинации.
-        """
-        return (
-            ProjectApplication.objects
-            .filter(Q(author=user) | Q(involved_users__user=user))
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
-            .distinct()
-            .order_by('-creation_date')
-        )
-    
-    def filter_in_work_by_user(self, user: User) -> List[ProjectApplication]:
-        """
-        Получение заявок в работе пользователя.
-        Заявки, где пользователь причастен и статус не approved/rejected.
-        """
-        return list(
-            ProjectApplication.objects
-            .filter(involved_users__user=user)
-            .exclude(status__code__in=['approved', 'rejected'])
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
-            .distinct()
-            .order_by('-creation_date')
-        )
-    
-    def filter_in_work_by_user_queryset(self, user: User):
-        """
-        Получение QuerySet заявок в работе пользователя для пагинации.
-        """
-        return (
-            ProjectApplication.objects
-            .filter(involved_users__user=user)
-            .exclude(status__code__in=['approved', 'rejected'])
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
-            .distinct()
-            .order_by('-creation_date')
-        )
-    
     def filter_by_status(self, status_code: str) -> List[ProjectApplication]:
         """
         Получение заявок по статусу.
@@ -155,18 +111,6 @@ class ProjectApplicationRepository:
         Для административных операций.
         """
         return list(
-            ProjectApplication.objects
-            .filter(status__code=status_code)
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
-            .order_by('-creation_date')
-        )
-    
-    def filter_by_status_queryset(self, status_code: str):
-        """
-        Получение QuerySet заявок по статусу для пагинации.
-        """
-        return (
             ProjectApplication.objects
             .filter(status__code=status_code)
             .select_related('status', 'author')
@@ -302,17 +246,4 @@ class ProjectApplicationRepository:
             .select_related('status', 'author')
             .prefetch_related('target_institutes')
             .order_by('-creation_date')[:limit]
-        )
-    
-    def get_all_applications_queryset(self):
-        """
-        Получение QuerySet всех заявок для пагинации.
-        
-        Для административных операций и общего списка.
-        """
-        return (
-            ProjectApplication.objects
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
-            .order_by('-creation_date')
         )

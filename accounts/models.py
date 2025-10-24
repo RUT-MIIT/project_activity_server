@@ -4,7 +4,6 @@ from django.contrib.auth.models import (
     BaseUserManager,
 )
 from django.db import models
-from django.conf import settings
 
 
 class UserManager(BaseUserManager):
@@ -53,12 +52,6 @@ class User(AbstractBaseUser, PermissionsMixin):
         related_name='users',
         verbose_name="Подразделение"
     )
-    phone = models.CharField(
-        max_length=20,
-        blank=True,
-        null=True,
-        verbose_name="Телефон"
-    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
@@ -67,10 +60,6 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         return f"{self.email} ({self.role})"
-
-    def get_full_name(self):
-        parts = [self.last_name, self.first_name, getattr(self, 'middle_name', '')]
-        return ' '.join([p for p in parts if p]).strip()
 
     class Meta:
         verbose_name = "Пользователь"
@@ -99,72 +88,11 @@ class Department(models.Model):
 
 class Role(models.Model):
     code = models.CharField(max_length=50, primary_key=True, verbose_name="Код роли")
-    name = models.CharField(max_length=255, verbose_name="Название роли")
-    requires_department = models.BooleanField(
-        default=False,
-        verbose_name="Требует указания подразделения"
-    )
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name="Активна"
-    )
+    name = models.CharField(max_length=100, verbose_name="Название роли")
 
     class Meta:
         verbose_name = "Роль"
         verbose_name_plural = "Роли"
-        ordering = ["code"]
 
     def __str__(self):
-        return f"{self.code}: {self.name}"
-
-
-class RegistrationRequest(models.Model):
-    class Status(models.TextChoices):
-        SUBMITTED = "submitted", "Подана"
-        APPROVED = "approved", "Одобрена"
-        REJECTED = "rejected", "Отклонена"
-
-    last_name = models.CharField(max_length=150, verbose_name="Фамилия")
-    first_name = models.CharField(max_length=150, verbose_name="Имя")
-    middle_name = models.CharField(max_length=150, blank=True, verbose_name="Отчество")
-    department = models.ForeignKey(
-        'Department',
-        on_delete=models.PROTECT,
-        related_name='registration_requests',
-        verbose_name="Подразделение",
-        null=True,
-        blank=True,
-    )
-    email = models.EmailField(unique=True, verbose_name="Email")
-    phone = models.CharField(max_length=32, verbose_name="Телефон")
-    comment = models.TextField(blank=True, null=True, verbose_name="Комментарий")
-    reason = models.TextField(blank=True, null=True, verbose_name="Причина отказа")
-    role = models.ForeignKey(
-        'Role',
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='registration_requests',
-        verbose_name="Роль (назначенная при одобрении)",
-    )
-    status = models.CharField(
-        max_length=16, choices=Status.choices, default=Status.SUBMITTED, verbose_name="Статус"
-    )
-    actor = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.SET_NULL,
-        null=True,
-        blank=True,
-        related_name='processed_registration_requests',
-        verbose_name="Изменил статус",
-    )
-    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
-    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
-
-    class Meta:
-        verbose_name = "Заявка на регистрацию"
-        verbose_name_plural = "Заявки на регистрацию"
-        ordering = ("-created_at",)
-
-    def __str__(self):
-        return f"{self.last_name} {self.first_name} <{self.email}> [{self.status}]"
+        return self.name

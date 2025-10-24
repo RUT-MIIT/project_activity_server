@@ -1,4 +1,0 @@
-django-filter>=24.3
-pytest>=8.2.0
-pytest-django>=4.8.0
-

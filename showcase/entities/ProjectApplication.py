@@ -8,11 +8,8 @@
 from rest_framework import serializers, viewsets, permissions, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework.permissions import AllowAny
-from rest_framework.pagination import PageNumberPagination
 from django.contrib.auth import get_user_model
 
-from showcase.models import ProjectApplication
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
@@ -22,18 +19,6 @@ from showcase.services.application_service import ProjectApplicationService
 User = get_user_model()
 
 
-class ProjectApplicationListSerializer(serializers.ModelSerializer):
-    """Простой сериализатор для списка заявок"""
-    
-    class Meta:
-        model = ProjectApplication
-        fields = [
-            'id', 'title', 'company', 'creation_date', 'needs_consultation',
-            'author_lastname', 'author_firstname', 'author_email'
-        ]
-        read_only_fields = fields
-
-
 class ProjectApplicationCreateSerializer(serializers.Serializer):
     """
     Сериализатор только для валидации HTTP данных.
@@ -41,16 +26,15 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     """
     
     # Основные поля
-    title = serializers.CharField(max_length=255, required=False, allow_blank=True)
-    description = serializers.CharField(required=False, allow_blank=True)  # Для совместимости с тестами
+    title = serializers.CharField(max_length=255)
     company = serializers.CharField(max_length=255)
     
-    # Контактные данные - делаем опциональными для совместимости с тестами
-    author_lastname = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    author_firstname = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    # Контактные данные
+    author_lastname = serializers.CharField(max_length=100)
+    author_firstname = serializers.CharField(max_length=100)
     author_middlename = serializers.CharField(max_length=100, required=False, allow_blank=True)
-    author_email = serializers.EmailField(required=False, allow_blank=True)
-    author_phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    author_email = serializers.EmailField()
+    author_phone = serializers.CharField(max_length=20)
     author_role = serializers.CharField(max_length=100, required=False, allow_blank=True)
     author_division = serializers.CharField(max_length=200, required=False, allow_blank=True)
     
@@ -63,10 +47,10 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     )
     project_level = serializers.CharField(max_length=100, required=False, allow_blank=True)
     
-    # Проблема - делаем опциональными для совместимости с тестами
-    problem_holder = serializers.CharField(required=False, allow_blank=True)
-    goal = serializers.CharField(required=False, allow_blank=True)
-    barrier = serializers.CharField(required=False, allow_blank=True)
+    # Проблема
+    problem_holder = serializers.CharField()
+    goal = serializers.CharField()
+    barrier = serializers.CharField()
     existing_solutions = serializers.CharField(required=False, allow_blank=True)
     
     # Контекст
@@ -128,24 +112,10 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
     """
     
     permission_classes = [permissions.IsAuthenticated]
-    pagination_class = PageNumberPagination
-    queryset = ProjectApplication.objects.all()  # Добавляем queryset для совместимости
-    serializer_class = ProjectApplicationListSerializer
     
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.service = ProjectApplicationService()
-    
-    def get_permissions(self):
-        """
-        Переопределяем права доступа для определенных действий.
-        Для действий 'simple' и 'my_applications' разрешаем доступ без авторизации.
-        """
-        if self.action in ['simple']:
-            permission_classes = [AllowAny]
-        else:
-            permission_classes = [permissions.IsAuthenticated]
-        return [permission() for permission in permission_classes]
     
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от действия"""
@@ -185,35 +155,18 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             # Обработка прочих ошибок
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-    def get_queryset(self):
-        """
-        Возвращает QuerySet для списка заявок.
-        DRF автоматически применит пагинацию.
-        """
-        try:
-            return self.service.get_user_applications_queryset(self.request.user)
-        except PermissionError:
-            return ProjectApplication.objects.none()
-    
     def list(self, request):
         """
         GET /api/project-applications/
-        Получение списка заявок с пагинацией
+        Получение списка заявок
         """
         try:
-            # Получаем QuerySet
-            queryset = self.get_queryset()
+            # Получаем данные через сервис
+            applications = self.service.get_user_applications(request.user)
             
-            # Применяем пагинацию
-            page = self.paginate_queryset(queryset)
-            if page is not None:
-                # Преобразуем в DTO для списка
-                list_dtos = [self.service.get_application_list_dto(app) for app in page]
-                return self.get_paginated_response([dto.to_dict() for dto in list_dtos])
-            
-            # Если пагинация не настроена, возвращаем все данные
-            applications = list(queryset)
+            # Преобразуем в DTO для списка
             list_dtos = [self.service.get_application_list_dto(app) for app in applications]
+            
             return Response([dto.to_dict() for dto in list_dtos])
             
         except PermissionError as e:
@@ -260,10 +213,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response(response_dto.to_dict())
             
         except ValueError as e:
-            error_msg = str(e)
-            if "не найдена" in error_msg:
-                return Response({'error': error_msg}, status=status.HTTP_404_NOT_FOUND)
-            return Response({'errors': error_msg}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'errors': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception:
@@ -290,14 +240,11 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response(response_dto.to_dict())
             
         except ValueError as e:
-            error_msg = str(e)
-            if "не найдена" in error_msg:
-                return Response({'error': error_msg}, status=status.HTTP_404_NOT_FOUND)
-            return Response({'errors': error_msg}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'errors': str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception:
-            return Response({'error': 'Произошла неизвестная ошибка'}, status=status.HTTP_404_NOT_FOUND)
+            return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
     @action(detail=True, methods=['post'])
     def approve(self, request, pk=None):
@@ -396,148 +343,5 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    # Методы для совместимости со старыми тестами
-    @action(detail=False, methods=['get'])
-    def my_applications(self, request):
-        """GET /api/project-applications/my_applications/"""
-        if not request.user.is_authenticated:
-            # Для неавторизованных пользователей возвращаем пустой список
-            return Response([])
-        return self.list(request)
-    
-    @action(detail=False, methods=['get'])
-    def my_in_work(self, request):
-        """
-        GET /api/project-applications/my_in_work/
-        Заявки, где пользователь причастен и статус не approved/rejected
-        """
-        if not request.user.is_authenticated:
-            # Для неавторизованных пользователей возвращаем пустой список
-            return Response([])
-        
-        try:
-            # Получаем заявки через сервис с фильтрацией по причастности
-            applications = self.service.get_user_in_work_applications(request.user)
-            
-            # Преобразуем в DTO для списка
-            list_dtos = [self.service.get_application_list_dto(app) for app in applications]
-            
-            return Response([dto.to_dict() for dto in list_dtos])
-            
-        except PermissionError as e:
-            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    @action(detail=False, methods=['post'])
-    def simple(self, request):
-        """
-        POST /api/project-applications/simple/
-        Создание заявки без авторизации
-        """
-        try:
-            # 1. Валидация HTTP данных
-            serializer = self.get_serializer(data=request.data)
-            serializer.is_valid(raise_exception=True)
-            
-            # 2. Преобразование в DTO
-            dto = serializer.save()
-            
-            # 3. Вызов сервиса (передаем None как пользователя для неавторизованных)
-            application, status_log = self.service.submit_application(dto, None)
-            
-            # 4. Сериализация ответа
-            response_dto = self.service.get_application_dto(application)
-            return Response(response_dto.to_dict(), status=status.HTTP_201_CREATED)
-            
-        except ValueError as e:
-            # Обработка ошибок валидации
-            return Response({'errors': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            # Обработка прочих ошибок
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    
-    @action(detail=True, methods=['post'])
-    def change_status(self, request, pk=None):
-        """POST /api/project-applications/{id}/change_status/"""
-        try:
-            status_code = request.data.get('status_code')
-            if not status_code:
-                return Response({'error': 'status_code is required'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            if status_code == 'approved':
-                application, log = self.service.approve_application(int(pk), request.user)
-            elif status_code == 'rejected':
-                reason = request.data.get('reason', '')
-                application, log = self.service.reject_application(int(pk), request.user, reason)
-            else:
-                # Для других статусов используем общий метод
-                application = self.service.get_application(int(pk), request.user)
-                # Здесь нужно добавить логику для других статусов
-                return Response({'error': f'Status {status_code} not implemented'}, status=status.HTTP_400_BAD_REQUEST)
-            
-            return Response({'status': status_code, 'message': f'Status changed to {status_code}'}, status=status.HTTP_200_OK)
-            
-        except PermissionError as e:
-            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except ValueError as e:
-            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
-            return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
-    
-    @action(detail=True, methods=['get'])
-    def status_logs(self, request, pk=None):
-        """GET /api/project-applications/{id}/status_logs/"""
-        try:
-            application = self.service.get_application(int(pk), request.user)
-            # Возвращаем логи из модели
-            logs = application.status_logs.all()
-            return Response([{
-                'id': log.id,
-                'from_status': log.from_status.code if log.from_status else None,
-                'to_status': log.to_status.code,
-                'changed_at': log.changed_at,
-                'actor': log.actor.get_full_name() if log.actor else None,
-            } for log in logs])
-        except PermissionError as e:
-            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
-    
-    @action(detail=True, methods=['get'])
-    def current_status_info(self, request, pk=None):
-        """GET /api/project-applications/{id}/current_status_info/"""
-        try:
-            application = self.service.get_application(int(pk), request.user)
-            return Response({
-                'status': application.status.code if application.status else None,
-                'status_name': application.status.name if application.status else None,
-            })
-        except PermissionError as e:
-            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
-    
-    @action(detail=True, methods=['post'])
-    def add_comment(self, request, pk=None):
-        """POST /api/project-applications/{id}/add_comment/"""
-        try:
-            application = self.service.get_application(int(pk), request.user)
-            # Здесь нужно добавить логику для добавления комментариев
-            return Response({'message': 'Comment added'}, status=status.HTTP_200_OK)
-        except PermissionError as e:
-            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
-    
-    @action(detail=False, methods=['post'])
-    def change_status_bulk(self, request):
-        """POST /api/project-applications/change_status_bulk/"""
-        try:
-            # Здесь нужно добавить логику для массового изменения статусов
-            return Response({'message': 'Bulk status change completed'}, status=status.HTTP_200_OK)
         except Exception:
             return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

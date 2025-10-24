@@ -15,13 +15,6 @@ class ApplicationStatusReadSerializer(serializers.ModelSerializer):
         ]
 
 
-class ApplicationStatusSerializer(serializers.ModelSerializer):
-    """Сериализатор для статусов заявок"""
-    class Meta:
-        model = ApplicationStatus
-        fields = ['code', 'name']
-
-
 class ApplicationStatusViewSet(viewsets.ReadOnlyModelViewSet):
     """
     ViewSet только для чтения статусов заявок на проекты.

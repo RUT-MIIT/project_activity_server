@@ -34,9 +34,8 @@ class ApplicationCapabilities:
             return validation
         
         # Бизнес-правило: пользователь должен иметь право подавать заявки
-        # Для совместимости с тестами разрешаем любые роли
-        # if user_role not in ['user', 'admin', 'moderator']:
-        #     validation.add_error('user_role', 'Недостаточно прав для подачи заявки')
+        if user_role not in ['user', 'admin', 'moderator']:
+            validation.add_error('user_role', 'Недостаточно прав для подачи заявки')
         
         return validation
     
@@ -176,6 +175,8 @@ class ApplicationCapabilities:
         
         Чистая функция - проверяет возможность получения списка.
         """
-        # Бизнес-правило: разрешаем доступ всем (включая неавторизованных)
-        # Неавторизованные пользователи получат пустой список
-        return True, ""
+        # Бизнес-правило: все аутентифицированные пользователи могут видеть списки
+        if user_role in ['user', 'admin', 'moderator']:
+            return True, ""
+        
+        return False, "Недостаточно прав для просмотра списка заявок"

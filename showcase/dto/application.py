@@ -12,15 +12,15 @@ class ProjectApplicationCreateDTO:
     
     def __init__(
         self,
+        title: str,
         company: str,
-        title: Optional[str] = None,
-        author_lastname: Optional[str] = None,
-        author_firstname: Optional[str] = None,
-        author_email: Optional[str] = None,
-        author_phone: Optional[str] = None,
-        problem_holder: Optional[str] = None,
-        goal: Optional[str] = None,
-        barrier: Optional[str] = None,
+        author_lastname: str,
+        author_firstname: str,
+        author_email: str,
+        author_phone: str,
+        problem_holder: str,
+        goal: str,
+        barrier: str,
         author_middlename: Optional[str] = None,
         author_role: Optional[str] = None,
         author_division: Optional[str] = None,
@@ -34,12 +34,10 @@ class ProjectApplicationCreateDTO:
         experts: Optional[str] = None,
         additional_materials: Optional[str] = None,
         needs_consultation: bool = False,
-        description: Optional[str] = None,  # Для совместимости с тестами
         **kwargs
     ):
-        self.title = title or ""
+        self.title = title
         self.company = company
-        self.description = description  # Сохраняем для совместимости
         self.author_lastname = author_lastname
         self.author_firstname = author_firstname
         self.author_middlename = author_middlename
@@ -70,7 +68,6 @@ class ProjectApplicationCreateDTO:
         """Преобразование в словарь"""
         return {
             'title': self.title,
-            'description': self.description,
             'company': self.company,
             'author_lastname': self.author_lastname,
             'author_firstname': self.author_firstname,
