@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import User
+from .models import User, Department, Role
+from .models import RegistrationRequest
 from django.conf import settings
 from django.contrib.auth.forms import PasswordResetForm as _PasswordResetForm
 from allauth.account.adapter import get_adapter
@@ -8,10 +9,39 @@ from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes
 
 
+class DepartmentSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для подразделений/кафедр.
+    """
+    class Meta:
+        model = Department
+        fields = [
+            'id',
+            'name',
+            'short_name',
+        ]
+
+
+class RoleSerializer(serializers.ModelSerializer):
+    """
+    Сериализатор для ролей пользователей.
+    """
+    class Meta:
+        model = Role
+        fields = [
+            'code',
+            'name',
+            'requires_department',
+            'is_active',
+        ]
+
+
 class UserSerializer(serializers.ModelSerializer):
+    department = DepartmentSerializer(read_only=True)
+    
     class Meta:
         model = User
-        fields = ("id", "email", "first_name", "last_name", "middle_name", "role")
+        fields = ("id", "email", "first_name", "last_name", "middle_name", "role", "phone", "department")
 
 
 class CustomResetPasswordForm(_PasswordResetForm):
@@ -95,3 +125,54 @@ class UserShortSerializer(serializers.ModelSerializer):
     def get_full_name(self, obj):
         parts = [obj.last_name, obj.first_name, getattr(obj, 'middle_name', '')]
         return ' '.join([p for p in parts if p]).strip()
+
+
+class RegistrationRequestCreateSerializer(serializers.ModelSerializer):
+    department = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.all(), required=False, allow_null=True
+    )
+
+    class Meta:
+        model = RegistrationRequest
+        fields = [
+            'id', 'last_name', 'first_name', 'middle_name', 'department',
+            'email', 'phone', 'comment', 'created_at', 'status'
+        ]
+        read_only_fields = ['id', 'created_at', 'status']
+
+    def validate_email(self, value):
+        # Не позволяем подавать повторную заявку, если уже есть с таким email в статусе submitted
+        if RegistrationRequest.objects.filter(email=value, status=RegistrationRequest.Status.SUBMITTED).exists():
+            raise serializers.ValidationError("Заявка с таким email уже подана и ожидает обработки.")
+        return value
+
+
+class RegistrationRequestSerializer(serializers.ModelSerializer):
+    department = DepartmentSerializer(read_only=True)
+    actor = UserShortSerializer(read_only=True)
+    role = RoleSerializer(read_only=True)
+
+    class Meta:
+        model = RegistrationRequest
+        fields = [
+            'id', 'last_name', 'first_name', 'middle_name', 'department',
+            'email', 'phone', 'comment', 'reason', 'role', 'status', 'actor', 'created_at', 'updated_at'
+        ]
+
+
+class ApproveRequestSerializer(serializers.Serializer):
+    role_id = serializers.CharField()
+    department_id = serializers.PrimaryKeyRelatedField(
+        queryset=Department.objects.all(), required=False, allow_null=True
+    )
+
+    def validate_role_id(self, value):
+        try:
+            role = Role.objects.get(pk=value)
+        except Role.DoesNotExist:
+            raise serializers.ValidationError("Роль не найдена.")
+        return value
+
+
+class RejectRequestSerializer(serializers.Serializer):
+    reason = serializers.CharField(required=False, allow_blank=True, allow_null=True)
