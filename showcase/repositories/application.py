@@ -76,7 +76,9 @@ class ProjectApplicationRepository:
                 'status_logs__from_status',
                 'status_logs__to_status',
                 'status_logs__actor',
-                'status_logs__comments__author',
+                'comments__author',
+                'comments__author__role',
+                'comments__author__department',
             )
             .get(pk=application_id)
         )
@@ -148,6 +150,21 @@ class ProjectApplicationRepository:
             .order_by('-creation_date')
         )
     
+    def filter_in_work_by_department(self, department) -> List[ProjectApplication]:
+        """
+        Получение заявок в работе по причастному подразделению.
+        Заявки, где подразделение причастно и статус не approved/rejected.
+        """
+        return list(
+            ProjectApplication.objects
+            .filter(involved_departments__department=department)
+            .exclude(status__code__in=['approved', 'rejected'])
+            .select_related('status', 'author')
+            .prefetch_related('target_institutes')
+            .distinct()
+            .order_by('-creation_date')
+        )
+    
     def filter_by_status(self, status_code: str) -> List[ProjectApplication]:
         """
         Получение заявок по статусу.
@@ -195,55 +212,34 @@ class ProjectApplicationRepository:
         Обновляет только переданные поля.
         """
         # Обновляем только переданные поля
-        if dto.title is not None:
-            application.title = dto.title
-        if dto.company is not None:
-            application.company = dto.company
-        if dto.author_lastname is not None:
-            application.author_lastname = dto.author_lastname
-        if dto.author_firstname is not None:
-            application.author_firstname = dto.author_firstname
-        if dto.author_middlename is not None:
-            application.author_middlename = dto.author_middlename
-        if dto.author_email is not None:
-            application.author_email = dto.author_email
-        if dto.author_phone is not None:
-            application.author_phone = dto.author_phone
-        if dto.author_role is not None:
-            application.author_role = dto.author_role
-        if dto.author_division is not None:
-            application.author_division = dto.author_division
-        if dto.company_contacts is not None:
-            application.company_contacts = dto.company_contacts
-        if dto.project_level is not None:
-            application.project_level = dto.project_level
-        if dto.problem_holder is not None:
-            application.problem_holder = dto.problem_holder
-        if dto.goal is not None:
-            application.goal = dto.goal
-        if dto.barrier is not None:
-            application.barrier = dto.barrier
-        if dto.existing_solutions is not None:
-            application.existing_solutions = dto.existing_solutions
-        if dto.context is not None:
-            application.context = dto.context
-        if dto.stakeholders is not None:
-            application.stakeholders = dto.stakeholders
-        if dto.recommended_tools is not None:
-            application.recommended_tools = dto.recommended_tools
-        if dto.experts is not None:
-            application.experts = dto.experts
-        if dto.additional_materials is not None:
-            application.additional_materials = dto.additional_materials
-        if dto.needs_consultation is not None:
-            application.needs_consultation = dto.needs_consultation
+        # Автоматически получаем поля из DTO
+        update_fields = []
+        
+        # Получаем все поля DTO (исключаем приватные и специальные)
+        dto_fields = [field for field in dir(dto) 
+                     if not field.startswith('_') 
+                     and not callable(getattr(dto, field))
+                     and field != 'target_institutes']  # M2M поле обрабатываем отдельно
+        
+        for field_name in dto_fields:
+            field_value = getattr(dto, field_name, None)
+            if field_value is not None:
+                # Проверяем, что поле существует в модели
+                if hasattr(application, field_name):
+                    setattr(application, field_name, field_value)
+                    update_fields.append(field_name)
         
         # Обновляем M2M поля
         if dto.target_institutes is not None:
             institutes = Institute.objects.filter(code__in=dto.target_institutes)
             application.target_institutes.set(institutes)
         
-        application.save()
+        # Сохраняем только изменённые поля для оптимизации
+        if update_fields:
+            application.save(update_fields=update_fields)
+        else:
+            application.save()
+        
         return application
     
     def update_status(self, application: ProjectApplication, status_code: str) -> ProjectApplication:

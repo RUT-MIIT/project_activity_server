@@ -38,11 +38,11 @@ class ProjectApplicationStatusLogAdmin(admin.ModelAdmin):
 
 @admin.register(ProjectApplicationComment)
 class ProjectApplicationCommentAdmin(admin.ModelAdmin):
-    list_display = ("status_log", "author", "created_at", "field", "text")
+    list_display = ("application", "author", "created_at", "field", "text")
     search_fields = ("text", "author__username", "field")
     list_filter = ("created_at",)
-    verbose_name = "Комментарий к изменению статуса заявки"
-    verbose_name_plural = "Комментарии к изменениям статусов заявок"
+    verbose_name = "Комментарий к заявке"
+    verbose_name_plural = "Комментарии к заявкам"
 
 
 @admin.register(Institute)

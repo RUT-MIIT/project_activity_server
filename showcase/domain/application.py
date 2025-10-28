@@ -17,6 +17,9 @@ class ProjectApplicationDomain:
         
         Чистая функция - принимает данные, возвращает результат валидации.
         Никаких обращений к БД, файлам, сети.
+        
+        ВАЖНО: Техническая валидация (типы, форматы, обязательные поля) 
+        выполняется в сериализаторе DRF. Здесь только бизнес-правила.
         """
         result = ValidationResult()
         
@@ -24,13 +27,13 @@ class ProjectApplicationDomain:
         if dto.title and len(dto.title.strip()) < 5:
             result.add_error('title', 'Название должно содержать минимум 5 символов')
         
-        # Бизнес-правило: компания обязательна
-        if not dto.company or len(dto.company.strip()) < 2:
-            result.add_error('company', 'Название компании обязательно')
+        # Бизнес-правило: название компании должно быть осмысленным (если передано)
+        if dto.company and len(dto.company.strip()) < 2:
+            result.add_error('company', 'Название компании должно содержать минимум 2 символа')
         
-        # Валидируем только переданные поля (для совместимости с тестами)
-        if dto.author_email is not None and (not dto.author_email or '@' not in dto.author_email):
-            result.add_error('author_email', 'Некорректный email')
+        # Бизнес-правило: email должен быть осмысленным (если указан)
+        if dto.author_email and len(dto.author_email.strip()) < 5:
+            result.add_error('author_email', 'Email должен содержать минимум 5 символов')
         
         if dto.goal is not None and (not dto.goal or len(dto.goal.strip()) < 10):
             result.add_error('goal', 'Опишите цель проекта (минимум 10 символов)')
@@ -98,16 +101,20 @@ class ProjectApplicationDomain:
         
         Чистая функция - принимает роль, возвращает статус.
         """
-        # Бизнес-правило: админы сразу создают одобренные заявки
-        if user_role == 'admin':
+        # Бизнес-правило: админы и CPDS сразу создают одобренные заявки
+        if user_role in ['admin', 'cpds']:
             return 'approved'
         
-        # Бизнес-правило: модераторы создают заявки в статусе "ожидает подразделения"
-        if user_role == 'moderator':
-            return 'await_department'
+        # Бизнес-правило: валидаторы подразделений создают заявки в статусе "ожидает института"
+        if user_role == 'department_validator':
+            return 'await_institute'
         
-        # Бизнес-правило: обычные пользователи создают заявки в статусе "создана"
-        return 'created'
+        # Бизнес-правило: валидаторы институтов создают заявки в статусе "ожидает CPDS"
+        if user_role == 'institute_validator':
+            return 'await_cpds'
+        
+        # Бизнес-правило: в ином случае - "ожидает подразделения"
+        return 'await_department'
     
     @staticmethod
     def can_change_status(
@@ -122,10 +129,20 @@ class ProjectApplicationDomain:
         """
         # Бизнес-правило: только определенные переходы разрешены
         allowed_transitions = {
-            'created': ['await_department', 'rejected'],
-            'await_department': ['approved', 'rejected'],
-            'approved': ['rejected'],  # Можно отклонить даже одобренную
-            'rejected': ['created'],   # Можно пересоздать отклоненную
+            'created': ['await_department', 'rejected', 'rejected_department'],
+            'await_department': ['approved_department', 'rejected', 'rejected_department', 'returned_department', 'returned_institute'],
+            'await_institute': ['approved_institute', 'rejected', 'rejected_institute', 'returned_institute'],
+            'await_cpds': ['approved', 'rejected', 'rejected_cpds', 'returned_cpds'],
+            'returned_department': ['await_department', 'returned_department','rejected_department', 'approved_department'],
+            'returned_institute': ['await_institute', 'returned_institute', 'approved_institute'],
+            'returned_cpds': ['await_cpds', 'returned_cpds', 'approved'],
+            'approved_department': ['await_institute', 'rejected'],
+            'approved_institute': ['await_cpds', 'rejected'],
+            'approved': ['rejected'],
+            'rejected': ['created'],
+            'rejected_department': ['rejected', 'created'],
+            'rejected_institute': ['rejected', 'created'],
+            'rejected_cpds': ['rejected', 'created'],
         }
         
         if new_status not in allowed_transitions.get(current_status, []):

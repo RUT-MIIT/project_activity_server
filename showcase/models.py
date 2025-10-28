@@ -179,6 +179,7 @@ class ProjectApplicationStatusLog(models.Model):
         ('involved_user_removed', 'Удален причастный пользователь'),
         ('involved_department_added', 'Добавлено причастное подразделение'),
         ('involved_department_removed', 'Удалено причастное подразделение'),
+        ('application_updated', 'Обновление заявки'),
     )
     action_type = models.CharField(
         max_length=32,
@@ -249,11 +250,11 @@ class ProjectApplicationStatusLog(models.Model):
 
 
 class ProjectApplicationComment(models.Model):
-    status_log = models.ForeignKey(
-        ProjectApplicationStatusLog,
+    application = models.ForeignKey(
+        ProjectApplication,
         on_delete=models.CASCADE,
         related_name='comments',
-        verbose_name='Лог статуса',
+        verbose_name='Заявка',
     )
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
@@ -274,8 +275,8 @@ class ProjectApplicationComment(models.Model):
     text = models.TextField(verbose_name='Текст комментария')
 
     class Meta:
-        verbose_name = 'Комментарий к изменению статуса заявки'
-        verbose_name_plural = 'Комментарии к изменениям статусов заявок'
+        verbose_name = 'Комментарий к заявке'
+        verbose_name_plural = 'Комментарии к заявкам'
         ordering = ['-created_at']
 
     def __str__(self):

@@ -10,7 +10,9 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.pagination import PageNumberPagination
+from rest_framework.exceptions import ValidationError as DRFValidationError
 from django.contrib.auth import get_user_model
+from django.conf import settings
 
 from showcase.models import ProjectApplication
 from showcase.dto.application import (
@@ -18,8 +20,94 @@ from showcase.dto.application import (
     ProjectApplicationUpdateDTO,
 )
 from showcase.services.application_service import ProjectApplicationService
+from showcase.services.comment_service import CommentService
+from showcase.dto.application import serialize_comment_author
 
 User = get_user_model()
+
+
+def get_error_message(exception: Exception) -> str:
+    """
+    Возвращает сообщение об ошибке в зависимости от режима DEBUG.
+    
+    Args:
+        exception: Исключение
+        
+    Returns:
+        str: Сообщение об ошибке
+    """
+    if settings.DEBUG:
+        return str(exception)
+    else:
+        return 'Внутренняя ошибка сервера'
+
+
+ 
+
+
+def format_validation_errors(errors) -> dict:
+    """
+    Форматирует ошибки валидации используя стандартные DRF механизмы.
+    
+    Args:
+        errors: Ошибки валидации (может быть dict, list, ErrorDetail или ValueError)
+        
+    Returns:
+        dict: Отформатированные ошибки
+    """
+    # Если это ValueError, пытаемся извлечь из него словарь ошибок
+    if isinstance(errors, ValueError):
+        # Пытаемся получить словарь ошибок из ValueError
+        if hasattr(errors, 'args') and errors.args:
+            # Если в args есть словарь ошибок
+            if isinstance(errors.args[0], dict):
+                return errors.args[0]
+            else:
+                # Если это строка с ErrorDetail, пытаемся распарсить
+                error_str = str(errors)
+                if 'ErrorDetail' in error_str:
+                    try:
+                        import re
+                        # Извлекаем информацию из строки с помощью регулярных выражений
+                        # Ищем паттерн: 'field': [ErrorDetail(string='message', code='code')]
+                        pattern = r"'([^']+)':\s*\[ErrorDetail\(string='([^']+)',\s*code='([^']+)'\)\]"
+                        matches = re.findall(pattern, error_str)
+                        
+                        if matches:
+                            formatted_errors = {}
+                            for field, message, code in matches:
+                                if field not in formatted_errors:
+                                    formatted_errors[field] = []
+                                formatted_errors[field].append(message)
+                            return formatted_errors
+                        else:
+                            return {'error': [error_str]}
+                    except:
+                        return {'error': [error_str]}
+                else:
+                    # Если это обычная строка, пытаемся распарсить как dict
+                    try:
+                        import ast
+                        return ast.literal_eval(error_str)
+                    except:
+                        return {'error': [error_str]}
+        else:
+            return {'error': [str(errors)]}
+    
+    # Если это уже словарь, обрабатываем ErrorDetail объекты
+    if isinstance(errors, dict):
+        formatted_errors = {}
+        for field, field_errors in errors.items():
+            if isinstance(field_errors, list):
+                # Извлекаем только текстовые сообщения из ErrorDetail
+                formatted_errors[field] = [str(error) for error in field_errors]
+            else:
+                formatted_errors[field] = [str(field_errors)]
+        return formatted_errors
+    elif isinstance(errors, list):
+        return {'non_field_errors': [str(error) for error in errors]}
+    else:
+        return {'error': [str(errors)]}
 
 
 class ProjectApplicationListSerializer(serializers.ModelSerializer):
@@ -36,8 +124,15 @@ class ProjectApplicationListSerializer(serializers.ModelSerializer):
 
 class ProjectApplicationCreateSerializer(serializers.Serializer):
     """
-    Сериализатор только для валидации HTTP данных.
-    Никакой бизнес-логики - только преобразование JSON в DTO.
+    Сериализатор для технической валидации HTTP данных.
+    
+    ОТВЕТСТВЕННОСТЬ:
+    - Типы данных (CharField, EmailField, BooleanField)
+    - Форматы (email, URL, даты)
+    - Длина строк (max_length)
+    - Обязательные поля (required=True)
+    
+    Бизнес-правила проверяются в ProjectApplicationDomain.validate_create()
     """
     
     # Основные поля
@@ -135,6 +230,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
         self.service = ProjectApplicationService()
+        self.comment_service = CommentService()
     
     def get_permissions(self):
         """
@@ -177,13 +273,16 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except ValueError as e:
             # Обработка ошибок валидации
-            return Response({'errors': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            formatted_errors = format_validation_errors(e)
+            return Response({'errors': formatted_errors}, status=status.HTTP_400_BAD_REQUEST)
+        except DRFValidationError as e:
+            # Обработка стандартных DRF ошибок валидации
+            return Response({'errors': e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             # Обработка ошибок прав доступа
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
-            # Обработка прочих ошибок
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': get_error_message(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def get_queryset(self):
         """
@@ -218,8 +317,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': get_error_message(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     def retrieve(self, request, pk=None):
         """
@@ -316,11 +415,25 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         Одобрение заявки
         """
         try:
-            self.service.approve_application(
+            application = self.service.approve_application(
                 application_id=int(pk),
                 approver=request.user
             )
-            return Response({'status': 'approved', 'message': 'Заявка одобрена'}, status=status.HTTP_200_OK)
+            
+            # Получаем доступные действия после одобрения
+            try:
+                available_actions_dto = self.service.get_available_actions(int(pk), request.user)
+                available_actions = available_actions_dto.to_dict()['available_actions']
+            except Exception:
+                # Если не удалось получить доступные действия, возвращаем пустой список
+                available_actions = []
+            
+            return Response({
+                'status': application.status.code,
+                'status_name': application.status.name if hasattr(application.status, 'name') else '',
+                'message': 'Заявка одобрена',
+                'available_actions': available_actions
+            }, status=status.HTTP_200_OK)
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
@@ -336,12 +449,26 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         """
         try:
             reason = request.data.get('reason', '')
-            self.service.reject_application(
+            application = self.service.reject_application(
                 application_id=int(pk),
                 rejector=request.user,
                 reason=reason
             )
-            return Response({'status': 'rejected', 'message': 'Заявка отклонена'}, status=status.HTTP_200_OK)
+            
+            # Получаем доступные действия после отклонения
+            try:
+                available_actions_dto = self.service.get_available_actions(int(pk), request.user)
+                available_actions = available_actions_dto.to_dict()['available_actions']
+            except Exception:
+                # Если не удалось получить доступные действия, возвращаем пустой список
+                available_actions = []
+            
+            return Response({
+                'status': application.status.code,
+                'status_name': application.status.name if hasattr(application.status, 'name') else '',
+                'message': 'Заявка отклонена',
+                'available_actions': available_actions
+            }, status=status.HTTP_200_OK)
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
@@ -353,16 +480,28 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
     def request_changes(self, request, pk=None):
         """
         POST /api/project-applications/{id}/request_changes/
-        Запрос изменений
+        Запрос изменений (отправка на доработку)
         """
         try:
-            comments = request.data.get('comments', [])
-            self.service.request_changes(
+            application = self.service.request_changes(
                 application_id=int(pk),
-                requester=request.user,
-                comments=comments
+                requester=request.user
             )
-            return Response({'status': 'changes_requested', 'message': 'Запрошены изменения'}, status=status.HTTP_200_OK)
+            
+            # Получаем доступные действия после отправки на доработку
+            try:
+                available_actions_dto = self.service.get_available_actions(int(pk), request.user)
+                available_actions = available_actions_dto.to_dict()['available_actions']
+            except Exception:
+                # Если не удалось получить доступные действия, возвращаем пустой список
+                available_actions = []
+            
+            return Response({
+                'status': application.status.code,
+                'status_name': application.status.name if hasattr(application.status, 'name') else '',
+                'message': 'Заявка отправлена на доработку',
+                'available_actions': available_actions
+            }, status=status.HTTP_200_OK)
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
@@ -388,8 +527,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': get_error_message(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['get'])
     def recent(self, request):
@@ -406,8 +545,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': get_error_message(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     # Методы для совместимости со старыми тестами
     @action(detail=False, methods=['get'])
@@ -426,8 +565,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': get_error_message(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['get'])
     def my_in_work(self, request):
@@ -450,8 +589,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except PermissionError as e:
             return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        except Exception as e:
+            return Response({'error': get_error_message(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     @action(detail=False, methods=['post'])
     def simple(self, request):
@@ -476,10 +615,14 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             
         except ValueError as e:
             # Обработка ошибок валидации
-            return Response({'errors': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            formatted_errors = format_validation_errors(e)
+            return Response({'errors': formatted_errors}, status=status.HTTP_400_BAD_REQUEST)
+        except DRFValidationError as e:
+            # Обработка стандартных DRF ошибок валидации
+            return Response({'errors': e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             # Обработка прочих ошибок
-            return Response({'error': 'Внутренняя ошибка сервера'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({'error': get_error_message(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
     @action(detail=True, methods=['get'])
@@ -501,5 +644,81 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
     
+    @action(detail=True, methods=['post'])
+    def add_comment(self, request, pk=None):
+        """
+        POST /api/project-applications/{id}/add_comment/
+        Добавление комментария к заявке
+        Тело: {"field": "goal", "text": "Комментарий"}
+        """
+        try:
+            field = request.data.get('field', '').strip()
+            text = request.data.get('text', '').strip()
+            
+            if not field:
+                return Response({'error': 'Поле обязательно'}, status=status.HTTP_400_BAD_REQUEST)
+            if not text:
+                return Response({'error': 'Текст комментария обязателен'}, status=status.HTTP_400_BAD_REQUEST)
+            
+            comment = self.comment_service.add_comment(
+                application_id=int(pk),
+                field=field,
+                text=text,
+                author=request.user
+            )
+            
+            # Перезагружаем комментарий с оптимизацией запросов
+            from showcase.models import ProjectApplicationComment
+            comment = ProjectApplicationComment.objects.select_related(
+                'author', 'author__role', 'author__department'
+            ).get(pk=comment.id)
+            
+            return Response({
+                'id': comment.id,
+                'field': comment.field,
+                'text': comment.text,
+                'author': serialize_comment_author(comment.author),
+                'created_at': comment.created_at.isoformat() if comment.created_at else None,
+            }, status=status.HTTP_201_CREATED)
+            
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({'error': 'Заявка не найдена'}, status=status.HTTP_404_NOT_FOUND)
+    
+    @action(detail=True, methods=['get'])
+    def comments(self, request, pk=None):
+        """
+        GET /api/project-applications/{id}/comments/
+        Получение всех комментариев к заявке
+        """
+        try:
+            # Получаем комментарии через сервис
+            comments = self.comment_service.get_application_comments(int(pk))
+            
+            return Response([
+                {
+                    'id': comment.id,
+                    'field': comment.field,
+                    'text': comment.text,
+                    'author': serialize_comment_author(comment.author),
+                    'created_at': comment.created_at.isoformat() if comment.created_at else None,
+                }
+                for comment in comments
+            ])
+            
+        except ValueError as e:
+            return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as e:
+            return Response({'error': str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            # Логируем реальную ошибку для отладки
+            import traceback
+            print(f"Ошибка при получении комментариев: {e}")
+            print(traceback.format_exc())
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
     
+     

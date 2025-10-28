@@ -3,7 +3,6 @@ from django.contrib.auth import get_user_model
 from showcase.models import (
     ProjectApplication,
     ProjectApplicationStatusLog,
-    ProjectApplicationComment,
     ApplicationInvolvedUser,
     ApplicationInvolvedDepartment,
 )
@@ -31,19 +30,13 @@ class InvolvedManager:
             }
         )
         if created and log_action:
-            log = ProjectApplicationStatusLog.objects.create(
+            ProjectApplicationStatusLog.objects.create(
                 application=application,
                 from_status=application.status,
                 to_status=application.status,
                 actor=actor,
                 action_type='involved_user_added',
                 involved_user=user,
-            )
-            ProjectApplicationComment.objects.create(
-                status_log=log,
-                author=actor,
-                field='involved_user',
-                text=f'Добавлен причастный пользователь: {getattr(user, "email", user.pk)}'
             )
         return involved
 
@@ -55,19 +48,13 @@ class InvolvedManager:
             user=user
         ).delete()
         if deleted:
-            log = ProjectApplicationStatusLog.objects.create(
+            ProjectApplicationStatusLog.objects.create(
                 application=application,
                 from_status=application.status,
                 to_status=application.status,
                 actor=actor,
                 action_type='involved_user_removed',
                 involved_user=user,
-            )
-            ProjectApplicationComment.objects.create(
-                status_log=log,
-                author=actor,
-                field='involved_user',
-                text=f'Удалён причастный пользователь: {getattr(user, "email", user)}'
             )
         return deleted
 
@@ -82,19 +69,13 @@ class InvolvedManager:
             }
         )
         if created:
-            log = ProjectApplicationStatusLog.objects.create(
+            ProjectApplicationStatusLog.objects.create(
                 application=application,
                 from_status=application.status,
                 to_status=application.status,
                 actor=actor,
                 action_type='involved_department_added',
                 involved_department=department,
-            )
-            ProjectApplicationComment.objects.create(
-                status_log=log,
-                author=actor,
-                field='involved_department',
-                text=f'Добавлено причастное подразделение: {getattr(department, "name", department.pk)}'
             )
         return involved
 
@@ -106,19 +87,13 @@ class InvolvedManager:
             department=department
         ).delete()
         if deleted:
-            log = ProjectApplicationStatusLog.objects.create(
+            ProjectApplicationStatusLog.objects.create(
                 application=application,
                 from_status=application.status,
                 to_status=application.status,
                 actor=actor,
                 action_type='involved_department_removed',
                 involved_department=department,
-            )
-            ProjectApplicationComment.objects.create(
-                status_log=log,
-                author=actor,
-                field='involved_department',
-                text=f'Удалено причастное подразделение: {getattr(department, "name", department)}'
             )
         return deleted
 

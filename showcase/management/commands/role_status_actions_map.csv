@@ -1,0 +1,33 @@
+﻿Исходный статус;Роль;save_changes;approve;reject;request_changes
+await_department;mentor;-;-;-;-
+await_department;department_validator;только своего подразделения;только своего подразделения;только своего подразделения;только своего подразделения
+await_department;institute_validator;только своего подразделения;только своего подразделения;только своего подразделения;только своего подразделения
+await_department;cpds;-;-;-;-
+await_institute;mentor;-;-;-;-
+await_institute;department_validator;-;-;-;-
+await_institute;institute_validator;только своего подразделения;только своего подразделения;только своего подразделения;только своего подразделения
+await_institute;cpds;-;-;-;-
+await_cpds;mentor;-;-;-;-
+await_cpds;department_validator;-;-;-;-
+await_cpds;institute_validator;-;-;-;-
+await_cpds;cpds;+;+;+;+
+returned_(all);mentor;только свои;только свои;только свои;-
+returned_(all);department_validator;только своего подразделения;только своего подразделения;только своего подразделения;-
+returned_(all);institute_validator;только своего подразделения;только своего подразделения;только своего подразделения;-
+returned_(all);cpds;-;-;-;-
+rejected_department;mentor;-;-;-;-
+rejected_department;department_validator;только своего подразделения;только своего подразделения;-;только своего подразделения
+rejected_department;institute_validator;только своего подразделения;только своего подразделения;-;только своего подразделения
+rejected_department;cpds;+;+;-;+
+rejected_institute;mentor;-;-;-;-
+rejected_institute;department_validator;-;-;-;-
+rejected_institute;institute_validator;только своего подразделения;только своего подразделения;-;только своего подразделения
+rejected_institute;cpds;+;+;-;+
+rejected_cpds;mentor;-;-;-;-
+rejected_cpds;department_validator;-;-;-;-
+rejected_cpds;institute_validator;только своего подразделения;только своего подразделения;-;только своего подразделения
+rejected_cpds;cpds;+;+;-;+
+approved;mentor;-;-;-;-
+approved;department_validator;-;-;-;-
+approved;institute_validator;-;-;-;-
+approved;cpds;+;+;+;+

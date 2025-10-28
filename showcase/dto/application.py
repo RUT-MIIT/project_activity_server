@@ -7,6 +7,44 @@ from datetime import datetime
 from .validation import ValidationResult
 
 
+def serialize_comment_author(author) -> dict:
+    """
+    Сериализует автора комментария с role и department.
+    
+    Args:
+        author: User объект
+        
+    Returns:
+        dict: Сериализованные данные автора
+    """
+    if not author:
+        return {'id': None, 'name': None, 'role_name': None, 'department_name': None}
+    
+    first_initial = f"{author.first_name[0]}." if author.first_name else ""
+    middle_value = getattr(author, 'middle_name', None)
+    middle_initial = f"{middle_value[0]}." if middle_value else ""
+    short_name = (
+        f"{author.last_name} {first_initial}{middle_initial}".strip()
+        if (author.last_name or author.first_name or middle_value)
+        else None
+    )
+    return {
+        'id': author.id,
+        'name': (
+            f"{author.first_name} {author.last_name}".strip()
+            if author.first_name and author.last_name else None
+        ),
+        'short_name': short_name,
+        'role_name': (
+            author.role.name if hasattr(author, 'role') and author.role else None
+        ),
+        'department_name': (
+            author.department.name
+            if hasattr(author, 'department') and author.department else None
+        ),
+    }
+
+
 class ProjectApplicationCreateDTO:
     """DTO для создания заявки - только данные, никакой логики"""
     
@@ -252,6 +290,24 @@ class ProjectApplicationReadDTO:
             }
             for involved in application.involved_departments.all()
         ]
+        
+        # Получаем комментарии напрямую из заявки
+        try:
+            comments = application.comments.all().select_related(
+                'author', 'author__role', 'author__department'
+            ).order_by('-created_at')
+            self.comments = [
+                {
+                    'id': comment.id,
+                    'field': comment.field,
+                    'text': comment.text,
+                    'author': serialize_comment_author(comment.author),
+                    'created_at': comment.created_at.isoformat() if comment.created_at else None,
+                }
+                for comment in comments
+            ]
+        except Exception:
+            self.comments = []
     
     def to_dict(self) -> Dict[str, Any]:
         """Преобразование в словарь для JSON"""
@@ -284,6 +340,7 @@ class ProjectApplicationReadDTO:
             'target_institutes': self.target_institutes,
             'involved_users': self.involved_users,
             'involved_departments': self.involved_departments,
+            'comments': self.comments,
         }
 
 
