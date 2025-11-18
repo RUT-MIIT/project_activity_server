@@ -59,6 +59,7 @@ source venv/bin/activate
 python manage.py migrate
 python manage.py collectstatic --noinput
 ```
+> Статические файлы собираются в директорию `/home/nnd/project_activity_server/staticfiles` (значение `STATIC_ROOT` по умолчанию). Команда `collectstatic` создаст её, если она отсутствует.
 
 ### 7. Тестовый запуск приложения
 ```bash
