@@ -1,6 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User, Department, RegistrationRequest, Role
+
+from .models import Department, RegistrationRequest, Role, User
 
 
 @admin.register(User)
@@ -21,7 +22,7 @@ class UserAdmin(BaseUserAdmin):
     ordering = ("id",)
     readonly_fields = ("date_joined",)
     fieldsets = (
-        (None, {"fields": ("email","phone", "password")}),
+        (None, {"fields": ("email", "phone", "password")}),
         (
             "Персональная информация",
             {
@@ -92,7 +93,14 @@ class RegistrationRequestAdmin(admin.ModelAdmin):
         "updated_at",
     )
     list_filter = ("status", "department", "created_at")
-    search_fields = ("email", "last_name", "first_name", "middle_name", "phone", "reason")
+    search_fields = (
+        "email",
+        "last_name",
+        "first_name",
+        "middle_name",
+        "phone",
+        "reason",
+    )
 
 
 @admin.register(Role)

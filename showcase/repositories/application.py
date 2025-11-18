@@ -1,31 +1,56 @@
-"""
-Репозиторий для работы с проектными заявками в БД.
+"""Репозиторий для работы с проектными заявками в БД.
 
 Изолирует всю работу с базой данных от бизнес-логики.
 """
 
-from typing import List, Optional
-from django.db.models import Q
 from django.contrib.auth import get_user_model
+from django.db.models import Max, Q
+from django.utils import timezone
 
-from showcase.models import ProjectApplication, ApplicationStatus, Institute
-from showcase.dto.application import ProjectApplicationCreateDTO, ProjectApplicationUpdateDTO
+from showcase.dto.application import (
+    ProjectApplicationCreateDTO,
+    ProjectApplicationUpdateDTO,
+)
+from showcase.models import ApplicationStatus, Institute, ProjectApplication
 
 User = get_user_model()
 
 
 class ProjectApplicationRepository:
     """Репозиторий - вся работа с БД здесь"""
-    
-    def create(self, dto: ProjectApplicationCreateDTO, author: User, status_code: str) -> ProjectApplication:
-        """
-        Создание заявки в БД.
-        
+
+    def create(
+        self, dto: ProjectApplicationCreateDTO, author: User, status_code: str
+    ) -> ProjectApplication:
+        """Создание заявки в БД.
+
         Принимает DTO и пользователя, возвращает созданную модель.
+        Генерирует год заявки, номер внутри года и номер для печати.
         """
         # Получаем статус
         status = ApplicationStatus.objects.get(code=status_code)
-        
+
+        # Определяем год заявки (год создания)
+        current_year = timezone.now().year
+
+        # Находим максимальный номер заявки для текущего года
+        # Используем aggregate(Max) для получения последнего номера, а не count()
+        max_number_result = ProjectApplication.objects.filter(
+            application_year=current_year
+        ).aggregate(max_number=Max("year_sequence_number"))
+        max_number = max_number_result["max_number"]
+
+        # Если заявок в этом году еще нет, начинаем с 1
+        # Иначе увеличиваем на 1
+        if max_number is None:
+            next_number = 1
+        else:
+            next_number = max_number + 1
+
+        # Генерируем номер для печати: последние две цифры года + тире + номер с ведущими нулями (5 цифр)
+        year_short = str(current_year)[-2:]
+        print_number = f"{year_short}-{next_number:05d}"
+
         # Создаем заявку
         application = ProjectApplication.objects.create(
             title=dto.title,
@@ -51,176 +76,176 @@ class ProjectApplicationRepository:
             additional_materials=dto.additional_materials,
             needs_consultation=dto.needs_consultation,
             status=status,
+            application_year=current_year,
+            year_sequence_number=next_number,
+            print_number=print_number,
         )
-        
+
         # Устанавливаем M2M поля
         if dto.target_institutes:
             institutes = Institute.objects.filter(code__in=dto.target_institutes)
             application.target_institutes.set(institutes)
-        
+
         return application
-    
+
     def get_by_id(self, application_id: int) -> ProjectApplication:
-        """
-        Получение заявки по ID с оптимизацией запросов.
-        
+        """Получение заявки по ID с оптимизацией запросов.
+
         Включает все связанные объекты для детального просмотра.
         """
         return (
-            ProjectApplication.objects
-            .select_related('status', 'author')
+            ProjectApplication.objects.select_related("status", "author")
             .prefetch_related(
-                'target_institutes',
-                'involved_users__user',
-                'involved_departments__department',
-                'status_logs__from_status',
-                'status_logs__to_status',
-                'status_logs__actor',
-                'comments__author',
-                'comments__author__role',
-                'comments__author__department',
+                "target_institutes",
+                "involved_users__user",
+                "involved_departments__department",
+                "status_logs__from_status",
+                "status_logs__to_status",
+                "status_logs__actor",
+                "comments__author",
+                "comments__author__role",
+                "comments__author__department",
             )
             .get(pk=application_id)
         )
-    
+
     def get_by_id_simple(self, application_id: int) -> ProjectApplication:
-        """
-        Получение заявки по ID без дополнительных связанных объектов.
-        
+        """Получение заявки по ID без дополнительных связанных объектов.
+
         Для простых операций, где не нужны все связи.
         """
-        return ProjectApplication.objects.select_related('status', 'author').get(pk=application_id)
-    
-    def filter_by_user(self, user: User) -> List[ProjectApplication]:
-        """
-        Получение заявок пользователя (автор или причастный).
-        
+        return ProjectApplication.objects.select_related("status", "author").get(
+            pk=application_id
+        )
+
+    def filter_by_user(self, user: User) -> list[ProjectApplication]:
+        """Получение заявок пользователя (автор или причастный).
+
         Оптимизированный запрос для списка заявок.
         """
         return list(
-            ProjectApplication.objects
-            .filter(Q(author=user) | Q(involved_users__user=user))
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
+            ProjectApplication.objects.filter(
+                Q(author=user) | Q(involved_users__user=user)
+            )
+            .select_related("status", "author")
+            .prefetch_related("target_institutes")
             .distinct()
-            .order_by('-creation_date')
+            .order_by("-creation_date")
         )
-    
+
     def filter_by_user_queryset(self, user: User):
-        """
-        Получение QuerySet заявок пользователя для пагинации.
-        
+        """Получение QuerySet заявок пользователя для пагинации.
+
         Возвращает QuerySet вместо списка для поддержки пагинации.
         """
         return (
-            ProjectApplication.objects
-            .filter(Q(author=user) | Q(involved_users__user=user))
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
+            ProjectApplication.objects.filter(
+                Q(author=user) | Q(involved_users__user=user)
+            )
+            .select_related("status", "author")
+            .prefetch_related("target_institutes")
             .distinct()
-            .order_by('-creation_date')
+            .order_by("-creation_date")
         )
-    
-    def filter_in_work_by_user(self, user: User) -> List[ProjectApplication]:
-        """
-        Получение заявок в работе пользователя.
+
+    def filter_coordination_by_user(self, user: User) -> list[ProjectApplication]:
+        """Получение заявок для координации пользователя.
         Заявки, где пользователь причастен и статус не approved/rejected.
         """
+        from django.db.models import Count
+
         return list(
-            ProjectApplication.objects
-            .filter(involved_users__user=user)
-            .exclude(status__code__in=['approved', 'rejected'])
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
+            ProjectApplication.objects.filter(involved_users__user=user)
+            # .exclude(status__code__in=["approved", "rejected"])
+            .select_related("status", "author")
+            .prefetch_related("target_institutes")
+            .annotate(comments_count=Count("comments"))
             .distinct()
-            .order_by('-creation_date')
+            .order_by("-creation_date")
         )
-    
-    def filter_in_work_by_user_queryset(self, user: User):
-        """
-        Получение QuerySet заявок в работе пользователя для пагинации.
-        """
+
+    def filter_coordination_by_user_queryset(self, user: User):
+        """Получение QuerySet заявок для координации пользователя для пагинации."""
+        from django.db.models import Count
+
         return (
-            ProjectApplication.objects
-            .filter(involved_users__user=user)
-            .exclude(status__code__in=['approved', 'rejected'])
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
+            ProjectApplication.objects.filter(involved_users__user=user)
+            .exclude(status__code__in=["approved", "rejected"])
+            .select_related("status", "author")
+            .prefetch_related("target_institutes")
+            .annotate(comments_count=Count("comments"))
             .distinct()
-            .order_by('-creation_date')
+            .order_by("-creation_date")
         )
-    
-    def filter_in_work_by_department(self, department) -> List[ProjectApplication]:
-        """
-        Получение заявок в работе по причастному подразделению.
+
+    def filter_coordination_by_department(self, department) -> list[ProjectApplication]:
+        """Получение заявок для координации по причастному подразделению.
         Заявки, где подразделение причастно и статус не approved/rejected.
         """
         return list(
-            ProjectApplication.objects
-            .filter(involved_departments__department=department)
-            .exclude(status__code__in=['approved', 'rejected'])
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
+            ProjectApplication.objects.filter(
+                involved_departments__department=department
+            )
+            .exclude(status__code__in=["approved", "rejected"])
+            .select_related("status", "author")
+            .prefetch_related("target_institutes")
             .distinct()
-            .order_by('-creation_date')
+            .order_by("-creation_date")
         )
-    
-    def filter_by_status(self, status_code: str) -> List[ProjectApplication]:
-        """
-        Получение заявок по статусу.
-        
+
+    def filter_by_status(self, status_code: str) -> list[ProjectApplication]:
+        """Получение заявок по статусу.
+
         Для административных операций.
         """
         return list(
-            ProjectApplication.objects
-            .filter(status__code=status_code)
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
-            .order_by('-creation_date')
+            ProjectApplication.objects.filter(status__code=status_code)
+            .select_related("status", "author")
+            .prefetch_related("target_institutes")
+            .order_by("-creation_date")
         )
-    
+
     def filter_by_status_queryset(self, status_code: str):
-        """
-        Получение QuerySet заявок по статусу для пагинации.
-        """
+        """Получение QuerySet заявок по статусу для пагинации."""
         return (
-            ProjectApplication.objects
-            .filter(status__code=status_code)
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
-            .order_by('-creation_date')
+            ProjectApplication.objects.filter(status__code=status_code)
+            .select_related("status", "author")
+            .prefetch_related("target_institutes")
+            .order_by("-creation_date")
         )
-    
-    def filter_by_company(self, company_name: str) -> List[ProjectApplication]:
-        """
-        Получение заявок по компании.
-        
+
+    def filter_by_company(self, company_name: str) -> list[ProjectApplication]:
+        """Получение заявок по компании.
+
         Для поиска и аналитики.
         """
         return list(
-            ProjectApplication.objects
-            .filter(company__icontains=company_name)
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
-            .order_by('-creation_date')
+            ProjectApplication.objects.filter(company__icontains=company_name)
+            .select_related("status", "author")
+            .prefetch_related("target_institutes")
+            .order_by("-creation_date")
         )
-    
-    def update(self, application: ProjectApplication, dto: ProjectApplicationUpdateDTO) -> ProjectApplication:
-        """
-        Обновление заявки.
-        
+
+    def update(
+        self, application: ProjectApplication, dto: ProjectApplicationUpdateDTO
+    ) -> ProjectApplication:
+        """Обновление заявки.
+
         Обновляет только переданные поля.
         """
         # Обновляем только переданные поля
         # Автоматически получаем поля из DTO
         update_fields = []
-        
+
         # Получаем все поля DTO (исключаем приватные и специальные)
-        dto_fields = [field for field in dir(dto) 
-                     if not field.startswith('_') 
-                     and not callable(getattr(dto, field))
-                     and field != 'target_institutes']  # M2M поле обрабатываем отдельно
-        
+        dto_fields = [
+            field
+            for field in dir(dto)
+            if not field.startswith("_")
+            and not callable(getattr(dto, field))
+            and field != "target_institutes"
+        ]  # M2M поле обрабатываем отдельно
+
         for field_name in dto_fields:
             field_value = getattr(dto, field_name, None)
             if field_value is not None:
@@ -228,87 +253,80 @@ class ProjectApplicationRepository:
                 if hasattr(application, field_name):
                     setattr(application, field_name, field_value)
                     update_fields.append(field_name)
-        
+
         # Обновляем M2M поля
         if dto.target_institutes is not None:
             institutes = Institute.objects.filter(code__in=dto.target_institutes)
             application.target_institutes.set(institutes)
-        
+
         # Сохраняем только изменённые поля для оптимизации
         if update_fields:
             application.save(update_fields=update_fields)
         else:
             application.save()
-        
+
         return application
-    
-    def update_status(self, application: ProjectApplication, status_code: str) -> ProjectApplication:
-        """
-        Обновление статуса заявки.
-        
+
+    def update_status(
+        self, application: ProjectApplication, status_code: str
+    ) -> ProjectApplication:
+        """Обновление статуса заявки.
+
         Простая операция для изменения статуса.
         """
         status = ApplicationStatus.objects.get(code=status_code)
         application.status = status
         application.save()
         return application
-    
+
     def delete(self, application: ProjectApplication) -> bool:
-        """
-        Удаление заявки.
-        
+        """Удаление заявки.
+
         Возвращает True если заявка была удалена.
         """
         application_id = application.id
         application.delete()
         return not ProjectApplication.objects.filter(pk=application_id).exists()
-    
+
     def exists(self, application_id: int) -> bool:
-        """
-        Проверка существования заявки.
-        
+        """Проверка существования заявки.
+
         Быстрая проверка без загрузки объекта.
         """
         return ProjectApplication.objects.filter(pk=application_id).exists()
-    
+
     def count_by_user(self, user: User) -> int:
-        """
-        Подсчет заявок пользователя.
-        
+        """Подсчет заявок пользователя.
+
         Для статистики и ограничений.
         """
         return ProjectApplication.objects.filter(author=user).count()
-    
+
     def count_by_status(self, status_code: str) -> int:
-        """
-        Подсчет заявок по статусу.
-        
+        """Подсчет заявок по статусу.
+
         Для аналитики и отчетов.
         """
         return ProjectApplication.objects.filter(status__code=status_code).count()
-    
-    def get_recent_applications(self, limit: int = 10) -> List[ProjectApplication]:
-        """
-        Получение последних заявок.
-        
+
+    def get_recent_applications(self, limit: int = 10) -> list[ProjectApplication]:
+        """Получение последних заявок.
+
         Для дашборда и новостей.
         """
         return list(
-            ProjectApplication.objects
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
-            .order_by('-creation_date')[:limit]
+            ProjectApplication.objects.select_related("status", "author")
+            .prefetch_related("target_institutes")
+            .order_by("-creation_date")[:limit]
         )
-    
+
     def get_all_applications_queryset(self):
-        """
-        Получение QuerySet всех заявок для пагинации.
-        
+        """Получение QuerySet всех заявок для пагинации.
+
         Для административных операций и общего списка.
         """
         return (
-            ProjectApplication.objects
-            .select_related('status', 'author')
-            .prefetch_related('target_institutes')
-            .order_by('-creation_date')
+            ProjectApplication.objects.select_related("status", "author")
+            .prefetch_related("target_institutes")
+            .order_by("-creation_date")
         )

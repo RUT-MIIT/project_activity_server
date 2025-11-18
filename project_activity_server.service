@@ -1,0 +1,23 @@
+[Unit]
+Description=Project Activity Server (Django + Gunicorn)
+After=network.target postgresql.service
+
+[Service]
+User=nnd
+Group=nnd
+WorkingDirectory=/home/nnd/project_activity_server
+Environment="PATH=/home/nnd/project_activity_server/venv/bin"
+ExecStart=/home/nnd/project_activity_server/venv/bin/gunicorn \
+    --workers 3 \
+    --bind 0.0.0.0:8000 \
+    --timeout 120 \
+    --access-logfile /home/nnd/project_activity_server/logs/gunicorn_access.log \
+    --error-logfile /home/nnd/project_activity_server/logs/gunicorn_error.log \
+    config.wsgi:application
+
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target
+

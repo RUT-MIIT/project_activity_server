@@ -1,0 +1,36 @@
+.container {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.field {
+  margin: 0px;
+  width: 100%;
+  outline: none;
+  border: none;
+  padding: 9px 16px 9px 16px;
+  border-radius: var(--border-radius);
+  box-sizing: border-box;
+  background: var(--inactive-color);
+	cursor: default;
+}
+
+.title {
+	margin: 0;
+  font-style: normal;
+  font-weight: bold;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--main-black-color);
+}
+
+.text {
+	margin: 0;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--main-black-color);
+}

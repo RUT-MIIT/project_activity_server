@@ -1,39 +1,37 @@
 #!/usr/bin/env python
-"""
-Создание тестовых заявок для проверки пагинации.
-"""
+"""Создание тестовых заявок для проверки пагинации."""
 
 import os
-import sys
+
 import django
 
 # Настройка Django
-os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "config.settings")
 django.setup()
 
 from accounts.models import User
-from showcase.models import ProjectApplication, ApplicationStatus, Institute
-from showcase.services.application_service import ProjectApplicationService
 from showcase.dto.application import ProjectApplicationCreateDTO
+from showcase.models import ApplicationStatus, Institute
+from showcase.services.application_service import ProjectApplicationService
+
 
 def create_test_applications():
     """Создаем тестовые заявки"""
-    
     # Получаем пользователя
-    user = User.objects.get(email='test@example.com')
-    
+    user = User.objects.get(email="test@example.com")
+
     # Получаем статус
     status = ApplicationStatus.objects.first()
     if not status:
         print("Нет статусов в системе")
         return
-    
+
     # Получаем институт
     institute = Institute.objects.first()
     if not institute:
         print("Нет институтов в системе")
         return
-    
+
     # Создаем несколько заявок
     for i in range(25):  # Создаем 25 заявок для тестирования пагинации
         dto = ProjectApplicationCreateDTO(
@@ -56,9 +54,9 @@ def create_test_applications():
             recommended_tools="Тестовые инструменты",
             experts="Тестовые эксперты",
             additional_materials="Тестовые материалы",
-            target_institutes=[institute.code] if institute else []
+            target_institutes=[institute.code] if institute else [],
         )
-        
+
         # Создаем заявку через сервис
         service = ProjectApplicationService()
         try:
@@ -66,6 +64,7 @@ def create_test_applications():
             print(f"Создана заявка {i+1}: {application.title}")
         except Exception as e:
             print(f"Ошибка создания заявки {i+1}: {e}")
+
 
 if __name__ == "__main__":
     create_test_applications()

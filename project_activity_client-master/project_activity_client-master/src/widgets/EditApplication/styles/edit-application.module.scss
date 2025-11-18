@@ -1,0 +1,135 @@
+.container {
+	margin: 0;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+}
+
+.header {
+	margin: 0;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.main {
+	margin: 0;
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	flex: 1;
+	min-height: 0;
+	gap: 20px;
+}
+
+.form {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	flex: 2;
+	min-height: 0;
+	&__content {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 1;
+	overflow-y: auto;
+	padding-right: 8px;
+	}
+	&__control {
+		margin: 12px 0 0 0;
+		padding: 12px 0 0 0;
+		box-sizing: border-box;
+		display: flex;
+		align-items: center;
+		justify-content: flex-end;
+		gap: 12px;
+		flex-wrap: wrap;
+		border-top: 1px solid var(--main-grey-light-color);
+	}
+}
+
+.comments {
+	margin: 0;
+	display: flex;
+	flex-direction: column;
+	width: 400px;
+	min-height: 0;
+}
+
+.field {
+	margin: 0;
+	width: 100%;
+	padding: 10px 16px;
+	box-sizing: border-box;
+	border: 1px solid var(--main-grey-light-color);
+	border-radius: var(--border-radius);
+	display: flex;
+	flex-direction: column;
+	transition: all .3s ease-in-out;
+	position: relative;
+	&:hover {
+		cursor: pointer;
+	}
+	&_active {
+		background-color: #F1F7FF;
+	}
+	&__header {
+		margin: 0 0 4px 0;
+		width: 100%;
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+	}
+	&__title {
+		margin: 0;
+    font-size: 14px;
+		line-height: 18px;
+		font-weight: 500;
+		color: var(--main-black-color);
+	}
+	&__comments {
+		margin: 0;
+		padding: 4px 8px 4px 26px;
+		box-sizing: border-box;
+		background-color: var(--main-grey-background-color);
+		border-radius: var(--border-radius);
+		font-size: 14px;
+		line-height: 18px;
+		font-weight: 500;
+		position: relative;
+		&::before {
+			content: '';
+			position: absolute;
+			top: 5px;
+			left: 8px;
+			background-image: url('../../../shared/images/icons/buttons/message-black.svg');
+			background-position: center;
+			background-repeat: no-repeat;
+			background-size: contain;
+			width: 14px;
+			height: 14px;
+		}
+	}
+}
+
+.field__comments_active {
+	background-color: var(--main-blue-background-color);
+	color: var(--main-blue-color);
+		&::before {
+		content: '';
+		position: absolute;
+		top: 5px;
+		left: 8px;
+		background-image: url('../../../shared/images/icons/buttons/message-blue.svg');
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: contain;
+		width: 14px;
+		height: 14px;
+	}
+}

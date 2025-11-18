@@ -18,14 +18,14 @@ class Migration(migrations.Migration):
 
     operations = [
         # Удаляем все комментарии
-        migrations.RunPython(delete_all_comments, reverse_code=migrations.RunPython.noop),
-        
+        migrations.RunPython(
+            delete_all_comments, reverse_code=migrations.RunPython.noop
+        ),
         # Удаляем старый ForeignKey
         migrations.RemoveField(
             model_name='projectapplicationcomment',
             name='status_log',
         ),
-        
         # Добавляем новый ForeignKey
         migrations.AddField(
             model_name='projectapplicationcomment',
@@ -40,4 +40,3 @@ class Migration(migrations.Migration):
             preserve_default=False,
         ),
     ]
-

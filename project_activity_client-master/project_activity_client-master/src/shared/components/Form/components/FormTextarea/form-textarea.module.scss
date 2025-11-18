@@ -1,0 +1,51 @@
+.textarea {
+	margin: 0px;
+  width: 100%;
+  min-height: 120px;
+  padding: 9px 16px 9px 16px;
+	box-sizing: border-box;
+  border: 1px solid var(--main-grey-light-color);
+  border-radius: var(--border-radius);
+  background: var(--main-white-color);
+	outline: none;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--main-black-color);
+	resize: none;
+	&:hover {
+		border: 1px solid var(--main-grey-color);
+	}
+	&:active {
+		border: 1px solid var(--main-blue-color);
+	}
+	&:focus {
+		border: 1px solid var(--main-blue-color);
+	}
+	&::placeholder {
+		font-style: normal;
+		font-weight: normal;
+		font-size: 14px;
+		line-height: 18px;
+		color: var(--main-grey-color);
+	}
+}
+.textarea_type_block {
+  user-select: none;
+  pointer-events: none;
+}
+.textarea_height_minimal {
+  max-height: 80px;
+  min-height: 80px;
+}
+.textarea_height_small {
+  max-height: 160px;
+}
+.textarea_height_medium {
+  max-height: 300px;
+}
+.textarea_height_max {
+  max-height: 100%;
+  height: 100%;
+}

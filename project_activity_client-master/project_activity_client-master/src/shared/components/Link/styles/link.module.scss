@@ -1,0 +1,16 @@
+.link {
+	margin: 0;
+	width: 100%;
+  font-style: normal;
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.15;
+	text-align: center;
+	color: var(--main-blue-color);
+	text-decoration: underline;
+	transition: all .3s ease-in-out;
+	&:hover {
+		cursor: pointer;
+		opacity: .7;
+	}
+}

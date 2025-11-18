@@ -1,0 +1,120 @@
+.item {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	background: var(--main-white-color);
+	border-radius: var(--border-radius);
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+	transition: all .3s ease-in-out;
+	&_level_first {
+		margin: 0;
+		width: 100%;
+	}
+	&_level_second {
+		margin: 0 0 0 12px;
+		width: calc(100% - 12px);
+	}
+	&_level_third {
+		margin: 0 0 0 24px;
+		width: calc(100% - 24px);
+	}
+}
+
+.badge {
+	margin: 0;
+	padding: 14px 10px;
+	box-sizing: border-box;
+	height: 100%;
+	min-height: 76px;
+	border-top-left-radius: 8px;
+	border-bottom-left-radius: 8px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	&_color_blue {
+		background-color: var(--main-blue-color);
+	}
+	&_color_blue-dark {
+		background-color: var(--main-blue-dark-color);
+	}
+	&_color_blue-light {
+		background-color: var(--main-blue-light-color);
+	}
+	&__text {
+		font-size: 10px;
+		font-weight: normal;
+		line-height: 12px;
+		font-style: normal;
+		writing-mode: vertical-lr;
+		text-orientation: mixed;
+		transform: rotate(180deg);
+		color: var(--main-white-color);
+	}
+	&_type_block {
+		background-color: var(--main-grey-dark-color);
+	}
+}
+
+.item_active .badge:hover {
+	cursor: pointer;
+}
+
+.main {
+	margin: 0;
+	padding: 6px 10px;
+	box-sizing: border-box;
+	width: 100%;
+	height: 100%;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	&_type_block {
+		background-color: var(--main-grey-light-color);
+	}
+}
+
+.item_active .main:hover {
+	cursor: pointer;
+}
+
+.title {
+	margin: 0;
+	font-size: 16px;
+	font-weight: 400;
+	line-height: 20px;
+	font-style: normal;
+	color: var(--main-black-color);
+}
+
+.control {
+	margin: 0 0 0 auto;
+	width: 34px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	flex-shrink: 0;
+	gap: 8px;
+	margin: 0;
+	height: 100%;
+	background-color: var(--main-grey-light-color);
+	border-top-right-radius: 8px;
+	border-bottom-right-radius: 8px;
+	&_color_blue {
+		background-color: var(--main-blue-color);
+	}
+	&_color_green {
+		background-color: var(--accent-green-color);
+	}
+	&_color_red {
+		background-color: var(--accent-red-color);
+	}
+	&_type_block {
+		background-color: var(--main-grey-dark-color);
+	}
+	&_color_default {
+		background-color: var(--main-white-color);
+	}
+}

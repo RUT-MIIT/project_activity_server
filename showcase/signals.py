@@ -12,4 +12,3 @@
 # from showcase.services.status import StatusServiceFactory
 # status_manager = StatusServiceFactory.create_status_manager()
 # status_manager.change_status(application, new_status, actor, comments)
-

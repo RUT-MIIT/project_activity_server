@@ -175,7 +175,7 @@ Content-Type: application/json
     "name": "АВТ"
   },
   {
-    "code": "AGA", 
+    "code": "AGA",
     "name": "АГА"
   },
   {
@@ -215,7 +215,7 @@ Content-Type: application/json
 
 ### 3. Роли пользователей
 
-**GET** `/api/showcase/user-roles/`
+**GET** `/api/showcase/roles/`
 
 ⚠️ **ВНИМАНИЕ**: Эндпоинт требует аутентификации (401 Unauthorized для неавторизованных пользователей).
 
@@ -227,7 +227,7 @@ Content-Type: application/json
     "name": "Работник/преподаватель РУТ (МИИТ)"
   },
   {
-    "code": "company_representative", 
+    "code": "company_representative",
     "name": "Представитель компании"
   },
   {

@@ -1,0 +1,31 @@
+.list {
+	margin: 0;
+	padding: 0;
+	width: 100%;
+	list-style-type: none;
+	display: flex;
+	flex-direction: column;
+}
+
+.item {
+	margin: 0;
+	width: 100%;
+}
+
+.title {
+	margin: 12px 0 0 0;
+	font-size: 16px;
+	font-weight: bold;
+	line-height: 20px;
+	font-style: normal;
+	color: var(--main-black-color);
+}
+
+.text {
+	margin: 8px 0 0 0;
+	font-size: 14px;
+	font-weight: normal;
+	line-height: 18px;
+	font-style: normal;
+	color: var(--main-black-color);
+}

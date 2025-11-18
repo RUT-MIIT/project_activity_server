@@ -1,0 +1,12 @@
+.avatar {
+	margin: 0;
+	width: 88px;
+	height: 88px;
+	background-color: var(--background-color);
+	border-radius: 50%;
+	object-fit: cover;
+	object-position: center;
+	pointer-events: none;
+	-webkit-user-select: none;
+	user-select: none;
+}

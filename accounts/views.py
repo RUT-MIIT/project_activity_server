@@ -1,36 +1,36 @@
-from rest_framework import status
+from django.conf import settings
+from django.contrib.auth import get_user_model
+from django.core import mail
+from django.db import transaction
+from django.template.loader import render_to_string
+from django.utils.crypto import get_random_string
+from rest_framework import decorators, permissions, status, viewsets
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+
+from .models import Department, RegistrationRequest, Role, User
 from .serializers import (
-    UserSerializer,
-    PasswordResetSerializer,
-    PasswordResetConfirmSerializer,
+    ApproveRequestSerializer,
     DepartmentSerializer,
+    PasswordResetConfirmSerializer,
+    PasswordResetSerializer,
     RegistrationRequestCreateSerializer,
     RegistrationRequestSerializer,
-    ApproveRequestSerializer,
     RejectRequestSerializer,
     RoleSerializer,
+    UserSerializer,
 )
-from .models import User, Department, RegistrationRequest, Role
-from rest_framework import viewsets, permissions, decorators
-from django.db import transaction
-from django.contrib.auth import get_user_model
-from django.core.mail import send_mail
-from django.template.loader import render_to_string
-from django.conf import settings
-from django.utils.crypto import get_random_string
 
 
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
         # Используем select_related для оптимизации
-        user = User.objects.select_related('department', 'role').get(pk=self.user.pk)
-        data['user'] = UserSerializer(user).data
+        user = User.objects.select_related("department", "role").get(pk=self.user.pk)
+        data["user"] = UserSerializer(user).data
         return data
 
 
@@ -45,7 +45,7 @@ class LoginView(TokenObtainPairView):
 class UserMeView(APIView):
     def get(self, request):
         # Используем prefetch_related для оптимизации запроса
-        user = User.objects.select_related('department', 'role').get(pk=request.user.pk)
+        user = User.objects.select_related("department", "role").get(pk=request.user.pk)
         serializer = UserSerializer(user)
         return Response(serializer.data)
 
@@ -59,7 +59,7 @@ class PasswordResetView(APIView):
             serializer.save(request=request)
             return Response(
                 {"detail": "Письмо с инструкциями отправлено на указанный email."},
-                status=status.HTTP_200_OK
+                status=status.HTTP_200_OK,
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -72,54 +72,60 @@ class PasswordResetConfirmView(APIView):
         if serializer.is_valid():
             serializer.save()
             return Response(
-                {"detail": "Пароль успешно изменен."},
-                status=status.HTTP_200_OK
+                {"detail": "Пароль успешно изменен."}, status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
-    """
-    ViewSet только для чтения подразделений/кафедр.
+    """ViewSet только для чтения подразделений/кафедр.
     Доступен только для аутентифицированных пользователей.
     """
+
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
     permission_classes = [permissions.AllowAny]
+    pagination_class = None
 
 
 class RoleViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Role.objects.filter(is_active=True)
     serializer_class = RoleSerializer
     permission_classes = [permissions.IsAuthenticated]
-    lookup_field = 'code'
+    lookup_field = "code"
+    pagination_class = None
 
 
 class RegistrationRequestViewSet(viewsets.ModelViewSet):
-    queryset = RegistrationRequest.objects.select_related('department', 'actor').all()
+    queryset = RegistrationRequest.objects.select_related("department", "actor").all()
     permission_classes = [permissions.IsAdminUser]
     filterset_fields = ["status"]
+    pagination_class = None
 
     def get_serializer_class(self):
-        if self.action == 'create':
+        if self.action == "create":
             return RegistrationRequestCreateSerializer
         return RegistrationRequestSerializer
 
     def get_permissions(self):
-        if self.action == 'create':
+        if self.action == "create":
             return [permissions.AllowAny()]
         return super().get_permissions()
 
     @transaction.atomic
-    @decorators.action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    @decorators.action(
+        detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser]
+    )
     def approve(self, request, pk=None):
         reg_request = self.get_object()
         if reg_request.status != RegistrationRequest.Status.SUBMITTED:
-            return Response({"detail": "Заявка уже обработана."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Заявка уже обработана."}, status=status.HTTP_400_BAD_REQUEST
+            )
         serializer = ApproveRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        role_id = serializer.validated_data['role_id']
-        department_override = serializer.validated_data.get('department_id')
+        role_id = serializer.validated_data["role_id"]
+        department_override = serializer.validated_data.get("department_id")
         try:
             role = Role.objects.get(pk=role_id)
         except Role.DoesNotExist:
@@ -128,9 +134,9 @@ class RegistrationRequestViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        UserModel = get_user_model()
+        user_model = get_user_model()
         # Проверка: пользователь с таким email уже существует
-        if UserModel.objects.filter(email=reg_request.email).exists():
+        if user_model.objects.filter(email=reg_request.email).exists():
             return Response(
                 {"detail": "Пользователь с таким email уже существует."},
                 status=status.HTTP_400_BAD_REQUEST,
@@ -138,7 +144,7 @@ class RegistrationRequestViewSet(viewsets.ModelViewSet):
 
         password = get_random_string(12)
         assigned_department = department_override or reg_request.department
-        UserModel.objects.create_user(
+        user_model.objects.create_user(
             email=reg_request.email,
             password=password,
             first_name=reg_request.first_name,
@@ -154,24 +160,26 @@ class RegistrationRequestViewSet(viewsets.ModelViewSet):
         reg_request.role = role
         reg_request.status = RegistrationRequest.Status.APPROVED
         reg_request.actor = request.user
-        reg_request.save(update_fields=['department', 'role', 'status', 'actor', 'updated_at'])
+        reg_request.save(
+            update_fields=["department", "role", "status", "actor", "updated_at"]
+        )
 
         # Отправка письма пользователю
-        subject = render_to_string('registration/approved_subject.txt').strip()
+        subject = render_to_string("registration/approved_subject.txt").strip()
         message = render_to_string(
-            'registration/approved_body.txt',
+            "registration/approved_body.txt",
             {
-                'last_name': reg_request.last_name,
-                'first_name': reg_request.first_name,
-                'email': reg_request.email,
-                'password': password,
-            }
+                "last_name": reg_request.last_name,
+                "first_name": reg_request.first_name,
+                "email": reg_request.email,
+                "password": password,
+            },
         )
         try:
-            send_mail(
+            mail.send_mail(
                 subject=subject,
                 message=message,
-                from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
                 recipient_list=[reg_request.email],
                 fail_silently=False,
             )
@@ -191,37 +199,41 @@ class RegistrationRequestViewSet(viewsets.ModelViewSet):
 
         response_data = RegistrationRequestSerializer(reg_request).data
         # В ответ добавляем сведения о назначенной роли
-        response_data['role'] = RoleSerializer(role).data
+        response_data["role"] = RoleSerializer(role).data
         return Response(response_data, status=status.HTTP_200_OK)
 
     @transaction.atomic
-    @decorators.action(detail=True, methods=['post'], permission_classes=[permissions.IsAdminUser])
+    @decorators.action(
+        detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser]
+    )
     def reject(self, request, pk=None):
         reg_request = self.get_object()
         if reg_request.status != RegistrationRequest.Status.SUBMITTED:
-            return Response({"detail": "Заявка уже обработана."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Заявка уже обработана."}, status=status.HTTP_400_BAD_REQUEST
+            )
         serializer = RejectRequestSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        reason = serializer.validated_data.get('reason') or ''
+        reason = serializer.validated_data.get("reason") or ""
 
         reg_request.status = RegistrationRequest.Status.REJECTED
         reg_request.actor = request.user
         reg_request.reason = reason
-        reg_request.save(update_fields=['status', 'actor', 'reason', 'updated_at'])
+        reg_request.save(update_fields=["status", "actor", "reason", "updated_at"])
 
-        subject = render_to_string('registration/rejected_subject.txt').strip()
+        subject = render_to_string("registration/rejected_subject.txt").strip()
         message = render_to_string(
-            'registration/rejected_body.txt',
+            "registration/rejected_body.txt",
             {
-                'last_name': reg_request.last_name,
-                'first_name': reg_request.first_name,
-                'reason': reason,
-            }
+                "last_name": reg_request.last_name,
+                "first_name": reg_request.first_name,
+                "reason": reason,
+            },
         )
-        send_mail(
+        mail.send_mail(
             subject=subject,
             message=message,
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', None),
+            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
             recipient_list=[reg_request.email],
             fail_silently=False,
         )

@@ -1,0 +1,57 @@
+.container {
+  width: 100%;
+  display: flex;
+  margin: 0;
+}
+
+.field {
+  width: 100%;
+  margin: 0px;
+  padding: 9px 16px 9px 16px;
+  border: 2px solid var(--main-grey-light-color);
+  background: var(--main-white-color);
+  border-radius: var(--border-radius);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all .3s ease-in-out;
+	&:hover {
+		border: 2px solid var(--main-grey-color);
+		cursor: pointer;
+	}
+}
+
+.caption {
+  margin: 0px 16px 0px 0px;
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--main-black-color);
+  -webkit-line-clamp: 1;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.icon {
+  margin: 0px;
+  width: 20px;
+  height: 20px;
+  background-image: url('../../../../shared/images/icons/upload-color.svg');
+  background-size: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+  transition: all .3s ease-in-out;
+}
+
+.field:hover .icon {
+  background-image: url('../../../../shared/images/icons/upload-hover.svg');
+  background-size: 20px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.input {
+  display: none;
+}

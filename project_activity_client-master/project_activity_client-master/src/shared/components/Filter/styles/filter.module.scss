@@ -1,0 +1,42 @@
+.filter {
+  margin: 0px;
+  width: 100%;
+	max-width: 334px;
+  padding: 9px 16px 9px 16px;
+	box-sizing: border-box;
+  border: 1px solid var(--main-grey-light-color);
+  border-radius: var(--border-radius);
+  background: var(--main-white-color);
+  font-style: normal;
+  font-weight: normal;
+  font-size: 14px;
+  line-height: 18px;
+  color: var(--main-black-color);
+	outline: none;
+  transition: all .3s ease-in-out;
+	&:hover {
+		border: 1px solid var(--main-grey-color);
+	}
+	&:active {
+		border: 1px solid var(--main-blue-color);
+	}
+	&:focus {
+		border: 1px solid var(--main-blue-color);
+	}
+	&::placeholder {
+		font-style: normal;
+		font-weight: normal;
+		font-size: 14px;
+		line-height: 18px;
+		color: var(--main-grey-color);
+	}
+	&::-webkit-outer-spin-button,
+  &::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  & {
+    -moz-appearance: textfield;
+  }
+}

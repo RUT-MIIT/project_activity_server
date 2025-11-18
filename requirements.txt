@@ -1,4 +1,20 @@
 django-filter>=24.3
 pytest>=8.2.0
 pytest-django>=4.8.0
+pytest-cov>=4.1.0
 
+# dev tools
+pre-commit
+ruff
+black
+isort
+mypy
+django-stubs
+django-stubs-ext
+pre-commit-hooks
+django-cors-headers
+python-dotenv
+djangorestframework-simplejwt
+drf-yasg
+django-allauth
+gunicorn

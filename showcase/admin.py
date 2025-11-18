@@ -1,12 +1,13 @@
 from django.contrib import admin
+
 from .models import (
-    ApplicationStatus,
-    ProjectApplicationStatusLog,
-    ProjectApplicationComment,
-    ProjectApplication,
-    Institute,
-    ApplicationInvolvedUser,
     ApplicationInvolvedDepartment,
+    ApplicationInvolvedUser,
+    ApplicationStatus,
+    Institute,
+    ProjectApplication,
+    ProjectApplicationComment,
+    ProjectApplicationStatusLog,
 )
 
 
@@ -47,10 +48,10 @@ class ProjectApplicationCommentAdmin(admin.ModelAdmin):
 
 @admin.register(Institute)
 class InstituteAdmin(admin.ModelAdmin):
-    list_display = ('code', 'name', 'position', 'is_active')
-    list_filter = ('is_active',)
-    search_fields = ('code', 'name')
-    ordering = ('position',)
+    list_display = ("code", "name", "position", "is_active")
+    list_filter = ("is_active",)
+    search_fields = ("code", "name")
+    ordering = ("position",)
 
 
 @admin.register(ProjectApplication)
@@ -58,62 +59,103 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
     class ApplicationInvolvedUserInline(admin.TabularInline):
         model = ApplicationInvolvedUser
         extra = 0
-        raw_id_fields = ('user', 'added_by')
-        readonly_fields = ('added_at',)
-        verbose_name = 'Причастный пользователь'
-        verbose_name_plural = 'Причастные пользователи'
+        raw_id_fields = ("user", "added_by")
+        readonly_fields = ("added_at",)
+        verbose_name = "Причастный пользователь"
+        verbose_name_plural = "Причастные пользователи"
 
     class ApplicationInvolvedDepartmentInline(admin.TabularInline):
         model = ApplicationInvolvedDepartment
         extra = 0
-        raw_id_fields = ('department', 'added_by')
-        readonly_fields = ('added_at',)
-        verbose_name = 'Причастное подразделение'
-        verbose_name_plural = 'Причастные подразделения'
+        raw_id_fields = ("department", "added_by")
+        readonly_fields = ("added_at",)
+        verbose_name = "Причастное подразделение"
+        verbose_name_plural = "Причастные подразделения"
 
     list_display = (
-        'title', 'author_lastname', 'author_firstname', 'company',
-        'status', 'creation_date'
+        "title",
+        "print_number",
+        "author_lastname",
+        "author_firstname",
+        "company",
+        "status",
+        "creation_date",
     )
     list_filter = (
-        'status', 'creation_date', 'project_level', 'needs_consultation'
+        "status",
+        "creation_date",
+        "project_level",
+        "needs_consultation",
+        "application_year",
     )
     search_fields = (
-        'title', 'author_lastname', 'author_firstname', 'author_email',
-        'company', 'problem_holder'
+        "title",
+        "print_number",
+        "author_lastname",
+        "author_firstname",
+        "author_email",
+        "company",
+        "problem_holder",
     )
-    readonly_fields = ('creation_date',)
-    filter_horizontal = ('target_institutes',)
+    readonly_fields = ("creation_date",)
+    filter_horizontal = ("target_institutes",)
     inlines = [ApplicationInvolvedUserInline, ApplicationInvolvedDepartmentInline]
 
     fieldsets = (
-        ('Основная информация', {
-            'fields': (
-                'title', 'author', 'status', 'creation_date',
-                'needs_consultation'
-            )
-        }),
-        ('Контактные данные', {
-            'fields': (
-                'author_lastname', 'author_firstname', 'author_middlename',
-                'author_email', 'author_phone', 'author_role', 'author_division'
-            )
-        }),
-        ('О проекте', {
-            'fields': (
-                'company', 'company_contacts', 'target_institutes',
-                'project_level'
-            )
-        }),
-        ('Проблема', {
-            'fields': (
-                'problem_holder', 'goal', 'barrier', 'existing_solutions'
-            )
-        }),
-        ('Контекст', {
-            'fields': (
-                'context', 'stakeholders', 'recommended_tools',
-                'experts', 'additional_materials'
-            )
-        }),
+        (
+            "Основная информация",
+            {
+                "fields": (
+                    "title",
+                    "author",
+                    "status",
+                    "creation_date",
+                    "needs_consultation",
+                    "application_year",
+                    "year_sequence_number",
+                    "print_number",
+                )
+            },
+        ),
+        (
+            "Контактные данные",
+            {
+                "fields": (
+                    "author_lastname",
+                    "author_firstname",
+                    "author_middlename",
+                    "author_email",
+                    "author_phone",
+                    "author_role",
+                    "author_division",
+                )
+            },
+        ),
+        (
+            "О проекте",
+            {
+                "fields": (
+                    "company",
+                    "company_contacts",
+                    "target_institutes",
+                    "project_level",
+                )
+            },
+        ),
+        (
+            "Проблема",
+            {"fields": ("problem_holder", "goal", "barrier", "existing_solutions")},
+        ),
+        (
+            "Контекст",
+            {
+                "fields": (
+                    "context",
+                    "stakeholders",
+                    "recommended_tools",
+                    "experts",
+                    "additional_materials",
+                )
+            },
+        ),
     )

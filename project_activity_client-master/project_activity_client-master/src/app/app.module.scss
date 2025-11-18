@@ -1,0 +1,34 @@
+.page {
+	margin: 0;
+	width: 100%;
+	min-height: 100vh;
+	min-height: calc(var(--vh, 1vh) * 100);
+	position: relative;
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	scroll-behavior: smooth;
+	background-color: var(--main-white-color);
+}
+
+.main {
+	margin: 0;
+	padding: 24px;
+	width: 100%;
+	min-height: 100vh;
+	display: flex;
+	box-sizing: border-box;
+	position: relative;
+	overflow: hidden;
+}
+
+.container {
+	margin: 0 auto;
+	padding: 24px;
+	box-sizing: border-box;
+	width: 100%;
+	max-width: 1280px;
+	min-height: calc(100vh - 48px);
+	display: flex;
+	flex-direction: column;
+}

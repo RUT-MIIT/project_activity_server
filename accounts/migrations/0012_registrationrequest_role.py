@@ -18,12 +18,7 @@ class Migration(migrations.Migration):
                 null=True,
                 blank=True,
                 related_name='registration_requests',
-                verbose_name='Роль (назначенная при одобрении)'
+                verbose_name='Роль (назначенная при одобрении)',
             ),
         ),
     ]
-
-
-
-
-

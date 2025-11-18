@@ -4,4 +4,3 @@
 {% if reason %}
 Причина: {{ reason }}
 {% endif %}
-

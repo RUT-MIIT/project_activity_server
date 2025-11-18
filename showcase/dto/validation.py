@@ -1,33 +1,29 @@
-"""
-Результаты валидации для DTO.
-"""
-
-from typing import Dict, List
+"""Результаты валидации для DTO."""
 
 
 class ValidationResult:
     """Результат валидации данных"""
-    
+
     def __init__(self):
-        self.errors: Dict[str, str] = {}
-    
+        self.errors: dict[str, str] = {}
+
     @property
     def is_valid(self) -> bool:
         """Проверка, что валидация прошла успешно"""
         return len(self.errors) == 0
-    
+
     def add_error(self, field: str, message: str):
         """Добавление ошибки валидации"""
         self.errors[field] = message
-    
-    def add_errors(self, errors: Dict[str, str]):
+
+    def add_errors(self, errors: dict[str, str]):
         """Добавление нескольких ошибок"""
         self.errors.update(errors)
-    
-    def get_errors_list(self) -> List[str]:
+
+    def get_errors_list(self) -> list[str]:
         """Получение списка ошибок для отображения"""
         return [f"{field}: {message}" for field, message in self.errors.items()]
-    
+
     def __str__(self):
         if self.is_valid:
             return "Validation successful"

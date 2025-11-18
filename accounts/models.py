@@ -1,10 +1,10 @@
+from django.conf import settings
 from django.contrib.auth.models import (
     AbstractBaseUser,
-    PermissionsMixin,
     BaseUserManager,
+    PermissionsMixin,
 )
 from django.db import models
-from django.conf import settings
 
 
 class UserManager(BaseUserManager):
@@ -12,8 +12,8 @@ class UserManager(BaseUserManager):
         if not email:
             raise ValueError("Email должен быть указан")
         email = self.normalize_email(email)
-        if not extra_fields.get('role'):
-            raise ValueError('Укажите роль пользователя')
+        if not extra_fields.get("role"):
+            raise ValueError("Укажите роль пользователя")
         user = self.model(email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -22,20 +22,20 @@ class UserManager(BaseUserManager):
     def create_superuser(self, email, password=None, **extra_fields):
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
-        if not extra_fields.get('role'):
+        if not extra_fields.get("role"):
             from accounts.models import Role
-            extra_fields['role'] = Role.objects.get(code='admin')
+
+            extra_fields["role"] = Role.objects.get(code="admin")
         return self.create_user(email, password, **extra_fields)
 
 
 class User(AbstractBaseUser, PermissionsMixin):
-
     email = models.EmailField(unique=True)
     first_name = models.CharField(max_length=150)
     last_name = models.CharField(max_length=150)
     middle_name = models.CharField(max_length=150, blank=True)
     role = models.ForeignKey(
-        'Role',
+        "Role",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
@@ -46,18 +46,15 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     department = models.ForeignKey(
-        'Department',
+        "Department",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='users',
-        verbose_name="Подразделение"
+        related_name="users",
+        verbose_name="Подразделение",
     )
     phone = models.CharField(
-        max_length=20,
-        blank=True,
-        null=True,
-        verbose_name="Телефон"
+        max_length=20, blank=True, null=True, verbose_name="Телефон"
     )
 
     USERNAME_FIELD = "email"
@@ -69,8 +66,8 @@ class User(AbstractBaseUser, PermissionsMixin):
         return f"{self.email} ({self.role})"
 
     def get_full_name(self):
-        parts = [self.last_name, self.first_name, getattr(self, 'middle_name', '')]
-        return ' '.join([p for p in parts if p]).strip()
+        parts = [self.last_name, self.first_name, getattr(self, "middle_name", "")]
+        return " ".join([p for p in parts if p]).strip()
 
     class Meta:
         verbose_name = "Пользователь"
@@ -81,12 +78,12 @@ class Department(models.Model):
     name = models.CharField("Название подразделения", max_length=255)
     short_name = models.CharField("Краткое название", max_length=64)
     parent = models.ForeignKey(
-        'self',
+        "self",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='children',
-        verbose_name="Родительское подразделение"
+        related_name="children",
+        verbose_name="Родительское подразделение",
     )
 
     class Meta:
@@ -101,13 +98,9 @@ class Role(models.Model):
     code = models.CharField(max_length=50, primary_key=True, verbose_name="Код роли")
     name = models.CharField(max_length=255, verbose_name="Название роли")
     requires_department = models.BooleanField(
-        default=False,
-        verbose_name="Требует указания подразделения"
+        default=False, verbose_name="Требует указания подразделения"
     )
-    is_active = models.BooleanField(
-        default=True,
-        verbose_name="Активна"
-    )
+    is_active = models.BooleanField(default=True, verbose_name="Активна")
 
     class Meta:
         verbose_name = "Роль"
@@ -128,9 +121,9 @@ class RegistrationRequest(models.Model):
     first_name = models.CharField(max_length=150, verbose_name="Имя")
     middle_name = models.CharField(max_length=150, blank=True, verbose_name="Отчество")
     department = models.ForeignKey(
-        'Department',
+        "Department",
         on_delete=models.PROTECT,
-        related_name='registration_requests',
+        related_name="registration_requests",
         verbose_name="Подразделение",
         null=True,
         blank=True,
@@ -140,22 +133,25 @@ class RegistrationRequest(models.Model):
     comment = models.TextField(blank=True, null=True, verbose_name="Комментарий")
     reason = models.TextField(blank=True, null=True, verbose_name="Причина отказа")
     role = models.ForeignKey(
-        'Role',
+        "Role",
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='registration_requests',
+        related_name="registration_requests",
         verbose_name="Роль (назначенная при одобрении)",
     )
     status = models.CharField(
-        max_length=16, choices=Status.choices, default=Status.SUBMITTED, verbose_name="Статус"
+        max_length=16,
+        choices=Status.choices,
+        default=Status.SUBMITTED,
+        verbose_name="Статус",
     )
     actor = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name='processed_registration_requests',
+        related_name="processed_registration_requests",
         verbose_name="Изменил статус",
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")

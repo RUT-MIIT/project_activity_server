@@ -1,0 +1,43 @@
+@import url('./vendor/normalize.css');
+@import url('./shared/fonts/fonts.css');
+
+:root {
+	--background-color: #f1f3f5;
+	--main-white-color: #ffffff;
+	--main-black-color: #333333;
+	--main-blue-color: #0575E6;
+	--main-blue-light-color: #5F77F0;
+	--main-blue-background-color: #DBEAFE;
+	--main-blue-dark-color: #3A4B9E;
+	--main-grey-color: #A5A5A5;
+	--main-grey-light-color: #EEEEEE;
+	--main-grey-background-color: #E2E8F0;
+	--main-grey-dark-color: #585D69;
+	--accent-green-color: #38A169;
+	--background-green-color: #F0FFF4;
+	--accent-red-color: #E53E3E;
+	--background-red-color: #FFF5F5;
+	--accent-yellow-color: #DD6B20;
+	--background-yellow-color: #FFFAF0;
+	--accent-grey-color: #797E8B;
+	--accent-blue-light-color: #D5E1FF;
+	--accent-green-light-color: #DAF5DF;
+	--accent-red-light-color: #FFD7D6;
+	--slider-color: #d9d9d9;
+	--inactive-color: #F6F6F7;
+	--border-radius: 12px;
+	color: var(--main-black-color);
+	font-weight: normal;
+	font-size: 16px;
+	font-family: 'Roboto', 'Avenir', 'Helvetica', 'Arial', sans-serif;
+	font-style: normal;
+	line-height: 1.5;
+	color-scheme: light dark;
+	font-synthesis: none;
+	text-rendering: optimizelegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	text-size-adjust: 100%;
+	background-color: var(--background-color);
+}
+

@@ -1,5 +1,5 @@
-from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 
 login_schema = swagger_auto_schema(
     operation_description="Получение JWT токена по email и паролю",

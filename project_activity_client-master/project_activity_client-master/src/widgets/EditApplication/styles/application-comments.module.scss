@@ -1,0 +1,97 @@
+.comments {
+	margin: 0;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+}
+.header {
+	margin: 0;
+	padding: 0 0 12px 0;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	border-bottom: 1px solid var(--main-grey-light-color);
+	&__title {
+		margin: 0;
+    font-size: 18px;
+		line-height: 24px;
+		font-weight: 500;
+		color: var(--main-black-color);
+	}
+	&__subtitle {
+		margin: 0;
+    font-size: 14px;
+		line-height: 18px;
+		font-weight: normal;
+		color: var(--main-grey-color);
+	}
+}
+
+.list {
+	margin: 12px 0;
+	padding: 0;
+	width: 100%;
+	list-style-type: none;
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	flex: 1;
+	min-height: 0;
+	overflow-y: auto;
+}
+
+.comment {
+	margin: 0 4px 0 0;
+	padding: 16px 12px;
+	box-sizing: border-box;
+	width: calc(100% - 4px);
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	border: 1px solid var(--main-grey-light-color);
+	border-radius: 12px;
+	&__header {
+		margin: 0;
+		width: 100%;
+		display: flex;
+		align-items: center;
+	}
+	&__author {
+		margin: 0 8px 0 0;
+		font-size: 14px;
+		line-height: 18px;
+		font-weight: 500;
+		color: var(--main-black-color);
+	}
+	&__role {
+		margin: 0 0 0 auto;
+		font-size: 12px;
+		line-height: 14px;
+		font-weight: normal;
+		color: var(--main-grey-color);
+	}
+	&__date {
+		margin: 0;
+		font-size: 12px;
+		line-height: 14px;
+		font-weight: normal;
+		color: var(--main-grey-color);
+	}
+	&__text {
+		margin: 0;
+		font-size: 14px;
+		line-height: 18px;
+		font-weight: 500;
+		color: var(--main-black-color);
+	}
+}
+
+.form {
+	margin: auto 0 0 0;
+	width: 100%;
+	display: flex;
+	flex-direction: column;
+}

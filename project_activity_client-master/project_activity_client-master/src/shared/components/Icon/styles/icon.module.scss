@@ -1,0 +1,51 @@
+.icon {
+	margin: 0;
+	width: 20px;
+	height: 20px;
+	position: relative;
+	background-color: var(--main-grey-color);
+	flex-shrink: 0;
+	outline: none;
+	border: none;
+	transition: all .3s ease-in-out;
+	&_active:hover {
+		cursor: pointer;
+		opacity: .7;
+	}
+	&.icon_icon_add.icon_color_grey {
+		background-color: inherit;
+		background-image: url('../../../images/icons/accent-grey/add.svg');
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: contain;
+	}
+	&.icon_icon_edit.icon_color_grey {
+		background-color: inherit;
+		background-image: url('../../../images/icons/accent-grey/edit.svg');
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: contain;
+	}
+	&.icon_icon_delete.icon_color_grey {
+		background-color: inherit;
+		background-image: url('../../../images/icons/accent-grey/remove.svg');
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: contain;
+	}
+	&.icon_icon_close.icon_color_grey {
+		background-color: inherit;
+		background-image: url('../../../images/icons/accent-grey/close.svg');
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: contain;
+	}
+		&.icon_icon_view.icon_color_grey {
+		background-color: inherit;
+		background-image: url('../../../images/icons/accent-grey/view.svg');
+		background-position: center;
+		background-repeat: no-repeat;
+		background-size: contain;
+	}
+}
+
