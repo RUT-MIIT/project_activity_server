@@ -209,10 +209,6 @@ class ProjectApplicationDomain:
         if new_status not in allowed_transitions.get(current_status, []):
             return False, f"Переход {current_status} → {new_status} запрещен"
 
-        # Бизнес-правило: только определенные роли могут одобрять
-        if new_status == "approved" and user_role not in ["admin", "moderator"]:
-            return False, "Недостаточно прав для одобрения заявки"
-
         # Бизнес-правило: только админы могут отклонять одобренные заявки
         if (
             current_status == "approved"

@@ -3,7 +3,7 @@
 Проверяем создание, преобразование в словари, работу со связанными объектами.
 """
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 import pytest
 
@@ -409,10 +409,11 @@ class TestProjectApplicationReadDTO:
         )
 
         # Ломаем доступ к comments, чтобы вызвать исключение
-        app.comments = Mock()
-        app.comments.all = Mock(side_effect=Exception("Database error"))
+        comments_mock = Mock()
+        comments_mock.all = Mock(side_effect=Exception("Database error"))
 
-        dto = ProjectApplicationReadDTO(app)
+        with patch.object(ProjectApplication, "comments", comments_mock):
+            dto = ProjectApplicationReadDTO(app)
         assert dto.comments == []
 
     def test_read_dto_to_dict(self, statuses, make_user):

@@ -12,6 +12,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Department, RegistrationRequest, Role, User
+from .permissions import RegistrationRequestManagePermission
 from .serializers import (
     ApproveRequestSerializer,
     DepartmentSerializer,
@@ -98,7 +99,7 @@ class RoleViewSet(viewsets.ReadOnlyModelViewSet):
 
 class RegistrationRequestViewSet(viewsets.ModelViewSet):
     queryset = RegistrationRequest.objects.select_related("department", "actor").all()
-    permission_classes = [permissions.IsAdminUser]
+    permission_classes = [RegistrationRequestManagePermission]
     filterset_fields = ["status"]
     pagination_class = None
 

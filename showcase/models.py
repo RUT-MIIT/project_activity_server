@@ -38,6 +38,11 @@ class ApplicationStatus(models.Model):
         verbose_name_plural = "Статусы заявок"
         ordering = ["position"]
 
+    @property
+    def id(self) -> str:
+        """Совместимость с кодом, используемым как первичный ключ."""
+        return self.code
+
     def __str__(self):
         return f"{self.code}: {self.name}"
 

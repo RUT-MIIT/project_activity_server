@@ -27,6 +27,10 @@ class AccountsApiTests(TestCase):
         )
         self.dept = Department.objects.create(name="Кафедра тестов", short_name="KT")
 
+        self.role_cpds = Role.objects.create(
+            code="cpds", name="ЦПДС", requires_department=False, is_active=True
+        )
+
         # Админ
         self.admin_password = "AdminPass123!"
         self.admin = self.user_model.objects.create_user(
@@ -48,6 +52,17 @@ class AccountsApiTests(TestCase):
             first_name="Regular",
             last_name="User",
             role=self.role_user,
+            department=self.dept,
+        )
+
+        # Пользователь ЦПДС
+        self.cpds_password = "CpdsPass123!"
+        self.cpds_user = self.user_model.objects.create_user(
+            email="cpds@example.com",
+            password=self.cpds_password,
+            first_name="Cpds",
+            last_name="User",
+            role=self.role_cpds,
             department=self.dept,
         )
 
@@ -152,8 +167,8 @@ class AccountsApiTests(TestCase):
             RegistrationRequest.objects.filter(email="new_user@example.com").exists()
         )
 
-    def test_registration_request_list_requires_admin(self):
-        """Список заявок: 401 без токена, 403 для обычного пользователя, 200 для админа."""
+    def test_registration_request_list_requires_privileged_user(self):
+        """Список заявок доступен только is_staff, admin или cpds."""
         url = "/api/accounts/registration-requests/"
         # Без авторизации
         response = self.client.get(url)
@@ -162,8 +177,13 @@ class AccountsApiTests(TestCase):
         self.auth(self.user.email, self.user_password)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 403)
-        # Под админом
+        # Под пользователем ЦПДС
         self.client = APIClient()  # сбрасываем креды
+        self.auth(self.cpds_user.email, self.cpds_password)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        # Под админом
+        self.client = APIClient()
         self.auth(self.admin.email, self.admin_password)
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)

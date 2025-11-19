@@ -79,5 +79,5 @@ class CommentService:
         return list(
             ProjectApplicationComment.objects.filter(application=application)
             .select_related("author", "author__role", "author__department")
-            .order_by("-created_at")
+            .order_by("-created_at", "-id")
         )

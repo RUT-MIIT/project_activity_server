@@ -259,7 +259,7 @@ class ApplicationLoggingService:
                 "involved_user",
                 "involved_department",
             )
-            .order_by("-changed_at")
+            .order_by("-changed_at", "-id")
         )
 
     def get_latest_log(
@@ -290,7 +290,7 @@ class ApplicationLoggingService:
                     "involved_user",
                     "involved_department",
                 )
-                .order_by("-changed_at")
+                .order_by("-changed_at", "-id")
                 .first()
             )
         except ProjectApplicationStatusLog.DoesNotExist:
@@ -328,7 +328,7 @@ class ApplicationLoggingService:
                 "involved_user",
                 "involved_department",
             )
-            .order_by("-changed_at")
+            .order_by("-changed_at", "-id")
         )
 
     def get_logs_by_actor(
@@ -363,7 +363,7 @@ class ApplicationLoggingService:
                 "involved_user",
                 "involved_department",
             )
-            .order_by("-changed_at")
+            .order_by("-changed_at", "-id")
         )
 
     @transaction.atomic

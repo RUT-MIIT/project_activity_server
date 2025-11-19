@@ -395,7 +395,7 @@ class ApplicationCapabilities:
             },
             "cpds": {
                 "save_changes": POLICY_ALLOW,
-                "approve": POLICY_ALLOW,
+                "approve": POLICY_DENY,
                 "reject": POLICY_ALLOW,
                 "request_changes": POLICY_ALLOW,
             },

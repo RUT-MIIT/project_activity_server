@@ -59,7 +59,7 @@ source venv/bin/activate
 python manage.py migrate
 python manage.py collectstatic --noinput
 ```
-> Статические файлы собираются в директорию `/home/nnd/project_activity_server/staticfiles` (значение `STATIC_ROOT` по умолчанию). Команда `collectstatic` создаст её, если она отсутствует.
+> Статические файлы собираются в директорию `/home/nnd/project_activity_server/staticfiles` (значение `STATIC_ROOT` по умолчанию) и обслуживаются по URL `/backend-static/`. Команда `collectstatic` создаст директорию при необходимости.
 
 ### 7. Тестовый запуск приложения
 ```bash
@@ -116,4 +116,67 @@ sudo systemctl status project_activity_server
   python manage.py collectstatic --noinput
   sudo systemctl restart project_activity_server
   ```
+
+### 11. Настройка nginx (backend + SPA)
+Создайте или обновите конфиг `/etc/nginx/sites-available/pd.emiit.ru`:
+```
+server {
+    server_name pd.emiit.ru;
+
+    location /api/ {
+        proxy_pass http://unix:/home/nnd/project_activity/project_activity_server/gunicorn.sock;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /admin/ {
+        proxy_pass http://unix:/home/nnd/project_activity/project_activity_server/gunicorn.sock;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # React SPA
+    location / {
+        root /home/nnd/project_activity/project_activity_client/dist;
+        try_files $uri /index.html;
+        add_header Cache-Control "no-cache";
+    }
+
+    # Статика React-билда
+    location /static/ {
+        alias /home/nnd/project_activity/project_activity_client/dist/static/;
+        try_files $uri $uri/ =404;
+    }
+
+    # Django статика
+    location /backend-static/ {
+        alias /home/nnd/project_activity/project_activity_server/staticfiles/;
+    }
+
+    location /media/ {
+        alias /home/nnd/project_activity/project_activity_server/media/;
+    }
+
+    listen 443 ssl;
+    ssl_certificate /etc/letsencrypt/live/pd.emiit.ru/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/pd.emiit.ru/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+}
+
+server {
+    if ($host = pd.emiit.ru) {
+        return 301 https://$host$request_uri;
+    }
+
+    server_name pd.emiit.ru;
+    listen 80;
+    return 404;
+}
+```
+После правок проверьте конфигурацию `sudo nginx -t` и перезапустите сервис `sudo systemctl reload nginx`.
 

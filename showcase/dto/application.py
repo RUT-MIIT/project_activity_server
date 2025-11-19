@@ -16,14 +16,19 @@ def serialize_comment_author(author) -> dict:
     if not author:
         return {"id": None, "name": None, "role_name": None, "department_name": None}
 
-    first_initial = f"{author.first_name[0]}." if author.first_name else ""
+    initials = []
+    if author.first_name:
+        initials.append(f"{author.first_name[0]}.")
     middle_value = getattr(author, "middle_name", None)
-    middle_initial = f"{middle_value[0]}." if middle_value else ""
-    short_name = (
-        f"{author.last_name} {first_initial}{middle_initial}".strip()
-        if (author.last_name or author.first_name or middle_value)
-        else None
-    )
+    if middle_value:
+        initials.append(f"{middle_value[0]}.")
+    initials_part = " ".join(initials).strip()
+    if author.last_name and initials_part:
+        short_name = f"{author.last_name} {initials_part}"
+    elif author.last_name:
+        short_name = author.last_name
+    else:
+        short_name = initials_part or None
     return {
         "id": author.id,
         "name": (

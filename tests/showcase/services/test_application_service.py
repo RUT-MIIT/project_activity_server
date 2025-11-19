@@ -329,6 +329,19 @@ class TestCoordinationAndDtosService:
         ids = {i.id for i in items}
         assert app1.id in ids and app2.id in ids
 
+    def test_cpds_sees_await_cpds_without_involvement(self, statuses, make_user):
+        """cpds видит все заявки в статусе await_cpds даже без причастности."""
+        cpds = make_user(role_code="cpds", with_department=True)
+        await_app = self._create_app(author=cpds, status_code="await_cpds")
+        other_app = self._create_app(author=cpds, status_code="await_department")
+
+        service = ProjectApplicationService()
+        items = service.get_user_coordination_applications(cpds)
+        ids = {i.id for i in items}
+
+        assert await_app.id in ids
+        assert other_app.id not in ids
+
     def test_dto_builders(self, statuses, make_user):
         """Преобразователи к DTO возвращают ожидаемые экземпляры."""
         user = make_user(role_code="admin")

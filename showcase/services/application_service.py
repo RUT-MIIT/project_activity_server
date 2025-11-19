@@ -123,6 +123,9 @@ class ProjectApplicationService:
         ):
             raise PermissionError("Недостаточно прав для запроса изменений")
 
+        # 2.5. Добавляем пользователя и его подразделение в причастные (если их еще нет)
+        self._ensure_user_and_department_involved(application, requester)
+
         # 3. Определяем статус для доработки в зависимости от роли
         revision_status_code = self._get_revision_status_code(user_role)
 
@@ -173,6 +176,9 @@ class ProjectApplicationService:
             is_user_author=is_user_author,
         ):
             raise PermissionError("Недостаточно прав для одобрения заявки")
+
+        # 2.5. Добавляем пользователя и его подразделение в причастные (если их еще нет)
+        self._ensure_user_and_department_involved(application, approver)
 
         # 3. Определяем промежуточный статус для одобрения в зависимости от роли
         approved_status_code = self._get_approved_status_code(user_role)
@@ -249,6 +255,9 @@ class ProjectApplicationService:
         ):
             raise PermissionError("Недостаточно прав для отклонения заявки")
 
+        # 2.5. Добавляем пользователя и его подразделение в причастные (если их еще нет)
+        self._ensure_user_and_department_involved(application, rejector)
+
         # 3. Определяем статус для отклонения в зависимости от роли
         rejected_status_code = self._get_rejected_status_code(user_role)
 
@@ -323,6 +332,9 @@ class ProjectApplicationService:
         if not can_edit:
             raise PermissionError("Нет прав для редактирования этой заявки")
 
+        # 2.5. Добавляем пользователя и его подразделение в причастные (если их еще нет)
+        self._ensure_user_and_department_involved(application, updater)
+
         # 3. Проверка валидации (Domain)
         author_id = application.author.id if application.author else 0
         validation, can_update, error = ApplicationCapabilities.update_application(
@@ -388,12 +400,11 @@ class ProjectApplicationService:
         """Бизнес-операция: получение заявок для координации пользователя.
 
         Для обычных пользователей:
-        - Заявки, где пользователь причастен и статус не approved/rejected.
+        - Заявки, где пользователь причастен .
 
         Для валидаторов (department_validator, institute_validator):
         - Заявки, где пользователь причастен
         - ПЛЮС заявки, где причастно подразделение пользователя
-        - Статус не approved/rejected.
         """
         # 1. Проверка прав (Domain)
         can_list, error = ApplicationCapabilities.list_applications(
@@ -408,7 +419,7 @@ class ProjectApplicationService:
         # 3. Если пользователь - валидатор (department_validator или institute_validator),
         #    добавляем заявки, где причастно его подразделение
         user_role = user.role.code if user.role else "user"
-        if user_role in ["department_validator", "institute_validator"]:
+        if user_role in ["department_validator", "institute_validator", "cpds"]:
             if hasattr(user, "department") and user.department:
                 department_applications = (
                     self.repository.filter_coordination_by_department(user.department)
@@ -419,6 +430,16 @@ class ProjectApplicationService:
                     if app.id not in application_ids:
                         applications.append(app)
                         application_ids.add(app.id)
+
+        # 4. Для роли cpds добавляем все заявки со статусом await_cpds,
+        #    даже если пользователь не причастен
+        if user_role == "cpds":
+            await_cpds_apps = self.repository.filter_by_status("await_cpds")
+            application_ids = {app.id for app in applications}
+            for app in await_cpds_apps:
+                if app.id not in application_ids:
+                    applications.append(app)
+                    application_ids.add(app.id)
 
         return applications
 
@@ -512,6 +533,19 @@ class ProjectApplicationService:
 
         # Проверяем, есть ли подразделение пользователя в списке причастных
         return involved_departments.filter(department__id=user.department.id).exists()
+
+    def _ensure_user_and_department_involved(self, application, user: User) -> None:
+        """Добавляет пользователя и его подразделение в причастные (если их еще нет).
+
+        Args:
+            application: Заявка, к которой добавляются причастные
+            user: Пользователь для добавления
+
+        """
+        if user:
+            self.involved_service.add_user_and_departments(
+                application=application, user=user, actor=user
+            )
 
     def _get_revision_status_code(self, user_role: str) -> str:
         """Определяет статус для доработки в зависимости от роли пользователя.
