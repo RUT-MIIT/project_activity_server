@@ -47,6 +47,21 @@ class ApplicationStatus(models.Model):
         return f"{self.code}: {self.name}"
 
 
+class Tag(models.Model):
+    """Теги для проектных заявок"""
+
+    name = models.CharField(max_length=255, unique=True, verbose_name="Название тега")
+    category = models.CharField(max_length=255, verbose_name="Категория тега")
+
+    class Meta:
+        verbose_name = "Тег"
+        verbose_name_plural = "Теги"
+        ordering = ["category", "name"]
+
+    def __str__(self):
+        return f"{self.category}: {self.name}"
+
+
 class ProjectApplication(models.Model):
     # Базовые поля
     creation_date = models.DateTimeField(
@@ -105,6 +120,11 @@ class ProjectApplication(models.Model):
             "Экспертам из какого института или академии стоит "
             "обратить особое внимание на заявку"
         ),
+        blank=True,
+    )
+    tags = models.ManyToManyField(
+        Tag,
+        verbose_name="Теги",
         blank=True,
     )
     project_level = models.CharField(

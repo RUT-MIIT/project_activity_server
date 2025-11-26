@@ -113,47 +113,93 @@ class TestApproveRejectRequest:
 
 
 class TestUpdateApplication:
-    def test_update_ok(self, monkeypatch):
-        """При валидных данных и доступе возвращается валидный результат без ошибок."""
+    def test_update_ok_by_author(self, monkeypatch):
+        """Автор может редактировать свою заявку при валидных данных."""
         dto = ProjectApplicationUpdateDTO(
             title="Valid title", goal="Длинная цель 12345"
         )
 
-        # Гарантируем, что доменная валидация вернёт ok для данного DTO
+        # Автор редактирует свою заявку
         result, can_update, _ = ApplicationCapabilities.update_application(
             dto=dto,
             application_status="await_department",
-            updater_role="admin",
+            updater_role="user",
             application_author_id=1,
-            updater_id=1,
+            updater_id=1,  # автор = редактор
         )
         assert result.is_valid
         assert can_update is True
 
+    def test_update_ok_by_cpds(self, monkeypatch):
+        """Сотрудник ЦПДС может редактировать любую заявку (кроме rejected)."""
+        dto = ProjectApplicationUpdateDTO(
+            title="Valid title", goal="Длинная цель 12345"
+        )
+
+        # CPDS редактирует чужую заявку
+        result, can_update, _ = ApplicationCapabilities.update_application(
+            dto=dto,
+            application_status="await_department",
+            updater_role="cpds",
+            application_author_id=1,
+            updater_id=2,  # редактор != автор, но это cpds
+        )
+        assert result.is_valid
+        assert can_update is True
+
+    def test_update_denied_for_non_author_non_cpds(self):
+        """Не-автор и не-ЦПДС не может редактировать заявку."""
+        dto = ProjectApplicationUpdateDTO(title="Valid title")
+
+        # Обычный пользователь пытается редактировать чужую заявку
+        result, can_update, _ = ApplicationCapabilities.update_application(
+            dto=dto,
+            application_status="await_department",
+            updater_role="user",
+            application_author_id=1,
+            updater_id=2,  # редактор != автор и не cpds
+        )
+        assert not result.is_valid
+        assert "access" in result.errors
+
     def test_update_errors_on_access_and_status(self):
         """Нет доступа и запрещённые статусы добавляют ошибки в ValidationResult."""
         dto = ProjectApplicationUpdateDTO(title="Valid title")
-        # Статус rejected всегда запрещён для обновления
+        # Статус rejected всегда запрещён для обновления (даже для автора и cpds)
         result, can_update, _ = ApplicationCapabilities.update_application(
             dto=dto,
             application_status="rejected",
             updater_role="user",
-            application_author_id=2,
-            updater_id=1,
+            application_author_id=1,
+            updater_id=1,  # автор
         )
         assert not result.is_valid
-        assert "status" in result.errors or "access" in result.errors
+        assert "status" in result.errors
 
-        # approved запрещён для не-админов
+        # approved запрещён для не-админов и не-cpds
         result2, can_update2, _ = ApplicationCapabilities.update_application(
             dto=dto,
             application_status="approved",
             updater_role="user",
-            application_author_id=2,
-            updater_id=1,
+            application_author_id=1,
+            updater_id=1,  # автор, но не админ и не cpds
         )
         assert not result2.is_valid
         assert "status" in result2.errors
+
+    def test_update_approved_allowed_for_cpds(self):
+        """CPDS может редактировать одобренные заявки."""
+        dto = ProjectApplicationUpdateDTO(title="Valid title")
+
+        result, can_update, _ = ApplicationCapabilities.update_application(
+            dto=dto,
+            application_status="approved",
+            updater_role="cpds",
+            application_author_id=1,
+            updater_id=2,  # cpds редактирует чужую заявку
+        )
+        assert result.is_valid
+        assert can_update is True
 
 
 class TestViewAndList:
@@ -227,4 +273,89 @@ class TestHelpers:
             user_role="mentor",
             is_user_department_involved=False,
             is_user_author=True,
+        )
+
+
+class TestCanEditApplication:
+    def test_can_edit_by_author(self):
+        """Автор может редактировать свою заявку."""
+        assert ApplicationCapabilities.can_edit_application(
+            current_status="await_department",
+            user_role="user",
+            is_user_department_involved=False,
+            is_user_author=True,
+        )
+
+    def test_can_edit_by_cpds(self):
+        """Сотрудник ЦПДС может редактировать любую заявку."""
+        assert ApplicationCapabilities.can_edit_application(
+            current_status="await_department",
+            user_role="cpds",
+            is_user_department_involved=False,
+            is_user_author=False,
+        )
+
+    def test_cannot_edit_by_non_author_non_cpds(self):
+        """Не-автор и не-ЦПДС не может редактировать чужую заявку."""
+        assert not ApplicationCapabilities.can_edit_application(
+            current_status="await_department",
+            user_role="user",
+            is_user_department_involved=False,
+            is_user_author=False,
+        )
+
+    def test_cannot_edit_rejected_status(self):
+        """Нельзя редактировать заявки со статусом rejected (даже автору и cpds)."""
+        assert not ApplicationCapabilities.can_edit_application(
+            current_status="rejected",
+            user_role="user",
+            is_user_department_involved=False,
+            is_user_author=True,
+        )
+        assert not ApplicationCapabilities.can_edit_application(
+            current_status="rejected",
+            user_role="cpds",
+            is_user_department_involved=False,
+            is_user_author=False,
+        )
+
+    def test_cannot_edit_approved_by_non_admin_non_cpds(self):
+        """Нельзя редактировать одобренные заявки (кроме админов и cpds)."""
+        assert not ApplicationCapabilities.can_edit_application(
+            current_status="approved",
+            user_role="user",
+            is_user_department_involved=False,
+            is_user_author=True,
+        )
+        # CPDS может редактировать approved
+        assert ApplicationCapabilities.can_edit_application(
+            current_status="approved",
+            user_role="cpds",
+            is_user_department_involved=False,
+            is_user_author=False,
+        )
+        # Админ может редактировать approved
+        assert ApplicationCapabilities.can_edit_application(
+            current_status="approved",
+            user_role="admin",
+            is_user_department_involved=False,
+            is_user_author=True,
+        )
+
+    def test_can_edit_returned_status_by_author(self):
+        """Автор может редактировать заявку в статусе returned_*."""
+        assert ApplicationCapabilities.can_edit_application(
+            current_status="returned_department",
+            user_role="user",
+            is_user_department_involved=False,
+            is_user_author=True,
+        )
+
+    def test_can_edit_rejected_department_by_cpds(self):
+        """CPDS может редактировать заявки в статусе rejected_department."""
+        assert ApplicationCapabilities.can_edit_application(
+            current_status="rejected_department",
+            user_role="cpds",
+            is_user_department_involved=False,
+            is_user_author=False,
         )

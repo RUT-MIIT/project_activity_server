@@ -137,7 +137,7 @@ class UserShortSerializer(serializers.ModelSerializer):
 
 class RegistrationRequestCreateSerializer(serializers.ModelSerializer):
     department = serializers.PrimaryKeyRelatedField(
-        queryset=Department.objects.all(), required=False, allow_null=True
+        queryset=Department.objects.all(), required=True
     )
 
     class Meta:
@@ -164,6 +164,12 @@ class RegistrationRequestCreateSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 "Заявка с таким email уже подана и ожидает обработки."
             )
+        return value
+
+    def validate_department(self, value):
+        """Валидация подразделения."""
+        if value is None:
+            raise serializers.ValidationError("Подразделение обязательно для указания.")
         return value
 
 

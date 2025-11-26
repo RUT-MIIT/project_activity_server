@@ -114,6 +114,7 @@ class TestProjectApplicationCreateDTO:
             "author_firstname": "Иван",
             "goal": "Длинная цель",
             "target_institutes": ["INST1"],
+            "tags": [1, 2],
         }
         dto = ProjectApplicationCreateDTO.from_dict(data)
 
@@ -121,6 +122,7 @@ class TestProjectApplicationCreateDTO:
         assert dto.title == "Test Project"
         assert dto.author_lastname == "Иванов"
         assert dto.target_institutes == ["INST1"]
+        assert dto.tags == [1, 2]
 
     def test_create_dto_to_dict(self):
         """Преобразование DTO в словарь через to_dict."""
@@ -135,6 +137,7 @@ class TestProjectApplicationCreateDTO:
             problem_holder="Носитель",
             barrier="Барьер",
             target_institutes=["INST1", "INST2"],
+            tags=[1, 2, 3],
             needs_consultation=True,
         )
 
@@ -144,6 +147,7 @@ class TestProjectApplicationCreateDTO:
         assert result["title"] == "Test Project"
         assert result["author_lastname"] == "Иванов"
         assert result["target_institutes"] == ["INST1", "INST2"]
+        assert result["tags"] == [1, 2, 3]
         assert result["needs_consultation"] is True
         assert "goal" in result
         assert "problem_holder" in result
@@ -155,7 +159,18 @@ class TestProjectApplicationCreateDTO:
         assert dto.title == ""
         assert dto.company_contacts == ""
         assert dto.target_institutes == []
+        assert dto.tags == []
         assert dto.needs_consultation is False
+
+    def test_create_dto_manual_needs_consultation_flag(self):
+        """Явно переданное значение needs_consultation сохраняется."""
+        dto = ProjectApplicationCreateDTO(company="Acme Corp", needs_consultation=True)
+        dto_false = ProjectApplicationCreateDTO(
+            company="Acme Corp", needs_consultation=False
+        )
+
+        assert dto.needs_consultation is True
+        assert dto_false.needs_consultation is False
 
 
 class TestProjectApplicationUpdateDTO:
@@ -318,6 +333,37 @@ class TestProjectApplicationReadDTO:
         assert {"code": "INST1", "name": "Institute 1"} in dto.target_institutes
         assert {"code": "INST2", "name": "Institute 2"} in dto.target_institutes
 
+    def test_read_dto_tags(self, statuses, make_user):
+        """tags сериализуется как список словарей с id, name и category."""
+        from showcase.models import ProjectApplication, Tag
+
+        user = make_user(role_code="user")
+        status = statuses["await_department"]
+
+        tag1 = Tag.objects.create(name="Тег 1", category="Категория 1")
+        tag2 = Tag.objects.create(name="Тег 2", category="Категория 2")
+
+        app = ProjectApplication.objects.create(
+            title="Test",
+            company="Acme",
+            author=user,
+            status=status,
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель",
+            problem_holder="Носитель",
+            barrier="Барьер",
+        )
+        app.tags.add(tag1, tag2)
+
+        dto = ProjectApplicationReadDTO(app)
+
+        assert len(dto.tags) == 2
+        assert {"id": tag1.id, "name": "Тег 1", "category": "Категория 1"} in dto.tags
+        assert {"id": tag2.id, "name": "Тег 2", "category": "Категория 2"} in dto.tags
+
     def test_read_dto_involved_users(self, statuses, make_user):
         """involved_users сериализуется с данными пользователя, added_at и added_by."""
         from showcase.models import ApplicationInvolvedUser, ProjectApplication
@@ -447,6 +493,7 @@ class TestProjectApplicationReadDTO:
         assert "status" in result
         assert "author" in result
         assert "target_institutes" in result
+        assert "tags" in result
         assert "involved_users" in result
         assert "comments" in result
 

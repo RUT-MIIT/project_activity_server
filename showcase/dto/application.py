@@ -74,8 +74,9 @@ class ProjectApplicationCreateDTO:
         recommended_tools: Optional[str] = None,
         experts: Optional[str] = None,
         additional_materials: Optional[str] = None,
-        needs_consultation: bool = False,
+        needs_consultation: Optional[bool] = None,
         description: Optional[str] = None,  # Для совместимости с тестами
+        tags: Optional[list[int]] = None,
         **kwargs,
     ):
         self.title = title or ""
@@ -90,6 +91,7 @@ class ProjectApplicationCreateDTO:
         self.author_division = author_division
         self.company_contacts = company_contacts
         self.target_institutes = target_institutes or []
+        self.tags = tags or []
         self.project_level = project_level
         self.problem_holder = problem_holder
         self.goal = goal
@@ -100,7 +102,9 @@ class ProjectApplicationCreateDTO:
         self.recommended_tools = recommended_tools
         self.experts = experts
         self.additional_materials = additional_materials
-        self.needs_consultation = needs_consultation
+        self.needs_consultation = (
+            needs_consultation if needs_consultation is not None else False
+        )
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationCreateDTO":
@@ -122,6 +126,7 @@ class ProjectApplicationCreateDTO:
             "author_division": self.author_division,
             "company_contacts": self.company_contacts,
             "target_institutes": self.target_institutes,
+            "tags": self.tags,
             "project_level": self.project_level,
             "problem_holder": self.problem_holder,
             "goal": self.goal,
@@ -163,6 +168,7 @@ class ProjectApplicationUpdateDTO:
         experts: Optional[str] = None,
         additional_materials: Optional[str] = None,
         needs_consultation: Optional[bool] = None,
+        tags: Optional[list[int]] = None,
         **kwargs,
     ):
         self.title = title
@@ -176,6 +182,7 @@ class ProjectApplicationUpdateDTO:
         self.author_division = author_division
         self.company_contacts = company_contacts
         self.target_institutes = target_institutes
+        self.tags = tags
         self.project_level = project_level
         self.problem_holder = problem_holder
         self.goal = goal
@@ -268,6 +275,11 @@ class ProjectApplicationReadDTO:
         self.target_institutes = [
             {"code": inst.code, "name": inst.name}
             for inst in application.target_institutes.all()
+        ]
+
+        self.tags = [
+            {"id": tag.id, "name": tag.name, "category": tag.category}
+            for tag in application.tags.all()
         ]
 
         self.involved_users = [
@@ -366,6 +378,7 @@ class ProjectApplicationReadDTO:
             "experts": self.experts,
             "additional_materials": self.additional_materials,
             "target_institutes": self.target_institutes,
+            "tags": self.tags,
             "involved_users": self.involved_users,
             "involved_departments": self.involved_departments,
             "comments": self.comments,

@@ -11,7 +11,7 @@ from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
 )
-from showcase.models import ApplicationStatus, Institute, ProjectApplication
+from showcase.models import ApplicationStatus, Institute, ProjectApplication, Tag
 
 User = get_user_model()
 
@@ -86,6 +86,10 @@ class ProjectApplicationRepository:
             institutes = Institute.objects.filter(code__in=dto.target_institutes)
             application.target_institutes.set(institutes)
 
+        if dto.tags:
+            tags = Tag.objects.filter(id__in=dto.tags)
+            application.tags.set(tags)
+
         return application
 
     def get_by_id(self, application_id: int) -> ProjectApplication:
@@ -97,6 +101,7 @@ class ProjectApplicationRepository:
             ProjectApplication.objects.select_related("status", "author")
             .prefetch_related(
                 "target_institutes",
+                "tags",
                 "involved_users__user",
                 "involved_departments__department",
                 "status_logs__from_status",
@@ -128,7 +133,7 @@ class ProjectApplicationRepository:
                 Q(author=user) | Q(involved_users__user=user)
             )
             .select_related("status", "author")
-            .prefetch_related("target_institutes")
+            .prefetch_related("target_institutes", "tags")
             .distinct()
             .order_by("-creation_date")
         )
@@ -143,7 +148,7 @@ class ProjectApplicationRepository:
                 Q(author=user) | Q(involved_users__user=user)
             )
             .select_related("status", "author")
-            .prefetch_related("target_institutes")
+            .prefetch_related("target_institutes", "tags")
             .distinct()
             .order_by("-creation_date")
         )
@@ -185,7 +190,7 @@ class ProjectApplicationRepository:
                 involved_departments__department=department
             )
             .select_related("status", "author")
-            .prefetch_related("target_institutes")
+            .prefetch_related("target_institutes", "tags")
             .distinct()
             .order_by("-creation_date")
         )
@@ -198,7 +203,7 @@ class ProjectApplicationRepository:
         return list(
             ProjectApplication.objects.filter(status__code=status_code)
             .select_related("status", "author")
-            .prefetch_related("target_institutes")
+            .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
 
@@ -207,7 +212,7 @@ class ProjectApplicationRepository:
         return (
             ProjectApplication.objects.filter(status__code=status_code)
             .select_related("status", "author")
-            .prefetch_related("target_institutes")
+            .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
 
@@ -219,7 +224,7 @@ class ProjectApplicationRepository:
         return list(
             ProjectApplication.objects.filter(company__icontains=company_name)
             .select_related("status", "author")
-            .prefetch_related("target_institutes")
+            .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
 
@@ -240,8 +245,8 @@ class ProjectApplicationRepository:
             for field in dir(dto)
             if not field.startswith("_")
             and not callable(getattr(dto, field))
-            and field != "target_institutes"
-        ]  # M2M поле обрабатываем отдельно
+            and field not in ("target_institutes", "tags")
+        ]  # M2M поля обрабатываем отдельно
 
         for field_name in dto_fields:
             field_value = getattr(dto, field_name, None)
@@ -255,6 +260,10 @@ class ProjectApplicationRepository:
         if dto.target_institutes is not None:
             institutes = Institute.objects.filter(code__in=dto.target_institutes)
             application.target_institutes.set(institutes)
+
+        if dto.tags is not None:
+            tags = Tag.objects.filter(id__in=dto.tags)
+            application.tags.set(tags)
 
         # Сохраняем только изменённые поля для оптимизации
         if update_fields:

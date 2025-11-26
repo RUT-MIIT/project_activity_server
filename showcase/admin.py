@@ -8,6 +8,7 @@ from .models import (
     ProjectApplication,
     ProjectApplicationComment,
     ProjectApplicationStatusLog,
+    Tag,
 )
 
 
@@ -54,6 +55,14 @@ class InstituteAdmin(admin.ModelAdmin):
     ordering = ("position",)
 
 
+@admin.register(Tag)
+class TagAdmin(admin.ModelAdmin):
+    list_display = ("name", "category")
+    list_filter = ("category",)
+    search_fields = ("name", "category")
+    ordering = ("category", "name")
+
+
 @admin.register(ProjectApplication)
 class ProjectApplicationAdmin(admin.ModelAdmin):
     class ApplicationInvolvedUserInline(admin.TabularInline):
@@ -98,7 +107,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
         "problem_holder",
     )
     readonly_fields = ("creation_date",)
-    filter_horizontal = ("target_institutes",)
+    filter_horizontal = ("target_institutes", "tags")
     inlines = [ApplicationInvolvedUserInline, ApplicationInvolvedDepartmentInline]
 
     fieldsets = (
@@ -138,6 +147,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
                     "company",
                     "company_contacts",
                     "target_institutes",
+                    "tags",
                     "project_level",
                 )
             },

@@ -80,13 +80,23 @@ class PasswordResetConfirmView(APIView):
 
 class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
     """ViewSet только для чтения подразделений/кафедр.
-    Доступен только для аутентифицированных пользователей.
+
+    Список подразделений должен быть доступен всем пользователям (AllowAny),
+    чтобы пользователь мог выбрать своё подразделение ещё до авторизации.
+    Другие действия (detail) по умолчанию требуют авторизации.
     """
 
     queryset = Department.objects.all()
     serializer_class = DepartmentSerializer
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.IsAuthenticated]
     pagination_class = None
+
+    def get_permissions(self):
+        """Для list используем AllowAny, остальные действия требуют авторизации."""
+
+        if self.action == "list":
+            return [permissions.AllowAny()]
+        return super().get_permissions()
 
 
 class RoleViewSet(viewsets.ReadOnlyModelViewSet):

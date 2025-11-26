@@ -131,21 +131,30 @@ class ApplicationCapabilities:
         # Валидация данных
         validation = ProjectApplicationDomain.validate_update(dto)
 
-        # Проверка прав на обновление
-        can_access = ProjectApplicationDomain.can_user_access_application(
-            updater_role, application_author_id, updater_id
-        )
-
-        if not can_access:
-            validation.add_error("access", "Нет прав для обновления этой заявки")
-
-        # Бизнес-правило: нельзя обновлять отклоненные заявки
+        # Бизнес-правило: нельзя обновлять отклоненные заявки (финальный статус rejected)
         if application_status == "rejected":
             validation.add_error("status", "Нельзя обновлять отклоненные заявки")
 
-        # Бизнес-правило: нельзя обновлять одобренные заявки (кроме админов)
-        if application_status == "approved" and updater_role != "admin":
+        # Бизнес-правило: нельзя обновлять одобренные заявки (кроме админов и cpds)
+        if application_status == "approved" and updater_role not in ["admin", "cpds"]:
             validation.add_error("status", "Нельзя обновлять одобренные заявки")
+
+        # Проверка прав на редактирование через матрицу разрешений
+        # В матрице настроено: редактировать может только автор (POLICY_OWN_ONLY) или cpds (POLICY_ALLOW)
+        is_user_author = application_author_id == updater_id
+        # Для проверки нужен is_user_department_involved, но здесь его нет
+        # Используем упрощенную проверку: автор или cpds
+        can_edit = ApplicationCapabilities.can_edit_application(
+            current_status=application_status,
+            user_role=updater_role,
+            is_user_department_involved=False,  # Не используется для save_changes в новой логике
+            is_user_author=is_user_author,
+        )
+
+        if not can_edit:
+            validation.add_error(
+                "access", "Редактировать заявку может только автор или сотрудник ЦПДС"
+            )
 
         return validation, validation.is_valid, ""
 
@@ -193,6 +202,12 @@ class ApplicationCapabilities:
     STATUS_RETURNED_ALL: str = "returned_(all)"
     _ROLE_STATUS_ACTIONS: dict[str, dict[str, dict[str, str]]] = {
         "await_department": {
+            "user": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
             "mentor": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
@@ -200,25 +215,31 @@ class ApplicationCapabilities:
                 "request_changes": POLICY_DENY,
             },
             "department_validator": {
-                "save_changes": POLICY_DEPARTMENT_ONLY,
+                "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DEPARTMENT_ONLY,
             },
             "institute_validator": {
-                "save_changes": POLICY_DEPARTMENT_ONLY,
+                "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DEPARTMENT_ONLY,
             },
             "cpds": {
-                "save_changes": POLICY_DENY,
+                "save_changes": POLICY_ALLOW,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
             },
         },
         "await_institute": {
+            "user": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
             "mentor": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
@@ -232,19 +253,25 @@ class ApplicationCapabilities:
                 "request_changes": POLICY_DENY,
             },
             "institute_validator": {
-                "save_changes": POLICY_DEPARTMENT_ONLY,
+                "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DEPARTMENT_ONLY,
             },
             "cpds": {
-                "save_changes": POLICY_DENY,
+                "save_changes": POLICY_ALLOW,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
             },
         },
         "await_cpds": {
+            "user": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
             "mentor": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
@@ -271,6 +298,12 @@ class ApplicationCapabilities:
             },
         },
         STATUS_RETURNED_ALL: {
+            "user": {
+                "save_changes": POLICY_OWN_ONLY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
             "mentor": {
                 "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_OWN_ONLY,
@@ -278,19 +311,19 @@ class ApplicationCapabilities:
                 "request_changes": POLICY_DENY,
             },
             "department_validator": {
-                "save_changes": POLICY_DEPARTMENT_ONLY,
+                "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DENY,
             },
             "institute_validator": {
-                "save_changes": POLICY_DEPARTMENT_ONLY,
+                "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DENY,
             },
             "cpds": {
-                "save_changes": POLICY_DENY,
+                "save_changes": POLICY_ALLOW,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
@@ -304,13 +337,13 @@ class ApplicationCapabilities:
                 "request_changes": POLICY_DENY,
             },
             "department_validator": {
-                "save_changes": POLICY_DEPARTMENT_ONLY,
+                "save_changes": POLICY_DENY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DEPARTMENT_ONLY,
             },
             "institute_validator": {
-                "save_changes": POLICY_DEPARTMENT_ONLY,
+                "save_changes": POLICY_DENY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DEPARTMENT_ONLY,
@@ -336,7 +369,7 @@ class ApplicationCapabilities:
                 "request_changes": POLICY_DENY,
             },
             "institute_validator": {
-                "save_changes": POLICY_DEPARTMENT_ONLY,
+                "save_changes": POLICY_DENY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DEPARTMENT_ONLY,
@@ -362,7 +395,7 @@ class ApplicationCapabilities:
                 "request_changes": POLICY_DENY,
             },
             "institute_validator": {
-                "save_changes": POLICY_DEPARTMENT_ONLY,
+                "save_changes": POLICY_DENY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DEPARTMENT_ONLY,
@@ -375,6 +408,12 @@ class ApplicationCapabilities:
             },
         },
         "approved": {
+            "user": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
             "mentor": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
@@ -398,6 +437,38 @@ class ApplicationCapabilities:
                 "approve": POLICY_DENY,
                 "reject": POLICY_ALLOW,
                 "request_changes": POLICY_ALLOW,
+            },
+        },
+        "rejected": {
+            "user": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
+            "mentor": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
+            "department_validator": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
+            "institute_validator": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
+            "cpds": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
             },
         },
     }
@@ -526,7 +597,22 @@ class ApplicationCapabilities:
         is_user_department_involved: bool,
         is_user_author: bool,
     ) -> bool:
-        """УСТАРЕВШЕ: прокси к новой матрице. Редактирование соответствует действию save_changes."""
+        """Проверка права на редактирование заявки.
+
+        Бизнес-правило: редактировать может только автор заявки или сотрудник ЦПДС.
+        С учетом ограничений по статусам: нельзя редактировать rejected и approved (кроме админов и cpds).
+        """
+        # Бизнес-правило: нельзя редактировать отклоненные заявки (кроме cpds для rejected_* статусов)
+        if current_status == "rejected":
+            return False
+
+        # Бизнес-правило: нельзя редактировать одобренные заявки (кроме админов и cpds)
+        if current_status == "approved" and user_role not in ["admin", "cpds"]:
+            return False
+
+        # Используем матрицу разрешений для проверки прав
+        # В матрице для save_changes настроено: POLICY_OWN_ONLY для всех ролей (кроме cpds),
+        # и POLICY_ALLOW для роли cpds
         return ApplicationCapabilities.is_action_allowed(
             "save_changes",
             current_status,

@@ -15,6 +15,7 @@ from showcase.models import (
     ApplicationStatus,
     Institute,
     ProjectApplication,
+    Tag,
 )
 from showcase.repositories.application import ProjectApplicationRepository
 
@@ -77,6 +78,59 @@ class TestRepositoryCreate:
 
         assert app.id is not None
         assert app.target_institutes.count() == 0
+
+    def test_create_with_tags(self, statuses, make_user):
+        """Создание заявки с тегами: проверяем установку M2M связи.
+
+        Проверяем, что tags устанавливается корректно при создании заявки.
+        """
+        # Создаём теги для теста
+        tag1 = Tag.objects.create(name="Тег 1", category="Категория 1")
+        tag2 = Tag.objects.create(name="Тег 2", category="Категория 1")
+
+        user = make_user(role_code="user")
+        dto = ProjectApplicationCreateDTO(
+            company="Acme Corp",
+            title="Test Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель проекта достаточно длинная",
+            problem_holder="Носитель проблемы",
+            barrier="Описание барьера достаточно длинное",
+            tags=[tag1.id, tag2.id],  # Проверяем установку M2M
+        )
+
+        repo = ProjectApplicationRepository()
+        app = repo.create(dto, user, "await_department")
+
+        assert app.id is not None
+        assert app.tags.count() == 2
+        assert tag1 in app.tags.all()
+        assert tag2 in app.tags.all()
+
+    def test_create_without_tags(self, statuses, make_user):
+        """Создание заявки без тегов: проверяем, что пустой список не вызывает ошибок."""
+        user = make_user(role_code="user")
+        dto = ProjectApplicationCreateDTO(
+            company="Acme Corp",
+            title="Test Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель проекта достаточно длинная",
+            problem_holder="Носитель проблемы",
+            barrier="Описание барьера достаточно длинное",
+            tags=[],  # Пустой список
+        )
+
+        repo = ProjectApplicationRepository()
+        app = repo.create(dto, user, "await_department")
+
+        assert app.id is not None
+        assert app.tags.count() == 0
 
 
 @pytest.mark.django_db
@@ -272,6 +326,42 @@ class TestRepositoryUpdate:
         assert updated_app.target_institutes.count() == 2
         assert inst2 in updated_app.target_institutes.all()
         assert inst3 in updated_app.target_institutes.all()
+
+    def test_update_with_tags(self, statuses, make_user):
+        """Обновление заявки с изменением тегов: проверяем установку M2M связи."""
+        tag1 = Tag.objects.create(name="Тег 1", category="Категория 1")
+        tag2 = Tag.objects.create(name="Тег 2", category="Категория 1")
+        tag3 = Tag.objects.create(name="Тег 3", category="Категория 2")
+
+        user = make_user(role_code="user")
+        repo = ProjectApplicationRepository()
+
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            title="Test",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель 1234567890",
+            problem_holder="Носитель",
+            barrier="Длинный барьер",
+            tags=[tag1.id],
+        )
+        app = repo.create(dto, user, "await_department")
+        assert app.tags.count() == 1
+
+        # Обновляем с новым списком тегов
+        update_dto = ProjectApplicationUpdateDTO(
+            title="Updated Title",
+            tags=[tag2.id, tag3.id],  # Изменяем список
+        )
+        updated_app = repo.update(app, update_dto)
+
+        assert updated_app.title == "Updated Title"
+        assert updated_app.tags.count() == 2
+        assert tag2 in updated_app.tags.all()
+        assert tag3 in updated_app.tags.all()
 
     def test_update_without_fields(self, statuses, make_user):
         """Обновление заявки без полей: проверяем вызов save() без update_fields."""

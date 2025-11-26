@@ -174,6 +174,9 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     target_institutes = serializers.ListField(
         child=serializers.CharField(max_length=50), required=False, allow_empty=True
     )
+    tags = serializers.ListField(
+        child=serializers.IntegerField(), required=False, allow_empty=True
+    )
     project_level = serializers.CharField(
         max_length=100, required=False, allow_blank=True
     )
@@ -190,7 +193,7 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     recommended_tools = serializers.CharField(required=False, allow_blank=True)
     experts = serializers.CharField(required=False, allow_blank=True)
     additional_materials = serializers.CharField(required=False, allow_blank=True)
-    needs_consultation = serializers.BooleanField(required=False, default=False)
+    needs_consultation = serializers.BooleanField(required=False)
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""
@@ -219,6 +222,9 @@ class ProjectApplicationUpdateSerializer(serializers.Serializer):
     company_contacts = serializers.CharField(required=False, allow_blank=True)
     target_institutes = serializers.ListField(
         child=serializers.CharField(max_length=50), required=False, allow_empty=True
+    )
+    tags = serializers.ListField(
+        child=serializers.IntegerField(), required=False, allow_empty=True
     )
     project_level = serializers.CharField(
         max_length=100, required=False, allow_blank=True

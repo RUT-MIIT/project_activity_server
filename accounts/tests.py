@@ -135,16 +135,21 @@ class AccountsApiTests(TestCase):
         )
         self.assertEqual(login_resp.status_code, 200)
 
-    def test_departments_list_and_retrieve(self):
-        """Список департаментов доступен всем; детальный запрос возвращает корректный объект."""
+    def test_departments_list_allow_any_detail_requires_auth(self):
+        """Список департаментов доступен всем, детальный просмотр требует авторизации."""
         # List доступен всем (AllowAny)
         list_url = "/api/accounts/departments/"
         response = self.client.get(list_url)
         self.assertEqual(response.status_code, 200)
         self.assertGreaterEqual(len(response.data), 1)
 
-        # Retrieve
+        # Retrieve без авторизации запрещён
         detail_url = f"/api/accounts/departments/{self.dept.id}/"
+        response = self.client.get(detail_url)
+        self.assertEqual(response.status_code, 401)
+
+        # С авторизацией доступ разрешён
+        self.auth(self.user.email, self.user_password)
         response = self.client.get(detail_url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["id"], self.dept.id)
@@ -166,6 +171,37 @@ class AccountsApiTests(TestCase):
         self.assertTrue(
             RegistrationRequest.objects.filter(email="new_user@example.com").exists()
         )
+
+    def test_registration_request_create_requires_department(self):
+        """Создание заявки без подразделения возвращает ошибку валидации."""
+        url = "/api/accounts/registration-requests/"
+        payload = {
+            "last_name": "Иванов",
+            "first_name": "Иван",
+            "middle_name": "Иванович",
+            "email": "no_dept@example.com",
+            "phone": "+79990000000",
+            "comment": "Хочу доступ",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("department", response.data)
+
+    def test_registration_request_create_invalid_department(self):
+        """Создание заявки с несуществующим подразделением возвращает ошибку валидации."""
+        url = "/api/accounts/registration-requests/"
+        payload = {
+            "last_name": "Иванов",
+            "first_name": "Иван",
+            "middle_name": "Иванович",
+            "department": 99999,  # Несуществующий ID
+            "email": "invalid_dept@example.com",
+            "phone": "+79990000000",
+            "comment": "Хочу доступ",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("department", response.data)
 
     def test_registration_request_list_requires_privileged_user(self):
         """Список заявок доступен только is_staff, admin или cpds."""

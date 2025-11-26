@@ -295,23 +295,27 @@ class TestCanChangeStatus:
         assert can_change is False
         assert "запрещен" in error
 
-    def test_can_change_status_approved_requires_admin_or_moderator(self):
-        """Переход в approved разрешён только admin или moderator."""
+    def test_can_change_status_approved_allowed_from_await_cpds(self):
+        """Переход в approved из await_cpds разрешён для всех ролей (проверка матрицы в capabilities)."""
+        # can_change_status проверяет только разрешенные переходы, не права ролей
+        # Права ролей проверяются в capabilities через матрицу
         can_change_admin, _ = ProjectApplicationDomain.can_change_status(
             "await_cpds", "approved", "admin"
         )
         assert can_change_admin is True
 
-        can_change_moderator, _ = ProjectApplicationDomain.can_change_status(
-            "await_cpds", "approved", "moderator"
+        can_change_cpds, _ = ProjectApplicationDomain.can_change_status(
+            "await_cpds", "approved", "cpds"
         )
-        assert can_change_moderator is True
+        assert can_change_cpds is True
 
-        can_change_user, error = ProjectApplicationDomain.can_change_status(
+        # Переход разрешен для всех, но права на действие проверяются в capabilities
+        can_change_user, _ = ProjectApplicationDomain.can_change_status(
             "await_cpds", "approved", "user"
         )
-        assert can_change_user is False
-        assert "Недостаточно прав" in error
+        assert (
+            can_change_user is True
+        )  # Переход разрешен, но действие будет запрещено матрицей
 
     def test_can_change_status_reject_approved_requires_admin(self):
         """Отклонение одобренной заявки разрешено только админу."""

@@ -54,9 +54,9 @@ class ProjectApplicationService:
         if not validation.is_valid:
             raise ValueError(validation.errors)
 
-        # 2. Определяем необходимость консультации (Domain)
-        needs_consultation = ProjectApplicationDomain.should_require_consultation(dto)
-        dto.needs_consultation = needs_consultation
+        # 2. Определяем необходимость консультации (Domain) только если пользователь явно не передал параметр
+        # Если параметр не передан, остается False по умолчанию
+        # Автоматическое вычисление отключено - если нужно, пользователь должен явно передать True
 
         # 3. Создаем заявку со статусом "created" (всегда)
         application = self.repository.create(dto, user, "created")
@@ -77,6 +77,12 @@ class ProjectApplicationService:
 
         # 6. Определяем финальный статус на основе роли
         final_status_code = ProjectApplicationDomain.calculate_initial_status(user_role)
+
+        # 6.5. Проверяем и корректируем статус при необходимости
+        # (если статус await_department, но нет валидаторов - переводим в await_institute)
+        final_status_code = self._ensure_valid_status_after_department_check(
+            application=application, target_status=final_status_code, actor=user
+        )
 
         # 7. Если статус изменился - обновляем и логируем
         if final_status_code != "created":
@@ -546,6 +552,71 @@ class ProjectApplicationService:
             self.involved_service.add_user_and_departments(
                 application=application, user=user, actor=user
             )
+
+    def _has_department_validator(self, application) -> bool:
+        """Проверяет наличие пользователя с ролью department_validator в причастных подразделениях заявки.
+
+        Args:
+            application: Заявка для проверки
+
+        Returns:
+            bool: True если хотя бы в одном причастном подразделении есть активный пользователь
+                  с ролью department_validator, False в противном случае
+
+        """
+        # Получаем все причастные подразделения заявки
+        involved_departments = application.involved_departments.select_related(
+            "department"
+        ).all()
+
+        # Проверяем каждое подразделение на наличие валидатора
+        for involved_dept in involved_departments:
+            department = involved_dept.department
+            if not department:
+                continue
+
+            # Проверяем наличие активного пользователя с ролью department_validator
+            has_validator = User.objects.filter(
+                department=department,
+                role__code="department_validator",
+                is_active=True,
+            ).exists()
+
+            if has_validator:
+                return True
+
+        return False
+
+    def _ensure_valid_status_after_department_check(
+        self, application, target_status: str, actor: User
+    ) -> str:
+        """Проверяет и корректирует статус заявки при необходимости.
+
+        Если целевой статус - await_department, но в причастных подразделениях
+        отсутствует пользователь с ролью department_validator, статус автоматически
+        меняется на await_institute.
+
+        Args:
+            application: Заявка для проверки
+            target_status: Целевой статус, который планируется установить
+            actor: Пользователь, выполняющий действие
+
+        Returns:
+            str: Скорректированный статус (может отличаться от target_status)
+
+        """
+        # Проверяем только если целевой статус - await_department
+        if target_status != "await_department":
+            return target_status
+
+        # Проверяем наличие валидаторов в причастных подразделениях
+        has_validator = self._has_department_validator(application)
+
+        # Если валидаторов нет, переводим в await_institute
+        if not has_validator:
+            return "await_institute"
+
+        return target_status
 
     def _get_revision_status_code(self, user_role: str) -> str:
         """Определяет статус для доработки в зависимости от роли пользователя.

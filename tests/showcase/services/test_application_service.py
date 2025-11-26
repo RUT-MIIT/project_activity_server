@@ -1,3 +1,4 @@
+from django.contrib.auth import get_user_model
 import pytest
 
 from accounts.models import Department
@@ -14,13 +15,16 @@ from showcase.models import (
 )
 from showcase.services.application_service import ProjectApplicationService
 
+User = get_user_model()
+
 
 @pytest.mark.django_db
 class TestSubmitApplicationService:
     def test_submit_success_user_flow(self, statuses, make_user):
         """Успешная подача заявки: создаётся со статусом created, затем переводится в начальный по роли.
 
-        Проверяем: финальный статус, наличие логов (создание + перевод), добавление причастных.
+        Проверяем: финальный статус (await_institute, если нет валидаторов),
+        наличие логов (создание + перевод), добавление причастных.
         """
         user = make_user(role_code="user", with_department=True)
         dto = ProjectApplicationCreateDTO(
@@ -41,7 +45,8 @@ class TestSubmitApplicationService:
         app = service.submit_application(dto, user)
 
         assert isinstance(app, ProjectApplication)
-        assert app.status.code == "await_department"
+        # Без валидаторов заявка должна перейти в await_institute
+        assert app.status.code == "await_institute"
         # Должны создаться логи: 1) создание, 2) перевод
         assert (
             ProjectApplicationStatusLog.objects.filter(
@@ -74,6 +79,240 @@ class TestSubmitApplicationService:
         service = ProjectApplicationService()
         with pytest.raises(ValueError):
             service.submit_application(dto, user)
+
+    def test_submit_preserves_manual_needs_consultation(self, statuses, make_user):
+        """Явно переданный needs_consultation не переопределяется доменной логикой."""
+        user = make_user(role_code="user", with_department=True)
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            goal="Цель менее 50 символов",
+            project_level="",
+            target_institutes=["INST"],
+            needs_consultation=False,
+        )
+        service = ProjectApplicationService()
+
+        app = service.submit_application(dto, user)
+
+        assert app.needs_consultation is False
+
+    def test_submit_sets_needs_consultation_when_not_provided(
+        self, statuses, make_user
+    ):
+        """Если needs_consultation не передан, значение остается False по умолчанию."""
+        user = make_user(role_code="user", with_department=True)
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            goal="Цель менее 50 символов",
+            project_level="",
+            target_institutes=[],
+        )
+        service = ProjectApplicationService()
+
+        app = service.submit_application(dto, user)
+
+        assert app.needs_consultation is False
+
+    def test_submit_without_department_validator_auto_transition(
+        self, statuses, make_user, roles
+    ):
+        """Заявка автоматически переходит в await_institute, если в подразделении нет department_validator."""
+        # Создаём пользователя с подразделением, но без валидатора в этом подразделении
+        user = make_user(role_code="user", with_department=True)
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            title="Проект X",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="user@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        service = ProjectApplicationService()
+
+        app = service.submit_application(dto, user)
+
+        # Должен автоматически перейти в await_institute, так как нет валидатора
+        assert app.status.code == "await_institute"
+        # Должны создаться логи: 1) создание, 2) перевод в await_institute
+        assert (
+            ProjectApplicationStatusLog.objects.filter(
+                application=app, action_type="status_change"
+            ).count()
+            == 2
+        )
+
+    def test_submit_with_department_validator_stays_await_department(
+        self, statuses, make_user, roles
+    ):
+        """Заявка остаётся в await_department, если в подразделении есть department_validator."""
+        # Создаём пользователя с подразделением
+        user = make_user(role_code="user", with_department=True)
+        # Создаём валидатора в том же подразделении
+        validator_role = roles["department_validator"]
+        User.objects.create_user(
+            email="validator@example.com",
+            password="pass",
+            first_name="Validator",
+            last_name="User",
+            role=validator_role,
+            department=user.department,  # То же подразделение
+        )
+
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            title="Проект X",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="user@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        service = ProjectApplicationService()
+
+        app = service.submit_application(dto, user)
+
+        # Должен остаться в await_department, так как есть валидатор
+        assert app.status.code == "await_department"
+        # Должны создаться логи: 1) создание, 2) перевод в await_department
+        assert (
+            ProjectApplicationStatusLog.objects.filter(
+                application=app, action_type="status_change"
+            ).count()
+            == 2
+        )
+
+    def test_submit_with_validator_in_parent_department(
+        self, statuses, make_user, roles, departments
+    ):
+        """Заявка остаётся в await_department, если валидатор есть в родительском подразделении."""
+        # Создаём пользователя с дочерним подразделением
+        user = make_user(role_code="user", with_department=True)
+        # Создаём валидатора в родительском подразделении
+        parent_dept = departments["parent"]
+        validator_role = roles["department_validator"]
+        User.objects.create_user(
+            email="validator@example.com",
+            password="pass",
+            first_name="Validator",
+            last_name="User",
+            role=validator_role,
+            department=parent_dept,
+        )
+
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            title="Проект X",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="user@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        service = ProjectApplicationService()
+
+        app = service.submit_application(dto, user)
+
+        # Должен остаться в await_department, так как есть валидатор в родительском подразделении
+        # (которое также добавляется как причастное)
+        assert app.status.code == "await_department"
+
+    def test_submit_no_validator_in_multiple_involved_departments(
+        self, statuses, make_user, roles, departments
+    ):
+        """Заявка переходит в await_institute, если ни в одном из причастных подразделений нет department_validator.
+
+        Проверяет ситуацию, когда у заявки есть несколько причастных подразделений
+        (подразделение пользователя + родительское), но ни в одном из них нет валидатора.
+        """
+        # Создаём пользователя с подразделением
+        # Важно: убеждаемся, что в подразделении пользователя и родительском нет валидаторов
+        user = make_user(role_code="user", with_department=True)
+
+        # Убеждаемся, что в подразделении пользователя нет валидатора
+        user_dept = user.department
+        parent_dept = user_dept.parent if hasattr(user_dept, 'parent') else None
+
+        # Проверяем, что в подразделении пользователя нет валидатора
+        has_validator_in_user_dept = User.objects.filter(
+            department=user_dept,
+            role__code="department_validator",
+            is_active=True,
+        ).exists()
+        assert (
+            not has_validator_in_user_dept
+        ), "В подразделении пользователя не должно быть валидатора"
+
+        # Проверяем родительское подразделение, если оно есть
+        if parent_dept:
+            has_validator_in_parent = User.objects.filter(
+                department=parent_dept,
+                role__code="department_validator",
+                is_active=True,
+            ).exists()
+            assert (
+                not has_validator_in_parent
+            ), "В родительском подразделении не должно быть валидатора"
+
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            title="Проект X",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="user@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        service = ProjectApplicationService()
+
+        app = service.submit_application(dto, user)
+
+        # Проверяем все причастные подразделения после создания заявки
+        involved_depts = ApplicationInvolvedDepartment.objects.filter(application=app)
+        assert (
+            involved_depts.count() >= 1
+        ), "Должно быть хотя бы одно причастное подразделение"
+
+        # Проверяем, что ни в одном из причастных подразделений нет валидатора
+        departments_without_validator = []
+        for involved_dept in involved_depts:
+            has_validator = User.objects.filter(
+                department=involved_dept.department,
+                role__code="department_validator",
+                is_active=True,
+            ).exists()
+            if not has_validator:
+                departments_without_validator.append(involved_dept.department.name)
+            else:
+                # Если нашли валидатора, это ошибка теста
+                assert False, (
+                    f"В подразделении {involved_dept.department.name} найден валидатор, "
+                    "но тест предполагает отсутствие валидаторов"
+                )
+
+        # Статус должен быть await_institute, так как ни в одном причастном подразделении нет валидатора
+        assert app.status.code == "await_institute", (
+            f"Ожидался статус await_institute, но получен {app.status.code}. "
+            f"Причастные подразделения без валидаторов: {', '.join(departments_without_validator)}. "
+            "Заявка должна автоматически перейти в await_institute при отсутствии валидаторов "
+            "во всех причастных подразделениях."
+        )
 
 
 @pytest.mark.django_db
@@ -132,8 +371,8 @@ class TestApproveRejectRequestService:
             application=app2, department=cpds_department
         ).exists()
 
-    def test_approve_cpds_final_forbidden_by_domain(self, statuses, make_user):
-        """cpds: попытка финального approved запрещена доменом (ожидаем ValueError)."""
+    def test_approve_cpds_from_await_cpds(self, statuses, make_user):
+        """cpds: может одобрять заявки в статусе await_cpds (переход в approved разрешен)."""
         cpds = make_user(role_code="cpds", with_department=True)
         app = self._create_app(author=cpds, status_code="await_cpds")
         ApplicationInvolvedDepartment.objects.create(
@@ -141,8 +380,9 @@ class TestApproveRejectRequestService:
         )
 
         service = ProjectApplicationService()
-        with pytest.raises(ValueError):
-            service.approve_application(app.id, cpds)
+        app2 = service.approve_application(app.id, cpds)
+        # CPDS одобряет в финальный статус approved
+        assert app2.status.code == "approved"
 
     def test_request_changes_department_validator(self, statuses, make_user):
         """Запрос изменений: await_department -> returned_department, один лог."""
@@ -206,14 +446,37 @@ class TestUpdateAndQueriesService:
             barrier="Длинный барьер",
         )
 
-    def test_update_success_by_department_validator(self, statuses, make_user):
-        """department_validator может сохранить изменения в await_department при причастном подразделении."""
+    def test_update_success_by_author(self, statuses, make_user):
+        """Автор может редактировать свою заявку."""
+        author = make_user(role_code="user", with_department=False)
+        app = self._create_app(author=author, status_code="await_department")
+        service = ProjectApplicationService()
+        dto = ProjectApplicationUpdateDTO(title="New valid title")
+        app2 = service.update_application(app.id, dto, author)
+        assert app2.title == "New valid title"
+        assert ProjectApplicationStatusLog.objects.filter(
+            application=app, action_type="application_updated"
+        ).exists()
+
+    def test_update_success_by_cpds(self, statuses, make_user):
+        """Сотрудник ЦПДС может редактировать любую заявку (кроме rejected)."""
+        author = make_user(role_code="user", with_department=False)
+        cpds = make_user(role_code="cpds", with_department=True)
+        app = self._create_app(author=author, status_code="await_department")
+        service = ProjectApplicationService()
+        dto = ProjectApplicationUpdateDTO(title="New valid title")
+        app2 = service.update_application(app.id, dto, cpds)
+        assert app2.title == "New valid title"
+        assert ProjectApplicationStatusLog.objects.filter(
+            application=app, action_type="application_updated"
+        ).exists()
+
+    def test_update_success_by_department_validator_as_author(
+        self, statuses, make_user
+    ):
+        """department_validator может редактировать свою заявку (как автор)."""
         validator = make_user(role_code="department_validator", with_department=True)
         app = self._create_app(author=validator, status_code="await_department")
-        # причастность подразделения нужна для save_changes
-        ApplicationInvolvedDepartment.objects.create(
-            application=app, department=validator.department
-        )
         service = ProjectApplicationService()
         dto = ProjectApplicationUpdateDTO(title="New valid title")
         app2 = service.update_application(app.id, dto, validator)
@@ -223,7 +486,7 @@ class TestUpdateAndQueriesService:
         ).exists()
 
     def test_update_permission_denied(self, statuses, make_user):
-        """Обычный пользователь не может редактировать чужую заявку — PermissionError."""
+        """Не-автор и не-ЦПДС не может редактировать чужую заявку — PermissionError."""
         author = make_user(role_code="user", with_department=False)
         other = make_user(role_code="user", with_department=False)
         app = self._create_app(author=author, status_code="await_department")
@@ -232,17 +495,43 @@ class TestUpdateAndQueriesService:
         with pytest.raises(PermissionError):
             service.update_application(app.id, dto, other)
 
-    def test_update_validation_error(self, statuses, make_user):
-        """Некорректный title вызывает ValueError при роли, которой разрешено редактировать."""
+    def test_update_permission_denied_for_validator(self, statuses, make_user):
+        """Валидатор не может редактировать чужую заявку (только если он не автор)."""
+        author = make_user(role_code="user", with_department=False)
         validator = make_user(role_code="department_validator", with_department=True)
-        app = self._create_app(author=validator, status_code="await_department")
+        app = self._create_app(author=author, status_code="await_department")
+        # Добавляем причастность подразделения валидатора
         ApplicationInvolvedDepartment.objects.create(
             application=app, department=validator.department
         )
         service = ProjectApplicationService()
+        dto = ProjectApplicationUpdateDTO(title="New title")
+        # Валидатор не является автором, поэтому не может редактировать
+        with pytest.raises(PermissionError):
+            service.update_application(app.id, dto, validator)
+
+    def test_update_validation_error(self, statuses, make_user):
+        """Некорректный title вызывает ValueError при роли, которой разрешено редактировать."""
+        author = make_user(role_code="user", with_department=False)
+        app = self._create_app(author=author, status_code="await_department")
+        service = ProjectApplicationService()
         dto = ProjectApplicationUpdateDTO(title="bad")
         with pytest.raises(ValueError):
-            service.update_application(app.id, dto, validator)
+            service.update_application(app.id, dto, author)
+
+    def test_update_rejected_status_denied(self, statuses, make_user):
+        """Нельзя редактировать заявки со статусом rejected (даже автору и cpds)."""
+        author = make_user(role_code="user", with_department=False)
+        cpds = make_user(role_code="cpds", with_department=True)
+        app = self._create_app(author=author, status_code="rejected")
+        service = ProjectApplicationService()
+        dto = ProjectApplicationUpdateDTO(title="New title")
+        # Автор не может редактировать rejected
+        with pytest.raises(PermissionError):
+            service.update_application(app.id, dto, author)
+        # CPDS тоже не может редактировать rejected
+        with pytest.raises(PermissionError):
+            service.update_application(app.id, dto, cpds)
 
     def test_get_application_permission(self, statuses, make_user):
         """Доступ к просмотру: чужому user запрещено, автору разрешено."""
