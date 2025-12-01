@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
+from accounts.models import Department
 from showcase.domain.application import ProjectApplicationDomain
 from showcase.domain.capabilities import ApplicationCapabilities
 from showcase.dto.application import (
@@ -37,7 +38,9 @@ class ProjectApplicationService:
         self.involved_service = InvolvedManagementService()
 
     @transaction.atomic
-    def submit_application(self, dto: ProjectApplicationCreateDTO, user: User):
+    def submit_application(
+        self, dto: ProjectApplicationCreateDTO, user: User, is_external: bool = False
+    ):
         """Бизнес-операция: подача заявки.
 
         Новая логика:
@@ -47,6 +50,11 @@ class ProjectApplicationService:
         4. Добавление причастных (пользователь + подразделения)
         5. Определение финального статуса
         6. Изменение статуса и логирование (если нужно)
+
+        Args:
+            dto: DTO с данными заявки
+            user: Пользователь, создающий заявку
+            is_external: Флаг внешней заявки (по умолчанию False)
         """
         # 1. Валидация (Domain)
         user_role = user.role.code if user and user.role else "user"
@@ -58,10 +66,36 @@ class ProjectApplicationService:
         # Если параметр не передан, остается False по умолчанию
         # Автоматическое вычисление отключено - если нужно, пользователь должен явно передать True
 
-        # 3. Создаем заявку со статусом "created" (всегда)
-        application = self.repository.create(dto, user, "created")
+        # 3. Для внешних заявок создаем сразу со статусом await_cpds
+        if is_external:
+            # Создаем заявку сразу со статусом await_cpds
+            application = self.repository.create(
+                dto, user, "await_cpds", is_external=is_external
+            )
 
-        # 4. Логируем создание заявки
+            # Логируем создание заявки со статусом await_cpds
+            self.logging_service.log_status_change(
+                application=application,
+                from_status=None,  # Заявка только что создана
+                to_status=application.status,
+                actor=user,
+            )
+
+            # Добавляем причастное подразделение ЦПДС
+            self.involved_service.add_department_by_short_name(
+                application=application,
+                short_name="ЦПДС",
+                actor=user,
+            )
+
+            return application
+
+        # 4. Для обычных заявок создаем со статусом "created" (всегда)
+        application = self.repository.create(
+            dto, user, "created", is_external=is_external
+        )
+
+        # 5. Логируем создание заявки
         self.logging_service.log_status_change(
             application=application,
             from_status=None,  # Заявка только что создана
@@ -69,22 +103,22 @@ class ProjectApplicationService:
             actor=user,
         )
 
-        # 5. Добавляем причастных (пользователь + его подразделение + родительское)
+        # 6. Добавляем причастных (пользователь + его подразделение + родительское)
         if user:
             self.involved_service.add_user_and_departments(
                 application=application, user=user, actor=user
             )
 
-        # 6. Определяем финальный статус на основе роли
+        # 7. Определяем финальный статус на основе роли
         final_status_code = ProjectApplicationDomain.calculate_initial_status(user_role)
 
-        # 6.5. Проверяем и корректируем статус при необходимости
+        # 7.5. Проверяем и корректируем статус при необходимости
         # (если статус await_department, но нет валидаторов - переводим в await_institute)
         final_status_code = self._ensure_valid_status_after_department_check(
             application=application, target_status=final_status_code, actor=user
         )
 
-        # 7. Если статус изменился - обновляем и логируем
+        # 8. Если статус изменился - обновляем и логируем
         if final_status_code != "created":
             old_status = application.status
             new_status = ApplicationStatus.objects.get(code=final_status_code)
@@ -312,6 +346,112 @@ class ProjectApplicationService:
         return application
 
     @transaction.atomic
+    def transfer_to_institute(
+        self, application_id: int, department_id: int, transferrer: User
+    ):
+        """Бизнес-операция: передача заявки в институт.
+
+        Доступно только для роли cpds для внешних заявок со статусом await_cpds.
+        Добавляет указанное подразделение (без parent) в причастные и переводит
+        заявку в статус await_institute.
+
+        Args:
+            application_id: ID заявки
+            department_id: ID подразделения для добавления
+            transferrer: Пользователь, выполняющий передачу
+
+        Returns:
+            ProjectApplication: Обновленная заявка
+
+        Raises:
+            PermissionError: Если недостаточно прав
+            ValueError: Если заявка не внешняя, статус не await_cpds,
+                       подразделение не найдено или имеет parent
+            ObjectDoesNotExist: Если заявка не найдена
+        """
+        # 1. Получаем заявку (Repository)
+        application = self.repository.get_by_id_simple(application_id)
+
+        # 2. Проверка прав (Domain)
+        user_role = transferrer.role.code if transferrer.role else "user"
+        is_user_department_involved = self._is_user_department_involved(
+            application, transferrer
+        )
+        is_user_author = (
+            application.author == transferrer if application.author else False
+        )
+
+        # Проверяем право на действие согласно матрице
+        if not ApplicationCapabilities.is_action_allowed(
+            action="transfer_to_institute",
+            current_status=application.status.code,
+            user_role=user_role,
+            is_user_department_involved=is_user_department_involved,
+            is_user_author=is_user_author,
+        ):
+            raise PermissionError("Недостаточно прав для передачи заявки в институт")
+
+        # 3. Проверка, что заявка внешняя
+        if not application.is_external:
+            raise ValueError("Действие доступно только для внешних заявок")
+
+        # 4. Проверка, что статус await_cpds
+        if application.status.code != "await_cpds":
+            raise ValueError(
+                f"Действие доступно только для заявок со статусом await_cpds, "
+                f"текущий статус: {application.status.code}"
+            )
+
+        # 5. Получаем подразделение по ID
+        try:
+            department = Department.objects.get(id=department_id)
+        except Department.DoesNotExist as err:
+            raise ValueError(f"Подразделение с ID {department_id} не найдено") from err
+
+        # 6. Проверка, что подразделение без parent
+        if department.parent is not None:
+            raise ValueError(
+                f"Подразделение {department.name} имеет родительское подразделение. "
+                f"Действие доступно только для подразделений без parent"
+            )
+
+        # 7. Добавляем подразделение в причастные
+        department_added = self.involved_service.add_department_by_id(
+            application=application, department_id=department_id, actor=transferrer
+        )
+
+        # 8. Логируем добавление подразделения (если оно было добавлено)
+        if department_added:
+            self.logging_service.log_involved_department_added(
+                application=application, department=department, actor=transferrer
+            )
+
+        # 9. Проверяем возможность перехода (Domain)
+        can_change, error = ProjectApplicationDomain.can_change_status(
+            application.status.code, "await_institute", user_role
+        )
+        if not can_change:
+            raise ValueError(error)
+
+        # 10. Сохраняем старый статус для логирования
+        old_status = application.status
+
+        # 11. Меняем статус на await_institute
+        new_status = ApplicationStatus.objects.get(code="await_institute")
+        application.status = new_status
+        application.save()
+
+        # 12. Логируем изменение статуса
+        self.logging_service.log_status_change(
+            application=application,
+            from_status=old_status,
+            to_status=new_status,
+            actor=transferrer,
+        )
+
+        return application
+
+    @transaction.atomic
     def update_application(
         self, application_id: int, dto: ProjectApplicationUpdateDTO, updater: User
     ):
@@ -487,6 +627,40 @@ class ProjectApplicationService:
 
         # 2. Получаем QuerySet (Repository)
         return self.repository.get_all_applications_queryset()
+
+    def get_external_applications(self, user: User):
+        """Бизнес-операция: получение списка внешних заявок (is_external=True).
+
+        Args:
+            user: Пользователь, запрашивающий список внешних заявок
+
+        Returns:
+            list[ProjectApplication]: Список внешних заявок
+        """
+        # 1. Проверка прав (Domain) - требуется авторизация
+        if not user.is_authenticated:
+            raise PermissionError("Требуется авторизация для просмотра внешних заявок")
+
+        # 2. Получаем внешние заявки (Repository)
+        applications = self.repository.filter_external_applications()
+
+        return applications
+
+    def get_external_applications_queryset(self, user: User):
+        """Бизнес-операция: получение QuerySet внешних заявок для пагинации.
+
+        Args:
+            user: Пользователь, запрашивающий список внешних заявок
+
+        Returns:
+            QuerySet: QuerySet внешних заявок
+        """
+        # 1. Проверка прав (Domain) - требуется авторизация
+        if not user.is_authenticated:
+            raise PermissionError("Требуется авторизация для просмотра внешних заявок")
+
+        # 2. Получаем QuerySet внешних заявок (Repository)
+        return self.repository.filter_external_applications_queryset()
 
     def get_available_actions(
         self, application_id: int, user: User

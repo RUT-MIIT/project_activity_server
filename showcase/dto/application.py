@@ -77,6 +77,7 @@ class ProjectApplicationCreateDTO:
         needs_consultation: Optional[bool] = None,
         description: Optional[str] = None,  # Для совместимости с тестами
         tags: Optional[list[int]] = None,
+        main_department_id: Optional[int] = None,
         **kwargs,
     ):
         self.title = title or ""
@@ -105,6 +106,7 @@ class ProjectApplicationCreateDTO:
         self.needs_consultation = (
             needs_consultation if needs_consultation is not None else False
         )
+        self.main_department_id = main_department_id
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationCreateDTO":
@@ -138,6 +140,7 @@ class ProjectApplicationCreateDTO:
             "experts": self.experts,
             "additional_materials": self.additional_materials,
             "needs_consultation": self.needs_consultation,
+            "main_department_id": self.main_department_id,
         }
 
 
@@ -169,6 +172,7 @@ class ProjectApplicationUpdateDTO:
         additional_materials: Optional[str] = None,
         needs_consultation: Optional[bool] = None,
         tags: Optional[list[int]] = None,
+        main_department_id: Optional[int] = None,
         **kwargs,
     ):
         self.title = title
@@ -194,6 +198,7 @@ class ProjectApplicationUpdateDTO:
         self.experts = experts
         self.additional_materials = additional_materials
         self.needs_consultation = needs_consultation
+        self.main_department_id = main_department_id
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationUpdateDTO":
@@ -218,6 +223,7 @@ class ProjectApplicationReadDTO:
         self.company = application.company
         self.creation_date = application.creation_date
         self.needs_consultation = application.needs_consultation
+        self.is_external = application.is_external
 
         # Нумерация заявок
         self.application_year = application.application_year
@@ -253,6 +259,20 @@ class ProjectApplicationReadDTO:
         self.author_phone = application.author_phone
         self.author_role = application.author_role
         self.author_division = application.author_division
+
+        # Основное подразделение
+        self.main_department = (
+            {
+                "id": application.main_department.id,
+                "name": application.main_department.name,
+                "short_name": application.main_department.short_name,
+            }
+            if application.main_department
+            else None
+        )
+        self.main_department_id = (
+            application.main_department.id if application.main_department else None
+        )
 
         # О проекте
         self.company_contacts = application.company_contacts
@@ -354,6 +374,7 @@ class ProjectApplicationReadDTO:
             "company": self.company,
             "creation_date": self.creation_date.isoformat(),
             "needs_consultation": self.needs_consultation,
+            "is_external": self.is_external,
             "application_year": self.application_year,
             "year_sequence_number": self.year_sequence_number,
             "print_number": self.print_number,
@@ -366,6 +387,8 @@ class ProjectApplicationReadDTO:
             "author_phone": self.author_phone,
             "author_role": self.author_role,
             "author_division": self.author_division,
+            "main_department": self.main_department,
+            "main_department_id": self.main_department_id,
             "company_contacts": self.company_contacts,
             "project_level": self.project_level,
             "problem_holder": self.problem_holder,
@@ -394,6 +417,7 @@ class ProjectApplicationListDTO:
         self.company = application.company
         self.creation_date = application.creation_date
         self.needs_consultation = application.needs_consultation
+        self.is_external = application.is_external
         # Количество комментариев: используем аннотацию, если есть, иначе fallback к count()
         annotated_count = getattr(application, "comments_count", None)
         self.comments_count = (
@@ -428,6 +452,7 @@ class ProjectApplicationListDTO:
             "company": self.company,
             "creation_date": self.creation_date.isoformat(),
             "needs_consultation": self.needs_consultation,
+            "is_external": self.is_external,
             "application_year": self.application_year,
             "year_sequence_number": self.year_sequence_number,
             "print_number": self.print_number,

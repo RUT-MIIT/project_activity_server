@@ -13,6 +13,14 @@ class Institute(models.Model):
     )
     position = models.PositiveIntegerField(verbose_name="Позиция для сортировки")
     is_active = models.BooleanField(default=True, verbose_name="Активен")
+    department = models.ForeignKey(
+        "accounts.Department",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="institutes",
+        verbose_name="Связанное подразделение",
+    )
 
     class Meta:
         verbose_name = "Институт"
@@ -106,6 +114,14 @@ class ProjectApplication(models.Model):
     author_division = models.CharField(
         max_length=200, blank=True, null=True, verbose_name="Подразделение автора"
     )
+    main_department = models.ForeignKey(
+        "accounts.Department",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="main_applications",
+        verbose_name="Основное подразделение",
+    )
 
     # Раздел "О проекте"
     company = models.CharField(
@@ -159,6 +175,7 @@ class ProjectApplication(models.Model):
     needs_consultation = models.BooleanField(
         default=False, verbose_name="Нужна консультация"
     )
+    is_external = models.BooleanField(default=False, verbose_name="Внешняя заявка")
 
     # Нумерация заявок
     application_year = models.PositiveIntegerField(

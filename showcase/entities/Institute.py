@@ -8,11 +8,14 @@ from showcase.models import Institute
 class InstituteSerializer(serializers.ModelSerializer):
     """Сериализатор для институтов/академий."""
 
+    department_id = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Institute
         fields = [
             "code",
             "name",
+            "department_id",
         ]
 
 

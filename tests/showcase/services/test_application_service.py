@@ -113,6 +113,87 @@ class TestSubmitApplicationService:
 
         assert app.needs_consultation is False
 
+    def test_submit_with_is_external_true(self, statuses, make_user):
+        """При создании упрощенной заявки устанавливается is_external=True и статус await_cpds."""
+        user = make_user(role_code="user", with_department=True)
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            title="External Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="user@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        service = ProjectApplicationService()
+
+        app = service.submit_application(dto, user, is_external=True)
+
+        assert isinstance(app, ProjectApplication)
+        assert app.is_external is True
+        assert app.status.code == "await_cpds"
+
+    def test_submit_with_is_external_true_adds_cpds_department(
+        self, statuses, make_user
+    ):
+        """При создании упрощенной заявки добавляется причастное подразделение ЦПДС."""
+        from accounts.models import Department
+
+        # Создаем подразделение ЦПДС если его нет
+        cpds_department, _ = Department.objects.get_or_create(
+            short_name="ЦПДС", defaults={"name": "Центр проектного развития"}
+        )
+
+        user = make_user(role_code="user", with_department=True)
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            title="External Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="user@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        service = ProjectApplicationService()
+
+        app = service.submit_application(dto, user, is_external=True)
+
+        # Проверяем, что подразделение ЦПДС добавлено как причастное
+        assert ApplicationInvolvedDepartment.objects.filter(
+            application=app, department=cpds_department
+        ).exists()
+
+    def test_submit_with_is_external_false(self, statuses, make_user):
+        """При создании обычной заявки is_external=False по умолчанию."""
+        user = make_user(role_code="user", with_department=True)
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            title="Internal Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="user@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        service = ProjectApplicationService()
+
+        app = service.submit_application(dto, user, is_external=False)
+
+        assert isinstance(app, ProjectApplication)
+        assert app.is_external is False
+
     def test_submit_without_department_validator_auto_transition(
         self, statuses, make_user, roles
     ):
@@ -640,3 +721,91 @@ class TestCoordinationAndDtosService:
         list_dto = service.get_application_list_dto(app)
         assert read_dto.id == app.id
         assert list_dto.id == app.id
+
+    def test_get_external_applications(self, statuses, make_user):
+        """get_external_applications возвращает только заявки с is_external=True."""
+        user = make_user(role_code="user", with_department=True)
+        service = ProjectApplicationService()
+
+        # Создаём внешнюю заявку
+        dto_external = ProjectApplicationCreateDTO(
+            company="External Corp",
+            title="External Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="external@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        app_external = service.submit_application(dto_external, user, is_external=True)
+
+        # Создаём обычную заявку
+        dto_internal = ProjectApplicationCreateDTO(
+            company="Internal Corp",
+            title="Internal Project",
+            author_lastname="Петров",
+            author_firstname="Пётр",
+            author_email="internal@example.com",
+            author_phone="+79990000001",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        app_internal = service.submit_application(dto_internal, user, is_external=False)
+
+        # Получаем внешние заявки
+        external_apps = service.get_external_applications(user)
+
+        # Проверяем, что только внешняя заявка в списке
+        external_ids = {app.id for app in external_apps}
+        assert app_external.id in external_ids
+        assert app_internal.id not in external_ids
+
+    def test_get_external_applications_queryset(self, statuses, make_user):
+        """get_external_applications_queryset возвращает QuerySet внешних заявок."""
+        user = make_user(role_code="user", with_department=True)
+        service = ProjectApplicationService()
+
+        # Создаём внешнюю заявку
+        dto_external = ProjectApplicationCreateDTO(
+            company="External Corp",
+            title="External Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="external@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        app_external = service.submit_application(dto_external, user, is_external=True)
+
+        # Получаем QuerySet внешних заявок
+        qs = service.get_external_applications_queryset(user)
+
+        assert hasattr(qs, "filter")  # QuerySet
+        results = list(qs)
+        assert len(results) == 1
+        assert results[0].id == app_external.id
+        assert results[0].is_external is True
+
+    def test_get_external_applications_requires_authentication(self, statuses):
+        """get_external_applications требует авторизации."""
+        from django.contrib.auth import get_user_model
+
+        User = get_user_model()
+        # Создаём неавторизованного пользователя (AnonymousUser)
+        anonymous_user = User()
+
+        service = ProjectApplicationService()
+
+        with pytest.raises(PermissionError, match="Требуется авторизация"):
+            service.get_external_applications(anonymous_user)

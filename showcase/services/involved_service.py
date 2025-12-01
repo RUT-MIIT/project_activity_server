@@ -97,7 +97,7 @@ class InvolvedManagementService:
         self,
         application: ProjectApplication,
         short_name: str,
-        actor: User,
+        actor: User | None = None,
     ) -> bool:
         """Добавляет причастное подразделение по его краткому названию.
 
@@ -117,6 +117,37 @@ class InvolvedManagementService:
 
         department = Department.objects.filter(short_name=short_name).first()
         if not department:
+            return False
+
+        self._add_involved_department(application, department, actor)
+        return True
+
+    @transaction.atomic
+    def add_department_by_id(
+        self,
+        application: ProjectApplication,
+        department_id: int,
+        actor: User | None = None,
+    ) -> bool:
+        """Добавляет причастное подразделение по его ID.
+
+        Args:
+            application: Заявка, к которой добавляется подразделение
+            department_id: ID подразделения
+            actor: Пользователь, выполняющий добавление
+
+        Returns:
+            bool: True если подразделение найдено и добавлено/присутствует, False если не найдено
+
+        Raises:
+            ValueError: Если не указан ID подразделения
+        """
+        if not department_id:
+            raise ValueError("ID подразделения обязательно")
+
+        try:
+            department = Department.objects.get(id=department_id)
+        except Department.DoesNotExist:
             return False
 
         self._add_involved_department(application, department, actor)
@@ -147,7 +178,10 @@ class InvolvedManagementService:
         return True
 
     def _add_involved_department(
-        self, application: ProjectApplication, department: "Department", actor: User
+        self,
+        application: ProjectApplication,
+        department: "Department",
+        actor: User | None = None,
     ) -> bool:
         """Добавляет подразделение как причастное к заявке.
 

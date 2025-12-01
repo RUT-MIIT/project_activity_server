@@ -169,7 +169,13 @@ class ProjectApplicationDomain:
                 "rejected_institute",
                 "returned_institute",
             ],
-            "await_cpds": ["approved", "rejected", "rejected_cpds", "returned_cpds"],
+            "await_cpds": [
+                "approved",
+                "rejected",
+                "rejected_cpds",
+                "returned_cpds",
+                "await_institute",
+            ],
             "returned_department": [
                 "await_department",
                 "returned_department",

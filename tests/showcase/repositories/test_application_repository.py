@@ -132,6 +132,69 @@ class TestRepositoryCreate:
         assert app.id is not None
         assert app.tags.count() == 0
 
+    def test_create_with_is_external_true(self, statuses, make_user):
+        """Создание заявки с is_external=True: проверяем установку флага."""
+        user = make_user(role_code="user")
+        dto = ProjectApplicationCreateDTO(
+            company="Acme Corp",
+            title="External Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель проекта достаточно длинная",
+            problem_holder="Носитель проблемы",
+            barrier="Описание барьера достаточно длинное",
+        )
+
+        repo = ProjectApplicationRepository()
+        app = repo.create(dto, user, "await_department", is_external=True)
+
+        assert app.id is not None
+        assert app.is_external is True
+
+    def test_create_with_is_external_false(self, statuses, make_user):
+        """Создание заявки с is_external=False: проверяем установку флага по умолчанию."""
+        user = make_user(role_code="user")
+        dto = ProjectApplicationCreateDTO(
+            company="Acme Corp",
+            title="Internal Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель проекта достаточно длинная",
+            problem_holder="Носитель проблемы",
+            barrier="Описание барьера достаточно длинное",
+        )
+
+        repo = ProjectApplicationRepository()
+        app = repo.create(dto, user, "await_department", is_external=False)
+
+        assert app.id is not None
+        assert app.is_external is False
+
+    def test_create_with_is_external_default(self, statuses, make_user):
+        """Создание заявки без указания is_external: проверяем значение по умолчанию (False)."""
+        user = make_user(role_code="user")
+        dto = ProjectApplicationCreateDTO(
+            company="Acme Corp",
+            title="Default Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель проекта достаточно длинная",
+            problem_holder="Носитель проблемы",
+            barrier="Описание барьера достаточно длинное",
+        )
+
+        repo = ProjectApplicationRepository()
+        app = repo.create(dto, user, "await_department")
+
+        assert app.id is not None
+        assert app.is_external is False
+
 
 @pytest.mark.django_db
 class TestRepositoryGetById:
@@ -534,6 +597,86 @@ class TestRepositoryCount:
         assert repo.count_by_status("await_department") == 2
         assert repo.count_by_status("await_institute") == 1
         assert repo.count_by_status("approved") == 0
+
+
+@pytest.mark.django_db
+class TestRepositoryFilterExternal:
+    """Тесты для методов фильтрации внешних заявок."""
+
+    def test_filter_external_applications(self, statuses, make_user):
+        """filter_external_applications возвращает только заявки с is_external=True."""
+        user = make_user(role_code="user")
+        repo = ProjectApplicationRepository()
+
+        # Создаём внешнюю заявку
+        dto_external = ProjectApplicationCreateDTO(
+            company="External Corp",
+            title="External Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="external@example.com",
+            author_phone="+79990000000",
+            goal="Цель проекта достаточно длинная",
+            problem_holder="Носитель проблемы",
+            barrier="Описание барьера достаточно длинное",
+        )
+        app_external = repo.create(
+            dto_external, user, "await_department", is_external=True
+        )
+
+        # Создаём обычную заявку
+        dto_internal = ProjectApplicationCreateDTO(
+            company="Internal Corp",
+            title="Internal Project",
+            author_lastname="Петров",
+            author_firstname="Пётр",
+            author_email="internal@example.com",
+            author_phone="+79990000001",
+            goal="Цель проекта достаточно длинная",
+            problem_holder="Носитель проблемы",
+            barrier="Описание барьера достаточно длинное",
+        )
+        app_internal = repo.create(
+            dto_internal, user, "await_department", is_external=False
+        )
+
+        # Получаем внешние заявки
+        external_apps = repo.filter_external_applications()
+
+        # Проверяем, что только внешняя заявка в списке
+        external_ids = {app.id for app in external_apps}
+        assert app_external.id in external_ids
+        assert app_internal.id not in external_ids
+
+    def test_filter_external_applications_queryset(self, statuses, make_user):
+        """filter_external_applications_queryset возвращает QuerySet внешних заявок."""
+        user = make_user(role_code="user")
+        repo = ProjectApplicationRepository()
+
+        # Создаём внешнюю заявку
+        dto_external = ProjectApplicationCreateDTO(
+            company="External Corp",
+            title="External Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="external@example.com",
+            author_phone="+79990000000",
+            goal="Цель проекта достаточно длинная",
+            problem_holder="Носитель проблемы",
+            barrier="Описание барьера достаточно длинное",
+        )
+        app_external = repo.create(
+            dto_external, user, "await_department", is_external=True
+        )
+
+        # Получаем QuerySet внешних заявок
+        qs = repo.filter_external_applications_queryset()
+
+        assert hasattr(qs, "filter")  # QuerySet
+        results = list(qs)
+        assert len(results) == 1
+        assert results[0].id == app_external.id
+        assert results[0].is_external is True
 
 
 @pytest.mark.django_db

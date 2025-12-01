@@ -295,6 +295,7 @@ class ApplicationCapabilities:
                 "approve": POLICY_ALLOW,
                 "reject": POLICY_ALLOW,
                 "request_changes": POLICY_ALLOW,
+                "transfer_to_institute": POLICY_ALLOW,
             },
         },
         STATUS_RETURNED_ALL: {
@@ -478,6 +479,7 @@ class ApplicationCapabilities:
         "reject": "Отклонить",
         "request_changes": "Отправить на доработку",
         "save_changes": "Сохранить изменение",
+        "transfer_to_institute": "Передать в институт",
     }
 
     @staticmethod
@@ -537,7 +539,13 @@ class ApplicationCapabilities:
         is_user_author: bool,
     ) -> list[dict[str, Any]]:
         """Возвращает список доступных действий согласно матрице."""
-        actions: list[str] = ["approve", "reject", "request_changes", "save_changes"]
+        actions: list[str] = [
+            "approve",
+            "reject",
+            "request_changes",
+            "save_changes",
+            "transfer_to_institute",
+        ]
         available: list[dict[str, Any]] = []
         for a in actions:
             if ApplicationCapabilities.is_action_allowed(

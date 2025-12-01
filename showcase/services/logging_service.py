@@ -34,7 +34,7 @@ class ApplicationLoggingService:
         application: ProjectApplication,
         from_status: ApplicationStatus,
         to_status: ApplicationStatus,
-        actor: User,
+        actor: User | None,
         previous_log: Optional[ProjectApplicationStatusLog] = None,
     ) -> ProjectApplicationStatusLog:
         """Логирование изменения статуса заявки.
@@ -43,7 +43,7 @@ class ApplicationLoggingService:
             application: Заявка, статус которой изменяется
             from_status: Предыдущий статус
             to_status: Новый статус
-            actor: Пользователь, выполнивший изменение
+            actor: Пользователь, выполнивший изменение (может быть None для анонимных действий)
             previous_log: Предыдущий лог для создания цепочки
 
         Returns:
@@ -57,8 +57,6 @@ class ApplicationLoggingService:
             raise ValueError("Заявка не может быть None")
         if not to_status:
             raise ValueError("Новый статус не может быть None")
-        if not actor:
-            raise ValueError("Актор не может быть None")
 
         # Создаем лог изменения статуса
         status_log = ProjectApplicationStatusLog.objects.create(

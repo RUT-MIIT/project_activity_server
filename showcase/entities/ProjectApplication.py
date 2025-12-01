@@ -6,6 +6,7 @@
 
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -194,6 +195,7 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     experts = serializers.CharField(required=False, allow_blank=True)
     additional_materials = serializers.CharField(required=False, allow_blank=True)
     needs_consultation = serializers.BooleanField(required=False)
+    main_department_id = serializers.IntegerField(required=False, allow_null=True)
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""
@@ -239,6 +241,7 @@ class ProjectApplicationUpdateSerializer(serializers.Serializer):
     experts = serializers.CharField(required=False, allow_blank=True)
     additional_materials = serializers.CharField(required=False, allow_blank=True)
     needs_consultation = serializers.BooleanField(required=False)
+    main_department_id = serializers.IntegerField(required=False, allow_null=True)
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""
@@ -575,6 +578,70 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
                 {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
             )
 
+    @action(detail=True, methods=["post"])
+    def transfer_to_institute(self, request, pk=None):
+        """POST /api/project-applications/{id}/transfer_to_institute/
+        Передача заявки в институт (только для роли cpds, внешние заявки со статусом await_cpds)
+        """
+        try:
+            # Получаем department_id из запроса
+            department_id = request.data.get("department_id")
+            if not department_id:
+                return Response(
+                    {"error": "Параметр department_id обязателен"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            try:
+                department_id = int(department_id)
+            except (ValueError, TypeError):
+                return Response(
+                    {"error": "department_id должен быть числом"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            application = self.service.transfer_to_institute(
+                application_id=int(pk),
+                department_id=department_id,
+                transferrer=request.user,
+            )
+
+            # Получаем доступные действия после передачи в институт
+            try:
+                available_actions_dto = self.service.get_available_actions(
+                    int(pk), request.user
+                )
+                available_actions = available_actions_dto.to_dict()["available_actions"]
+            except Exception:
+                # Если не удалось получить доступные действия, возвращаем пустой список
+                available_actions = []
+
+            return Response(
+                {
+                    "status": application.status.code,
+                    "status_name": (
+                        application.status.name
+                        if hasattr(application.status, "name")
+                        else ""
+                    ),
+                    "message": "Заявка передана в институт",
+                    "available_actions": available_actions,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except PermissionError as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except ObjectDoesNotExist:
+            return Response(
+                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+            )
+        except Exception:
+            return Response(
+                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+            )
+
     @action(detail=False, methods=["get"])
     def by_status(self, request):
         """GET /api/project-applications/by_status/?status=created
@@ -694,7 +761,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             dto = serializer.save()
 
             # 3. Вызов сервиса (передаем None как пользователя для неавторизованных)
-            application = self.service.submit_application(dto, None)
+            # Устанавливаем is_external=True для упрощенных заявок
+            application = self.service.submit_application(dto, None, is_external=True)
 
             # 4. Сериализация ответа
             response_dto = self.service.get_application_dto(application)
@@ -835,4 +903,26 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             print(traceback.format_exc())
             return Response(
                 {"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+    @action(detail=False, methods=["get"])
+    def external(self, request):
+        """GET /api/project-applications/external/
+        Получение списка всех внешних заявок (is_external=True)
+        Требуется авторизация
+        """
+        try:
+            # Получаем ВСЕ внешние заявки (без пагинации)
+            applications = self.service.get_external_applications(request.user)
+            list_dtos = [
+                self.service.get_application_list_dto(app) for app in applications
+            ]
+            return Response([dto.to_dict() for dto in list_dtos])
+
+        except PermissionError as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response(
+                {"error": get_error_message(e)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

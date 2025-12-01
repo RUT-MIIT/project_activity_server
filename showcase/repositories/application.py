@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Max, Q
 from django.utils import timezone
 
+from accounts.models import Department
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
@@ -20,7 +21,11 @@ class ProjectApplicationRepository:
     """Репозиторий - вся работа с БД здесь"""
 
     def create(
-        self, dto: ProjectApplicationCreateDTO, author: User, status_code: str
+        self,
+        dto: ProjectApplicationCreateDTO,
+        author: User,
+        status_code: str,
+        is_external: bool = False,
     ) -> ProjectApplication:
         """Создание заявки в БД.
 
@@ -75,10 +80,16 @@ class ProjectApplicationRepository:
             experts=dto.experts,
             additional_materials=dto.additional_materials,
             needs_consultation=dto.needs_consultation,
+            main_department=(
+                Department.objects.get(pk=dto.main_department_id)
+                if dto.main_department_id
+                else None
+            ),
             status=status,
             application_year=current_year,
             year_sequence_number=next_number,
             print_number=print_number,
+            is_external=is_external,
         )
 
         # Устанавливаем M2M поля
@@ -119,9 +130,9 @@ class ProjectApplicationRepository:
 
         Для простых операций, где не нужны все связи.
         """
-        return ProjectApplication.objects.select_related("status", "author").get(
-            pk=application_id
-        )
+        return ProjectApplication.objects.select_related(
+            "status", "author", "main_department"
+        ).get(pk=application_id)
 
     def filter_by_user(self, user: User) -> list[ProjectApplication]:
         """Получение заявок пользователя (автор или причастный).
@@ -245,8 +256,8 @@ class ProjectApplicationRepository:
             for field in dir(dto)
             if not field.startswith("_")
             and not callable(getattr(dto, field))
-            and field not in ("target_institutes", "tags")
-        ]  # M2M поля обрабатываем отдельно
+            and field not in ("target_institutes", "tags", "main_department_id")
+        ]  # M2M поля и ForeignKey обрабатываем отдельно
 
         for field_name in dto_fields:
             field_value = getattr(dto, field_name, None)
@@ -255,6 +266,22 @@ class ProjectApplicationRepository:
                 if hasattr(application, field_name):
                     setattr(application, field_name, field_value)
                     update_fields.append(field_name)
+
+        # Обрабатываем main_department_id отдельно, так как это ForeignKey
+        if hasattr(dto, "main_department_id") and dto.main_department_id is not None:
+            if dto.main_department_id:
+                try:
+                    application.main_department = Department.objects.get(
+                        pk=dto.main_department_id
+                    )
+                except Department.DoesNotExist as err:
+                    raise ValueError(
+                        f"Подразделение с id {dto.main_department_id} не найдено"
+                    ) from err
+            else:
+                # Если передан 0, сбрасываем поле
+                application.main_department = None
+            update_fields.append("main_department")
 
         # Обновляем M2M поля
         if dto.target_institutes is not None:
@@ -334,5 +361,29 @@ class ProjectApplicationRepository:
         return (
             ProjectApplication.objects.select_related("status", "author")
             .prefetch_related("target_institutes")
+            .order_by("-creation_date")
+        )
+
+    def filter_external_applications(self) -> list[ProjectApplication]:
+        """Получение всех внешних заявок (is_external=True).
+
+        Для получения списка внешних заявок.
+        """
+        return list(
+            ProjectApplication.objects.filter(is_external=True)
+            .select_related("status", "author")
+            .prefetch_related("target_institutes", "tags")
+            .order_by("-creation_date")
+        )
+
+    def filter_external_applications_queryset(self):
+        """Получение QuerySet внешних заявок для пагинации.
+
+        Для получения списка внешних заявок с поддержкой пагинации.
+        """
+        return (
+            ProjectApplication.objects.filter(is_external=True)
+            .select_related("status", "author")
+            .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
