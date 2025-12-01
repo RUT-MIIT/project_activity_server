@@ -90,6 +90,7 @@ class ProjectApplicationRepository:
             year_sequence_number=next_number,
             print_number=print_number,
             is_external=is_external,
+            is_internal_customer=dto.is_internal_customer,
         )
 
         # Устанавливаем M2M поля

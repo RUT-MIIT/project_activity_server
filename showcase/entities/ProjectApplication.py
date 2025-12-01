@@ -196,6 +196,7 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     additional_materials = serializers.CharField(required=False, allow_blank=True)
     needs_consultation = serializers.BooleanField(required=False)
     main_department_id = serializers.IntegerField(required=False, allow_null=True)
+    is_internal_customer = serializers.BooleanField(required=False)
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""
@@ -242,6 +243,7 @@ class ProjectApplicationUpdateSerializer(serializers.Serializer):
     additional_materials = serializers.CharField(required=False, allow_blank=True)
     needs_consultation = serializers.BooleanField(required=False)
     main_department_id = serializers.IntegerField(required=False, allow_null=True)
+    is_internal_customer = serializers.BooleanField(required=False)
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""

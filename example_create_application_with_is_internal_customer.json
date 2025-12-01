@@ -1,0 +1,88 @@
+{
+  "Пример данных для создания проектной заявки с внутренним заказчиком": {
+    "endpoint": "POST /api/showcase/project-applications/",
+    "description": "Создание заявки с указанием, что заказчик является внутренним",
+    "data": {
+      "company": "Внутренняя Компания ООО",
+      "title": "Проект по разработке внутренней системы",
+      "author_lastname": "Петров",
+      "author_firstname": "Петр",
+      "author_middlename": "Иванович",
+      "author_email": "petrov@internal-company.ru",
+      "author_phone": "+79991111111",
+      "author_role": "Руководитель проекта",
+      "author_division": "Отдел разработки",
+      "company_contacts": "Контакты представителя заказчика: тел. +79991111111, email: contact@internal-company.ru",
+      "target_institutes": ["INST1", "INST2"],
+      "tags": [1, 2, 3],
+      "project_level": "L1",
+      "problem_holder": "Внутренний отдел компании",
+      "goal": "Разработать внутреннюю систему управления проектами для повышения эффективности работы отдела",
+      "barrier": "Отсутствие единой системы управления проектами приводит к потере информации и неэффективному использованию ресурсов",
+      "existing_solutions": "Используются разрозненные инструменты: Excel, Trello, но нет единой системы",
+      "context": "Компания растет, количество проектов увеличивается, требуется централизованное управление",
+      "stakeholders": "Руководство компании, отдел разработки, отдел маркетинга",
+      "recommended_tools": "Django, PostgreSQL, React",
+      "experts": "Иванов И.И. - эксперт по системам управления проектами",
+      "additional_materials": "Дополнительные материалы приложены отдельно",
+      "needs_consultation": true,
+      "main_department_id": 1,
+      "is_internal_customer": true
+    }
+  },
+  "Пример данных для создания проектной заявки с внешним заказчиком": {
+    "endpoint": "POST /api/showcase/project-applications/",
+    "description": "Создание заявки с указанием, что заказчик является внешним (по умолчанию)",
+    "data": {
+      "company": "Внешняя Компания ООО",
+      "title": "Проект по разработке внешней системы",
+      "author_lastname": "Сидоров",
+      "author_firstname": "Сидор",
+      "author_middlename": "Петрович",
+      "author_email": "sidorov@external-company.ru",
+      "author_phone": "+79992222222",
+      "author_role": "Директор",
+      "author_division": "IT-отдел",
+      "company_contacts": "Контакты представителя заказчика: тел. +79992222222, email: contact@external-company.ru",
+      "target_institutes": ["INST1"],
+      "tags": [1],
+      "project_level": "L2",
+      "problem_holder": "Внешняя компания-заказчик",
+      "goal": "Разработать систему для управления заказами клиентов",
+      "barrier": "Текущая система не справляется с растущим объемом заказов",
+      "existing_solutions": "Используется старая система на базе Access",
+      "context": "Компания расширяет бизнес, требуется современная система",
+      "stakeholders": "Руководство компании, отдел продаж, отдел логистики",
+      "recommended_tools": "Python, Django, PostgreSQL",
+      "experts": "Петров П.П. - эксперт по системам управления заказами",
+      "additional_materials": "Техническое задание приложено",
+      "needs_consultation": false,
+      "main_department_id": 2,
+      "is_internal_customer": false
+    }
+  },
+  "Пример данных для создания проектной заявки без указания типа заказчика": {
+    "endpoint": "POST /api/showcase/project-applications/",
+    "description": "Создание заявки без указания is_internal_customer (по умолчанию будет false)",
+    "data": {
+      "company": "Компания ООО",
+      "title": "Проект разработки",
+      "author_lastname": "Иванов",
+      "author_firstname": "Иван",
+      "author_email": "ivanov@company.ru",
+      "author_phone": "+79993333333",
+      "goal": "Длинная цель проекта, больше 50 символов для консультации",
+      "problem_holder": "Носитель проблемы",
+      "barrier": "Длинное описание барьера",
+      "project_level": "L1"
+    }
+  },
+  "Пример обновления поля is_internal_customer": {
+    "endpoint": "PATCH /api/showcase/project-applications/{id}/",
+    "description": "Обновление только поля is_internal_customer",
+    "data": {
+      "is_internal_customer": true
+    }
+  }
+}
+

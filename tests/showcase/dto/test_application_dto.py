@@ -172,6 +172,41 @@ class TestProjectApplicationCreateDTO:
         assert dto.needs_consultation is True
         assert dto_false.needs_consultation is False
 
+    def test_create_dto_is_internal_customer_defaults_to_false(self):
+        """По умолчанию is_internal_customer равен False."""
+        dto = ProjectApplicationCreateDTO(company="Acme Corp")
+
+        assert dto.is_internal_customer is False
+
+    def test_create_dto_is_internal_customer_true(self):
+        """Явно переданное значение is_internal_customer=True сохраняется."""
+        dto = ProjectApplicationCreateDTO(
+            company="Acme Corp", is_internal_customer=True
+        )
+
+        assert dto.is_internal_customer is True
+
+    def test_create_dto_is_internal_customer_in_to_dict(self):
+        """is_internal_customer включается в to_dict."""
+        dto = ProjectApplicationCreateDTO(
+            company="Acme Corp", is_internal_customer=True
+        )
+
+        result = dto.to_dict()
+
+        assert "is_internal_customer" in result
+        assert result["is_internal_customer"] is True
+
+    def test_create_dto_is_internal_customer_from_dict(self):
+        """is_internal_customer создается из словаря через from_dict."""
+        data = {
+            "company": "Acme Corp",
+            "is_internal_customer": True,
+        }
+        dto = ProjectApplicationCreateDTO.from_dict(data)
+
+        assert dto.is_internal_customer is True
+
 
 class TestProjectApplicationUpdateDTO:
     """Тесты для ProjectApplicationUpdateDTO."""
@@ -586,3 +621,59 @@ class TestProjectApplicationListDTO:
         assert "status" in result
         assert "author_name" in result
         assert "author_email" in result
+
+    def test_list_dto_is_internal_customer(self, statuses, make_user):
+        """is_internal_customer включается в ProjectApplicationListDTO."""
+        from showcase.models import ProjectApplication
+
+        user = make_user(role_code="user")
+        status = statuses["await_department"]
+
+        app = ProjectApplication.objects.create(
+            title="Test",
+            company="Acme",
+            author=user,
+            status=status,
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель",
+            problem_holder="Носитель",
+            barrier="Барьер",
+            is_internal_customer=True,
+        )
+
+        dto = ProjectApplicationListDTO(app)
+        result = dto.to_dict()
+
+        assert "is_internal_customer" in result
+        assert result["is_internal_customer"] is True
+
+    def test_read_dto_is_internal_customer(self, statuses, make_user):
+        """is_internal_customer включается в ProjectApplicationReadDTO."""
+        from showcase.models import ProjectApplication
+
+        user = make_user(role_code="user")
+        status = statuses["await_department"]
+
+        app = ProjectApplication.objects.create(
+            title="Test",
+            company="Acme",
+            author=user,
+            status=status,
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель",
+            problem_holder="Носитель",
+            barrier="Барьер",
+            is_internal_customer=True,
+        )
+
+        dto = ProjectApplicationReadDTO(app)
+        result = dto.to_dict()
+
+        assert "is_internal_customer" in result
+        assert result["is_internal_customer"] is True

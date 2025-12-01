@@ -78,6 +78,7 @@ class ProjectApplicationCreateDTO:
         description: Optional[str] = None,  # Для совместимости с тестами
         tags: Optional[list[int]] = None,
         main_department_id: Optional[int] = None,
+        is_internal_customer: Optional[bool] = None,
         **kwargs,
     ):
         self.title = title or ""
@@ -107,6 +108,9 @@ class ProjectApplicationCreateDTO:
             needs_consultation if needs_consultation is not None else False
         )
         self.main_department_id = main_department_id
+        self.is_internal_customer = (
+            is_internal_customer if is_internal_customer is not None else False
+        )
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationCreateDTO":
@@ -141,6 +145,7 @@ class ProjectApplicationCreateDTO:
             "additional_materials": self.additional_materials,
             "needs_consultation": self.needs_consultation,
             "main_department_id": self.main_department_id,
+            "is_internal_customer": self.is_internal_customer,
         }
 
 
@@ -173,6 +178,7 @@ class ProjectApplicationUpdateDTO:
         needs_consultation: Optional[bool] = None,
         tags: Optional[list[int]] = None,
         main_department_id: Optional[int] = None,
+        is_internal_customer: Optional[bool] = None,
         **kwargs,
     ):
         self.title = title
@@ -199,6 +205,7 @@ class ProjectApplicationUpdateDTO:
         self.additional_materials = additional_materials
         self.needs_consultation = needs_consultation
         self.main_department_id = main_department_id
+        self.is_internal_customer = is_internal_customer
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationUpdateDTO":
@@ -224,6 +231,7 @@ class ProjectApplicationReadDTO:
         self.creation_date = application.creation_date
         self.needs_consultation = application.needs_consultation
         self.is_external = application.is_external
+        self.is_internal_customer = application.is_internal_customer
 
         # Нумерация заявок
         self.application_year = application.application_year
@@ -375,6 +383,7 @@ class ProjectApplicationReadDTO:
             "creation_date": self.creation_date.isoformat(),
             "needs_consultation": self.needs_consultation,
             "is_external": self.is_external,
+            "is_internal_customer": self.is_internal_customer,
             "application_year": self.application_year,
             "year_sequence_number": self.year_sequence_number,
             "print_number": self.print_number,
@@ -418,6 +427,7 @@ class ProjectApplicationListDTO:
         self.creation_date = application.creation_date
         self.needs_consultation = application.needs_consultation
         self.is_external = application.is_external
+        self.is_internal_customer = application.is_internal_customer
         # Количество комментариев: используем аннотацию, если есть, иначе fallback к count()
         annotated_count = getattr(application, "comments_count", None)
         self.comments_count = (
@@ -453,6 +463,7 @@ class ProjectApplicationListDTO:
             "creation_date": self.creation_date.isoformat(),
             "needs_consultation": self.needs_consultation,
             "is_external": self.is_external,
+            "is_internal_customer": self.is_internal_customer,
             "application_year": self.application_year,
             "year_sequence_number": self.year_sequence_number,
             "print_number": self.print_number,

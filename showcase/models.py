@@ -176,6 +176,9 @@ class ProjectApplication(models.Model):
         default=False, verbose_name="Нужна консультация"
     )
     is_external = models.BooleanField(default=False, verbose_name="Внешняя заявка")
+    is_internal_customer = models.BooleanField(
+        default=False, verbose_name="Внутренний заказчик"
+    )
 
     # Нумерация заявок
     application_year = models.PositiveIntegerField(

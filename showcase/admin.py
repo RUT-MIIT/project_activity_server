@@ -95,6 +95,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
         "creation_date",
         "project_level",
         "needs_consultation",
+        "is_internal_customer",
         "application_year",
     )
     search_fields = (
@@ -145,6 +146,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "company",
+                    "is_internal_customer",
                     "company_contacts",
                     "target_institutes",
                     "tags",
