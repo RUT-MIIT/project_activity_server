@@ -384,9 +384,10 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
 
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response(
-                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+                {"error": f"Заявка не найдена ({str(e)})"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     def update(self, request, pk=None):
@@ -415,9 +416,10 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({"errors": error_msg}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response(
-                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+                {"error": f"Заявка не найдена ({str(e)})"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     def partial_update(self, request, pk=None):
@@ -488,9 +490,10 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
+        except Exception as e:
             return Response(
-                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+                {"error": f"Заявка не найдена ({str(e)})"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     @action(detail=True, methods=["post"])
@@ -531,9 +534,10 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
+        except Exception as e:
             return Response(
-                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+                {"error": f"Заявка не найдена ({str(e)})"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     @action(detail=True, methods=["post"])
@@ -573,9 +577,10 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception:
+        except Exception as e:
             return Response(
-                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+                {"error": f"Заявка не найдена ({str(e)})"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     @action(detail=True, methods=["post"])
@@ -633,13 +638,15 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        except ObjectDoesNotExist:
+        except ObjectDoesNotExist as e:
             return Response(
-                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+                {"error": f"Заявка не найдена ({str(e)})"},
+                status=status.HTTP_404_NOT_FOUND,
             )
-        except Exception:
+        except Exception as e:
             return Response(
-                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+                {"error": f"Заявка не найдена ({str(e)})"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     @action(detail=False, methods=["get"])
@@ -807,9 +814,10 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             )
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response(
-                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+                {"error": f"Заявка не найдена ({str(e)})"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     @action(detail=True, methods=["post"])
@@ -860,9 +868,10 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
-        except Exception:
+        except Exception as e:
             return Response(
-                {"error": "Заявка не найдена"}, status=status.HTTP_404_NOT_FOUND
+                {"error": f"Заявка не найдена ({str(e)})"},
+                status=status.HTTP_404_NOT_FOUND,
             )
 
     @action(detail=True, methods=["get"])

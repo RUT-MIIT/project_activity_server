@@ -465,6 +465,114 @@ class TestApproveRejectRequestService:
         # CPDS одобряет в финальный статус approved
         assert app2.status.code == "approved"
 
+    def test_cpds_request_changes_after_full_approval_chain(
+        self, statuses, make_user, roles
+    ):
+        """Полный цикл: заявка создается, одобряется department_validator, затем institute_validator,
+        затем cpds возвращает на доработку.
+
+        Проверяет:
+        - Заявка создается со статусом await_department
+        - department_validator одобряет -> await_institute
+        - institute_validator одобряет -> await_cpds
+        - cpds возвращает на доработку -> returned_cpds
+        - Все логи статусов созданы правильно
+        """
+        # Создаем пользователей с разными ролями
+        author = make_user(role_code="user", with_department=True)
+        inst_validator = make_user(
+            role_code="institute_validator", with_department=True
+        )
+        cpds_user = make_user(role_code="cpds", with_department=True)
+
+        # Создаем валидатора в подразделении автора, чтобы заявка точно была в await_department
+        validator_role = roles["department_validator"]
+        dept_validator = User.objects.create_user(
+            email="dept_validator@example.com",
+            password="pass",
+            first_name="Dept",
+            last_name="Validator",
+            role=validator_role,
+            department=author.department,  # То же подразделение, что и у автора
+        )
+
+        # Создаем заявку
+        service = ProjectApplicationService()
+        dto = ProjectApplicationCreateDTO(
+            company="Test Company",
+            title="Test Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="author@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        app = service.submit_application(dto, author)
+
+        # Проверяем, что заявка в статусе await_department
+        assert app.status.code == "await_department"
+
+        # Одобряем через department_validator
+        # Причастность подразделения уже добавлена автоматически при создании заявки
+        app = service.approve_application(app.id, dept_validator)
+        app.refresh_from_db()
+        assert app.status.code == "await_institute"
+
+        # Одобряем через institute_validator
+        # Добавляем причастность подразделения валидатора института (если еще не добавлено)
+        ApplicationInvolvedDepartment.objects.get_or_create(
+            application=app, department=inst_validator.department
+        )
+        app = service.approve_application(app.id, inst_validator)
+        app.refresh_from_db()
+        assert app.status.code == "await_cpds"
+
+        # CPDS возвращает на доработку
+        # Добавляем причастность подразделения CPDS (если еще не добавлено)
+        cpds_department, _ = Department.objects.get_or_create(
+            short_name="ЦПДС", defaults={"name": "Центр проектного развития"}
+        )
+        ApplicationInvolvedDepartment.objects.get_or_create(
+            application=app, department=cpds_department
+        )
+        app = service.request_changes(app.id, cpds_user)
+        app.refresh_from_db()
+
+        # Проверяем финальный статус
+        assert app.status.code == "returned_cpds"
+
+        # Проверяем логи статусов
+        status_logs = ProjectApplicationStatusLog.objects.filter(
+            application=app, action_type="status_change"
+        ).order_by("changed_at")
+
+        # Должно быть минимум 4 лога:
+        # 1) создание заявки (created -> await_department)
+        # 2) одобрение department_validator (await_department -> approved_department -> await_institute)
+        # 3) одобрение institute_validator (await_institute -> approved_institute -> await_cpds)
+        # 4) возврат на доработку cpds (await_cpds -> returned_cpds)
+        assert status_logs.count() >= 4
+
+        # Проверяем последний лог - возврат на доработку
+        last_log = status_logs.last()
+        assert last_log.from_status.code == "await_cpds"
+        assert last_log.to_status.code == "returned_cpds"
+        assert last_log.actor == cpds_user
+
+        # Проверяем, что в логах есть все необходимые переходы
+        log_statuses = [log.to_status.code for log in status_logs]
+        assert (
+            "await_institute" in log_statuses
+        ), "Должен быть лог перехода в await_institute"
+        assert "await_cpds" in log_statuses, "Должен быть лог перехода в await_cpds"
+        assert (
+            "returned_cpds" in log_statuses
+        ), "Должен быть лог перехода в returned_cpds"
+
     def test_request_changes_department_validator(self, statuses, make_user):
         """Запрос изменений: await_department -> returned_department, один лог."""
         validator = make_user(role_code="department_validator", with_department=True)
