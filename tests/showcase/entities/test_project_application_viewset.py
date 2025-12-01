@@ -1,7 +1,7 @@
 """Тесты для ProjectApplicationViewSet - проверка API endpoints."""
 
-import pytest
 from django.contrib.auth import get_user_model
+import pytest
 from rest_framework.test import APIClient
 
 from showcase.models import ProjectApplication
