@@ -1,10 +1,10 @@
 import os
 from typing import Any, Dict, Iterable, List, Optional
 
-import pandas as pd
 from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 from django.db.models import ProtectedError
+import pandas as pd
 
 from accounts.models import Department
 from showcase.models import Institute

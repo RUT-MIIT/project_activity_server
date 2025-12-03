@@ -1,10 +1,9 @@
+import os
 from typing import Any
 
-import os
-
+from django.core.management import call_command
 import pandas as pd
 import pytest
-from django.core.management import call_command
 
 from accounts.models import Department
 from showcase.models import Institute

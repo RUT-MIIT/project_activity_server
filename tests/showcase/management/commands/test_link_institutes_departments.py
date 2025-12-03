@@ -1,7 +1,7 @@
 from typing import Any
 
-import pytest
 from django.core.management import call_command
+import pytest
 
 from accounts.models import Department
 from showcase.models import Institute
