@@ -143,11 +143,11 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     """
 
     # Основные поля
-    title = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    title = serializers.CharField(max_length=255, required=True, allow_blank=False)
     description = serializers.CharField(
         required=False, allow_blank=True
     )  # Для совместимости с тестами
-    company = serializers.CharField(max_length=255)
+    company = serializers.CharField(max_length=255, required=True, allow_blank=False)
 
     # Контактные данные - делаем опциональными для совместимости с тестами
     author_lastname = serializers.CharField(
@@ -171,7 +171,7 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     )
 
     # О проекте
-    company_contacts = serializers.CharField(required=False, allow_blank=True)
+    company_contacts = serializers.CharField(required=True, allow_blank=False)
     target_institutes = serializers.ListField(
         child=serializers.CharField(max_length=50), required=False, allow_empty=True
     )
@@ -182,11 +182,11 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
         max_length=100, required=False, allow_blank=True
     )
 
-    # Проблема - делаем опциональными для совместимости с тестами
-    problem_holder = serializers.CharField(required=False, allow_blank=True)
-    goal = serializers.CharField(required=False, allow_blank=True)
-    barrier = serializers.CharField(required=False, allow_blank=True)
-    existing_solutions = serializers.CharField(required=False, allow_blank=True)
+    # Проблема - обязательные поля
+    problem_holder = serializers.CharField(required=True, allow_blank=False)
+    goal = serializers.CharField(required=True, allow_blank=False)
+    barrier = serializers.CharField(required=True, allow_blank=False)
+    existing_solutions = serializers.CharField(required=True, allow_blank=False)
 
     # Контекст
     context = serializers.CharField(required=False, allow_blank=True)
@@ -594,28 +594,25 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["post"])
     def transfer_to_institute(self, request, pk=None):
         """POST /api/project-applications/{id}/transfer_to_institute/
-        Передача заявки в институт (только для роли cpds, внешние заявки со статусом await_cpds)
+        Передача заявки в институт по коду института.
+
+        Ожидает в теле запроса параметр:
+        - code (str): код института из модели Institute.code
         """
         try:
-            # Получаем department_id из запроса
-            department_id = request.data.get("department_id")
-            if not department_id:
+            # Получаем код института из запроса
+            institute_code = request.data.get("code")
+            if not institute_code or not isinstance(institute_code, str):
                 return Response(
-                    {"error": "Параметр department_id обязателен"},
-                    status=status.HTTP_400_BAD_REQUEST,
-                )
-
-            try:
-                department_id = int(department_id)
-            except (ValueError, TypeError):
-                return Response(
-                    {"error": "department_id должен быть числом"},
+                    {
+                        "error": "Параметр code обязателен и должен быть непустой строкой"
+                    },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
             application = self.service.transfer_to_institute(
                 application_id=int(pk),
-                department_id=department_id,
+                institute_code=institute_code,
                 transferrer=request.user,
             )
 
@@ -929,8 +926,13 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         Требуется авторизация
         """
         try:
-            # Получаем ВСЕ внешние заявки (без пагинации)
-            applications = self.service.get_external_applications(request.user)
+            # Читаем опциональный фильтр по статусу
+            status_code = request.query_params.get("status")
+
+            # Получаем внешние заявки (без пагинации)
+            applications = self.service.get_external_applications(
+                request.user, status_code=status_code
+            )
             list_dtos = [
                 self.service.get_application_list_dto(app) for app in applications
             ]
@@ -938,6 +940,9 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
 
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError as e:
+            # Ошибки валидации параметров (например, несуществующий статус)
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(
                 {"error": get_error_message(e)},

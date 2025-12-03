@@ -22,49 +22,51 @@ class ProjectApplicationDomain:
         """
         result = ValidationResult()
 
-        # Бизнес-правило: название должно быть осмысленным (если указано)
-        if dto.title and len(dto.title.strip()) < 5:
-            result.add_error("title", "Название должно содержать минимум 5 символов")
+        # Бизнес-правило: название проекта обязательно
+        if not dto.title or not dto.title.strip():
+            result.add_error("title", "Название проекта обязательно")
 
-        # Бизнес-правило: название компании должно быть осмысленным (если передано)
-        if dto.company and len(dto.company.strip()) < 2:
+        # Бизнес-правило: наименование организации-заказчика обязательно
+        if not dto.company or not dto.company.strip():
             result.add_error(
-                "company", "Название компании должно содержать минимум 2 символа"
+                "company", "Наименование организации-заказчика обязательно"
             )
 
-        # Бизнес-правило: email должен быть осмысленным (если указан)
-        if dto.author_email and len(dto.author_email.strip()) < 5:
+        # Бизнес-правило: цель проекта обязательна
+        if not dto.goal or not dto.goal.strip():
+            result.add_error("goal", "Цель обязательна")
+
+        # Бизнес-правило: носитель проблемы обязателен
+        if not dto.problem_holder or not dto.problem_holder.strip():
+            result.add_error("problem_holder", "Носитель проблемы обязателен")
+
+        # Бизнес-правило: барьер обязателен
+        if not dto.barrier or not dto.barrier.strip():
+            result.add_error("barrier", "Барьер обязателен")
+
+        # Бизнес-правило: существующие решения обязательны
+        if not dto.existing_solutions or not dto.existing_solutions.strip():
+            result.add_error("existing_solutions", "Существующие решения обязательны")
+
+        # Бизнес-правило: контактные данные представителя заказчика обязательны
+        if not dto.company_contacts or not dto.company_contacts.strip():
             result.add_error(
-                "author_email", "Email должен содержать минимум 5 символов"
+                "company_contacts",
+                "Контактные данные представителя заказчика обязательны",
             )
-
-        if dto.goal is not None and (not dto.goal or len(dto.goal.strip()) < 10):
-            result.add_error("goal", "Опишите цель проекта (минимум 10 символов)")
-
-        if dto.problem_holder is not None and (
-            not dto.problem_holder or len(dto.problem_holder.strip()) < 5
-        ):
-            result.add_error(
-                "problem_holder", "Опишите носителя проблемы (минимум 5 символов)"
-            )
-
-        if dto.barrier is not None and (
-            not dto.barrier or len(dto.barrier.strip()) < 10
-        ):
-            result.add_error("barrier", "Опишите барьер (минимум 10 символов)")
 
         if dto.author_lastname is not None and (
-            not dto.author_lastname or len(dto.author_lastname.strip()) < 2
+            not dto.author_lastname or not dto.author_lastname.strip()
         ):
             result.add_error("author_lastname", "Фамилия автора обязательна")
 
         if dto.author_firstname is not None and (
-            not dto.author_firstname or len(dto.author_firstname.strip()) < 2
+            not dto.author_firstname or not dto.author_firstname.strip()
         ):
             result.add_error("author_firstname", "Имя автора обязательно")
 
         if dto.author_phone is not None and (
-            not dto.author_phone or len(dto.author_phone.strip()) < 10
+            not dto.author_phone or not dto.author_phone.strip()
         ):
             result.add_error("author_phone", "Телефон автора обязателен")
 
@@ -79,46 +81,42 @@ class ProjectApplicationDomain:
         result = ValidationResult()
 
         # Валидируем только переданные поля
-        if dto.title is not None and (not dto.title or len(dto.title.strip()) < 5):
-            result.add_error("title", "Название должно содержать минимум 5 символов")
+        if dto.title is not None and (not dto.title or not dto.title.strip()):
+            result.add_error("title", "Название проекта обязательно")
 
         if dto.author_email is not None and (
             not dto.author_email or "@" not in dto.author_email
         ):
             result.add_error("author_email", "Некорректный email")
 
-        if dto.goal is not None and (not dto.goal or len(dto.goal.strip()) < 10):
-            result.add_error("goal", "Опишите цель проекта (минимум 10 символов)")
+        if dto.goal is not None and (not dto.goal or not dto.goal.strip()):
+            result.add_error("goal", "Цель обязательна")
 
         if dto.problem_holder is not None and (
-            not dto.problem_holder or len(dto.problem_holder.strip()) < 5
+            not dto.problem_holder or not dto.problem_holder.strip()
         ):
+            result.add_error("problem_holder", "Носитель проблемы обязателен")
+
+        if dto.barrier is not None and (not dto.barrier or not dto.barrier.strip()):
+            result.add_error("barrier", "Барьер обязателен")
+
+        if dto.company is not None and (not dto.company or not dto.company.strip()):
             result.add_error(
-                "problem_holder", "Опишите носителя проблемы (минимум 5 символов)"
+                "company", "Наименование организации-заказчика обязательно"
             )
 
-        if dto.barrier is not None and (
-            not dto.barrier or len(dto.barrier.strip()) < 10
-        ):
-            result.add_error("barrier", "Опишите барьер (минимум 10 символов)")
-
-        if dto.company is not None and (
-            not dto.company or len(dto.company.strip()) < 2
-        ):
-            result.add_error("company", "Название компании обязательно")
-
         if dto.author_lastname is not None and (
-            not dto.author_lastname or len(dto.author_lastname.strip()) < 2
+            not dto.author_lastname or not dto.author_lastname.strip()
         ):
             result.add_error("author_lastname", "Фамилия автора обязательна")
 
         if dto.author_firstname is not None and (
-            not dto.author_firstname or len(dto.author_firstname.strip()) < 2
+            not dto.author_firstname or not dto.author_firstname.strip()
         ):
             result.add_error("author_firstname", "Имя автора обязательно")
 
         if dto.author_phone is not None and (
-            not dto.author_phone or len(dto.author_phone.strip()) < 10
+            not dto.author_phone or not dto.author_phone.strip()
         ):
             result.add_error("author_phone", "Телефон автора обязателен")
 
@@ -174,6 +172,9 @@ class ProjectApplicationDomain:
                 "rejected",
                 "rejected_cpds",
                 "returned_cpds",
+                "await_institute",
+            ],
+            "require_assignment": [
                 "await_institute",
             ],
             "returned_department": [

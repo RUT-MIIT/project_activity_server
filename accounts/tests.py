@@ -278,6 +278,86 @@ class AccountsApiTests(TestCase):
         self.assertEqual(reg.status, RegistrationRequest.Status.REJECTED)
         self.assertGreaterEqual(len(mail.outbox), 1)
 
+    def test_registration_request_approve_forbidden_for_regular_user(self):
+        """Обычный пользователь не может утверждать заявки (ожидается 403)."""
+        reg = RegistrationRequest.objects.create(
+            last_name="Иванов",
+            first_name="Иван",
+            middle_name="",
+            department=self.dept,
+            email="ivanov@example.com",
+            phone="+79990001122",
+            comment="-",
+        )
+        # Авторизуемся обычным пользователем
+        self.client = APIClient()
+        self.auth(self.user.email, self.user_password)
+        url = f"/api/accounts/registration-requests/{reg.id}/approve/"
+        payload = {"role_id": self.role_user.code}
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 403)
+
+    def test_registration_request_reject_forbidden_for_regular_user(self):
+        """Обычный пользователь не может отклонять заявки (ожидается 403)."""
+        reg = RegistrationRequest.objects.create(
+            last_name="Иванов",
+            first_name="Иван",
+            middle_name="",
+            department=self.dept,
+            email="ivanov2@example.com",
+            phone="+79990003344",
+            comment="-",
+        )
+        self.client = APIClient()
+        self.auth(self.user.email, self.user_password)
+        url = f"/api/accounts/registration-requests/{reg.id}/reject/"
+        payload = {"reason": "Нет прав"}
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 403)
+
+    def test_registration_request_approve_allowed_for_cpds_user(self):
+        """Пользователь ЦПДС может утверждать заявки (IsCpdsUser)."""
+        reg = RegistrationRequest.objects.create(
+            last_name="Ковалёв",
+            first_name="Кирилл",
+            middle_name="",
+            department=self.dept,
+            email="kovalev@example.com",
+            phone="+79990005566",
+            comment="-",
+        )
+        # Авторизуемся пользователем ЦПДС
+        self.client = APIClient()
+        self.auth(self.cpds_user.email, self.cpds_password)
+        url = f"/api/accounts/registration-requests/{reg.id}/approve/"
+        payload = {"role_id": self.role_user.code}
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 200)
+        # Пользователь создан
+        self.assertTrue(
+            self.user_model.objects.filter(email="kovalev@example.com").exists()
+        )
+
+    def test_registration_request_reject_allowed_for_cpds_user(self):
+        """Пользователь ЦПДС может отклонять заявки (IsCpdsUser)."""
+        reg = RegistrationRequest.objects.create(
+            last_name="Романов",
+            first_name="Роман",
+            middle_name="",
+            department=self.dept,
+            email="romanov@example.com",
+            phone="+79990007788",
+            comment="-",
+        )
+        self.client = APIClient()
+        self.auth(self.cpds_user.email, self.cpds_password)
+        url = f"/api/accounts/registration-requests/{reg.id}/reject/"
+        payload = {"reason": "Не подходит"}
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 200)
+        reg.refresh_from_db()
+        self.assertEqual(reg.status, RegistrationRequest.Status.REJECTED)
+
     def test_registration_request_approve_mail_failure_returns_400_and_no_user_created(
         self,
     ):
@@ -317,6 +397,46 @@ class AccountsApiTests(TestCase):
             self.assertEqual(reg.status, RegistrationRequest.Status.SUBMITTED)
         finally:
             # Вернём исходную функцию
+            core_mail.send_mail = original_send_mail
+
+    def test_registration_request_reject_mail_failure_still_returns_200_and_keeps_rejected_status(
+        self,
+    ):
+        """Если отправка письма при reject падает, возвращаем 200 и оставляем статус REJECTED."""
+        reg = RegistrationRequest.objects.create(
+            last_name="Ошибкин",
+            first_name="Отказ",
+            middle_name="",
+            department=self.dept,
+            email="broken_email@example.com",
+            phone="+79990009999",
+            comment="-",
+        )
+        # Авторизуемся админом
+        self.client = APIClient()
+        self.auth(self.admin.email, self.admin_password)
+
+        # Мокаем send_mail, чтобы он бросал исключение
+        from django.core import mail as core_mail
+
+        original_send_mail = core_mail.send_mail
+
+        def raising_send_mail(*args, **kwargs):
+            raise RuntimeError("SMTP failed")
+
+        core_mail.send_mail = raising_send_mail
+        try:
+            url = f"/api/accounts/registration-requests/{reg.id}/reject/"
+            payload = {"reason": "Почта не работает"}
+            response = self.client.post(url, payload, format="json")
+            # Не должны получить 500, ожидаем 200
+            self.assertEqual(response.status_code, 200)
+            # Заявка должна остаться в статусе REJECTED
+            reg.refresh_from_db()
+            self.assertEqual(reg.status, RegistrationRequest.Status.REJECTED)
+            # В ответе есть информация об ошибке отправки письма
+            self.assertIn("email_error", response.data)
+        finally:
             core_mail.send_mail = original_send_mail
 
     def test_user_roles_list_requires_auth_and_returns(self):

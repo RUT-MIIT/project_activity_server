@@ -4,7 +4,7 @@
 """
 
 from django.contrib.auth import get_user_model
-from django.db.models import Max, Q
+from django.db.models import Max
 from django.utils import timezone
 
 from accounts.models import Department
@@ -136,17 +136,17 @@ class ProjectApplicationRepository:
         ).get(pk=application_id)
 
     def filter_by_user(self, user: User) -> list[ProjectApplication]:
-        """Получение заявок пользователя (автор или причастный).
+        """Получение заявок пользователя, где он является автором.
 
         Оптимизированный запрос для списка заявок.
+        Ранее сюда попадали также заявки, где пользователь был причастным
+        через involved_users. Теперь для "Мои заявки" и основного списка
+        считаем "заявками пользователя" только те, где он указан автором.
         """
         return list(
-            ProjectApplication.objects.filter(
-                Q(author=user) | Q(involved_users__user=user)
-            )
+            ProjectApplication.objects.filter(author=user)
             .select_related("status", "author")
             .prefetch_related("target_institutes", "tags")
-            .distinct()
             .order_by("-creation_date")
         )
 
@@ -154,14 +154,14 @@ class ProjectApplicationRepository:
         """Получение QuerySet заявок пользователя для пагинации.
 
         Возвращает QuerySet вместо списка для поддержки пагинации.
+        Ранее сюда попадали также заявки, где пользователь был причастным
+        через involved_users. Теперь сюда попадают только заявки, где он
+        является автором.
         """
         return (
-            ProjectApplication.objects.filter(
-                Q(author=user) | Q(involved_users__user=user)
-            )
+            ProjectApplication.objects.filter(author=user)
             .select_related("status", "author")
             .prefetch_related("target_institutes", "tags")
-            .distinct()
             .order_by("-creation_date")
         )
 
@@ -223,6 +223,19 @@ class ProjectApplicationRepository:
         """Получение QuerySet заявок по статусу для пагинации."""
         return (
             ProjectApplication.objects.filter(status__code=status_code)
+            .select_related("status", "author")
+            .prefetch_related("target_institutes", "tags")
+            .order_by("-creation_date")
+        )
+
+    def filter_all_except_status(self, status_code: str) -> list[ProjectApplication]:
+        """Получение всех заявок, кроме указанных по статусу.
+
+        Используется, например, для роли cpds, чтобы видеть все заявки,
+        кроме заявок в промежуточном статусе require_assignment.
+        """
+        return list(
+            ProjectApplication.objects.exclude(status__code=status_code)
             .select_related("status", "author")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
@@ -365,26 +378,42 @@ class ProjectApplicationRepository:
             .order_by("-creation_date")
         )
 
-    def filter_external_applications(self) -> list[ProjectApplication]:
+    def filter_external_applications(
+        self, status_code: str | None = None
+    ) -> list[ProjectApplication]:
         """Получение всех внешних заявок (is_external=True).
 
-        Для получения списка внешних заявок.
+        Args:
+            status_code: Необязательный код статуса для дополнительной фильтрации.
+
+        Returns:
+            list[ProjectApplication]: Список внешних заявок.
         """
+        qs = ProjectApplication.objects.filter(is_external=True)
+        if status_code:
+            qs = qs.filter(status__code=status_code)
+
         return list(
-            ProjectApplication.objects.filter(is_external=True)
-            .select_related("status", "author")
+            qs.select_related("status", "author")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
 
-    def filter_external_applications_queryset(self):
+    def filter_external_applications_queryset(self, status_code: str | None = None):
         """Получение QuerySet внешних заявок для пагинации.
 
-        Для получения списка внешних заявок с поддержкой пагинации.
+        Args:
+            status_code: Необязательный код статуса для дополнительной фильтрации.
+
+        Returns:
+            QuerySet: QuerySet внешних заявок.
         """
+        qs = ProjectApplication.objects.filter(is_external=True)
+        if status_code:
+            qs = qs.filter(status__code=status_code)
+
         return (
-            ProjectApplication.objects.filter(is_external=True)
-            .select_related("status", "author")
+            qs.select_related("status", "author")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )

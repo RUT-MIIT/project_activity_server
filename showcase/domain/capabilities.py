@@ -47,6 +47,8 @@ class ApplicationCapabilities:
         approver_role: str,
         is_user_department_involved: bool = False,
         is_user_author: bool = False,
+        user_department_can_save: bool = False,
+        is_external: bool = False,
     ) -> tuple[bool, str]:
         """Бизнес-операция: одобрение заявки.
 
@@ -59,6 +61,8 @@ class ApplicationCapabilities:
             user_role=approver_role,
             is_user_department_involved=is_user_department_involved,
             is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
         ):
             return False, "Недостаточно прав для одобрения заявки"
 
@@ -72,6 +76,8 @@ class ApplicationCapabilities:
         rejector_role: str,
         is_user_department_involved: bool = False,
         is_user_author: bool = False,
+        user_department_can_save: bool = False,
+        is_external: bool = False,
     ) -> tuple[bool, str]:
         """Бизнес-операция: отклонение заявки.
 
@@ -84,6 +90,8 @@ class ApplicationCapabilities:
             user_role=rejector_role,
             is_user_department_involved=is_user_department_involved,
             is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
         ):
             return False, "Недостаточно прав для отклонения заявки"
 
@@ -97,6 +105,8 @@ class ApplicationCapabilities:
         requester_role: str,
         is_user_department_involved: bool = False,
         is_user_author: bool = False,
+        user_department_can_save: bool = False,
+        is_external: bool = False,
     ) -> tuple[bool, str]:
         """Бизнес-операция: запрос изменений.
 
@@ -109,6 +119,8 @@ class ApplicationCapabilities:
             user_role=requester_role,
             is_user_department_involved=is_user_department_involved,
             is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
         ):
             return False, "Недостаточно прав для запроса изменений"
 
@@ -123,6 +135,7 @@ class ApplicationCapabilities:
         updater_role: str,
         application_author_id: int,
         updater_id: int,
+        user_department_can_save: bool = False,
     ) -> tuple[ValidationResult, bool, str]:
         """Бизнес-операция: обновление заявки.
 
@@ -141,6 +154,7 @@ class ApplicationCapabilities:
 
         # Проверка прав на редактирование через матрицу разрешений
         # В матрице настроено: редактировать может только автор (POLICY_OWN_ONLY) или cpds (POLICY_ALLOW)
+        # Для institute_validator: разрешено, если у подразделения can_save_project_applications = True
         is_user_author = application_author_id == updater_id
         # Для проверки нужен is_user_department_involved, но здесь его нет
         # Используем упрощенную проверку: автор или cpds
@@ -149,6 +163,7 @@ class ApplicationCapabilities:
             user_role=updater_role,
             is_user_department_involved=False,  # Не используется для save_changes в новой логике
             is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
         )
 
         if not can_edit:
@@ -199,6 +214,10 @@ class ApplicationCapabilities:
     POLICY_DENY: str = "-"
     POLICY_DEPARTMENT_ONLY: str = "только своего подразделения"
     POLICY_OWN_ONLY: str = "только свои"
+    POLICY_DEPARTMENT_CAN_SAVE: str = "если подразделение может сохранять"
+    POLICY_DEPARTMENT_ONLY_NOT_EXTERNAL: str = (
+        "только своего подразделения и не внешняя заявка"
+    )
     STATUS_RETURNED_ALL: str = "returned_(all)"
     _ROLE_STATUS_ACTIONS: dict[str, dict[str, dict[str, str]]] = {
         "await_department": {
@@ -221,7 +240,7 @@ class ApplicationCapabilities:
                 "request_changes": POLICY_DEPARTMENT_ONLY,
             },
             "institute_validator": {
-                "save_changes": POLICY_OWN_ONLY,
+                "save_changes": POLICY_DEPARTMENT_CAN_SAVE,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DEPARTMENT_ONLY,
@@ -231,6 +250,39 @@ class ApplicationCapabilities:
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+            },
+        },
+        "require_assignment": {
+            "user": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
+            "mentor": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
+            "department_validator": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
+            "institute_validator": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+            },
+            "cpds": {
+                "save_changes": POLICY_ALLOW,
+                "approve": POLICY_DENY,
+                "reject": POLICY_ALLOW,
+                "request_changes": POLICY_DENY,
+                "transfer_to_institute": POLICY_ALLOW,
             },
         },
         "await_institute": {
@@ -253,10 +305,10 @@ class ApplicationCapabilities:
                 "request_changes": POLICY_DENY,
             },
             "institute_validator": {
-                "save_changes": POLICY_OWN_ONLY,
+                "save_changes": POLICY_DEPARTMENT_CAN_SAVE,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
-                "request_changes": POLICY_DEPARTMENT_ONLY,
+                "request_changes": POLICY_DEPARTMENT_ONLY_NOT_EXTERNAL,
             },
             "cpds": {
                 "save_changes": POLICY_ALLOW,
@@ -318,7 +370,7 @@ class ApplicationCapabilities:
                 "request_changes": POLICY_DENY,
             },
             "institute_validator": {
-                "save_changes": POLICY_OWN_ONLY,
+                "save_changes": POLICY_DEPARTMENT_CAN_SAVE,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DENY,
@@ -500,7 +552,11 @@ class ApplicationCapabilities:
 
     @staticmethod
     def _check_policy(
-        policy: str, is_user_department_involved: bool, is_user_author: bool
+        policy: str,
+        is_user_department_involved: bool,
+        is_user_author: bool,
+        user_department_can_save: bool = False,
+        is_external: bool = False,
     ) -> bool:
         if policy == ApplicationCapabilities.POLICY_ALLOW:
             return True
@@ -510,6 +566,10 @@ class ApplicationCapabilities:
             return bool(is_user_department_involved)
         if policy == ApplicationCapabilities.POLICY_OWN_ONLY:
             return bool(is_user_author)
+        if policy == ApplicationCapabilities.POLICY_DEPARTMENT_CAN_SAVE:
+            return bool(is_user_department_involved) and bool(user_department_can_save)
+        if policy == ApplicationCapabilities.POLICY_DEPARTMENT_ONLY_NOT_EXTERNAL:
+            return bool(is_user_department_involved) and not bool(is_external)
         return False
 
     @staticmethod
@@ -519,6 +579,8 @@ class ApplicationCapabilities:
         user_role: str,
         is_user_department_involved: bool,
         is_user_author: bool,
+        user_department_can_save: bool = False,
+        is_external: bool = False,
     ) -> bool:
         """Проверка права на конкретное действие на основе статической матрицы."""
         for key in ApplicationCapabilities._match_status_pattern(current_status):
@@ -527,7 +589,11 @@ class ApplicationCapabilities:
             if action in action_map:
                 policy = action_map[action]
                 return ApplicationCapabilities._check_policy(
-                    policy, is_user_department_involved, is_user_author
+                    policy,
+                    is_user_department_involved,
+                    is_user_author,
+                    user_department_can_save,
+                    is_external,
                 )
         return False
 
@@ -537,6 +603,8 @@ class ApplicationCapabilities:
         user_role: str,
         is_user_department_involved: bool,
         is_user_author: bool,
+        user_department_can_save: bool = False,
+        is_external: bool = False,
     ) -> list[dict[str, Any]]:
         """Возвращает список доступных действий согласно матрице."""
         actions: list[str] = [
@@ -554,6 +622,8 @@ class ApplicationCapabilities:
                 user_role=user_role,
                 is_user_department_involved=is_user_department_involved,
                 is_user_author=is_user_author,
+                user_department_can_save=user_department_can_save,
+                is_external=is_external,
             ):
                 available.append(
                     {
@@ -570,6 +640,8 @@ class ApplicationCapabilities:
         user_role: str,
         is_user_department_involved: bool,
         is_user_author: bool,
+        user_department_can_save: bool = False,
+        is_external: bool = False,
     ) -> bool:
         """УСТАРЕВШЕ: прокси к новой матрице. Считаем, что "управление"
         означает доступность хотя бы одного из действий approve/reject/request_changes.
@@ -581,6 +653,8 @@ class ApplicationCapabilities:
                 user_role,
                 is_user_department_involved,
                 is_user_author,
+                user_department_can_save,
+                is_external,
             )
             or ApplicationCapabilities.is_action_allowed(
                 "reject",
@@ -588,6 +662,8 @@ class ApplicationCapabilities:
                 user_role,
                 is_user_department_involved,
                 is_user_author,
+                user_department_can_save,
+                is_external,
             )
             or ApplicationCapabilities.is_action_allowed(
                 "request_changes",
@@ -595,6 +671,8 @@ class ApplicationCapabilities:
                 user_role,
                 is_user_department_involved,
                 is_user_author,
+                user_department_can_save,
+                is_external,
             )
         )
 
@@ -604,11 +682,14 @@ class ApplicationCapabilities:
         user_role: str,
         is_user_department_involved: bool,
         is_user_author: bool,
+        user_department_can_save: bool = False,
+        is_external: bool = False,
     ) -> bool:
         """Проверка права на редактирование заявки.
 
         Бизнес-правило: редактировать может только автор заявки или сотрудник ЦПДС.
         С учетом ограничений по статусам: нельзя редактировать rejected и approved (кроме админов и cpds).
+        Для institute_validator: разрешено, если у подразделения can_save_project_applications = True.
         """
         # Бизнес-правило: нельзя редактировать отклоненные заявки (кроме cpds для rejected_* статусов)
         if current_status == "rejected":
@@ -620,11 +701,13 @@ class ApplicationCapabilities:
 
         # Используем матрицу разрешений для проверки прав
         # В матрице для save_changes настроено: POLICY_OWN_ONLY для всех ролей (кроме cpds),
-        # и POLICY_ALLOW для роли cpds
+        # POLICY_DEPARTMENT_CAN_SAVE для institute_validator, и POLICY_ALLOW для роли cpds
         return ApplicationCapabilities.is_action_allowed(
             "save_changes",
             current_status,
             user_role,
             is_user_department_involved,
             is_user_author,
+            user_department_can_save,
+            is_external,
         )

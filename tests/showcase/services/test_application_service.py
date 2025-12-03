@@ -10,6 +10,7 @@ from showcase.models import (
     ApplicationInvolvedDepartment,
     ApplicationInvolvedUser,
     ApplicationStatus,
+    Institute,
     ProjectApplication,
     ProjectApplicationStatusLog,
 )
@@ -114,7 +115,7 @@ class TestSubmitApplicationService:
         assert app.needs_consultation is False
 
     def test_submit_with_is_external_true(self, statuses, make_user):
-        """При создании упрощенной заявки устанавливается is_external=True и статус await_cpds."""
+        """При создании упрощенной заявки устанавливается is_external=True и статус require_assignment."""
         user = make_user(role_code="user", with_department=True)
         dto = ProjectApplicationCreateDTO(
             company="Acme",
@@ -135,7 +136,7 @@ class TestSubmitApplicationService:
 
         assert isinstance(app, ProjectApplication)
         assert app.is_external is True
-        assert app.status.code == "await_cpds"
+        assert app.status.code == "require_assignment"
 
     def test_submit_with_is_external_true_adds_cpds_department(
         self, statuses, make_user
@@ -609,6 +610,196 @@ class TestApproveRejectRequestService:
             == 2
         )
 
+    def test_transfer_to_institute_success(self, statuses, make_user):
+        """cpds может передать внешнюю заявку в институт по коду института.
+
+        Проверяем:
+        - используется связанное с институтом подразделение;
+        - подразделение добавлено в причастные;
+        - статус заявки становится await_institute;
+        - создаётся лог изменения статуса.
+        """
+        cpds_user = make_user(role_code="cpds", with_department=True)
+
+        # Создаём внешнюю заявку со статусом require_assignment
+        service = ProjectApplicationService()
+        dto = ProjectApplicationCreateDTO(
+            company="External Corp",
+            title="External Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="external@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        app = service.submit_application(dto, cpds_user, is_external=True)
+        assert app.status.code == "require_assignment"
+
+        # Создаём институт и связываем его с подразделением
+        department = Department.objects.create(name="Институт 1", short_name="INST1")
+        institute = Institute.objects.create(
+            code="INST_CODE",
+            name="Институт тестовый",
+            position=1,
+            is_active=True,
+            department=department,
+        )
+
+        # Вызываем передачу в институт
+        app2 = service.transfer_to_institute(
+            application_id=app.id,
+            institute_code=institute.code,
+            transferrer=cpds_user,
+        )
+
+        app2.refresh_from_db()
+        assert app2.status.code == "await_institute"
+        # Подразделение института добавлено в причастные
+        assert ApplicationInvolvedDepartment.objects.filter(
+            application=app2, department=department
+        ).exists()
+
+        # Проверяем, что есть лог изменения статуса на await_institute
+        assert ProjectApplicationStatusLog.objects.filter(
+            application=app2,
+            to_status__code="await_institute",
+            action_type="status_change",
+        ).exists()
+
+    def test_transfer_to_institute_requires_external_and_require_assignment(
+        self, statuses, make_user
+    ):
+        """Передача в институт доступна только для внешних заявок со статусом require_assignment."""
+        cpds_user = make_user(role_code="cpds", with_department=True)
+        service = ProjectApplicationService()
+
+        # Создаём обычную (внутреннюю) заявку
+        dto_internal = ProjectApplicationCreateDTO(
+            company="Internal Corp",
+            title="Internal Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="internal@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        app_internal = service.submit_application(
+            dto_internal, cpds_user, is_external=False
+        )
+
+        # Создаём внешний апп, но вручную меняем статус на отличный от require_assignment
+        dto_external = ProjectApplicationCreateDTO(
+            company="External Corp",
+            title="External Project",
+            author_lastname="Петров",
+            author_firstname="Пётр",
+            author_email="external@example.com",
+            author_phone="+79990000001",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        app_external = service.submit_application(
+            dto_external, cpds_user, is_external=True
+        )
+        # Меняем статус на await_institute
+        app_external.status = ApplicationStatus.objects.get(code="await_institute")
+        app_external.save()
+
+        # Создаём институт с подразделением
+        department = Department.objects.create(name="Институт 2", short_name="INST2")
+        institute = Institute.objects.create(
+            code="INST2",
+            name="Институт 2",
+            position=2,
+            is_active=True,
+            department=department,
+        )
+
+        # Для внутренней заявки ожидаем ValueError (is_external=False)
+        with pytest.raises(
+            ValueError, match="Действие доступно только для внешних заявок"
+        ):
+            service.transfer_to_institute(
+                application_id=app_internal.id,
+                institute_code=institute.code,
+                transferrer=cpds_user,
+            )
+
+        # Для внешней заявки в неверном статусе — тоже ValueError
+        with pytest.raises(
+            ValueError,
+            match="Действие доступно только для заявок со статусом require_assignment",
+        ):
+            service.transfer_to_institute(
+                application_id=app_external.id,
+                institute_code=institute.code,
+                transferrer=cpds_user,
+            )
+
+    def test_transfer_to_institute_institute_validation_errors(
+        self, statuses, make_user
+    ):
+        """Ошибки валидации института: несуществующий код или отсутствие связанного подразделения."""
+        cpds_user = make_user(role_code="cpds", with_department=True)
+        service = ProjectApplicationService()
+
+        # Создаём внешнюю заявку в правильном статусе
+        dto = ProjectApplicationCreateDTO(
+            company="External Corp",
+            title="External Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="external@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        app = service.submit_application(dto, cpds_user, is_external=True)
+        assert app.status.code == "require_assignment"
+
+        # 1. Неверный код института
+        with pytest.raises(
+            ValueError, match="Институт с кодом 'UNKNOWN' не найден или неактивен"
+        ):
+            service.transfer_to_institute(
+                application_id=app.id,
+                institute_code="UNKNOWN",
+                transferrer=cpds_user,
+            )
+
+        # 2. Институт без связанного подразделения
+        institute = Institute.objects.create(
+            code="NO_DEPT",
+            name="Институт без подразделения",
+            position=3,
+            is_active=True,
+            department=None,
+        )
+
+        with pytest.raises(
+            ValueError,
+            match="У института 'Институт без подразделения' \\(код NO_DEPT\\) не настроено связанное подразделение",
+        ):
+            service.transfer_to_institute(
+                application_id=app.id,
+                institute_code=institute.code,
+                transferrer=cpds_user,
+            )
+
     def test_approve_permission_denied(self, statuses, make_user):
         """Нет причастности подразделения — матрица запрещает действие, ожидаем PermissionError."""
         validator = make_user(role_code="department_validator", with_department=True)
@@ -867,13 +1058,81 @@ class TestCoordinationAndDtosService:
         )
         app_internal = service.submit_application(dto_internal, user, is_external=False)
 
-        # Получаем внешние заявки
+        # Получаем внешние заявки без фильтра по статусу
         external_apps = service.get_external_applications(user)
 
         # Проверяем, что только внешняя заявка в списке
         external_ids = {app.id for app in external_apps}
         assert app_external.id in external_ids
         assert app_internal.id not in external_ids
+
+    def test_get_external_applications_with_status_filter(self, statuses, make_user):
+        """get_external_applications позволяет фильтровать внешние заявки по коду статуса."""
+        user = make_user(role_code="user", with_department=True)
+        service = ProjectApplicationService()
+
+        # Создаём две внешние заявки с разными статусами
+        dto1 = ProjectApplicationCreateDTO(
+            company="External Corp 1",
+            title="External Project 1",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="external1@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        app1 = service.submit_application(dto1, user, is_external=True)
+
+        dto2 = ProjectApplicationCreateDTO(
+            company="External Corp 2",
+            title="External Project 2",
+            author_lastname="Петров",
+            author_firstname="Пётр",
+            author_email="external2@example.com",
+            author_phone="+79990000001",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        app2 = service.submit_application(dto2, user, is_external=True)
+
+        # Принудительно меняем статус второй заявки на await_institute
+        app2.status = ApplicationStatus.objects.get(code="await_institute")
+        app2.save()
+
+        # Фильтруем по статусу require_assignment
+        apps_require_assignment = service.get_external_applications(
+            user, status_code="require_assignment"
+        )
+        ids_require_assignment = {app.id for app in apps_require_assignment}
+        assert app1.id in ids_require_assignment
+        assert app2.id not in ids_require_assignment
+
+        # Фильтруем по статусу await_institute
+        apps_await_institute = service.get_external_applications(
+            user, status_code="await_institute"
+        )
+        ids_await_institute = {app.id for app in apps_await_institute}
+        assert app2.id in ids_await_institute
+        assert app1.id not in ids_await_institute
+
+    def test_get_external_applications_with_invalid_status_raises_value_error(
+        self, statuses, make_user
+    ):
+        """get_external_applications с несуществующим статусом выбрасывает ValueError."""
+        user = make_user(role_code="user", with_department=True)
+        service = ProjectApplicationService()
+
+        with pytest.raises(
+            ValueError, match="Статус с кодом 'unknown_status' не найден"
+        ):
+            service.get_external_applications(user, status_code="unknown_status")
 
     def test_get_external_applications_queryset(self, statuses, make_user):
         """get_external_applications_queryset возвращает QuerySet внешних заявок."""

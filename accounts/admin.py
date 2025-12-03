@@ -72,9 +72,15 @@ class UserAdmin(BaseUserAdmin):
 
 @admin.register(Department)
 class DepartmentAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "short_name", "parent")
+    list_display = (
+        "id",
+        "name",
+        "short_name",
+        "parent",
+        "can_save_project_applications",
+    )
     search_fields = ("name", "short_name")
-    list_filter = ("parent",)
+    list_filter = ("parent", "can_save_project_applications")
 
 
 @admin.register(RegistrationRequest)

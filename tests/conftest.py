@@ -47,19 +47,20 @@ def statuses(db):
     """Создаёт все необходимые статусы для сценариев сервисов."""
     codes = [
         ("created", 1),
-        ("await_department", 2),
-        ("await_institute", 3),
-        ("await_cpds", 4),
-        ("returned_department", 5),
-        ("returned_institute", 6),
-        ("returned_cpds", 7),
-        ("approved_department", 8),
-        ("approved_institute", 9),
-        ("approved", 10),
-        ("rejected_department", 11),
-        ("rejected_institute", 12),
-        ("rejected_cpds", 13),
-        ("rejected", 14),
+        ("require_assignment", 2),
+        ("await_department", 3),
+        ("await_institute", 4),
+        ("await_cpds", 5),
+        ("returned_department", 6),
+        ("returned_institute", 7),
+        ("returned_cpds", 8),
+        ("approved_department", 9),
+        ("approved_institute", 10),
+        ("approved", 11),
+        ("rejected_department", 12),
+        ("rejected_institute", 13),
+        ("rejected_cpds", 14),
+        ("rejected", 15),
     ]
     for code, pos in codes:
         ApplicationStatus.objects.get_or_create(

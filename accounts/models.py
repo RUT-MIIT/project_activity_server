@@ -85,6 +85,9 @@ class Department(models.Model):
         related_name="children",
         verbose_name="Родительское подразделение",
     )
+    can_save_project_applications = models.BooleanField(
+        default=False, verbose_name="Может сохранять проектные заявки"
+    )
 
     class Meta:
         verbose_name = "Подразделение"

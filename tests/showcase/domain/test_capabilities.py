@@ -114,7 +114,7 @@ class TestApproveRejectRequest:
 
 class TestUpdateApplication:
     def test_update_ok_by_author(self, monkeypatch):
-        """Автор может редактировать свою заявку при валидных данных."""
+        """Автор с ролью user в статусе await_department не может редактировать заявку."""
         dto = ProjectApplicationUpdateDTO(
             title="Valid title", goal="Длинная цель 12345"
         )
@@ -127,8 +127,12 @@ class TestUpdateApplication:
             application_author_id=1,
             updater_id=1,  # автор = редактор
         )
-        assert result.is_valid
-        assert can_update is True
+        # Бизнес-валидация данных проходит
+        assert "title" not in result.errors
+        # Но права доступа не позволяют редактировать заявку
+        assert not result.is_valid
+        assert can_update is False
+        assert "access" in result.errors
 
     def test_update_ok_by_cpds(self, monkeypatch):
         """Сотрудник ЦПДС может редактировать любую заявку (кроме rejected)."""
@@ -278,8 +282,8 @@ class TestHelpers:
 
 class TestCanEditApplication:
     def test_can_edit_by_author(self):
-        """Автор может редактировать свою заявку."""
-        assert ApplicationCapabilities.can_edit_application(
+        """Автор с ролью user в статусе await_department не может редактировать заявку."""
+        assert not ApplicationCapabilities.can_edit_application(
             current_status="await_department",
             user_role="user",
             is_user_department_involved=False,

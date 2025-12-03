@@ -35,3 +35,25 @@ class RegistrationRequestManagePermission(BasePermission):
             return True
 
         return False
+
+
+class IsCpdsUser(BasePermission):
+    """Разрешает доступ только пользователям с ролью ЦПДС (код роли `cpds`)."""
+
+    message = "Недостаточно прав: требуется роль ЦПДС"
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        """Проверяет, что у текущего пользователя установлена роль с кодом `cpds`.
+
+        Args:
+            request: текущий HTTP‑запрос.
+            view: DRF‑представление, выполняющее проверку.
+
+        Returns:
+            bool: True, если пользователь аутентифицирован и его роль имеет код `cpds`.
+        """
+        user: User | None = request.user if request.user.is_authenticated else None
+        if not user:
+            return False
+
+        return bool(user.role and user.role.code == "cpds")

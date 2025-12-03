@@ -7,7 +7,6 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
-from accounts.models import Department
 from showcase.domain.application import ProjectApplicationDomain
 from showcase.domain.capabilities import ApplicationCapabilities
 from showcase.dto.application import (
@@ -17,7 +16,7 @@ from showcase.dto.application import (
     ProjectApplicationUpdateDTO,
 )
 from showcase.dto.available_actions import AvailableActionsDTO
-from showcase.models import ApplicationStatus
+from showcase.models import ApplicationStatus, Institute, ProjectApplication
 from showcase.repositories.application import ProjectApplicationRepository
 from showcase.services.involved_service import InvolvedManagementService
 from showcase.services.logging_service import ApplicationLoggingService
@@ -66,14 +65,14 @@ class ProjectApplicationService:
         # Если параметр не передан, остается False по умолчанию
         # Автоматическое вычисление отключено - если нужно, пользователь должен явно передать True
 
-        # 3. Для внешних заявок создаем сразу со статусом await_cpds
+        # 3. Для внешних заявок создаем сразу со статусом require_assignment
         if is_external:
-            # Создаем заявку сразу со статусом await_cpds
+            # Создаем заявку сразу со статусом require_assignment
             application = self.repository.create(
-                dto, user, "await_cpds", is_external=is_external
+                dto, user, "require_assignment", is_external=is_external
             )
 
-            # Логируем создание заявки со статусом await_cpds
+            # Логируем создание заявки со статусом require_assignment
             self.logging_service.log_status_change(
                 application=application,
                 from_status=None,  # Заявка только что создана
@@ -154,12 +153,16 @@ class ProjectApplicationService:
         )
 
         # Проверяем право на действие согласно матрице
+        user_department_can_save = self._get_user_department_can_save(requester)
+        is_external = getattr(application, "is_external", False)
         if not ApplicationCapabilities.is_action_allowed(
             action="request_changes",
             current_status=current_status,
             user_role=user_role,
             is_user_department_involved=is_user_department_involved,
             is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
         ):
             raise PermissionError("Недостаточно прав для запроса изменений")
 
@@ -208,12 +211,16 @@ class ProjectApplicationService:
         is_user_author = application.author == approver if application.author else False
 
         # Проверяем право на действие согласно матрице
+        user_department_can_save = self._get_user_department_can_save(approver)
+        is_external = getattr(application, "is_external", False)
         if not ApplicationCapabilities.is_action_allowed(
             action="approve",
             current_status=application.status.code,
             user_role=user_role,
             is_user_department_involved=is_user_department_involved,
             is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
         ):
             raise PermissionError("Недостаточно прав для одобрения заявки")
 
@@ -286,12 +293,16 @@ class ProjectApplicationService:
         is_user_author = application.author == rejector if application.author else False
 
         # Проверяем право на действие согласно матрице
+        user_department_can_save = self._get_user_department_can_save(rejector)
+        is_external = getattr(application, "is_external", False)
         if not ApplicationCapabilities.is_action_allowed(
             action="reject",
             current_status=application.status.code,
             user_role=user_role,
             is_user_department_involved=is_user_department_involved,
             is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
         ):
             raise PermissionError("Недостаточно прав для отклонения заявки")
 
@@ -347,17 +358,18 @@ class ProjectApplicationService:
 
     @transaction.atomic
     def transfer_to_institute(
-        self, application_id: int, department_id: int, transferrer: User
+        self, application_id: int, institute_code: str, transferrer: User
     ):
         """Бизнес-операция: передача заявки в институт.
 
-        Доступно только для роли cpds для внешних заявок со статусом await_cpds.
-        Добавляет указанное подразделение (без parent) в причастные и переводит
-        заявку в статус await_institute.
+        Доступно только для роли cpds для внешних заявок со статусом require_assignment.
+        Находит институт по коду, использует его связанное подразделение и
+        добавляет его в причастные, после чего переводит заявку в статус
+        await_institute.
 
         Args:
             application_id: ID заявки
-            department_id: ID подразделения для добавления
+            institute_code: Код института (Institute.code) для передачи
             transferrer: Пользователь, выполняющий передачу
 
         Returns:
@@ -365,8 +377,8 @@ class ProjectApplicationService:
 
         Raises:
             PermissionError: Если недостаточно прав
-            ValueError: Если заявка не внешняя, статус не await_cpds,
-                       подразделение не найдено или имеет parent
+            ValueError: Если заявка не внешняя, статус не require_assignment,
+                       институт не найден/неактивен или у него не задано связанное подразделение
             ObjectDoesNotExist: Если заявка не найдена
         """
         # 1. Получаем заявку (Repository)
@@ -382,12 +394,16 @@ class ProjectApplicationService:
         )
 
         # Проверяем право на действие согласно матрице
+        user_department_can_save = self._get_user_department_can_save(transferrer)
+        is_external = getattr(application, "is_external", False)
         if not ApplicationCapabilities.is_action_allowed(
             action="transfer_to_institute",
             current_status=application.status.code,
             user_role=user_role,
             is_user_department_involved=is_user_department_involved,
             is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
         ):
             raise PermissionError("Недостаточно прав для передачи заявки в институт")
 
@@ -395,29 +411,32 @@ class ProjectApplicationService:
         if not application.is_external:
             raise ValueError("Действие доступно только для внешних заявок")
 
-        # 4. Проверка, что статус await_cpds
-        if application.status.code != "await_cpds":
+        # 4. Проверка, что статус require_assignment
+        if application.status.code != "require_assignment":
             raise ValueError(
-                f"Действие доступно только для заявок со статусом await_cpds, "
+                f"Действие доступно только для заявок со статусом require_assignment, "
                 f"текущий статус: {application.status.code}"
             )
 
-        # 5. Получаем подразделение по ID
+        # 5. Находим институт по коду
         try:
-            department = Department.objects.get(id=department_id)
-        except Department.DoesNotExist as err:
-            raise ValueError(f"Подразделение с ID {department_id} не найдено") from err
-
-        # 6. Проверка, что подразделение без parent
-        if department.parent is not None:
+            institute = Institute.objects.get(code=institute_code, is_active=True)
+        except Institute.DoesNotExist as err:
             raise ValueError(
-                f"Подразделение {department.name} имеет родительское подразделение. "
-                f"Действие доступно только для подразделений без parent"
+                f"Институт с кодом '{institute_code}' не найден или неактивен"
+            ) from err
+
+        # 6. Проверяем, что у института есть связанное подразделение
+        if not institute.department:
+            raise ValueError(
+                f"У института '{institute.name}' (код {institute.code}) не настроено связанное подразделение"
             )
+
+        department = institute.department
 
         # 7. Добавляем подразделение в причастные
         department_added = self.involved_service.add_department_by_id(
-            application=application, department_id=department_id, actor=transferrer
+            application=application, department_id=department.id, actor=transferrer
         )
 
         # 8. Логируем добавление подразделения (если оно было добавлено)
@@ -469,11 +488,15 @@ class ProjectApplicationService:
         )
         is_user_author = application.author == updater if application.author else False
 
+        user_department_can_save = self._get_user_department_can_save(updater)
+        is_external = getattr(application, "is_external", False)
         can_edit = ApplicationCapabilities.can_edit_application(
             current_status=application.status.code,
             user_role=user_role,
             is_user_department_involved=is_user_department_involved,
             is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
         )
         if not can_edit:
             raise PermissionError("Нет прав для редактирования этой заявки")
@@ -484,7 +507,12 @@ class ProjectApplicationService:
         # 3. Проверка валидации (Domain)
         author_id = application.author.id if application.author else 0
         validation, can_update, error = ApplicationCapabilities.update_application(
-            dto, application.status.code, user_role, author_id, updater.id
+            dto,
+            application.status.code,
+            user_role,
+            author_id,
+            updater.id,
+            user_department_can_save=user_department_can_save,
         )
         if not validation.is_valid:
             raise ValueError(validation.errors)
@@ -553,18 +581,21 @@ class ProjectApplicationService:
         - ПЛЮС заявки, где причастно подразделение пользователя
         """
         # 1. Проверка прав (Domain)
-        can_list, error = ApplicationCapabilities.list_applications(
-            user.role.code if user.role else "user"
-        )
+        user_role = user.role.code if user.role else "user"
+        can_list, error = ApplicationCapabilities.list_applications(user_role)
         if not can_list:
             raise PermissionError(error)
 
-        # 2. Получаем заявки в работе (Repository)
+        # Особый случай для роли cpds:
+        # cpds должен видеть все заявки, КРОМЕ заявок со статусом require_assignment
+        if user_role == "cpds":
+            return self.repository.filter_all_except_status("require_assignment")
+
+        # 2. Для остальных ролей получаем заявки в работе (Repository)
         applications = self.repository.filter_coordination_by_user(user)
 
         # 3. Если пользователь - валидатор (department_validator или institute_validator),
         #    добавляем заявки, где причастно его подразделение
-        user_role = user.role.code if user.role else "user"
         if user_role in ["department_validator", "institute_validator", "cpds"]:
             if hasattr(user, "department") and user.department:
                 department_applications = (
@@ -628,39 +659,63 @@ class ProjectApplicationService:
         # 2. Получаем QuerySet (Repository)
         return self.repository.get_all_applications_queryset()
 
-    def get_external_applications(self, user: User):
+    def get_external_applications(
+        self, user: User, status_code: str | None = None
+    ) -> list[ProjectApplication]:
         """Бизнес-операция: получение списка внешних заявок (is_external=True).
 
         Args:
             user: Пользователь, запрашивающий список внешних заявок
+            status_code: Необязательный код статуса для фильтрации
 
         Returns:
             list[ProjectApplication]: Список внешних заявок
+
+        Raises:
+            PermissionError: Если пользователь неавторизован
+            ValueError: Если передан несуществующий код статуса
         """
         # 1. Проверка прав (Domain) - требуется авторизация
         if not user.is_authenticated:
             raise PermissionError("Требуется авторизация для просмотра внешних заявок")
 
-        # 2. Получаем внешние заявки (Repository)
-        applications = self.repository.filter_external_applications()
+        # 2. Если передан код статуса, проверяем, что такой статус существует
+        if status_code:
+            if not ApplicationStatus.objects.filter(code=status_code).exists():
+                raise ValueError(f"Статус с кодом '{status_code}' не найден")
+
+        # 3. Получаем внешние заявки (Repository)
+        applications = self.repository.filter_external_applications(status_code)
 
         return applications
 
-    def get_external_applications_queryset(self, user: User):
+    def get_external_applications_queryset(
+        self, user: User, status_code: str | None = None
+    ):
         """Бизнес-операция: получение QuerySet внешних заявок для пагинации.
 
         Args:
             user: Пользователь, запрашивающий список внешних заявок
+            status_code: Необязательный код статуса для фильтрации
 
         Returns:
             QuerySet: QuerySet внешних заявок
+
+        Raises:
+            PermissionError: Если пользователь неавторизован
+            ValueError: Если передан несуществующий код статуса
         """
         # 1. Проверка прав (Domain) - требуется авторизация
         if not user.is_authenticated:
             raise PermissionError("Требуется авторизация для просмотра внешних заявок")
 
-        # 2. Получаем QuerySet внешних заявок (Repository)
-        return self.repository.filter_external_applications_queryset()
+        # 2. Если передан код статуса, проверяем, что такой статус существует
+        if status_code:
+            if not ApplicationStatus.objects.filter(code=status_code).exists():
+                raise ValueError(f"Статус с кодом '{status_code}' не найден")
+
+        # 3. Получаем QuerySet внешних заявок (Repository)
+        return self.repository.filter_external_applications_queryset(status_code)
 
     def get_available_actions(
         self, application_id: int, user: User
@@ -695,11 +750,15 @@ class ProjectApplicationService:
         is_user_author = application.author == user if application.author else False
 
         # Получаем список доступных действий из новой матрицы
+        user_department_can_save = self._get_user_department_can_save(user)
+        is_external = getattr(application, "is_external", False)
         available_actions = ApplicationCapabilities.get_available_actions(
             current_status=current_status,
             user_role=user_role,
             is_user_department_involved=is_user_department_involved,
             is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
         )
         return AvailableActionsDTO.from_actions_list(available_actions)
 
@@ -713,6 +772,12 @@ class ProjectApplicationService:
 
         # Проверяем, есть ли подразделение пользователя в списке причастных
         return involved_departments.filter(department__id=user.department.id).exists()
+
+    def _get_user_department_can_save(self, user: User) -> bool:
+        """Проверяет, может ли подразделение пользователя сохранять проектные заявки."""
+        if not hasattr(user, "department") or not user.department:
+            return False
+        return getattr(user.department, "can_save_project_applications", False)
 
     def _ensure_user_and_department_involved(self, application, user: User) -> None:
         """Добавляет пользователя и его подразделение в причастные (если их еще нет).

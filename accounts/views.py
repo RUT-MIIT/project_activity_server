@@ -12,7 +12,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
 from .models import Department, RegistrationRequest, Role, User
-from .permissions import RegistrationRequestManagePermission
+from .permissions import IsCpdsUser, RegistrationRequestManagePermission
 from .serializers import (
     ApproveRequestSerializer,
     DepartmentSerializer,
@@ -125,7 +125,9 @@ class RegistrationRequestViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     @decorators.action(
-        detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser]
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAdminUser | IsCpdsUser],
     )
     def approve(self, request, pk=None):
         reg_request = self.get_object()
@@ -215,7 +217,9 @@ class RegistrationRequestViewSet(viewsets.ModelViewSet):
 
     @transaction.atomic
     @decorators.action(
-        detail=True, methods=["post"], permission_classes=[permissions.IsAdminUser]
+        detail=True,
+        methods=["post"],
+        permission_classes=[permissions.IsAdminUser | IsCpdsUser],
     )
     def reject(self, request, pk=None):
         reg_request = self.get_object()
@@ -241,13 +245,21 @@ class RegistrationRequestViewSet(viewsets.ModelViewSet):
                 "reason": reason,
             },
         )
-        mail.send_mail(
-            subject=subject,
-            message=message,
-            from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
-            recipient_list=[reg_request.email],
-            fail_silently=False,
-        )
+        try:
+            mail.send_mail(
+                subject=subject,
+                message=message,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                recipient_list=[reg_request.email],
+                fail_silently=False,
+            )
+        except Exception as exc:
+            # Не считаем ошибку отправки письма критичной для отклонения заявки.
+            # Статус уже изменён на REJECTED, поэтому просто возвращаем успешный ответ
+            # с дополнительной информацией об ошибке доставки письма.
+            response_data = RegistrationRequestSerializer(reg_request).data
+            response_data["email_error"] = str(exc)
+            return Response(response_data, status=status.HTTP_200_OK)
 
         return Response(
             RegistrationRequestSerializer(reg_request).data,
