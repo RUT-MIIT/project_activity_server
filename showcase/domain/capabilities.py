@@ -218,6 +218,7 @@ class ApplicationCapabilities:
     POLICY_DEPARTMENT_ONLY_NOT_EXTERNAL: str = (
         "только своего подразделения и не внешняя заявка"
     )
+    POLICY_EXTERNAL_ONLY: str = "только для внешней заявки"
     STATUS_RETURNED_ALL: str = "returned_(all)"
     _ROLE_STATUS_ACTIONS: dict[str, dict[str, dict[str, str]]] = {
         "await_department": {
@@ -282,7 +283,7 @@ class ApplicationCapabilities:
                 "approve": POLICY_DENY,
                 "reject": POLICY_ALLOW,
                 "request_changes": POLICY_DENY,
-                "transfer_to_institute": POLICY_ALLOW,
+                "transfer_to_institute": POLICY_EXTERNAL_ONLY,
             },
         },
         "await_institute": {
@@ -347,7 +348,7 @@ class ApplicationCapabilities:
                 "approve": POLICY_ALLOW,
                 "reject": POLICY_ALLOW,
                 "request_changes": POLICY_ALLOW,
-                "transfer_to_institute": POLICY_ALLOW,
+                "transfer_to_institute": POLICY_EXTERNAL_ONLY,
             },
         },
         STATUS_RETURNED_ALL: {
@@ -570,6 +571,8 @@ class ApplicationCapabilities:
             return bool(is_user_department_involved) and bool(user_department_can_save)
         if policy == ApplicationCapabilities.POLICY_DEPARTMENT_ONLY_NOT_EXTERNAL:
             return bool(is_user_department_involved) and not bool(is_external)
+        if policy == ApplicationCapabilities.POLICY_EXTERNAL_ONLY:
+            return bool(is_external)
         return False
 
     @staticmethod
