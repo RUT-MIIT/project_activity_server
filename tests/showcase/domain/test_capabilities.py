@@ -115,6 +115,28 @@ class TestApproveRejectRequest:
         )
         assert ok is expected
 
+    @pytest.mark.parametrize(
+        "status,is_author,expected",
+        [
+            ("await_department", True, True),
+            ("await_department", False, False),
+            ("returned_cpds", True, True),
+            ("returned_author", True, False),
+            ("approved", True, False),
+            ("rejected", True, False),
+        ],
+    )
+    def test_return_by_author_matrix(self, status, is_author, expected):
+        """Отзыв доступен только автору и не для финальных approved/rejected."""
+        ok = ApplicationCapabilities.is_action_allowed(
+            action="return_by_author",
+            current_status=status,
+            user_role="user",
+            is_user_department_involved=False,
+            is_user_author=is_author,
+        )
+        assert ok is expected
+
 
 class TestUpdateApplication:
     def test_update_ok_by_author(self, monkeypatch):

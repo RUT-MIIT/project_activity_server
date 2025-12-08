@@ -201,19 +201,26 @@ class ProjectApplicationDomain:
         """
         # Бизнес-правило: только определенные переходы разрешены
         allowed_transitions = {
-            "created": ["await_department", "rejected", "rejected_department"],
+            "created": [
+                "await_department",
+                "rejected",
+                "rejected_department",
+                "returned_author",
+            ],
             "await_department": [
                 "approved_department",
                 "rejected",
                 "rejected_department",
                 "returned_department",
                 "returned_institute",
+                "returned_author",
             ],
             "await_institute": [
                 "approved_institute",
                 "rejected",
                 "rejected_institute",
                 "returned_institute",
+                "returned_author",
             ],
             "await_cpds": [
                 "approved",
@@ -221,9 +228,11 @@ class ProjectApplicationDomain:
                 "rejected_cpds",
                 "returned_cpds",
                 "await_institute",
+                "returned_author",
             ],
             "require_assignment": [
                 "await_institute",
+                "returned_author",
             ],
             "returned_department": [
                 "await_department",
@@ -231,6 +240,7 @@ class ProjectApplicationDomain:
                 "rejected_department",
                 "approved_department",
                 "rejected_department",
+                "returned_author",
             ],
             "returned_institute": [
                 "await_department",
@@ -239,6 +249,7 @@ class ProjectApplicationDomain:
                 "approved_department",
                 "approved_institute",
                 "rejected_department",
+                "returned_author",
             ],
             "returned_cpds": [
                 "await_cpds",
@@ -251,6 +262,13 @@ class ProjectApplicationDomain:
                 "rejected_department",
                 "rejected_institute",
                 "rejected_cpds",
+                "returned_author",
+            ],
+            "returned_author": [
+                "await_department",
+                "await_institute",
+                "await_cpds",
+                "require_assignment",
             ],
             "approved_department": ["await_institute", "rejected"],
             "approved_institute": ["await_cpds", "rejected"],

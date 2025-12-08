@@ -198,6 +198,62 @@ class ProjectApplicationService:
         return application
 
     @transaction.atomic
+    def return_by_author(self, application_id: int, author: User):
+        """Бизнес-операция: отзыв заявки автором."""
+        # 1. Получаем заявку (Repository)
+        application = self.repository.get_by_id_simple(application_id)
+
+        # 2. Проверка прав (Domain)
+        user_role = author.role.code if author.role else "user"
+        current_status = application.status.code
+
+        is_user_department_involved = self._is_user_department_involved(
+            application, author
+        )
+        is_user_author = application.author == author if application.author else False
+
+        user_department_can_save = self._get_user_department_can_save(author)
+        is_external = getattr(application, "is_external", False)
+        if not ApplicationCapabilities.is_action_allowed(
+            action="return_by_author",
+            current_status=current_status,
+            user_role=user_role,
+            is_user_department_involved=is_user_department_involved,
+            is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
+        ):
+            raise PermissionError("Недостаточно прав для отзыва заявки")
+
+        # 2.5. Добавляем пользователя и его подразделение в причастные (если их еще нет)
+        self._ensure_user_and_department_involved(application, author)
+
+        # 3. Проверяем возможность перехода (Domain)
+        can_change, error = ProjectApplicationDomain.can_change_status(
+            current_status, "returned_author", user_role
+        )
+        if not can_change:
+            raise ValueError(error)
+
+        # 4. Сохраняем старый статус для логирования
+        old_status = application.status
+
+        # 5. Меняем статус на returned_author
+        new_status = ApplicationStatus.objects.get(code="returned_author")
+        application.status = new_status
+        application.save()
+
+        # 6. Логируем изменение статуса
+        self.logging_service.log_status_change(
+            application=application,
+            from_status=old_status,
+            to_status=new_status,
+            actor=author,
+        )
+
+        return application
+
+    @transaction.atomic
     def approve_application(self, application_id: int, approver: User):
         """Бизнес-операция: одобрение заявки."""
         # 1. Получаем заявку (Repository) - нужно для проверки прав
@@ -396,16 +452,6 @@ class ProjectApplicationService:
         # Проверяем право на действие согласно матрице
         user_department_can_save = self._get_user_department_can_save(transferrer)
         is_external = getattr(application, "is_external", False)
-        if not ApplicationCapabilities.is_action_allowed(
-            action="transfer_to_institute",
-            current_status=application.status.code,
-            user_role=user_role,
-            is_user_department_involved=is_user_department_involved,
-            is_user_author=is_user_author,
-            user_department_can_save=user_department_can_save,
-            is_external=is_external,
-        ):
-            raise PermissionError("Недостаточно прав для передачи заявки в институт")
 
         # 3. Проверка, что заявка внешняя
         if not application.is_external:
@@ -417,6 +463,18 @@ class ProjectApplicationService:
                 f"Действие доступно только для заявок со статусом require_assignment, "
                 f"текущий статус: {application.status.code}"
             )
+
+        # 4.1 Проверяем право на действие согласно матрице (после бизнес-правил)
+        if not ApplicationCapabilities.is_action_allowed(
+            action="transfer_to_institute",
+            current_status=application.status.code,
+            user_role=user_role,
+            is_user_department_involved=is_user_department_involved,
+            is_user_author=is_user_author,
+            user_department_can_save=user_department_can_save,
+            is_external=is_external,
+        ):
+            raise PermissionError("Недостаточно прав для передачи заявки в институт")
 
         # 5. Находим институт по коду
         try:

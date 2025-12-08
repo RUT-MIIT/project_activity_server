@@ -654,6 +654,48 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
                 status=status.HTTP_404_NOT_FOUND,
             )
 
+    @action(detail=True, methods=["post"])
+    def return_by_author(self, request, pk=None):
+        """POST /api/project-applications/{id}/return_by_author/
+        Отзыв заявки автором (перевод в статус returned_author).
+        """
+        try:
+            application = self.service.return_by_author(
+                application_id=int(pk), author=request.user
+            )
+
+            # Получаем доступные действия после отзыва
+            try:
+                available_actions_dto = self.service.get_available_actions(
+                    int(pk), request.user
+                )
+                available_actions = available_actions_dto.to_dict()["available_actions"]
+            except Exception:
+                available_actions = []
+
+            return Response(
+                {
+                    "status": application.status.code,
+                    "status_name": (
+                        application.status.name
+                        if hasattr(application.status, "name")
+                        else ""
+                    ),
+                    "message": "Заявка отозвана",
+                    "available_actions": available_actions,
+                },
+                status=status.HTTP_200_OK,
+            )
+        except PermissionError as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response(
+                {"error": f"Заявка не найдена ({str(e)})"},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
     @action(detail=False, methods=["get"])
     def by_status(self, request):
         """GET /api/project-applications/by_status/?status=created

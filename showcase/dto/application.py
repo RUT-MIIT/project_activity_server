@@ -3,6 +3,24 @@
 from typing import Any, Optional
 
 
+def build_author_short_name(
+    lastname: Optional[str],
+    firstname: Optional[str],
+    middlename: Optional[str],
+) -> Optional[str]:
+    """Формирует короткое имя вида 'Фамилия И.О.' или возвращает None."""
+    initials = ""
+    if firstname:
+        initials += f"{firstname[0]}."
+    if middlename:
+        initials += f"{middlename[0]}."
+    if lastname and initials:
+        return f"{lastname} {initials}"
+    if lastname:
+        return lastname
+    return initials or None
+
+
 def serialize_comment_author(author) -> dict:
     """Сериализует автора комментария с role и department.
 
@@ -246,6 +264,11 @@ class ProjectApplicationReadDTO:
         )
 
         # Автор
+        author_short_name = build_author_short_name(
+            application.author_lastname,
+            application.author_firstname,
+            application.author_middlename,
+        )
         self.author = (
             {
                 "id": application.author.id if application.author else None,
@@ -254,6 +277,8 @@ class ProjectApplicationReadDTO:
                 "phone": application.author_phone,
                 "role": application.author_role,
                 "division": application.author_division,
+                "middlename": application.author_middlename,
+                "short_name": author_short_name,
             }
             if application.author
             else None
@@ -267,6 +292,7 @@ class ProjectApplicationReadDTO:
         self.author_phone = application.author_phone
         self.author_role = application.author_role
         self.author_division = application.author_division
+        self.author_short_name = author_short_name
 
         # Основное подразделение
         self.main_department = (
@@ -396,6 +422,7 @@ class ProjectApplicationReadDTO:
             "author_phone": self.author_phone,
             "author_role": self.author_role,
             "author_division": self.author_division,
+            "author_short_name": self.author_short_name,
             "main_department": self.main_department,
             "main_department_id": self.main_department_id,
             "company_contacts": self.company_contacts,
@@ -453,6 +480,12 @@ class ProjectApplicationListDTO:
             f"{application.author_lastname} {application.author_firstname}"
         )
         self.author_email = application.author_email
+        self.author_middlename = application.author_middlename
+        self.author_short_name = build_author_short_name(
+            application.author_lastname,
+            application.author_firstname,
+            application.author_middlename,
+        )
 
     def to_dict(self) -> dict[str, Any]:
         """Преобразование в словарь для JSON"""
@@ -470,5 +503,7 @@ class ProjectApplicationListDTO:
             "status": self.status,
             "author_name": self.author_name,
             "author_email": self.author_email,
+            "author_middlename": self.author_middlename,
+            "author_short_name": self.author_short_name,
             "comments_count": self.comments_count,
         }

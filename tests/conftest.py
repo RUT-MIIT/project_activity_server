@@ -61,6 +61,7 @@ def statuses(db):
         ("rejected_institute", 13),
         ("rejected_cpds", 14),
         ("rejected", 15),
+        ("returned_author", 16),
     ]
     for code, pos in codes:
         ApplicationStatus.objects.get_or_create(

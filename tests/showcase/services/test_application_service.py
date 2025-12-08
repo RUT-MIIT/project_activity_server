@@ -429,6 +429,7 @@ class TestApproveRejectRequestService:
             status=ApplicationStatus.objects.get(code=status_code),
             author_lastname="Иванов",
             author_firstname="Иван",
+            author_middlename="Иванович",
             author_email="user@example.com",
             author_phone="+79990000000",
             goal="Длинная цель 1234567890",
@@ -849,6 +850,7 @@ class TestUpdateAndQueriesService:
             status=ApplicationStatus.objects.get(code=status_code),
             author_lastname="Иванов",
             author_firstname="Иван",
+            author_middlename="Иванович",
             author_email="user@example.com",
             author_phone="+79990000000",
             goal="Длинная цель 1234567890",
@@ -857,16 +859,13 @@ class TestUpdateAndQueriesService:
         )
 
     def test_update_success_by_author(self, statuses, make_user):
-        """Автор может редактировать свою заявку."""
+        """Автор не может редактировать заявку в статусе await_department (матрица запрещает)."""
         author = make_user(role_code="user", with_department=False)
         app = self._create_app(author=author, status_code="await_department")
         service = ProjectApplicationService()
         dto = ProjectApplicationUpdateDTO(title="New valid title")
-        app2 = service.update_application(app.id, dto, author)
-        assert app2.title == "New valid title"
-        assert ProjectApplicationStatusLog.objects.filter(
-            application=app, action_type="application_updated"
-        ).exists()
+        with pytest.raises(PermissionError):
+            service.update_application(app.id, dto, author)
 
     def test_update_success_by_cpds(self, statuses, make_user):
         """Сотрудник ЦПДС может редактировать любую заявку (кроме rejected)."""
@@ -880,6 +879,84 @@ class TestUpdateAndQueriesService:
         assert ProjectApplicationStatusLog.objects.filter(
             application=app, action_type="application_updated"
         ).exists()
+
+    def test_return_by_author_success(self, statuses, make_user):
+        """Автор может отозвать заявку: статус -> returned_author, пишется лог."""
+        author = make_user(role_code="user", with_department=True)
+        app = self._create_app(author=author, status_code="await_department")
+        service = ProjectApplicationService()
+
+        app2 = service.return_by_author(app.id, author)
+
+        assert app2.status.code == "returned_author"
+        assert (
+            ProjectApplicationStatusLog.objects.filter(
+                application=app, action_type="status_change"
+            ).count()
+            == 1
+        )
+
+    def test_return_by_author_denied_for_non_author(self, statuses, make_user):
+        """Не-автор не может отозвать заявку — PermissionError."""
+        author = make_user(role_code="user", with_department=True)
+        other = make_user(role_code="user", with_department=True)
+        app = self._create_app(author=author, status_code="await_department")
+        service = ProjectApplicationService()
+
+        with pytest.raises(PermissionError):
+            service.return_by_author(app.id, other)
+
+    def test_return_by_author_denied_for_approved(self, statuses, make_user):
+        """Отозвать одобренную заявку нельзя (PermissionError по матрице)."""
+        author = make_user(role_code="user", with_department=True)
+        app = self._create_app(author=author, status_code="approved")
+        service = ProjectApplicationService()
+
+        with pytest.raises(PermissionError):
+            service.return_by_author(app.id, author)
+
+    def test_return_by_author_available_action_and_flow(
+        self, statuses, make_user, roles
+    ):
+        """Автор видит действие 'Отозвать' в await_department и может вернуть в returned_author."""
+        author = make_user(role_code="user", with_department=True)
+        # Создаем валидатора в том же подразделении, чтобы не уйти в await_institute
+        validator_role = roles["department_validator"]
+        User.objects.create_user(
+            email="dept_validator@example.com",
+            password="pass",
+            first_name="Dept",
+            last_name="Validator",
+            role=validator_role,
+            department=author.department,
+        )
+
+        dto = ProjectApplicationCreateDTO(
+            company="Acme",
+            title="Project",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="author@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель",
+            barrier="Длинный барьер",
+            target_institutes=[],
+            project_level="L1",
+        )
+        service = ProjectApplicationService()
+        app = service.submit_application(dto, author)
+
+        # Гарантируем статус await_department
+        app.status = ApplicationStatus.objects.get(code="await_department")
+        app.save()
+
+        actions_dto = service.get_available_actions(app.id, author)
+        actions = actions_dto.to_dict()["available_actions"]
+        assert any(a["action"] == "return_by_author" for a in actions)
+
+        app2 = service.return_by_author(app.id, author)
+        assert app2.status.code == "returned_author"
 
     def test_update_success_by_department_validator_as_author(
         self, statuses, make_user
@@ -921,12 +998,12 @@ class TestUpdateAndQueriesService:
             service.update_application(app.id, dto, validator)
 
     def test_update_validation_error(self, statuses, make_user):
-        """Некорректный title вызывает ValueError при роли, которой разрешено редактировать."""
+        """Автор в await_department не может редактировать, ожидаем PermissionError (матрица)."""
         author = make_user(role_code="user", with_department=False)
         app = self._create_app(author=author, status_code="await_department")
         service = ProjectApplicationService()
         dto = ProjectApplicationUpdateDTO(title="bad")
-        with pytest.raises(ValueError):
+        with pytest.raises(PermissionError):
             service.update_application(app.id, dto, author)
 
     def test_update_rejected_status_denied(self, statuses, make_user):
@@ -1003,6 +1080,7 @@ class TestCoordinationAndDtosService:
             status=ApplicationStatus.objects.get(code=status_code),
             author_lastname="Иванов",
             author_firstname="Иван",
+            author_middlename="Иванович",
             author_email="user@example.com",
             author_phone="+79990000000",
             goal="Длинная цель 1234567890",
@@ -1050,6 +1128,14 @@ class TestCoordinationAndDtosService:
         list_dto = service.get_application_list_dto(app)
         assert read_dto.id == app.id
         assert list_dto.id == app.id
+        read_dict = read_dto.to_dict()
+        list_dict = list_dto.to_dict()
+        assert read_dict["author_middlename"] == "Иванович"
+        assert read_dict["author_short_name"] == "Иванов И.И."
+        assert read_dict["author"]["middlename"] == "Иванович"
+        assert read_dict["author"]["short_name"] == "Иванов И.И."
+        assert list_dict["author_middlename"] == "Иванович"
+        assert list_dict["author_short_name"] == "Иванов И.И."
 
     def test_get_external_applications(self, statuses, make_user):
         """get_external_applications возвращает только заявки с is_external=True."""
@@ -1198,9 +1284,9 @@ class TestCoordinationAndDtosService:
         """get_external_applications требует авторизации."""
         from django.contrib.auth import get_user_model
 
-        User = get_user_model()
+        user_model = get_user_model()
         # Создаём неавторизованного пользователя (AnonymousUser)
-        anonymous_user = User()
+        anonymous_user = user_model()
 
         service = ProjectApplicationService()
 

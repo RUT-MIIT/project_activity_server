@@ -221,36 +221,95 @@ class ApplicationCapabilities:
     POLICY_EXTERNAL_ONLY: str = "только для внешней заявки"
     STATUS_RETURNED_ALL: str = "returned_(all)"
     _ROLE_STATUS_ACTIONS: dict[str, dict[str, dict[str, str]]] = {
-        "await_department": {
+        "returned_author": {
             "user": {
-                "save_changes": POLICY_DENY,
+                "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_DENY,
             },
             "mentor": {
-                "save_changes": POLICY_DENY,
-                "approve": POLICY_DENY,
+                "save_changes": POLICY_OWN_ONLY,
+                "approve": POLICY_OWN_ONLY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_DENY,
             },
             "department_validator": {
                 "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
-                "request_changes": POLICY_DEPARTMENT_ONLY,
+                "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_DENY,
             },
             "institute_validator": {
                 "save_changes": POLICY_DEPARTMENT_CAN_SAVE,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
-                "request_changes": POLICY_DEPARTMENT_ONLY,
+                "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_DENY,
             },
             "cpds": {
                 "save_changes": POLICY_ALLOW,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_DENY,
+            },
+        },
+        "created": {
+            "user": {
+                "return_by_author": POLICY_OWN_ONLY,
+            },
+            "mentor": {
+                "return_by_author": POLICY_OWN_ONLY,
+            },
+            "department_validator": {
+                "return_by_author": POLICY_OWN_ONLY,
+            },
+            "institute_validator": {
+                "return_by_author": POLICY_OWN_ONLY,
+            },
+            "cpds": {
+                "return_by_author": POLICY_OWN_ONLY,
+            },
+        },
+        "await_department": {
+            "user": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
+            },
+            "mentor": {
+                "save_changes": POLICY_DENY,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
+            },
+            "department_validator": {
+                "save_changes": POLICY_OWN_ONLY,
+                "approve": POLICY_DEPARTMENT_ONLY,
+                "reject": POLICY_DEPARTMENT_ONLY,
+                "request_changes": POLICY_DEPARTMENT_ONLY,
+                "return_by_author": POLICY_OWN_ONLY,
+            },
+            "institute_validator": {
+                "save_changes": POLICY_DEPARTMENT_CAN_SAVE,
+                "approve": POLICY_DEPARTMENT_ONLY,
+                "reject": POLICY_DEPARTMENT_ONLY,
+                "request_changes": POLICY_DEPARTMENT_ONLY,
+                "return_by_author": POLICY_OWN_ONLY,
+            },
+            "cpds": {
+                "save_changes": POLICY_ALLOW,
+                "approve": POLICY_DENY,
+                "reject": POLICY_DENY,
+                "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
         },
         "require_assignment": {
@@ -259,24 +318,28 @@ class ApplicationCapabilities:
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "mentor": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "department_validator": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "institute_validator": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "cpds": {
                 "save_changes": POLICY_ALLOW,
@@ -284,6 +347,7 @@ class ApplicationCapabilities:
                 "reject": POLICY_ALLOW,
                 "request_changes": POLICY_DENY,
                 "transfer_to_institute": POLICY_EXTERNAL_ONLY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
         },
         "await_institute": {
@@ -292,30 +356,35 @@ class ApplicationCapabilities:
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "mentor": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "department_validator": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "institute_validator": {
                 "save_changes": POLICY_DEPARTMENT_CAN_SAVE,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DEPARTMENT_ONLY_NOT_EXTERNAL,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "cpds": {
                 "save_changes": POLICY_ALLOW,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
         },
         "await_cpds": {
@@ -324,24 +393,28 @@ class ApplicationCapabilities:
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "mentor": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "department_validator": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "institute_validator": {
                 "save_changes": POLICY_DENY,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "cpds": {
                 "save_changes": POLICY_ALLOW,
@@ -349,6 +422,7 @@ class ApplicationCapabilities:
                 "reject": POLICY_ALLOW,
                 "request_changes": POLICY_ALLOW,
                 "transfer_to_institute": POLICY_EXTERNAL_ONLY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
         },
         STATUS_RETURNED_ALL: {
@@ -357,30 +431,35 @@ class ApplicationCapabilities:
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "mentor": {
                 "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_OWN_ONLY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "department_validator": {
                 "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "institute_validator": {
                 "save_changes": POLICY_DEPARTMENT_CAN_SAVE,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
             "cpds": {
                 "save_changes": POLICY_ALLOW,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
+                "return_by_author": POLICY_OWN_ONLY,
             },
         },
         "rejected_department": {
@@ -533,6 +612,7 @@ class ApplicationCapabilities:
         "request_changes": "Отправить на доработку",
         "save_changes": "Сохранить изменение",
         "transfer_to_institute": "Передать в институт",
+        "return_by_author": "Отозвать",
     }
 
     @staticmethod
@@ -616,6 +696,7 @@ class ApplicationCapabilities:
             "request_changes",
             "save_changes",
             "transfer_to_institute",
+            "return_by_author",
         ]
         available: list[dict[str, Any]] = []
         for a in actions:
