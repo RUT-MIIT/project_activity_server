@@ -19,6 +19,8 @@ class TestProjectApplicationViewSetSimple:
         data = {
             "company": "Test Company",
             "title": "Test Project",
+            "company_contacts": "Контакты представителя",
+            "existing_solutions": "Описание существующих решений",
             "author_lastname": "Иванов",
             "author_firstname": "Иван",
             "author_email": "test@example.com",
@@ -49,6 +51,8 @@ class TestProjectApplicationViewSetSimple:
         data = {
             "company": "Test Company",
             "title": "Test Project",
+            "company_contacts": "Контакты представителя",
+            "existing_solutions": "Описание существующих решений",
             "author_lastname": "Иванов",
             "author_firstname": "Иван",
             "author_email": "test@example.com",
@@ -81,6 +85,8 @@ class TestProjectApplicationViewSetSimple:
         data = {
             "company": "Test Company",
             "title": "Test Project",
+            "company_contacts": "Контакты представителя",
+            "existing_solutions": "Описание существующих решений",
             "author_lastname": "Иванов",
             "author_firstname": "Иван",
             "author_email": "test@example.com",
@@ -137,6 +143,8 @@ class TestProjectApplicationViewSetExternal:
         dto_external = ProjectApplicationCreateDTO(
             company="External Corp",
             title="External Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="external@example.com",
@@ -153,6 +161,8 @@ class TestProjectApplicationViewSetExternal:
         dto_internal = ProjectApplicationCreateDTO(
             company="Internal Corp",
             title="Internal Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Петров",
             author_firstname="Пётр",
             author_email="internal@example.com",
@@ -202,6 +212,8 @@ class TestProjectApplicationViewSetExternal:
         dto = ProjectApplicationCreateDTO(
             company="External Corp",
             title="External Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="external@example.com",
@@ -242,6 +254,8 @@ class TestProjectApplicationViewSetTransferToInstitute:
         dto = ProjectApplicationCreateDTO(
             company="External Corp",
             title="External Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="external@example.com",
@@ -357,6 +371,8 @@ class TestProjectApplicationViewSetTransferToInstitute:
         dto1 = ProjectApplicationCreateDTO(
             company="External Corp 1",
             title="External Project 1",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="ext1@example.com",
@@ -372,6 +388,8 @@ class TestProjectApplicationViewSetTransferToInstitute:
         dto2 = ProjectApplicationCreateDTO(
             company="External Corp 2",
             title="External Project 2",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Петров",
             author_firstname="Пётр",
             author_email="ext2@example.com",
@@ -431,6 +449,8 @@ class TestProjectApplicationViewSetIsExternalInResponses:
         data = {
             "company": "Test Company",
             "title": "Test Project",
+            "company_contacts": "Контактные данные представителя",
+            "existing_solutions": "Описание существующих решений",
             "author_lastname": "Иванов",
             "author_firstname": "Иван",
             "author_email": "test@example.com",
@@ -464,6 +484,8 @@ class TestProjectApplicationViewSetIsExternalInResponses:
         dto = ProjectApplicationCreateDTO(
             company="Test Company",
             title="Test Project",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -498,6 +520,8 @@ class TestProjectApplicationViewSetIsExternalInResponses:
         dto = ProjectApplicationCreateDTO(
             company="Test Company",
             title="Test Project",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",

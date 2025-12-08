@@ -22,53 +22,96 @@ class ProjectApplicationDomain:
         """
         result = ValidationResult()
 
-        # Бизнес-правило: название проекта обязательно
+        # Бизнес-правило: название проекта обязательно и минимум 5 символов
         if not dto.title or not dto.title.strip():
             result.add_error("title", "Название проекта обязательно")
+        elif len(dto.title.strip()) < 5:
+            result.add_error(
+                "title", "Название проекта должно содержать минимум 5 символов"
+            )
 
-        # Бизнес-правило: наименование организации-заказчика обязательно
+        # Бизнес-правило: наименование организации-заказчика обязательно и минимум 2 символа
         if not dto.company or not dto.company.strip():
             result.add_error(
                 "company", "Наименование организации-заказчика обязательно"
             )
-
-        # Бизнес-правило: цель проекта обязательна
-        if not dto.goal or not dto.goal.strip():
-            result.add_error("goal", "Цель обязательна")
-
-        # Бизнес-правило: носитель проблемы обязателен
-        if not dto.problem_holder or not dto.problem_holder.strip():
-            result.add_error("problem_holder", "Носитель проблемы обязателен")
-
-        # Бизнес-правило: барьер обязателен
-        if not dto.barrier or not dto.barrier.strip():
-            result.add_error("barrier", "Барьер обязателен")
-
-        # Бизнес-правило: существующие решения обязательны
-        if not dto.existing_solutions or not dto.existing_solutions.strip():
-            result.add_error("existing_solutions", "Существующие решения обязательны")
-
-        # Бизнес-правило: контактные данные представителя заказчика обязательны
-        if not dto.company_contacts or not dto.company_contacts.strip():
+        elif len(dto.company.strip()) < 2:
             result.add_error(
-                "company_contacts",
-                "Контактные данные представителя заказчика обязательны",
+                "company",
+                "Наименование организации-заказчика должно содержать минимум 2 символа",
             )
 
-        if dto.author_lastname is not None and (
-            not dto.author_lastname or not dto.author_lastname.strip()
-        ):
-            result.add_error("author_lastname", "Фамилия автора обязательна")
+        # Бизнес-правило: цель проекта обязательна и минимум 10 символов
+        if not dto.goal or not dto.goal.strip():
+            result.add_error("goal", "Цель обязательна")
+        elif len(dto.goal.strip()) < 10:
+            result.add_error("goal", "Цель должна содержать минимум 10 символов")
 
-        if dto.author_firstname is not None and (
-            not dto.author_firstname or not dto.author_firstname.strip()
-        ):
-            result.add_error("author_firstname", "Имя автора обязательно")
+        # Бизнес-правило: носитель проблемы и барьер могут быть пустыми на черновых шагах.
+        # Проверяем только при наличии значения.
+        if dto.problem_holder not in (None, ""):
+            if len(dto.problem_holder.strip()) < 5:
+                result.add_error(
+                    "problem_holder",
+                    "Носитель проблемы должен содержать минимум 5 символов",
+                )
 
-        if dto.author_phone is not None and (
-            not dto.author_phone or not dto.author_phone.strip()
-        ):
-            result.add_error("author_phone", "Телефон автора обязателен")
+        if dto.barrier not in (None, ""):
+            if len(dto.barrier.strip()) < 10:
+                result.add_error(
+                    "barrier",
+                    "Барьер должен содержать минимум 10 символов",
+                )
+
+        # Бизнес-правило: существующие решения и контакты заказчика допускаются пустыми
+        # для упрощённой подачи. Валидируем только если переданы непустые строки.
+        if dto.existing_solutions not in (None, ""):
+            if not dto.existing_solutions.strip():
+                result.add_error(
+                    "existing_solutions", "Существующие решения обязательны"
+                )
+
+        if dto.company_contacts not in (None, ""):
+            if not dto.company_contacts.strip():
+                result.add_error(
+                    "company_contacts",
+                    "Контактные данные представителя заказчика обязательны",
+                )
+
+        # Бизнес-правило: email автора, если задан, должен быть достаточно длинным
+        # (подробная проверка формата выполняется на уровне сериализатора)
+        if dto.author_email is not None:
+            if not dto.author_email or len(dto.author_email.strip()) < 5:
+                result.add_error(
+                    "author_email", "Email автора должен содержать минимум 5 символов"
+                )
+
+        if dto.author_lastname is not None:
+            if not dto.author_lastname or not dto.author_lastname.strip():
+                result.add_error("author_lastname", "Фамилия автора обязательна")
+            elif len(dto.author_lastname.strip()) < 2:
+                result.add_error(
+                    "author_lastname",
+                    "Фамилия автора должна содержать минимум 2 символа",
+                )
+
+        if dto.author_firstname is not None:
+            if not dto.author_firstname or not dto.author_firstname.strip():
+                result.add_error("author_firstname", "Имя автора обязательно")
+            elif len(dto.author_firstname.strip()) < 2:
+                result.add_error(
+                    "author_firstname",
+                    "Имя автора должно содержать минимум 2 символа",
+                )
+
+        if dto.author_phone is not None:
+            if not dto.author_phone or not dto.author_phone.strip():
+                result.add_error("author_phone", "Телефон автора обязателен")
+            elif len(dto.author_phone.strip()) < 10:
+                result.add_error(
+                    "author_phone",
+                    "Телефон автора должен содержать минимум 10 символов",
+                )
 
         return result
 
@@ -81,44 +124,49 @@ class ProjectApplicationDomain:
         result = ValidationResult()
 
         # Валидируем только переданные поля
-        if dto.title is not None and (not dto.title or not dto.title.strip()):
-            result.add_error("title", "Название проекта обязательно")
+        if dto.title is not None:
+            if not dto.title or not dto.title.strip():
+                result.add_error("title", "Название проекта обязательно")
+            elif len(dto.title.strip()) < 5:
+                result.add_error(
+                    "title",
+                    "Название проекта должно содержать минимум 5 символов",
+                )
 
         if dto.author_email is not None and (
             not dto.author_email or "@" not in dto.author_email
         ):
             result.add_error("author_email", "Некорректный email")
 
-        if dto.goal is not None and (not dto.goal or not dto.goal.strip()):
-            result.add_error("goal", "Цель обязательна")
+        if dto.goal is not None:
+            if not dto.goal or not dto.goal.strip():
+                result.add_error("goal", "Цель обязательна")
 
-        if dto.problem_holder is not None and (
-            not dto.problem_holder or not dto.problem_holder.strip()
-        ):
-            result.add_error("problem_holder", "Носитель проблемы обязателен")
+        if dto.problem_holder is not None:
+            if not dto.problem_holder or not dto.problem_holder.strip():
+                result.add_error("problem_holder", "Носитель проблемы обязателен")
 
-        if dto.barrier is not None and (not dto.barrier or not dto.barrier.strip()):
-            result.add_error("barrier", "Барьер обязателен")
+        if dto.barrier is not None:
+            if not dto.barrier or not dto.barrier.strip():
+                result.add_error("barrier", "Барьер обязателен")
 
-        if dto.company is not None and (not dto.company or not dto.company.strip()):
-            result.add_error(
-                "company", "Наименование организации-заказчика обязательно"
-            )
+        if dto.company is not None:
+            if not dto.company or not dto.company.strip():
+                result.add_error(
+                    "company", "Наименование организации-заказчика обязательно"
+                )
 
-        if dto.author_lastname is not None and (
-            not dto.author_lastname or not dto.author_lastname.strip()
-        ):
-            result.add_error("author_lastname", "Фамилия автора обязательна")
+        if dto.author_lastname is not None:
+            if not dto.author_lastname or not dto.author_lastname.strip():
+                result.add_error("author_lastname", "Фамилия автора обязательна")
 
-        if dto.author_firstname is not None and (
-            not dto.author_firstname or not dto.author_firstname.strip()
-        ):
-            result.add_error("author_firstname", "Имя автора обязательно")
+        if dto.author_firstname is not None:
+            if not dto.author_firstname or not dto.author_firstname.strip():
+                result.add_error("author_firstname", "Имя автора обязательно")
 
-        if dto.author_phone is not None and (
-            not dto.author_phone or not dto.author_phone.strip()
-        ):
-            result.add_error("author_phone", "Телефон автора обязателен")
+        if dto.author_phone is not None:
+            if not dto.author_phone or not dto.author_phone.strip():
+                result.add_error("author_phone", "Телефон автора обязателен")
 
         return result
 

@@ -20,13 +20,15 @@ class TestValidateCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme Corporation",
             title="Valid Project Title",
+            problem_holder="Носитель проблемы",
+            goal="Длинная цель проекта для валидации",
+            barrier="Описание барьера достаточно длинное",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
             author_phone="+79990000000",
-            goal="Длинная цель проекта для валидации",
-            problem_holder="Носитель проблемы",
-            barrier="Описание барьера достаточно длинное",
         )
         result = ProjectApplicationDomain.validate_create(dto)
         assert (
@@ -38,13 +40,15 @@ class TestValidateCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Bad",
+            problem_holder="Носитель проблемы",
+            goal="Длинная цель",
+            barrier="Длинный барьер",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
             author_phone="+79990000000",
-            goal="Длинная цель",
-            problem_holder="Носитель",
-            barrier="Длинный барьер",
         )
         result = ProjectApplicationDomain.validate_create(dto)
         assert not result.is_valid
@@ -56,13 +60,15 @@ class TestValidateCreate:
         dto = ProjectApplicationCreateDTO(
             company="A",
             title="Valid Title",
+            problem_holder="Носитель проблемы",
+            goal="Длинная цель",
+            barrier="Длинный барьер",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
             author_phone="+79990000000",
-            goal="Длинная цель",
-            problem_holder="Носитель",
-            barrier="Длинный барьер",
         )
         result = ProjectApplicationDomain.validate_create(dto)
         assert not result.is_valid
@@ -73,13 +79,15 @@ class TestValidateCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Valid Title",
+            problem_holder="Носитель проблемы",
+            goal="Длинная цель",
+            barrier="Длинный барьер",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="x@y",
             author_phone="+79990000000",
-            goal="Длинная цель",
-            problem_holder="Носитель",
-            barrier="Длинный барьер",
         )
         result = ProjectApplicationDomain.validate_create(dto)
         assert not result.is_valid
@@ -90,13 +98,15 @@ class TestValidateCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Valid Title",
+            problem_holder="Носитель проблемы",
+            goal="Short",
+            barrier="Длинный барьер",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
             author_phone="+79990000000",
-            goal="Short",
-            problem_holder="Носитель",
-            barrier="Длинный барьер",
         )
         result = ProjectApplicationDomain.validate_create(dto)
         assert not result.is_valid
@@ -107,13 +117,15 @@ class TestValidateCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Valid Title",
+            problem_holder="X",
+            goal="Длинная цель",
+            barrier="Длинный барьер",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
             author_phone="+79990000000",
-            goal="Длинная цель",
-            problem_holder="X",
-            barrier="Длинный барьер",
         )
         result = ProjectApplicationDomain.validate_create(dto)
         assert not result.is_valid
@@ -124,13 +136,15 @@ class TestValidateCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Valid Title",
+            problem_holder="Носитель проблемы",
+            goal="Длинная цель",
+            barrier="Short",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
             author_phone="+79990000000",
-            goal="Длинная цель",
-            problem_holder="Носитель",
-            barrier="Short",
         )
         result = ProjectApplicationDomain.validate_create(dto)
         assert not result.is_valid
@@ -141,13 +155,15 @@ class TestValidateCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Valid Title",
+            problem_holder="Носитель проблемы",
+            goal="Длинная цель",
+            barrier="Длинный барьер",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             author_lastname="И",
             author_firstname="И",
             author_email="user@example.com",
             author_phone="+79990000000",
-            goal="Длинная цель",
-            problem_holder="Носитель",
-            barrier="Длинный барьер",
         )
         result = ProjectApplicationDomain.validate_create(dto)
         assert not result.is_valid
@@ -159,13 +175,15 @@ class TestValidateCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Valid Title",
+            problem_holder="Носитель проблемы",
+            goal="Длинная цель",
+            barrier="Длинный барьер",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
             author_phone="12345",
-            goal="Длинная цель",
-            problem_holder="Носитель",
-            barrier="Длинный барьер",
         )
         result = ProjectApplicationDomain.validate_create(dto)
         assert not result.is_valid
@@ -176,13 +194,15 @@ class TestValidateCreate:
         dto = ProjectApplicationCreateDTO(
             company="A",
             title="Bad",
+            problem_holder="xx",
+            goal="short",
+            barrier="short",
+            company_contacts="",
+            existing_solutions="",
             author_lastname="И",
             author_firstname="И",
             author_email="x@",
             author_phone="123",
-            goal="short",
-            problem_holder="xx",
-            barrier="short",
         )
         result = ProjectApplicationDomain.validate_create(dto)
         assert not result.is_valid
@@ -437,9 +457,13 @@ class TestShouldRequireConsultation:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            problem_holder="Носитель проблемы",
+            goal="Достаточно длинная цель проекта для консультации проверки",
+            barrier="Описание барьера достаточно длинное",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             project_level="",  # Пустой уровень
             target_institutes=["INST1"],
-            goal="Достаточно длинная цель проекта для консультации проверки",
         )
         requires = ProjectApplicationDomain.should_require_consultation(dto)
         assert requires is True
@@ -449,9 +473,13 @@ class TestShouldRequireConsultation:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            problem_holder="Носитель проблемы",
+            goal="Достаточно длинная цель проекта для консультации проверки",
+            barrier="Описание барьера достаточно длинное",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             project_level="L1",
             target_institutes=[],  # Пустой список
-            goal="Достаточно длинная цель проекта для консультации проверки",
         )
         requires = ProjectApplicationDomain.should_require_consultation(dto)
         assert requires is True
@@ -461,9 +489,13 @@ class TestShouldRequireConsultation:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            problem_holder="Носитель проблемы",
+            goal="Короткая цель",  # Меньше 50 символов
+            barrier="Описание барьера достаточно длинное",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             project_level="L1",
             target_institutes=["INST1"],
-            goal="Короткая цель",  # Меньше 50 символов
         )
         requires = ProjectApplicationDomain.should_require_consultation(dto)
         assert requires is True
@@ -473,9 +505,13 @@ class TestShouldRequireConsultation:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            problem_holder="Носитель проблемы",
+            goal="Достаточно длинная цель проекта для консультации проверки длиннее 50 символов",  # > 50 символов
+            barrier="Описание барьера достаточно длинное",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             project_level="L1",  # Уровень указан
             target_institutes=["INST1", "INST2"],  # Институты указаны
-            goal="Достаточно длинная цель проекта для консультации проверки длиннее 50 символов",  # > 50 символов
         )
         requires = ProjectApplicationDomain.should_require_consultation(dto)
         assert requires is False
@@ -485,9 +521,13 @@ class TestShouldRequireConsultation:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            problem_holder="Носитель проблемы",
+            goal="Достаточно длинная цель проекта для консультации проверки",
+            barrier="Описание барьера достаточно длинное",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             project_level=None,
             target_institutes=["INST1"],
-            goal="Достаточно длинная цель проекта для консультации проверки",
         )
         requires = ProjectApplicationDomain.should_require_consultation(dto)
         assert requires is True
@@ -497,9 +537,13 @@ class TestShouldRequireConsultation:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            problem_holder="Носитель проблемы",
+            goal="Достаточно длинная цель проекта для консультации проверки",
+            barrier="Описание барьера достаточно длинное",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Существующие решения описаны подробно",
             project_level="L1",
             target_institutes=None,
-            goal="Достаточно длинная цель проекта для консультации проверки",
         )
         requires = ProjectApplicationDomain.should_require_consultation(dto)
         assert requires is True

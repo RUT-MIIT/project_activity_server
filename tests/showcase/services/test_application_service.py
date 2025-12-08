@@ -31,6 +31,8 @@ class TestSubmitApplicationService:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Проект X",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
@@ -69,6 +71,8 @@ class TestSubmitApplicationService:
         dto = ProjectApplicationCreateDTO(
             company="A",  # слишком коротко
             title="bad",  # слишком коротко
+            company_contacts="",
+            existing_solutions="",
             author_lastname="I",
             author_firstname="I",
             author_email="x@",
@@ -86,6 +90,9 @@ class TestSubmitApplicationService:
         user = make_user(role_code="user", with_department=True)
         dto = ProjectApplicationCreateDTO(
             company="Acme",
+            title="Проект X",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             goal="Цель менее 50 символов",
             project_level="",
             target_institutes=["INST"],
@@ -104,6 +111,9 @@ class TestSubmitApplicationService:
         user = make_user(role_code="user", with_department=True)
         dto = ProjectApplicationCreateDTO(
             company="Acme",
+            title="Проект X",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             goal="Цель менее 50 символов",
             project_level="",
             target_institutes=[],
@@ -120,6 +130,8 @@ class TestSubmitApplicationService:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="External Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
@@ -153,6 +165,8 @@ class TestSubmitApplicationService:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="External Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
@@ -178,6 +192,8 @@ class TestSubmitApplicationService:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Internal Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
@@ -204,6 +220,8 @@ class TestSubmitApplicationService:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Проект X",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
@@ -248,6 +266,8 @@ class TestSubmitApplicationService:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Проект X",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
@@ -293,6 +313,8 @@ class TestSubmitApplicationService:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Проект X",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="user@example.com",
@@ -626,6 +648,8 @@ class TestApproveRejectRequestService:
         dto = ProjectApplicationCreateDTO(
             company="External Corp",
             title="External Project",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="external@example.com",
@@ -681,6 +705,8 @@ class TestApproveRejectRequestService:
         dto_internal = ProjectApplicationCreateDTO(
             company="Internal Corp",
             title="Internal Project",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="internal@example.com",
@@ -699,6 +725,8 @@ class TestApproveRejectRequestService:
         dto_external = ProjectApplicationCreateDTO(
             company="External Corp",
             title="External Project",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Петров",
             author_firstname="Пётр",
             author_email="external@example.com",
@@ -758,6 +786,8 @@ class TestApproveRejectRequestService:
         dto = ProjectApplicationCreateDTO(
             company="External Corp",
             title="External Project",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="external@example.com",

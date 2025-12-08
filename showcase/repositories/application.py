@@ -173,6 +173,7 @@ class ProjectApplicationRepository:
 
         return list(
             ProjectApplication.objects.filter(involved_users__user=user)
+            .exclude(status__code__in=["approved", "rejected"])
             .select_related("status", "author")
             .prefetch_related("target_institutes")
             .annotate(comments_count=Count("comments"))
@@ -186,6 +187,7 @@ class ProjectApplicationRepository:
 
         return (
             ProjectApplication.objects.filter(involved_users__user=user)
+            .exclude(status__code__in=["approved", "rejected"])
             .select_related("status", "author")
             .prefetch_related("target_institutes")
             .annotate(comments_count=Count("comments"))

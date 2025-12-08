@@ -702,6 +702,10 @@ class ApplicationCapabilities:
         if current_status == "approved" and user_role not in ["admin", "cpds"]:
             return False
 
+        # Для статуса approved администраторы и сотрудники ЦПДС могут редактировать
+        if current_status == "approved" and user_role in ["admin", "cpds"]:
+            return True
+
         # Используем матрицу разрешений для проверки прав
         # В матрице для save_changes настроено: POLICY_OWN_ONLY для всех ролей (кроме cpds),
         # POLICY_DEPARTMENT_CAN_SAVE для institute_validator, и POLICY_ALLOW для роли cpds

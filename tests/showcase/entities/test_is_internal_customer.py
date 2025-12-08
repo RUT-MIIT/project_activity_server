@@ -19,6 +19,8 @@ class TestProjectApplicationViewSetIsInternalCustomer:
         data = {
             "company": "Внутренняя Компания",
             "title": "Внутренний проект",
+            "company_contacts": "Контакты представителя",
+            "existing_solutions": "Описание существующих решений",
             "author_lastname": "Петров",
             "author_firstname": "Петр",
             "author_email": "petrov@example.com",
@@ -51,6 +53,8 @@ class TestProjectApplicationViewSetIsInternalCustomer:
         data = {
             "company": "Внешняя Компания",
             "title": "Внешний проект",
+            "company_contacts": "Контакты представителя",
+            "existing_solutions": "Описание существующих решений",
             "author_lastname": "Сидоров",
             "author_firstname": "Сидор",
             "author_email": "sidorov@example.com",
@@ -85,6 +89,8 @@ class TestProjectApplicationViewSetIsInternalCustomer:
         data = {
             "company": "Компания без указания типа",
             "title": "Проект без типа заказчика",
+            "company_contacts": "Контакты представителя",
+            "existing_solutions": "Описание существующих решений",
             "author_lastname": "Иванов",
             "author_firstname": "Иван",
             "author_email": "ivanov@example.com",
@@ -125,6 +131,8 @@ class TestProjectApplicationViewSetIsInternalCustomer:
         dto = ProjectApplicationCreateDTO(
             company="Тестовая Компания",
             title="Тестовый проект",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Тестов",
             author_firstname="Тест",
             author_email="test@example.com",
@@ -167,6 +175,8 @@ class TestProjectApplicationViewSetIsInternalCustomer:
         dto = ProjectApplicationCreateDTO(
             company="Тестовая Компания",
             title="Тестовый проект",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Тестов",
             author_firstname="Тест",
             author_email="test@example.com",
@@ -216,6 +226,8 @@ class TestProjectApplicationViewSetIsInternalCustomer:
         dto = ProjectApplicationCreateDTO(
             company="Тестовая Компания",
             title="Тестовый проект",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Тестов",
             author_firstname="Тест",
             author_email="test@example.com",
@@ -271,6 +283,8 @@ class TestProjectApplicationViewSetIsInternalCustomer:
         dto = ProjectApplicationCreateDTO(
             company="Тестовая Компания",
             title="Тестовый проект",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Тестов",
             author_firstname="Тест",
             author_email="test@example.com",

@@ -110,9 +110,13 @@ class TestProjectApplicationCreateDTO:
         data = {
             "company": "Acme Corp",
             "title": "Test Project",
+            "problem_holder": "Носитель",
+            "goal": "Длинная цель",
+            "barrier": "Длинный барьер",
+            "company_contacts": "Контакты компании",
+            "existing_solutions": "Описание существующих решений",
             "author_lastname": "Иванов",
             "author_firstname": "Иван",
-            "goal": "Длинная цель",
             "target_institutes": ["INST1"],
             "tags": [1, 2],
         }
@@ -129,13 +133,15 @@ class TestProjectApplicationCreateDTO:
         dto = ProjectApplicationCreateDTO(
             company="Acme Corp",
             title="Test Project",
+            problem_holder="Носитель",
+            goal="Длинная цель",
+            barrier="Барьер",
+            company_contacts="Контакты компании",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
             author_phone="+79990000000",
-            goal="Длинная цель",
-            problem_holder="Носитель",
-            barrier="Барьер",
             target_institutes=["INST1", "INST2"],
             tags=[1, 2, 3],
             needs_consultation=True,
@@ -164,9 +170,23 @@ class TestProjectApplicationCreateDTO:
 
     def test_create_dto_manual_needs_consultation_flag(self):
         """Явно переданное значение needs_consultation сохраняется."""
-        dto = ProjectApplicationCreateDTO(company="Acme Corp", needs_consultation=True)
+        dto = ProjectApplicationCreateDTO(
+            company="Acme Corp",
+            problem_holder="Носитель",
+            goal="Длинная цель",
+            barrier="Барьер",
+            company_contacts="Контакты компании",
+            existing_solutions="Описание существующих решений",
+            needs_consultation=True,
+        )
         dto_false = ProjectApplicationCreateDTO(
-            company="Acme Corp", needs_consultation=False
+            company="Acme Corp",
+            problem_holder="Носитель",
+            goal="Длинная цель",
+            barrier="Барьер",
+            company_contacts="Контакты компании",
+            existing_solutions="Описание существующих решений",
+            needs_consultation=False,
         )
 
         assert dto.needs_consultation is True
@@ -174,14 +194,27 @@ class TestProjectApplicationCreateDTO:
 
     def test_create_dto_is_internal_customer_defaults_to_false(self):
         """По умолчанию is_internal_customer равен False."""
-        dto = ProjectApplicationCreateDTO(company="Acme Corp")
+        dto = ProjectApplicationCreateDTO(
+            company="Acme Corp",
+            problem_holder="Носитель",
+            goal="Длинная цель",
+            barrier="Барьер",
+            company_contacts="Контакты компании",
+            existing_solutions="Описание существующих решений",
+        )
 
         assert dto.is_internal_customer is False
 
     def test_create_dto_is_internal_customer_true(self):
         """Явно переданное значение is_internal_customer=True сохраняется."""
         dto = ProjectApplicationCreateDTO(
-            company="Acme Corp", is_internal_customer=True
+            company="Acme Corp",
+            problem_holder="Носитель",
+            goal="Длинная цель",
+            barrier="Барьер",
+            company_contacts="Контакты компании",
+            existing_solutions="Описание существующих решений",
+            is_internal_customer=True,
         )
 
         assert dto.is_internal_customer is True
@@ -189,7 +222,13 @@ class TestProjectApplicationCreateDTO:
     def test_create_dto_is_internal_customer_in_to_dict(self):
         """is_internal_customer включается в to_dict."""
         dto = ProjectApplicationCreateDTO(
-            company="Acme Corp", is_internal_customer=True
+            company="Acme Corp",
+            problem_holder="Носитель",
+            goal="Длинная цель",
+            barrier="Барьер",
+            company_contacts="Контакты компании",
+            existing_solutions="Описание существующих решений",
+            is_internal_customer=True,
         )
 
         result = dto.to_dict()
@@ -201,6 +240,11 @@ class TestProjectApplicationCreateDTO:
         """is_internal_customer создается из словаря через from_dict."""
         data = {
             "company": "Acme Corp",
+            "problem_holder": "Носитель",
+            "goal": "Длинная цель",
+            "barrier": "Барьер",
+            "company_contacts": "Контакты компании",
+            "existing_solutions": "Описание существующих решений",
             "is_internal_customer": True,
         }
         dto = ProjectApplicationCreateDTO.from_dict(data)

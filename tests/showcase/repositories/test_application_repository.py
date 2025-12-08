@@ -39,6 +39,8 @@ class TestRepositoryCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme Corp",
             title="Test Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -63,6 +65,8 @@ class TestRepositoryCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme Corp",
             title="Test Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -92,6 +96,8 @@ class TestRepositoryCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme Corp",
             title="Test Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -116,6 +122,8 @@ class TestRepositoryCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme Corp",
             title="Test Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -138,6 +146,8 @@ class TestRepositoryCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme Corp",
             title="External Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -159,6 +169,8 @@ class TestRepositoryCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme Corp",
             title="Internal Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -180,6 +192,8 @@ class TestRepositoryCreate:
         dto = ProjectApplicationCreateDTO(
             company="Acme Corp",
             title="Default Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -207,6 +221,8 @@ class TestRepositoryGetById:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -229,6 +245,8 @@ class TestRepositoryGetById:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -318,6 +336,8 @@ class TestRepositoryFilter:
         dto1 = ProjectApplicationCreateDTO(
             company="Acme Corporation",
             title="Test1",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -331,6 +351,8 @@ class TestRepositoryFilter:
         dto2 = ProjectApplicationCreateDTO(
             company="Other Corp",
             title="Test2",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Петров",
             author_firstname="Пётр",
             author_email="test2@example.com",
@@ -366,6 +388,8 @@ class TestRepositoryUpdate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -402,6 +426,8 @@ class TestRepositoryUpdate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -434,6 +460,8 @@ class TestRepositoryUpdate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -460,6 +488,8 @@ class TestRepositoryUpdate:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -547,6 +577,8 @@ class TestRepositoryCount:
             dto = ProjectApplicationCreateDTO(
                 company=f"Acme{i}",
                 title=f"Test{i}",
+                company_contacts="Контакты представителя",
+                existing_solutions="Описание существующих решений",
                 author_lastname="Иванов",
                 author_firstname="Иван",
                 author_email=f"test{i}@example.com",
@@ -561,6 +593,8 @@ class TestRepositoryCount:
         dto = ProjectApplicationCreateDTO(
             company="Other",
             title="Test",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Петров",
             author_firstname="Пётр",
             author_email="other@example.com",
@@ -584,6 +618,8 @@ class TestRepositoryCount:
             dto = ProjectApplicationCreateDTO(
                 company="Acme",
                 title="Test",
+                company_contacts="Контакты представителя",
+                existing_solutions="Описание существующих решений",
                 author_lastname="Иванов",
                 author_firstname="Иван",
                 author_email="test@example.com",
@@ -612,6 +648,8 @@ class TestRepositoryFilterExternal:
         dto_external = ProjectApplicationCreateDTO(
             company="External Corp",
             title="External Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="external@example.com",
@@ -628,6 +666,8 @@ class TestRepositoryFilterExternal:
         dto_internal = ProjectApplicationCreateDTO(
             company="Internal Corp",
             title="Internal Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Петров",
             author_firstname="Пётр",
             author_email="internal@example.com",
@@ -657,6 +697,8 @@ class TestRepositoryFilterExternal:
         dto_external = ProjectApplicationCreateDTO(
             company="External Corp",
             title="External Project",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="external@example.com",
@@ -692,6 +734,8 @@ class TestRepositoryApplicationNumbering:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Test",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_email="test@example.com",
@@ -812,6 +856,8 @@ class TestRepositoryApplicationNumbering:
             dto1 = ProjectApplicationCreateDTO(
                 company="Acme2024",
                 title="Test2024",
+                company_contacts="Контакты представителя",
+                existing_solutions="Описание существующих решений",
                 author_lastname="Иванов",
                 author_firstname="Иван",
                 author_email="test2024@example.com",
@@ -838,6 +884,8 @@ class TestRepositoryApplicationNumbering:
             dto2 = ProjectApplicationCreateDTO(
                 company="Acme2025",
                 title="Test2025",
+                company_contacts="Контакты представителя",
+                existing_solutions="Описание существующих решений",
                 author_lastname="Петров",
                 author_firstname="Пётр",
                 author_email="test2025@example.com",

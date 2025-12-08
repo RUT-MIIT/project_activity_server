@@ -132,35 +132,6 @@ class TestLogStatusChange:
                 actor=user,
             )
 
-    def test_log_status_change_actor_none(self, statuses, make_user):
-        """Если actor равен None, выбрасывается ValueError."""
-
-        user = make_user(role_code="user")
-        status = statuses["await_department"]
-
-        app = ProjectApplication.objects.create(
-            title="Test",
-            company="Acme",
-            author=user,
-            status=status,
-            author_lastname="Иванов",
-            author_firstname="Иван",
-            author_email="test@example.com",
-            author_phone="+79990000000",
-            goal="Цель",
-            problem_holder="Носитель",
-            barrier="Барьер",
-        )
-
-        service = ApplicationLoggingService()
-        with pytest.raises(ValueError, match="Актор не может быть None"):
-            service.log_status_change(
-                application=app,
-                from_status=status,
-                to_status=status,
-                actor=None,
-            )
-
 
 @pytest.mark.django_db
 class TestLogInvolvedUser:

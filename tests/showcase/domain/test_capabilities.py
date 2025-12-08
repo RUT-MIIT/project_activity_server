@@ -13,13 +13,15 @@ class TestSubmitApplication:
         dto = ProjectApplicationCreateDTO(
             company="Acme",
             title="Valid title",
+            problem_holder="Носитель проблемы",
+            goal="Цель проекта достаточно длинная строка 12345",
+            barrier="Длинное описание барьера",
+            company_contacts="Контакты компании",
+            existing_solutions="Описание существующих решений",
             author_lastname="Иванов",
             author_firstname="Иван",
             author_phone="+79990000000",
             author_email="user@example.com",
-            goal="Цель проекта достаточно длинная строка 12345",
-            problem_holder="Носитель",
-            barrier="Длинное описание барьера",
         )
         result = ApplicationCapabilities.submit_application(dto, user_role="user")
         assert result.is_valid, result.errors
@@ -29,13 +31,15 @@ class TestSubmitApplication:
         dto = ProjectApplicationCreateDTO(
             company="A",
             title="bad",
+            problem_holder="xx",
+            goal="short",
+            barrier="short",
+            company_contacts="",
+            existing_solutions="",
             author_lastname="I",
             author_firstname="I",
             author_phone="123",
             author_email="x@",
-            goal="short",
-            problem_holder="xx",
-            barrier="short",
         )
         result = ApplicationCapabilities.submit_application(dto, user_role="user")
         assert not result.is_valid

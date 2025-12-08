@@ -586,15 +586,10 @@ class ProjectApplicationService:
         if not can_list:
             raise PermissionError(error)
 
-        # Особый случай для роли cpds:
-        # cpds должен видеть все заявки, КРОМЕ заявок со статусом require_assignment
-        if user_role == "cpds":
-            return self.repository.filter_all_except_status("require_assignment")
-
-        # 2. Для остальных ролей получаем заявки в работе (Repository)
+        # 2. Для большинства ролей получаем заявки в работе (Repository)
         applications = self.repository.filter_coordination_by_user(user)
 
-        # 3. Если пользователь - валидатор (department_validator или institute_validator),
+        # 3. Если пользователь - валидатор (department_validator или institute_validator или cpds),
         #    добавляем заявки, где причастно его подразделение
         if user_role in ["department_validator", "institute_validator", "cpds"]:
             if hasattr(user, "department") and user.department:
@@ -608,7 +603,7 @@ class ProjectApplicationService:
                         applications.append(app)
                         application_ids.add(app.id)
 
-        # 4. Для роли cpds добавляем все заявки со статусом await_cpds,
+        # 4. Для роли cpds дополнительно добавляем все заявки со статусом await_cpds,
         #    даже если пользователь не причастен
         if user_role == "cpds":
             await_cpds_apps = self.repository.filter_by_status("await_cpds")
@@ -676,7 +671,11 @@ class ProjectApplicationService:
             ValueError: Если передан несуществующий код статуса
         """
         # 1. Проверка прав (Domain) - требуется авторизация
-        if not user.is_authenticated:
+        if (
+            not user
+            or not getattr(user, "is_authenticated", False)
+            or not getattr(user, "pk", None)
+        ):
             raise PermissionError("Требуется авторизация для просмотра внешних заявок")
 
         # 2. Если передан код статуса, проверяем, что такой статус существует
@@ -706,7 +705,11 @@ class ProjectApplicationService:
             ValueError: Если передан несуществующий код статуса
         """
         # 1. Проверка прав (Domain) - требуется авторизация
-        if not user.is_authenticated:
+        if (
+            not user
+            or not getattr(user, "is_authenticated", False)
+            or not getattr(user, "pk", None)
+        ):
             raise PermissionError("Требуется авторизация для просмотра внешних заявок")
 
         # 2. Если передан код статуса, проверяем, что такой статус существует
