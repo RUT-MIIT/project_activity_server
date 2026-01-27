@@ -88,6 +88,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
         "print_number",
         "author_lastname",
         "author_firstname",
+        "semester",
         "company",
         "status",
         "creation_date",
@@ -98,6 +99,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
         "project_level",
         "needs_consultation",
         "is_internal_customer",
+        "semester",
         "application_year",
     )
     search_fields = (
@@ -123,6 +125,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
                     "status",
                     "creation_date",
                     "needs_consultation",
+                    "semester",
                     "application_year",
                     "year_sequence_number",
                     "print_number",
