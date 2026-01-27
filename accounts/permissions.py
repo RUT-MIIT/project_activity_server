@@ -57,3 +57,46 @@ class IsCpdsUser(BasePermission):
             return False
 
         return bool(user.role and user.role.code == "cpds")
+
+
+class IsAdminOrCpds(BasePermission):
+    """Разрешает доступ только администраторам или пользователям с ролью `cpds`."""
+
+    message = "Недостаточно прав: требуется роль admin или cpds"
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        user: User | None = request.user if request.user.is_authenticated else None
+        if not user:
+            return False
+
+        if user.is_staff:
+            return True
+
+        return bool(user.role and user.role.code in {"admin", "cpds"})
+
+
+class TagManagePermission(BasePermission):
+    """Разрешает доступ к управлению тегами только для ролей cpds, admin и institute_validator."""
+
+    message = "Недостаточно прав для управления тегами"
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        """Проверяет наличие прав у пользователя.
+
+        Args:
+            request: текущий запрос
+            view: представление, совершающее проверку
+
+        Returns:
+            bool: True, если пользователь имеет доступ.
+        """
+        user: User | None = request.user if request.user.is_authenticated else None
+        if not user:
+            return False
+
+        if user.is_staff:
+            return True
+
+        return bool(
+            user.role and user.role.code in {"cpds", "admin", "institute_validator"}
+        )

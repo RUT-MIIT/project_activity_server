@@ -120,6 +120,7 @@ class ProjectApplicationListSerializer(serializers.ModelSerializer):
             "company",
             "creation_date",
             "needs_consultation",
+            "semester_id",
             "application_year",
             "year_sequence_number",
             "print_number",
@@ -197,6 +198,7 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     needs_consultation = serializers.BooleanField(required=False)
     main_department_id = serializers.IntegerField(required=False, allow_null=True)
     is_internal_customer = serializers.BooleanField(required=False)
+    semester_id = serializers.IntegerField(required=False, allow_null=True)
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""
@@ -244,10 +246,51 @@ class ProjectApplicationUpdateSerializer(serializers.Serializer):
     needs_consultation = serializers.BooleanField(required=False)
     main_department_id = serializers.IntegerField(required=False, allow_null=True)
     is_internal_customer = serializers.BooleanField(required=False)
+    semester_id = serializers.IntegerField(required=False, allow_null=True)
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""
         return ProjectApplicationUpdateDTO.from_dict(validated_data)
+
+
+class SemesterViewSet(viewsets.ViewSet):
+    """ViewSet для операций над семестрами, связанных с проектными заявками."""
+
+    permission_classes = [permissions.IsAuthenticated]
+
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.service = ProjectApplicationService()
+
+    @action(
+        detail=True,
+        methods=["post"],
+        url_path="assign-empty-applications",
+        permission_classes=[permissions.IsAuthenticated],
+    )
+    def assign_empty_applications(self, request, pk=None):
+        """POST /api/semesters/{id}/assign-empty-applications
+
+        Присваивает переданный семестр всем заявкам без установленного семестра.
+        Доступно только для ролей admin и cpds.
+        Возвращает 204 No Content.
+        """
+        try:
+            self.service.assign_empty_applications_to_semester(
+                semester_id=int(pk), actor=request.user
+            )
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+        except ObjectDoesNotExist as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as exc:
+            return Response(
+                {"error": f"Не удалось назначить семестр: {str(exc)}"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
 
 class ProjectApplicationViewSet(viewsets.ModelViewSet):

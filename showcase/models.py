@@ -1,4 +1,5 @@
 from django.conf import settings
+from django.core.validators import MinValueValidator
 from django.db import models
 
 
@@ -58,8 +59,20 @@ class ApplicationStatus(models.Model):
 class Tag(models.Model):
     """Теги для проектных заявок"""
 
-    name = models.CharField(max_length=255, unique=True, verbose_name="Название тега")
-    category = models.CharField(max_length=255, verbose_name="Категория тега")
+    name = models.CharField(max_length=255, verbose_name="Название тега")
+    category = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="Категория тега",
+    )
+    is_base = models.BooleanField(default=False, verbose_name="Базовый тег")
+    departments = models.ManyToManyField(
+        "accounts.Department",
+        blank=True,
+        related_name="tags",
+        verbose_name="Подразделения",
+    )
 
     class Meta:
         verbose_name = "Тег"
@@ -67,6 +80,9 @@ class Tag(models.Model):
         ordering = ["category", "name"]
 
     def __str__(self):
+        dept_names = ", ".join([dept.name for dept in self.departments.all()])
+        if dept_names:
+            return f"{self.category}: {self.name} ({dept_names})"
         return f"{self.category}: {self.name}"
 
 
@@ -121,6 +137,14 @@ class ProjectApplication(models.Model):
         blank=True,
         related_name="main_applications",
         verbose_name="Основное подразделение",
+    )
+    semester = models.ForeignKey(
+        "accounts.Semester",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="project_applications",
+        verbose_name="Семестр",
     )
 
     # Раздел "О проекте"
@@ -392,3 +416,34 @@ class ApplicationInvolvedDepartment(models.Model):
 
     def __str__(self):
         return f"{self.application} — {self.department}"
+
+
+class DepartmentPlan(models.Model):
+    """План по проектным заявкам для подразделения на семестр"""
+
+    semester = models.ForeignKey(
+        "accounts.Semester",
+        on_delete=models.CASCADE,
+        related_name="department_plans",
+        verbose_name="Семестр",
+    )
+    department = models.ForeignKey(
+        "accounts.Department",
+        on_delete=models.CASCADE,
+        related_name="department_plans",
+        verbose_name="Подразделение",
+    )
+    plan = models.PositiveIntegerField(
+        default=0,
+        validators=[MinValueValidator(0)],
+        verbose_name="План",
+    )
+
+    class Meta:
+        verbose_name = "План подразделения"
+        verbose_name_plural = "Планы подразделений"
+        unique_together = [("semester", "department")]
+        ordering = ["semester", "department"]
+
+    def __str__(self):
+        return f"{self.department} — {self.semester}: план {self.plan}"

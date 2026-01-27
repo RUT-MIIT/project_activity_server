@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 import pytest
 from rest_framework.test import APIClient
 
+from accounts.models import Semester
 from showcase.models import ApplicationStatus, Institute, ProjectApplication
 
 User = get_user_model()
@@ -197,6 +198,83 @@ class TestProjectApplicationViewSetExternal:
         for item in results:
             assert item["is_external"] is True
 
+
+@pytest.mark.django_db
+class TestSemesterAssignViewSet:
+    """Тесты для ручки массового назначения семестра."""
+
+    def _create_application(self, service, user, company_suffix: str = ""):
+        from showcase.dto.application import ProjectApplicationCreateDTO
+
+        dto = ProjectApplicationCreateDTO(
+            company=f"Company {company_suffix}",
+            title=f"Project {company_suffix}",
+            company_contacts="Контакты представителя",
+            existing_solutions="Описание существующих решений",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email=f"test{company_suffix}@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель проблемы",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+        )
+        return service.submit_application(dto, user, is_external=False)
+
+    def test_assigns_only_without_semester(self, statuses, make_user):
+        user = make_user(role_code="cpds", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        from showcase.services.application_service import ProjectApplicationService
+
+        service = ProjectApplicationService()
+        app_without_semester = self._create_application(service, user, "A")
+        app_with_semester = self._create_application(service, user, "B")
+
+        # Создаем семестры после заявок, чтобы авто-подстановка не сработала
+        target_semester = Semester.objects.create(name="Осень", position=1)
+        other_semester = Semester.objects.create(name="Весна", position=2)
+
+        app_with_semester.semester = other_semester
+        app_with_semester.save(update_fields=["semester"])
+
+        response = client.post(
+            f"/api/showcase/semesters/{target_semester.id}/assign-empty-applications/"
+        )
+
+        assert response.status_code == 204
+
+        app_without_semester.refresh_from_db()
+        app_with_semester.refresh_from_db()
+
+        assert app_without_semester.semester_id == target_semester.id
+        assert app_with_semester.semester_id == other_semester.id
+
+    def test_forbidden_for_non_privileged(self, statuses, make_user):
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        target_semester = Semester.objects.create(name="Осень", position=1)
+
+        response = client.post(
+            f"/api/showcase/semesters/{target_semester.id}/assign-empty-applications/"
+        )
+
+        assert response.status_code == 403
+
+    def test_not_found_semester_returns_404(self, statuses, make_user):
+        user = make_user(role_code="cpds", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.post("/api/showcase/semesters/999/assign-empty-applications/")
+
+        assert response.status_code == 404
+
     def test_external_list_includes_is_external_field(self, statuses, make_user):
         """GET /api/showcase/project-applications/external/ включает поле is_external в ответе."""
         user = make_user(role_code="user", with_department=True)
@@ -240,6 +318,87 @@ class TestProjectApplicationViewSetExternal:
         assert len(results) > 0
         assert "is_external" in results[0]
         assert results[0]["is_external"] is True
+
+
+@pytest.mark.django_db
+class TestProjectApplicationSemesterAutoAssign:
+    """Автоподстановка семестра при создании заявки."""
+
+    def _base_payload(self):
+        return {
+            "company": "Test Company",
+            "title": "Test Project",
+            "company_contacts": "Контактные данные представителя",
+            "existing_solutions": "Описание существующих решений",
+            "author_lastname": "Иванов",
+            "author_firstname": "Иван",
+            "author_email": "test@example.com",
+            "author_phone": "+79990000000",
+            "goal": "Длинная цель проекта, больше 50 символов для консультации",
+            "problem_holder": "Носитель проблемы",
+            "barrier": "Длинное описание барьера",
+            "project_level": "L1",
+        }
+
+    def test_sets_last_active_semester_when_not_provided(self, statuses, make_user):
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        Semester.objects.create(name="Old", position=1, is_active=True)
+        target_semester = Semester.objects.create(
+            name="Latest", position=5, is_active=True
+        )
+        Semester.objects.create(name="Inactive", position=10, is_active=False)
+
+        response = client.post(
+            "/api/showcase/project-applications/", self._base_payload(), format="json"
+        )
+
+        assert response.status_code == 201
+        assert response.data["semester_id"] == target_semester.id
+
+        app = ProjectApplication.objects.get(pk=response.data["id"])
+        assert app.semester_id == target_semester.id
+
+    def test_leaves_empty_if_no_active_semesters(self, statuses, make_user):
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        Semester.objects.create(name="Inactive 1", position=1, is_active=False)
+        Semester.objects.create(name="Inactive 2", position=2, is_active=False)
+
+        response = client.post(
+            "/api/showcase/project-applications/", self._base_payload(), format="json"
+        )
+
+        assert response.status_code == 201
+        assert response.data["semester_id"] is None
+
+        app = ProjectApplication.objects.get(pk=response.data["id"])
+        assert app.semester_id is None
+
+    def test_respects_explicit_semester_id(self, statuses, make_user):
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        explicit = Semester.objects.create(name="Explicit", position=2, is_active=True)
+        Semester.objects.create(name="Another", position=5, is_active=True)
+
+        payload = self._base_payload()
+        payload["semester_id"] = explicit.id
+
+        response = client.post(
+            "/api/showcase/project-applications/", payload, format="json"
+        )
+
+        assert response.status_code == 201
+        assert response.data["semester_id"] == explicit.id
+
+        app = ProjectApplication.objects.get(pk=response.data["id"])
+        assert app.semester_id == explicit.id
 
 
 @pytest.mark.django_db

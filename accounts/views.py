@@ -2,26 +2,32 @@ from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
 from django.db import transaction
+from django.db.models import Prefetch
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
 from rest_framework import decorators, permissions, status, viewsets
 from rest_framework.permissions import AllowAny
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from rest_framework_simplejwt.views import TokenObtainPairView
 
-from .models import Department, RegistrationRequest, Role, User
-from .permissions import IsCpdsUser, RegistrationRequestManagePermission
+from showcase.models import Institute
+
+from .models import Department, RegistrationRequest, Role, Semester, User
+from .permissions import IsAdminOrCpds, IsCpdsUser, RegistrationRequestManagePermission
 from .serializers import (
     ApproveRequestSerializer,
     DepartmentSerializer,
+    PasswordChangeSerializer,
     PasswordResetConfirmSerializer,
     PasswordResetSerializer,
     RegistrationRequestCreateSerializer,
     RegistrationRequestSerializer,
     RejectRequestSerializer,
     RoleSerializer,
+    SemesterSerializer,
     UserSerializer,
 )
 
@@ -29,8 +35,17 @@ from .serializers import (
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     def validate(self, attrs):
         data = super().validate(attrs)
-        # Используем select_related для оптимизации
-        user = User.objects.select_related("department", "role").get(pk=self.user.pk)
+        # Используем select_related и prefetch_related для оптимизации
+        user = (
+            User.objects.select_related("department", "role")
+            .prefetch_related(
+                Prefetch(
+                    "department__institutes",
+                    queryset=Institute.objects.filter(is_active=True),
+                )
+            )
+            .get(pk=self.user.pk)
+        )
         data["user"] = UserSerializer(user).data
         return data
 
@@ -45,8 +60,17 @@ class LoginView(TokenObtainPairView):
 
 class UserMeView(APIView):
     def get(self, request):
-        # Используем prefetch_related для оптимизации запроса
-        user = User.objects.select_related("department", "role").get(pk=request.user.pk)
+        # Используем select_related и prefetch_related для оптимизации запроса
+        user = (
+            User.objects.select_related("department", "role")
+            .prefetch_related(
+                Prefetch(
+                    "department__institutes",
+                    queryset=Institute.objects.filter(is_active=True),
+                )
+            )
+            .get(pk=request.user.pk)
+        )
         serializer = UserSerializer(user)
         return Response(serializer.data)
 
@@ -68,7 +92,7 @@ class PasswordResetView(APIView):
 class PasswordResetConfirmView(APIView):
     permission_classes = [AllowAny]
 
-    def post(self, request):
+    def post(self, request: Request) -> Response:
         serializer = PasswordResetConfirmSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
@@ -76,6 +100,24 @@ class PasswordResetConfirmView(APIView):
                 {"detail": "Пароль успешно изменен."}, status=status.HTTP_200_OK
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class PasswordChangeView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request: Request) -> Response:
+        """
+        Сменяет пароль текущего пользователя после проверки текущего пароля.
+        """
+
+        serializer = PasswordChangeSerializer(
+            data=request.data, context={"request": request}
+        )
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        return Response(
+            {"detail": "Пароль успешно изменен."}, status=status.HTTP_200_OK
+        )
 
 
 class DepartmentViewSet(viewsets.ReadOnlyModelViewSet):
@@ -105,6 +147,22 @@ class RoleViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     lookup_field = "code"
     pagination_class = None
+
+
+class SemesterViewSet(viewsets.ModelViewSet):
+    """CRUD для семестров. Чтение — для аутентифицированных, управление — admin/cpds."""
+
+    queryset = Semester.objects.all().order_by("position")
+    serializer_class = SemesterSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    pagination_class = None
+
+    def get_permissions(self):
+        """Ограничиваем запись только admin/cpds, чтение — любому аутентифицированному."""
+
+        if self.action in ["list", "retrieve"]:
+            return [permissions.IsAuthenticated()]
+        return [permissions.IsAuthenticated(), IsAdminOrCpds()]
 
 
 class RegistrationRequestViewSet(viewsets.ModelViewSet):

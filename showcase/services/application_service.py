@@ -7,6 +7,7 @@ from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 
+from accounts.models import Semester
 from showcase.domain.application import ProjectApplicationDomain
 from showcase.domain.capabilities import ApplicationCapabilities
 from showcase.dto.application import (
@@ -822,6 +823,37 @@ class ProjectApplicationService:
             is_external=is_external,
         )
         return AvailableActionsDTO.from_actions_list(available_actions)
+
+    @transaction.atomic
+    def assign_empty_applications_to_semester(
+        self, semester_id: int, actor: User
+    ) -> int:
+        """Массово присваивает семестр всем заявкам без семестра.
+
+        Args:
+            semester_id: Идентификатор семестра.
+            actor: Пользователь, выполняющий операцию.
+
+        Returns:
+            Количество обновленных заявок.
+
+        Raises:
+            PermissionError: Если у пользователя нет прав.
+            ObjectDoesNotExist: Если семестр не найден.
+        """
+        if not actor or not getattr(actor, "is_authenticated", False):
+            raise PermissionError("Требуется авторизация")
+
+        role_code = actor.role.code if actor.role else None
+        if role_code not in ["admin", "cpds"]:
+            raise PermissionError("Недостаточно прав для назначения семестра")
+
+        try:
+            semester = Semester.objects.get(pk=semester_id)
+        except Semester.DoesNotExist as err:
+            raise ObjectDoesNotExist(f"Семестр с id {semester_id} не найден") from err
+
+        return self.repository.assign_semester_to_unassigned(semester.id)
 
     def _is_user_department_involved(self, application, user) -> bool:
         """Проверяет, есть ли подразделение пользователя в причастных подразделениях заявки."""

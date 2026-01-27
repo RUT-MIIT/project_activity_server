@@ -167,3 +167,17 @@ class RegistrationRequest(models.Model):
 
     def __str__(self):
         return f"{self.last_name} {self.first_name} <{self.email}> [{self.status}]"
+
+
+class Semester(models.Model):
+    name = models.CharField(max_length=255, verbose_name="Название семестра")
+    position = models.PositiveIntegerField(verbose_name="Позиция для сортировки")
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+
+    class Meta:
+        verbose_name = "Семестр"
+        verbose_name_plural = "Семестры"
+        ordering = ["position"]
+
+    def __str__(self) -> str:
+        return self.name

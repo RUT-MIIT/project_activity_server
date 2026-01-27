@@ -4,7 +4,9 @@
 """
 
 from .application import ProjectApplicationRepository
+from .tag import TagRepository
 
 __all__ = [
     "ProjectApplicationRepository",
+    "TagRepository",
 ]

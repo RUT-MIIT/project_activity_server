@@ -1,12 +1,17 @@
+from typing import Any, Dict
+
 from allauth.account.adapter import get_adapter
 from django.conf import settings
+from django.contrib.auth import password_validation
 from django.contrib.auth.forms import PasswordResetForm as _PasswordResetForm
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_decode, urlsafe_base64_encode
 from rest_framework import serializers
 
-from .models import Department, RegistrationRequest, Role, User
+from showcase.models import Institute
+
+from .models import Department, RegistrationRequest, Role, Semester, User
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -34,8 +39,17 @@ class RoleSerializer(serializers.ModelSerializer):
         ]
 
 
+class SemesterSerializer(serializers.ModelSerializer):
+    """Сериализатор для семестров."""
+
+    class Meta:
+        model = Semester
+        fields = ["id", "name", "position", "is_active"]
+
+
 class UserSerializer(serializers.ModelSerializer):
     department = DepartmentSerializer(read_only=True)
+    institute_code = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -48,7 +62,27 @@ class UserSerializer(serializers.ModelSerializer):
             "role",
             "phone",
             "department",
+            "institute_code",
         )
+
+    def get_institute_code(self, obj: User) -> str | None:
+        """Возвращает код института, сопоставленного с подразделением пользователя.
+
+        Если у пользователя нет подразделения или нет подходящего института,
+        возвращает None.
+        """
+        department = getattr(obj, "department", None)
+        if not department:
+            return None
+
+        # Ищем первый активный институт, связанный с этим подразделением.
+        institute = (
+            Institute.objects.filter(department=department, is_active=True)
+            .order_by("position")
+            .only("code")
+            .first()
+        )
+        return institute.code if institute else None
 
 
 class CustomResetPasswordForm(_PasswordResetForm):
@@ -101,7 +135,7 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
     token = serializers.CharField()
     new_password = serializers.CharField(min_length=8, write_only=True)
 
-    def validate(self, attrs):
+    def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
         try:
             uid = urlsafe_base64_decode(attrs["uid"]).decode()
             self.user = User.objects.get(pk=uid)
@@ -115,10 +149,36 @@ class PasswordResetConfirmSerializer(serializers.Serializer):
             )
         return attrs
 
-    def save(self):
+    def save(self) -> User:
         self.user.set_password(self.validated_data["new_password"])
         self.user.save()
         return self.user
+
+
+class PasswordChangeSerializer(serializers.Serializer):
+    """Сериализатор для смены пароля аутентифицированного пользователя."""
+
+    current_password = serializers.CharField(write_only=True)
+    new_password = serializers.CharField(write_only=True, min_length=8)
+
+    def validate(self, attrs: Dict[str, Any]) -> Dict[str, Any]:
+        user = self.context.get("request").user
+        if user is None or not user.is_authenticated:
+            raise serializers.ValidationError("Пользователь не аутентифицирован.")
+
+        if not user.check_password(attrs["current_password"]):
+            raise serializers.ValidationError(
+                {"current_password": "Неверный текущий пароль."}
+            )
+
+        password_validation.validate_password(attrs["new_password"], user)
+        return attrs
+
+    def save(self, **kwargs: Any) -> User:
+        user = self.context["request"].user
+        user.set_password(self.validated_data["new_password"])
+        user.save(update_fields=["password"])
+        return user
 
 
 class UserShortSerializer(serializers.ModelSerializer):

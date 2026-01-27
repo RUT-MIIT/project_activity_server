@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 import pytest
 
 from accounts.models import Department, Role
-from showcase.models import ApplicationStatus
+from showcase.models import ApplicationStatus, Institute
 
 
 @pytest.fixture
@@ -68,6 +68,14 @@ def statuses(db):
             code=code, defaults={"name": code, "position": pos}
         )
     return {s.code: s for s in ApplicationStatus.objects.all()}
+
+
+@pytest.fixture
+def institute(departments):
+    """Создаёт институт, связанный с родительским подразделением."""
+    return Institute.objects.create(
+        code="INST-1", name="Institute 1", position=1, department=departments["parent"]
+    )
 
 
 @pytest.fixture

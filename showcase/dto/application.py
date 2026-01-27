@@ -97,6 +97,7 @@ class ProjectApplicationCreateDTO:
         tags: Optional[list[int]] = None,
         main_department_id: Optional[int] = None,
         is_internal_customer: Optional[bool] = None,
+        semester_id: Optional[int] = None,
         **kwargs,
     ):
         self.title = title or ""
@@ -129,6 +130,7 @@ class ProjectApplicationCreateDTO:
         self.is_internal_customer = (
             is_internal_customer if is_internal_customer is not None else False
         )
+        self.semester_id = semester_id
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationCreateDTO":
@@ -164,6 +166,7 @@ class ProjectApplicationCreateDTO:
             "needs_consultation": self.needs_consultation,
             "main_department_id": self.main_department_id,
             "is_internal_customer": self.is_internal_customer,
+            "semester_id": self.semester_id,
         }
 
 
@@ -197,6 +200,7 @@ class ProjectApplicationUpdateDTO:
         tags: Optional[list[int]] = None,
         main_department_id: Optional[int] = None,
         is_internal_customer: Optional[bool] = None,
+        semester_id: Optional[int] = None,
         **kwargs,
     ):
         self.title = title
@@ -224,6 +228,7 @@ class ProjectApplicationUpdateDTO:
         self.needs_consultation = needs_consultation
         self.main_department_id = main_department_id
         self.is_internal_customer = is_internal_customer
+        self.semester_id = semester_id
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationUpdateDTO":
@@ -307,6 +312,16 @@ class ProjectApplicationReadDTO:
         self.main_department_id = (
             application.main_department.id if application.main_department else None
         )
+        self.semester = (
+            {
+                "id": application.semester.id,
+                "name": application.semester.name,
+                "position": application.semester.position,
+            }
+            if application.semester
+            else None
+        )
+        self.semester_id = application.semester.id if application.semester else None
 
         # О проекте
         self.company_contacts = application.company_contacts
@@ -425,6 +440,8 @@ class ProjectApplicationReadDTO:
             "author_short_name": self.author_short_name,
             "main_department": self.main_department,
             "main_department_id": self.main_department_id,
+            "semester": self.semester,
+            "semester_id": self.semester_id,
             "company_contacts": self.company_contacts,
             "project_level": self.project_level,
             "problem_holder": self.problem_holder,
@@ -455,6 +472,12 @@ class ProjectApplicationListDTO:
         self.needs_consultation = application.needs_consultation
         self.is_external = application.is_external
         self.is_internal_customer = application.is_internal_customer
+        self.semester = (
+            {"id": application.semester.id, "name": application.semester.name}
+            if application.semester
+            else None
+        )
+        self.semester_id = application.semester.id if application.semester else None
         # Количество комментариев: используем аннотацию, если есть, иначе fallback к count()
         annotated_count = getattr(application, "comments_count", None)
         self.comments_count = (
@@ -497,6 +520,8 @@ class ProjectApplicationListDTO:
             "needs_consultation": self.needs_consultation,
             "is_external": self.is_external,
             "is_internal_customer": self.is_internal_customer,
+            "semester": self.semester,
+            "semester_id": self.semester_id,
             "application_year": self.application_year,
             "year_sequence_number": self.year_sequence_number,
             "print_number": self.print_number,

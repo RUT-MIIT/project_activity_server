@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Department, RegistrationRequest, Role, User
+from .models import Department, RegistrationRequest, Role, Semester, User
 
 
 @admin.register(User)
@@ -115,3 +115,11 @@ class RoleAdmin(admin.ModelAdmin):
     search_fields = ("code", "name")
     list_filter = ("is_active", "requires_department")
     ordering = ("code",)
+
+
+@admin.register(Semester)
+class SemesterAdmin(admin.ModelAdmin):
+    list_display = ("id", "name", "position", "is_active")
+    search_fields = ("name",)
+    list_filter = ("is_active",)
+    ordering = ("position",)

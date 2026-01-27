@@ -7,7 +7,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import Max
 from django.utils import timezone
 
-from accounts.models import Department
+from accounts.models import Department, Semester
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
@@ -56,6 +56,18 @@ class ProjectApplicationRepository:
         year_short = str(current_year)[-2:]
         print_number = f"{year_short}-{next_number:05d}"
 
+        semester = None
+        if dto.semester_id:
+            try:
+                semester = Semester.objects.get(pk=dto.semester_id)
+            except Semester.DoesNotExist as err:
+                raise ValueError(f"Семестр с id {dto.semester_id} не найден") from err
+        else:
+            # Если семестр не передан, подставляем последний активный (максимальная position)
+            semester = (
+                Semester.objects.filter(is_active=True).order_by("-position").first()
+            )
+
         # Создаем заявку
         application = ProjectApplication.objects.create(
             title=dto.title,
@@ -91,6 +103,7 @@ class ProjectApplicationRepository:
             print_number=print_number,
             is_external=is_external,
             is_internal_customer=dto.is_internal_customer,
+            semester=semester,
         )
 
         # Устанавливаем M2M поля
@@ -110,7 +123,9 @@ class ProjectApplicationRepository:
         Включает все связанные объекты для детального просмотра.
         """
         return (
-            ProjectApplication.objects.select_related("status", "author")
+            ProjectApplication.objects.select_related(
+                "status", "author", "main_department", "semester"
+            )
             .prefetch_related(
                 "target_institutes",
                 "tags",
@@ -132,7 +147,7 @@ class ProjectApplicationRepository:
         Для простых операций, где не нужны все связи.
         """
         return ProjectApplication.objects.select_related(
-            "status", "author", "main_department"
+            "status", "author", "main_department", "semester"
         ).get(pk=application_id)
 
     def filter_by_user(self, user: User) -> list[ProjectApplication]:
@@ -145,7 +160,7 @@ class ProjectApplicationRepository:
         """
         return list(
             ProjectApplication.objects.filter(author=user)
-            .select_related("status", "author")
+            .select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
@@ -160,7 +175,7 @@ class ProjectApplicationRepository:
         """
         return (
             ProjectApplication.objects.filter(author=user)
-            .select_related("status", "author")
+            .select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
@@ -174,7 +189,7 @@ class ProjectApplicationRepository:
         return list(
             ProjectApplication.objects.filter(involved_users__user=user)
             .exclude(status__code__in=["approved", "rejected"])
-            .select_related("status", "author")
+            .select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes")
             .annotate(comments_count=Count("comments"))
             .distinct()
@@ -188,7 +203,7 @@ class ProjectApplicationRepository:
         return (
             ProjectApplication.objects.filter(involved_users__user=user)
             .exclude(status__code__in=["approved", "rejected"])
-            .select_related("status", "author")
+            .select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes")
             .annotate(comments_count=Count("comments"))
             .distinct()
@@ -203,7 +218,7 @@ class ProjectApplicationRepository:
             ProjectApplication.objects.filter(
                 involved_departments__department=department
             )
-            .select_related("status", "author")
+            .select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes", "tags")
             .distinct()
             .order_by("-creation_date")
@@ -216,7 +231,7 @@ class ProjectApplicationRepository:
         """
         return list(
             ProjectApplication.objects.filter(status__code=status_code)
-            .select_related("status", "author")
+            .select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
@@ -225,7 +240,7 @@ class ProjectApplicationRepository:
         """Получение QuerySet заявок по статусу для пагинации."""
         return (
             ProjectApplication.objects.filter(status__code=status_code)
-            .select_related("status", "author")
+            .select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
@@ -238,7 +253,7 @@ class ProjectApplicationRepository:
         """
         return list(
             ProjectApplication.objects.exclude(status__code=status_code)
-            .select_related("status", "author")
+            .select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
@@ -250,7 +265,7 @@ class ProjectApplicationRepository:
         """
         return list(
             ProjectApplication.objects.filter(company__icontains=company_name)
-            .select_related("status", "author")
+            .select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
@@ -272,7 +287,8 @@ class ProjectApplicationRepository:
             for field in dir(dto)
             if not field.startswith("_")
             and not callable(getattr(dto, field))
-            and field not in ("target_institutes", "tags", "main_department_id")
+            and field
+            not in ("target_institutes", "tags", "main_department_id", "semester_id")
         ]  # M2M поля и ForeignKey обрабатываем отдельно
 
         for field_name in dto_fields:
@@ -298,6 +314,19 @@ class ProjectApplicationRepository:
                 # Если передан 0, сбрасываем поле
                 application.main_department = None
             update_fields.append("main_department")
+
+        # Обрабатываем semester_id отдельно
+        if hasattr(dto, "semester_id") and dto.semester_id is not None:
+            if dto.semester_id:
+                try:
+                    application.semester = Semester.objects.get(pk=dto.semester_id)
+                except Semester.DoesNotExist as err:
+                    raise ValueError(
+                        f"Семестр с id {dto.semester_id} не найден"
+                    ) from err
+            else:
+                application.semester = None
+            update_fields.append("semester")
 
         # Обновляем M2M поля
         if dto.target_institutes is not None:
@@ -358,13 +387,29 @@ class ProjectApplicationRepository:
         """
         return ProjectApplication.objects.filter(status__code=status_code).count()
 
+    def assign_semester_to_unassigned(self, semester_id: int) -> int:
+        """Присваивает семестр всем заявкам без установленного семестра.
+
+        Args:
+            semester_id: Идентификатор семестра, который нужно установить.
+
+        Returns:
+            Количество обновленных записей.
+        """
+        updated = ProjectApplication.objects.filter(semester__isnull=True).update(
+            semester_id=semester_id
+        )
+        return int(updated)
+
     def get_recent_applications(self, limit: int = 10) -> list[ProjectApplication]:
         """Получение последних заявок.
 
         Для дашборда и новостей.
         """
         return list(
-            ProjectApplication.objects.select_related("status", "author")
+            ProjectApplication.objects.select_related(
+                "status", "author", "main_department", "semester"
+            )
             .prefetch_related("target_institutes")
             .order_by("-creation_date")[:limit]
         )
@@ -375,7 +420,9 @@ class ProjectApplicationRepository:
         Для административных операций и общего списка.
         """
         return (
-            ProjectApplication.objects.select_related("status", "author")
+            ProjectApplication.objects.select_related(
+                "status", "author", "main_department", "semester"
+            )
             .prefetch_related("target_institutes")
             .order_by("-creation_date")
         )
@@ -396,7 +443,7 @@ class ProjectApplicationRepository:
             qs = qs.filter(status__code=status_code)
 
         return list(
-            qs.select_related("status", "author")
+            qs.select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )
@@ -415,7 +462,7 @@ class ProjectApplicationRepository:
             qs = qs.filter(status__code=status_code)
 
         return (
-            qs.select_related("status", "author")
+            qs.select_related("status", "author", "main_department", "semester")
             .prefetch_related("target_institutes", "tags")
             .order_by("-creation_date")
         )

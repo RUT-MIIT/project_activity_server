@@ -4,10 +4,12 @@ from rest_framework.routers import DefaultRouter
 from .views import (
     DepartmentViewSet,
     LoginView,
+    PasswordChangeView,
     PasswordResetConfirmView,
     PasswordResetView,
     RegistrationRequestViewSet,
     RoleViewSet,
+    SemesterViewSet,
     UserMeView,
 )
 
@@ -19,6 +21,7 @@ router.register(
     basename="registration-request",
 )
 router.register(r"roles", RoleViewSet, basename="role")
+router.register(r"semesters", SemesterViewSet, basename="semester")
 
 urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),
@@ -32,6 +35,11 @@ urlpatterns = [
         "password/reset/confirm/",
         PasswordResetConfirmView.as_view(),
         name="password-reset-confirm",
+    ),
+    path(
+        "password/change/",
+        PasswordChangeView.as_view(),
+        name="password-change",
     ),
     path("", include(router.urls)),
 ]

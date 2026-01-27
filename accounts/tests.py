@@ -6,7 +6,9 @@ from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APIClient
 
-from .models import Department, RegistrationRequest, Role
+from showcase.models import Institute
+
+from .models import Department, RegistrationRequest, Role, Semester
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
@@ -91,6 +93,8 @@ class AccountsApiTests(TestCase):
         self.assertIn("access", response.data)
         self.assertIn("refresh", response.data)
         self.assertIn("user", response.data)
+        # В user должен присутствовать institute_code
+        self.assertIn("institute_code", response.data["user"])
 
     def test_user_me_requires_auth_and_returns_profile(self):
         """Без токена возвращается 401, с токеном — профиль текущего пользователя."""
@@ -104,6 +108,37 @@ class AccountsApiTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["email"], self.user.email)
+        self.assertIn("institute_code", response.data)
+
+    def test_user_me_institute_code_from_department_institute(self):
+        """GET /api/accounts/user/ возвращает код института, сопоставленного с департаментом."""
+        # Создаём институт, связанный с департаментом пользователя
+        institute = Institute.objects.create(
+            code="INST-TEST",
+            name="Тестовый институт",
+            position=1,
+            is_active=True,
+            department=self.dept,
+        )
+
+        self.auth(self.user.email, self.user_password)
+        url = "/api/accounts/user/"
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.data["institute_code"], institute.code)
+
+    def test_user_me_institute_code_none_if_no_institute(self):
+        """Если для департамента нет института, institute_code должен быть None."""
+        # Убедимся, что институтов для департамента нет
+        Institute.objects.filter(department=self.dept).delete()
+
+        self.auth(self.user.email, self.user_password)
+        url = "/api/accounts/user/"
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertIsNone(response.data["institute_code"])
 
     def test_password_reset_sends_email(self):
         """Сброс пароля по email отправляет письмо (locmem backend)."""
@@ -131,6 +166,50 @@ class AccountsApiTests(TestCase):
         login_resp = self.client.post(
             "/api/accounts/login/",
             {"email": self.user.email, "password": new_password},
+            format="json",
+        )
+        self.assertEqual(login_resp.status_code, 200)
+
+    def test_password_change_success(self):
+        """Аутентифицированный пользователь меняет пароль, новый пароль работает."""
+        self.auth(self.user.email, self.user_password)
+        url = "/api/accounts/password/change/"
+        new_password = "UserNewPass123!"
+        response = self.client.post(
+            url,
+            {"current_password": self.user_password, "new_password": new_password},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("detail", response.data)
+
+        # Проверяем вход с новым паролем
+        fresh_client = APIClient()
+        login_resp = fresh_client.post(
+            "/api/accounts/login/",
+            {"email": self.user.email, "password": new_password},
+            format="json",
+        )
+        self.assertEqual(login_resp.status_code, 200)
+
+    def test_password_change_wrong_current_password(self):
+        """При неверном текущем пароле возвращаем 400 и не меняем пароль."""
+        self.auth(self.user.email, self.user_password)
+        url = "/api/accounts/password/change/"
+        new_password = "UserNewPass456!"
+        response = self.client.post(
+            url,
+            {"current_password": "WrongPass123!", "new_password": new_password},
+            format="json",
+        )
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("current_password", response.data)
+
+        # Пароль не должен поменяться
+        fresh_client = APIClient()
+        login_resp = fresh_client.post(
+            "/api/accounts/login/",
+            {"email": self.user.email, "password": self.user_password},
             format="json",
         )
         self.assertEqual(login_resp.status_code, 200)
@@ -458,6 +537,45 @@ class AccountsApiTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.data["code"], self.role_user.code)
+
+    def test_semester_list_requires_auth(self):
+        """Список семестров доступен только аутентифицированным."""
+        Semester.objects.create(name="Осень", position=1)
+        url = "/api/accounts/semesters/"
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 401)
+
+        self.auth(self.user.email, self.user_password)
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertGreaterEqual(len(response.data), 1)
+
+    def test_semester_create_allowed_for_admin_and_cpds(self):
+        """Создание семестра разрешено admin/cpds, запрещено обычному пользователю."""
+        url = "/api/accounts/semesters/"
+
+        # Обычный пользователь — 403
+        self.auth(self.user.email, self.user_password)
+        response = self.client.post(
+            url, {"name": "Весна", "position": 2, "is_active": True}, format="json"
+        )
+        self.assertEqual(response.status_code, 403)
+
+        # cpds — ok
+        self.auth(self.cpds_user.email, self.cpds_password)
+        response = self.client.post(
+            url, {"name": "Весна", "position": 2, "is_active": True}, format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["name"], "Весна")
+
+        # admin — ok
+        self.auth(self.admin.email, self.admin_password)
+        response = self.client.post(
+            url, {"name": "Лето", "position": 3, "is_active": False}, format="json"
+        )
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(response.data["name"], "Лето")
 
 
 from django.test import TestCase

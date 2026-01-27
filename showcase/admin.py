@@ -4,6 +4,7 @@ from .models import (
     ApplicationInvolvedDepartment,
     ApplicationInvolvedUser,
     ApplicationStatus,
+    DepartmentPlan,
     Institute,
     ProjectApplication,
     ProjectApplicationComment,
@@ -57,9 +58,10 @@ class InstituteAdmin(admin.ModelAdmin):
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
-    list_display = ("name", "category")
-    list_filter = ("category",)
-    search_fields = ("name", "category")
+    list_display = ("id", "name", "category", "is_base")
+    list_filter = ("category", "is_base", "departments")
+    search_fields = ("name", "category", "departments__name")
+    filter_horizontal = ("departments",)
     ordering = ("category", "name")
 
 
@@ -171,3 +173,13 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+
+@admin.register(DepartmentPlan)
+class DepartmentPlanAdmin(admin.ModelAdmin):
+    list_display = ("department", "semester", "plan")
+    list_filter = ("semester", "department")
+    search_fields = ("department__name", "semester__name")
+    ordering = ("semester", "department")
+    verbose_name = "План подразделения"
+    verbose_name_plural = "Планы подразделений"
