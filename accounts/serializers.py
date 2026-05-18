@@ -94,7 +94,7 @@ class CustomResetPasswordForm(_PasswordResetForm):
         for user in self.get_users(email):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = token_generator.make_token(user)
-            reset_url = f"{settings.FRONT_END}/reset_password/{uid}/{token}"
+            reset_url = f"{settings.FRONT_END}/reset-password/{uid}/{token}"
             context = {
                 "user": user,
                 "request": request,
