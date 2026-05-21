@@ -18,6 +18,11 @@ class Migration(migrations.Migration):
             model_name="studygroup",
             name="direction",
         ),
+        # Сначала убираем id (старый PK), иначе PostgreSQL: "multiple primary keys"
+        migrations.RemoveField(
+            model_name="direction",
+            name="id",
+        ),
         migrations.AlterField(
             model_name="direction",
             name="code",
@@ -27,10 +32,6 @@ class Migration(migrations.Migration):
                 serialize=False,
                 verbose_name="Код направления",
             ),
-        ),
-        migrations.RemoveField(
-            model_name="direction",
-            name="id",
         ),
         migrations.AddField(
             model_name="studygroup",
