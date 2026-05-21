@@ -169,10 +169,61 @@ class RegistrationRequest(models.Model):
         return f"{self.last_name} {self.first_name} <{self.email}> [{self.status}]"
 
 
+class AcademicYear(models.Model):
+    """Учебный год."""
+
+    code = models.CharField(
+        max_length=64,
+        unique=True,
+        verbose_name="Код",
+    )
+    name = models.CharField(max_length=255, verbose_name="Название")
+
+    class Meta:
+        verbose_name = "Учебный год"
+        verbose_name_plural = "Учебные годы"
+        ordering = ("code",)
+
+    def __str__(self) -> str:
+        return f"{self.code} — {self.name}"
+
+
+class Settings(models.Model):
+    """Ключ–значение настроек приложения (редактируемые из админки / импортом)."""
+
+    code = models.CharField(
+        max_length=128,
+        unique=True,
+        verbose_name="Код",
+    )
+    description = models.CharField(
+        max_length=512,
+        blank=True,
+        default="",
+        verbose_name="Описание",
+    )
+    value = models.TextField(blank=True, default="", verbose_name="Значение")
+
+    class Meta:
+        verbose_name = "Настройка"
+        verbose_name_plural = "Настройки"
+
+    def __str__(self) -> str:
+        return self.code
+
+
 class Semester(models.Model):
     name = models.CharField(max_length=255, verbose_name="Название семестра")
     position = models.PositiveIntegerField(verbose_name="Позиция для сортировки")
     is_active = models.BooleanField(default=True, verbose_name="Активен")
+    academic_year = models.ForeignKey(
+        AcademicYear,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="semesters",
+        verbose_name="Учебный год",
+    )
 
     class Meta:
         verbose_name = "Семестр"

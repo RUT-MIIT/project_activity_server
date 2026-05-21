@@ -11,7 +11,7 @@ from rest_framework import serializers
 
 from showcase.models import Institute
 
-from .models import Department, RegistrationRequest, Role, Semester, User
+from .models import AcademicYear, Department, RegistrationRequest, Role, Semester, User
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -39,12 +39,36 @@ class RoleSerializer(serializers.ModelSerializer):
         ]
 
 
+class AcademicYearSerializer(serializers.ModelSerializer):
+    """Сериализатор учебного года (краткий)."""
+
+    class Meta:
+        model = AcademicYear
+        fields = ["id", "code", "name"]
+
+
 class SemesterSerializer(serializers.ModelSerializer):
     """Сериализатор для семестров."""
 
+    academic_year = AcademicYearSerializer(read_only=True)
+    academic_year_id = serializers.PrimaryKeyRelatedField(
+        queryset=AcademicYear.objects.all(),
+        source="academic_year",
+        write_only=True,
+        required=False,
+        allow_null=True,
+    )
+
     class Meta:
         model = Semester
-        fields = ["id", "name", "position", "is_active"]
+        fields = [
+            "id",
+            "name",
+            "position",
+            "is_active",
+            "academic_year",
+            "academic_year_id",
+        ]
 
 
 class UserSerializer(serializers.ModelSerializer):

@@ -615,6 +615,21 @@ class TestApproveRejectRequestService:
             == 1
         )
 
+    def test_approve_from_returned_department_without_validator_goes_to_await_institute(
+        self, statuses, make_user
+    ):
+        """Повторная отправка после доработки: без department_validator -> await_institute."""
+        author = make_user(role_code="mentor", with_department=True)
+        app = self._create_app(author=author, status_code="returned_department")
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=author.department
+        )
+
+        service = ProjectApplicationService()
+        app2 = service.approve_application(app.id, author)
+
+        assert app2.status.code == "await_institute"
+
     def test_reject_department_validator_to_final(self, statuses, make_user):
         """Отклонение: await_department -> rejected_department -> rejected, два лога."""
         validator = make_user(role_code="department_validator", with_department=True)

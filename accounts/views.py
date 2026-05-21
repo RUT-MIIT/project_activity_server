@@ -152,7 +152,7 @@ class RoleViewSet(viewsets.ReadOnlyModelViewSet):
 class SemesterViewSet(viewsets.ModelViewSet):
     """CRUD для семестров. Чтение — для аутентифицированных, управление — admin/cpds."""
 
-    queryset = Semester.objects.all().order_by("position")
+    queryset = Semester.objects.select_related("academic_year").order_by("position")
     serializer_class = SemesterSerializer
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = None

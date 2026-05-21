@@ -1,7 +1,15 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 
-from .models import Department, RegistrationRequest, Role, Semester, User
+from .models import (
+    AcademicYear,
+    Department,
+    RegistrationRequest,
+    Role,
+    Semester,
+    Settings,
+    User,
+)
 
 
 @admin.register(User)
@@ -117,9 +125,27 @@ class RoleAdmin(admin.ModelAdmin):
     ordering = ("code",)
 
 
+@admin.register(AcademicYear)
+class AcademicYearAdmin(admin.ModelAdmin):
+    list_display = ("id", "code", "name")
+    search_fields = ("code", "name")
+    ordering = ("code",)
+
+
+@admin.register(Settings)
+class SettingsAdmin(admin.ModelAdmin):
+    list_display = ("id", "code", "description", "value_preview")
+    search_fields = ("code", "description", "value")
+
+    @admin.display(description="Значение")
+    def value_preview(self, obj: Settings) -> str:
+        text = obj.value or ""
+        return text if len(text) <= 80 else text[:77] + "..."
+
+
 @admin.register(Semester)
 class SemesterAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "position", "is_active")
+    list_display = ("id", "name", "position", "is_active", "academic_year")
     search_fields = ("name",)
-    list_filter = ("is_active",)
+    list_filter = ("is_active", "academic_year")
     ordering = ("position",)

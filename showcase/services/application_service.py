@@ -294,11 +294,18 @@ class ProjectApplicationService:
         if not can_change:
             raise ValueError(error)
 
+        # 4.5. Пропуск кафедры, если нет department_validator (как при первой подаче)
+        target_status_code = self._ensure_valid_status_after_department_check(
+            application=application,
+            target_status=approved_status_code,
+            actor=approver,
+        )
+
         # 5. Сохраняем старый статус для логирования
         old_status = application.status
 
-        # 6. Меняем статус на промежуточный
-        intermediate_status = ApplicationStatus.objects.get(code=approved_status_code)
+        # 6. Меняем статус на целевой (с учётом проверки кафедры)
+        intermediate_status = ApplicationStatus.objects.get(code=target_status_code)
         application.status = intermediate_status
         application.save()
 
