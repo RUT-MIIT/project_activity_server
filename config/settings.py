@@ -196,6 +196,10 @@ if EMAIL_BACKEND.endswith("smtp.EmailBackend"):
 SERVER_EMAIL = os.getenv("EMAIL_HOST_USER", "no-reply@example.com")
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER", "no-reply@example.com")
 FRONT_END = os.environ.get("FRONT_END", "http://localhost:3000")
+# Путь к карточке заявки на фронте; {id} — подставляется id заявки
+FRONT_END_APPLICATION_PATH = os.environ.get(
+    "FRONT_END_APPLICATION_PATH", "/my-applications/app/{id}"
+)
 
 
 SWAGGER_USE_COMPAT_RENDERERS = False

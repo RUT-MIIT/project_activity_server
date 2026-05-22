@@ -1,3 +1,5 @@
+from unittest.mock import patch
+
 from django.contrib.auth import get_user_model
 import pytest
 
@@ -597,7 +599,12 @@ class TestApproveRejectRequestService:
             "returned_cpds" in log_statuses
         ), "Должен быть лог перехода в returned_cpds"
 
-    def test_request_changes_department_validator(self, statuses, make_user):
+    @patch(
+        "showcase.services.application_notification_service.mail.send_mail",
+    )
+    def test_request_changes_department_validator(
+        self, mock_send_mail, statuses, make_user
+    ):
         """Запрос изменений: await_department -> returned_department, один лог."""
         validator = make_user(role_code="department_validator", with_department=True)
         app = self._create_app(author=validator, status_code="await_department")
@@ -614,6 +621,8 @@ class TestApproveRejectRequestService:
             ).count()
             == 1
         )
+        mock_send_mail.assert_called_once()
+        assert mock_send_mail.call_args.kwargs["recipient_list"] == ["user@example.com"]
 
     def test_approve_from_returned_department_without_validator_goes_to_await_institute(
         self, statuses, make_user
@@ -630,7 +639,12 @@ class TestApproveRejectRequestService:
 
         assert app2.status.code == "await_institute"
 
-    def test_reject_department_validator_to_final(self, statuses, make_user):
+    @patch(
+        "showcase.services.application_notification_service.mail.send_mail",
+    )
+    def test_reject_department_validator_to_final(
+        self, mock_send_mail, statuses, make_user
+    ):
         """Отклонение: await_department -> rejected_department -> rejected, два лога."""
         validator = make_user(role_code="department_validator", with_department=True)
         app = self._create_app(author=validator, status_code="await_department")
@@ -647,6 +661,115 @@ class TestApproveRejectRequestService:
             ).count()
             == 2
         )
+        mock_send_mail.assert_called_once()
+        message = mock_send_mail.call_args.kwargs["message"]
+        assert "not good" in message
+
+    def test_request_changes_without_author_email_skips_mail(self, statuses, make_user):
+        """Без email автора письмо не отправляется, статус меняется."""
+        validator = make_user(role_code="department_validator", with_department=True)
+        app = self._create_app(author=validator, status_code="await_department")
+        app.author_email = ""
+        app.author = None
+        app.save(update_fields=["author_email", "author"])
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=validator.department
+        )
+
+        with patch(
+            "showcase.services.application_notification_service.mail.send_mail",
+        ) as mock_send_mail:
+            service = ProjectApplicationService()
+            app2 = service.request_changes(app.id, validator)
+
+        assert app2.status.code == "returned_department"
+        mock_send_mail.assert_not_called()
+
+    def test_request_changes_sets_has_unseen_changes(self, statuses, make_user):
+        """Отправка на доработку выставляет has_unseen_changes."""
+        validator = make_user(role_code="department_validator", with_department=True)
+        author = make_user(role_code="user", with_department=True)
+        app = self._create_app(author=author, status_code="await_department")
+        app.has_unseen_changes = False
+        app.save(update_fields=["has_unseen_changes"])
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=validator.department
+        )
+
+        service = ProjectApplicationService()
+        service.request_changes(app.id, validator)
+
+        app.refresh_from_db()
+        assert app.has_unseen_changes is True
+
+    def test_reject_sets_has_unseen_changes(self, statuses, make_user):
+        """Отклонение выставляет has_unseen_changes."""
+        validator = make_user(role_code="department_validator", with_department=True)
+        author = make_user(role_code="user", with_department=True)
+        app = self._create_app(author=author, status_code="await_department")
+        app.has_unseen_changes = False
+        app.save(update_fields=["has_unseen_changes"])
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=validator.department
+        )
+
+        service = ProjectApplicationService()
+        service.reject_application(app.id, validator, reason="причина")
+
+        app.refresh_from_db()
+        assert app.has_unseen_changes is True
+
+    def test_get_application_by_author_clears_has_unseen_changes(
+        self, statuses, make_user
+    ):
+        """Автор при открытии заявки сбрасывает has_unseen_changes."""
+        author = make_user(role_code="user", with_department=True)
+        app = self._create_app(author=author, status_code="returned_department")
+        app.has_unseen_changes = True
+        app.save(update_fields=["has_unseen_changes"])
+
+        service = ProjectApplicationService()
+        result = service.get_application(app.id, author)
+
+        assert result.has_unseen_changes is False
+        app.refresh_from_db()
+        assert app.has_unseen_changes is False
+
+    def test_get_application_by_validator_keeps_has_unseen_changes(
+        self, statuses, make_user
+    ):
+        """Не-автор при просмотре не сбрасывает флаг."""
+        author = make_user(role_code="user", with_department=True)
+        validator = make_user(role_code="department_validator", with_department=True)
+        app = self._create_app(author=author, status_code="returned_department")
+        app.has_unseen_changes = True
+        app.save(update_fields=["has_unseen_changes"])
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=validator.department
+        )
+
+        service = ProjectApplicationService()
+        service.get_application(app.id, validator)
+
+        app.refresh_from_db()
+        assert app.has_unseen_changes is True
+
+    def test_reject_succeeds_when_send_mail_fails(
+        self, mock_send_mail, statuses, make_user
+    ):
+        """Сбой SMTP не откатывает отклонение заявки."""
+        mock_send_mail.side_effect = ConnectionError("SMTP down")
+        validator = make_user(role_code="department_validator", with_department=True)
+        app = self._create_app(author=validator, status_code="await_department")
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=validator.department
+        )
+
+        service = ProjectApplicationService()
+        app2 = service.reject_application(app.id, validator, reason="причина")
+
+        assert app2.status.code == "rejected"
+        mock_send_mail.assert_called_once()
 
     def test_transfer_to_institute_success(self, statuses, make_user):
         """cpds может передать внешнюю заявку в институт по коду института.

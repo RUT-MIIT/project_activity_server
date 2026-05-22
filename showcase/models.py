@@ -203,6 +203,10 @@ class ProjectApplication(models.Model):
     is_internal_customer = models.BooleanField(
         default=False, verbose_name="Внутренний заказчик"
     )
+    has_unseen_changes = models.BooleanField(
+        default=False,
+        verbose_name="Есть изменения с последнего просмотра автором",
+    )
 
     # Нумерация заявок
     application_year = models.PositiveIntegerField(

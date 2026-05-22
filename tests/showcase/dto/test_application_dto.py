@@ -575,6 +575,33 @@ class TestProjectApplicationReadDTO:
         assert "tags" in result
         assert "involved_users" in result
         assert "comments" in result
+        assert result["has_unseen_changes"] is False
+
+    def test_read_dto_has_unseen_changes(self, statuses, make_user):
+        """ReadDTO отдаёт has_unseen_changes из модели."""
+        from showcase.models import ProjectApplication
+
+        user = make_user(role_code="user")
+        status = statuses["await_department"]
+
+        app = ProjectApplication.objects.create(
+            title="Test",
+            company="Acme",
+            author=user,
+            status=status,
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель",
+            problem_holder="Носитель",
+            barrier="Барьер",
+            has_unseen_changes=True,
+        )
+
+        dto = ProjectApplicationReadDTO(app)
+        assert dto.has_unseen_changes is True
+        assert dto.to_dict()["has_unseen_changes"] is True
 
 
 @pytest.mark.django_db
@@ -665,6 +692,8 @@ class TestProjectApplicationListDTO:
         assert "status" in result
         assert "author_name" in result
         assert "author_email" in result
+        assert "has_unseen_changes" in result
+        assert result["has_unseen_changes"] is False
 
     def test_list_dto_is_internal_customer(self, statuses, make_user):
         """is_internal_customer включается в ProjectApplicationListDTO."""

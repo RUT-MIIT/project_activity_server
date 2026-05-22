@@ -86,6 +86,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
     list_display = (
         "title",
         "print_number",
+        "has_unseen_changes",
         "author_lastname",
         "author_firstname",
         "semester",

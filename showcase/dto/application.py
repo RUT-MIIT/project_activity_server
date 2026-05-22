@@ -255,6 +255,7 @@ class ProjectApplicationReadDTO:
         self.needs_consultation = application.needs_consultation
         self.is_external = application.is_external
         self.is_internal_customer = application.is_internal_customer
+        self.has_unseen_changes = application.has_unseen_changes
 
         # Нумерация заявок
         self.application_year = application.application_year
@@ -425,6 +426,7 @@ class ProjectApplicationReadDTO:
             "needs_consultation": self.needs_consultation,
             "is_external": self.is_external,
             "is_internal_customer": self.is_internal_customer,
+            "has_unseen_changes": self.has_unseen_changes,
             "application_year": self.application_year,
             "year_sequence_number": self.year_sequence_number,
             "print_number": self.print_number,
@@ -472,6 +474,7 @@ class ProjectApplicationListDTO:
         self.needs_consultation = application.needs_consultation
         self.is_external = application.is_external
         self.is_internal_customer = application.is_internal_customer
+        self.has_unseen_changes = application.has_unseen_changes
         self.semester = (
             {"id": application.semester.id, "name": application.semester.name}
             if application.semester
@@ -520,6 +523,7 @@ class ProjectApplicationListDTO:
             "needs_consultation": self.needs_consultation,
             "is_external": self.is_external,
             "is_internal_customer": self.is_internal_customer,
+            "has_unseen_changes": self.has_unseen_changes,
             "semester": self.semester,
             "semester_id": self.semester_id,
             "application_year": self.application_year,

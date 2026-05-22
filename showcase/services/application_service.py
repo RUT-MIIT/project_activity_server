@@ -19,6 +19,9 @@ from showcase.dto.application import (
 from showcase.dto.available_actions import AvailableActionsDTO
 from showcase.models import ApplicationStatus, Institute, ProjectApplication
 from showcase.repositories.application import ProjectApplicationRepository
+from showcase.services.application_notification_service import (
+    ApplicationNotificationService,
+)
 from showcase.services.involved_service import InvolvedManagementService
 from showcase.services.logging_service import ApplicationLoggingService
 
@@ -36,6 +39,7 @@ class ProjectApplicationService:
         self.repository = ProjectApplicationRepository()
         self.logging_service = ApplicationLoggingService()
         self.involved_service = InvolvedManagementService()
+        self.notification_service = ApplicationNotificationService()
 
     @transaction.atomic
     def submit_application(
@@ -194,6 +198,10 @@ class ProjectApplicationService:
             from_status=old_status,
             to_status=new_status,
             actor=requester,
+        )
+
+        self.notification_service.notify_author_revision_requested(
+            application, requester, new_status
         )
 
         return application
@@ -418,6 +426,10 @@ class ProjectApplicationService:
                 actor=rejector,
             )
 
+        self.notification_service.notify_author_rejected(
+            application, rejector, reason=reason
+        )
+
         return application
 
     @transaction.atomic
@@ -607,6 +619,16 @@ class ProjectApplicationService:
         )
         if not can_view:
             raise PermissionError(error)
+
+        if (
+            application.author_id
+            and viewer.id == application.author_id
+            and application.has_unseen_changes
+        ):
+            ProjectApplication.objects.filter(pk=application.pk).update(
+                has_unseen_changes=False
+            )
+            application.has_unseen_changes = False
 
         return application
 

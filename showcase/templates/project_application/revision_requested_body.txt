@@ -1,0 +1,9 @@
+Здравствуйте{% if full_name %}, {{ full_name }}{% endif %}!
+
+Ваша проектная заявка{% if application_number %} № {{ application_number }}{% endif %}{% if title %} «{{ title }}»{% endif %} отправлена на доработку.
+
+Текущий статус: {{ status_name }}
+{% if actor_name %}Кем: {{ actor_name }}{% if actor_role %} ({{ actor_role }}){% endif %}
+{% endif %}
+Откройте заявку в системе и внесите необходимые изменения:
+{{ application_url }}
