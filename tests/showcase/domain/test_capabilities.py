@@ -120,7 +120,9 @@ class TestApproveRejectRequest:
         [
             ("await_department", True, True),
             ("await_department", False, False),
-            ("returned_cpds", True, True),
+            ("returned_department", True, False),
+            ("returned_institute", True, False),
+            ("returned_cpds", True, False),
             ("returned_author", True, False),
             ("approved", True, False),
             ("rejected", True, False),
@@ -380,6 +382,42 @@ class TestCanEditApplication:
             is_user_department_involved=False,
             is_user_author=True,
         )
+
+    def test_update_application_institute_validator_author_with_department(
+        self,
+    ):
+        """institute_validator-автор: save совпадает с available_actions (подразделение причастно)."""
+        dto = ProjectApplicationUpdateDTO(
+            title="Valid title", goal="Длинная цель 12345"
+        )
+        result, can_update, _ = ApplicationCapabilities.update_application(
+            dto=dto,
+            application_status="returned_department",
+            updater_role="institute_validator",
+            application_author_id=10,
+            updater_id=10,
+            user_department_can_save=True,
+            is_user_department_involved=True,
+        )
+        assert result.is_valid
+        assert can_update is True
+
+    def test_update_application_institute_validator_without_department_involved(
+        self,
+    ):
+        """institute_validator без причастного подразделения не может сохранить."""
+        dto = ProjectApplicationUpdateDTO(title="Valid title")
+        result, can_update, _ = ApplicationCapabilities.update_application(
+            dto=dto,
+            application_status="returned_department",
+            updater_role="institute_validator",
+            application_author_id=10,
+            updater_id=10,
+            user_department_can_save=True,
+            is_user_department_involved=False,
+        )
+        assert not result.is_valid
+        assert "access" in result.errors
 
     def test_can_edit_rejected_department_by_cpds(self):
         """CPDS может редактировать заявки в статусе rejected_department."""

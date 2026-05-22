@@ -269,6 +269,8 @@ class ProjectApplicationDomain:
                 "await_institute",
                 "await_cpds",
                 "require_assignment",
+                "approved_department",
+                "approved_institute",
             ],
             "approved_department": ["await_institute", "rejected"],
             "approved_institute": ["await_cpds", "rejected"],

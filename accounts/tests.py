@@ -540,7 +540,7 @@ class AccountsApiTests(TestCase):
 
     def test_semester_list_requires_auth(self):
         """Список семестров доступен только аутентифицированным."""
-        Semester.objects.create(name="Осень", position=1)
+        Semester.objects.create(code="fall", name="Осень", position=1)
         url = "/api/accounts/semesters/"
         response = self.client.get(url)
         self.assertEqual(response.status_code, 401)
@@ -557,22 +557,29 @@ class AccountsApiTests(TestCase):
         # Обычный пользователь — 403
         self.auth(self.user.email, self.user_password)
         response = self.client.post(
-            url, {"name": "Весна", "position": 2, "is_active": True}, format="json"
+            url,
+            {"code": "spring", "name": "Весна", "position": 2},
+            format="json",
         )
         self.assertEqual(response.status_code, 403)
 
         # cpds — ok
         self.auth(self.cpds_user.email, self.cpds_password)
         response = self.client.post(
-            url, {"name": "Весна", "position": 2, "is_active": True}, format="json"
+            url,
+            {"code": "spring", "name": "Весна", "position": 2},
+            format="json",
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["name"], "Весна")
+        self.assertEqual(response.data["code"], "spring")
 
         # admin — ok
         self.auth(self.admin.email, self.admin_password)
         response = self.client.post(
-            url, {"name": "Лето", "position": 3, "is_active": False}, format="json"
+            url,
+            {"code": "summer", "name": "Лето", "position": 3},
+            format="json",
         )
         self.assertEqual(response.status_code, 201)
         self.assertEqual(response.data["name"], "Лето")

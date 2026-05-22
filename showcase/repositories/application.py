@@ -63,10 +63,7 @@ class ProjectApplicationRepository:
             except Semester.DoesNotExist as err:
                 raise ValueError(f"Семестр с id {dto.semester_id} не найден") from err
         else:
-            # Если семестр не передан, подставляем последний активный (максимальная position)
-            semester = (
-                Semester.objects.filter(is_active=True).order_by("-position").first()
-            )
+            semester = Semester.get_next()
 
         # Создаем заявку
         application = ProjectApplication.objects.create(

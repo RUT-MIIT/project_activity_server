@@ -69,7 +69,12 @@ class ApplicationLoggingService:
         )
 
         status_changed = from_status is None or from_status.pk != to_status.pk
-        if status_changed:
+        actor_is_author = (
+            actor is not None
+            and application.author_id is not None
+            and application.author_id == actor.pk
+        )
+        if status_changed and not actor_is_author:
             ProjectApplication.objects.filter(pk=application.pk).update(
                 has_unseen_changes=True
             )

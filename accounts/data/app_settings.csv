@@ -1,3 +1,4 @@
 code,description,value
-active_semester_code,Идентификатор активного семестра (pk в таблице accounts_semester),
+active_semester_code,Код активного семестра (поле code модели Семестр),
+next_semester_code,Код следующего семестра (поле code модели Семестр),
 active_academic_year_code,Код активного учебного года (поле code модели Учебный год),

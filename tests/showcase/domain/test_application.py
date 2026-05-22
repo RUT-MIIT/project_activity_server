@@ -364,6 +364,8 @@ class TestCanChangeStatus:
             ("await_institute", "returned_institute", "institute_validator", True),
             ("returned_department", "await_department", "mentor", True),
             ("approved_department", "await_institute", "admin", True),
+            ("returned_author", "approved_department", "department_validator", True),
+            ("returned_author", "approved_institute", "institute_validator", True),
         ],
     )
     def test_can_change_status_multiple_allowed_transitions(

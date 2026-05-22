@@ -17,16 +17,17 @@ class TestLogStatusChange:
     """Тесты для log_status_change."""
 
     def test_log_status_change_success(self, statuses, make_user):
-        """Успешное логирование изменения статуса."""
+        """Успешное логирование изменения статуса (не автор — флаг выставляется)."""
 
-        user = make_user(role_code="user")
+        author = make_user(role_code="user", email="author@example.com")
+        actor = make_user(role_code="department_validator", email="actor@example.com")
         status_from = statuses["await_department"]
         status_to = statuses["await_institute"]
 
         app = ProjectApplication.objects.create(
             title="Test",
             company="Acme",
-            author=user,
+            author=author,
             status=status_from,
             author_lastname="Иванов",
             author_firstname="Иван",
@@ -42,7 +43,7 @@ class TestLogStatusChange:
             application=app,
             from_status=status_from,
             to_status=status_to,
-            actor=user,
+            actor=actor,
         )
 
         assert log.id is not None
@@ -50,10 +51,44 @@ class TestLogStatusChange:
         assert log.action_type == "status_change"
         assert log.from_status.id == status_from.id
         assert log.to_status.id == status_to.id
-        assert log.actor.id == user.id
+        assert log.actor.id == actor.id
 
         app.refresh_from_db()
         assert app.has_unseen_changes is True
+
+    def test_log_status_change_author_actor_does_not_set_flag(
+        self, statuses, make_user
+    ):
+        """Смена статуса автором не помечает заявку для самого автора."""
+        author = make_user(role_code="mentor")
+        status_from = statuses["returned_department"]
+        status_to = statuses["await_institute"]
+
+        app = ProjectApplication.objects.create(
+            title="Test",
+            company="Acme",
+            author=author,
+            status=status_from,
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель",
+            problem_holder="Носитель",
+            barrier="Барьер",
+            has_unseen_changes=False,
+        )
+
+        service = ApplicationLoggingService()
+        service.log_status_change(
+            application=app,
+            from_status=status_from,
+            to_status=status_to,
+            actor=author,
+        )
+
+        app.refresh_from_db()
+        assert app.has_unseen_changes is False
 
     def test_log_status_change_same_status_does_not_set_flag(self, statuses, make_user):
         """Одинаковый from/to статус не помечает заявку как изменённую."""
@@ -86,15 +121,18 @@ class TestLogStatusChange:
         app.refresh_from_db()
         assert app.has_unseen_changes is False
 
-    def test_log_status_change_from_none_sets_flag(self, statuses, make_user):
-        """Первый переход (from_status=None) помечает заявку."""
-        user = make_user(role_code="user")
+    def test_log_status_change_from_none_non_author_sets_flag(
+        self, statuses, make_user
+    ):
+        """Первый переход (from_status=None) помечает заявку, если актор не автор."""
+        author = make_user(role_code="user", email="author2@example.com")
+        actor = make_user(role_code="cpds", email="cpds@example.com")
         status = statuses["created"]
 
         app = ProjectApplication.objects.create(
             title="Test",
             company="Acme",
-            author=user,
+            author=author,
             status=status,
             author_lastname="Иванов",
             author_firstname="Иван",
@@ -111,7 +149,7 @@ class TestLogStatusChange:
             application=app,
             from_status=None,
             to_status=status,
-            actor=user,
+            actor=actor,
         )
 
         app.refresh_from_db()

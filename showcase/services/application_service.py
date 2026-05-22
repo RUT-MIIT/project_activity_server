@@ -591,6 +591,8 @@ class ProjectApplicationService:
             author_id,
             updater.id,
             user_department_can_save=user_department_can_save,
+            is_user_department_involved=is_user_department_involved,
+            is_external=is_external,
         )
         if not validation.is_valid:
             raise ValueError(validation.errors)
@@ -620,6 +622,34 @@ class ProjectApplicationService:
         if not can_view:
             raise PermissionError(error)
 
+        self._mark_application_viewed_by_author(application, viewer)
+
+        return application
+
+    def get_application_status_logs(self, application_id: int, viewer: User):
+        """Получение логов заявки; для автора сбрасывает has_unseen_changes."""
+        try:
+            application = self.repository.get_by_id_simple(application_id)
+        except ObjectDoesNotExist as err:
+            raise ValueError(f"Заявка с ID {application_id} не найдена") from err
+
+        can_view, error = ApplicationCapabilities.view_application(
+            application.status.code,
+            viewer.role.code if viewer.role else "user",
+            application.author.id if application.author else 0,
+            viewer.id,
+        )
+        if not can_view:
+            raise PermissionError(error)
+
+        self._mark_application_viewed_by_author(application, viewer)
+
+        return self.logging_service.get_application_logs(application)
+
+    def _mark_application_viewed_by_author(
+        self, application: ProjectApplication, viewer: User
+    ) -> None:
+        """Сбрасывает флаг непросмотренных изменений, если заявку открыл автор."""
         if (
             application.author_id
             and viewer.id == application.author_id
@@ -629,8 +659,6 @@ class ProjectApplicationService:
                 has_unseen_changes=False
             )
             application.has_unseen_changes = False
-
-        return application
 
     def get_user_applications(self, user: User):
         """Бизнес-операция: получение заявок пользователя."""

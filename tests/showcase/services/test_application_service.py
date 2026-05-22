@@ -624,6 +624,38 @@ class TestApproveRejectRequestService:
         mock_send_mail.assert_called_once()
         assert mock_send_mail.call_args.kwargs["recipient_list"] == ["user@example.com"]
 
+    def test_approve_from_returned_author_department_validator(
+        self, statuses, make_user
+    ):
+        """После отзыва автором: department_validator одобряет -> await_institute."""
+        author = make_user(role_code="mentor", with_department=True)
+        validator = make_user(role_code="department_validator", with_department=True)
+        app = self._create_app(author=author, status_code="returned_author")
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=validator.department
+        )
+
+        service = ProjectApplicationService()
+        app2 = service.approve_application(app.id, validator)
+
+        assert app2.status.code == "await_institute"
+
+    def test_approve_from_returned_author_institute_validator(
+        self, statuses, make_user
+    ):
+        """После отзыва автором: institute_validator одобряет -> await_cpds."""
+        author = make_user(role_code="mentor", with_department=True)
+        validator = make_user(role_code="institute_validator", with_department=True)
+        app = self._create_app(author=author, status_code="returned_author")
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=validator.department
+        )
+
+        service = ProjectApplicationService()
+        app2 = service.approve_application(app.id, validator)
+
+        assert app2.status.code == "await_cpds"
+
     def test_approve_from_returned_department_without_validator_goes_to_await_institute(
         self, statuses, make_user
     ):
@@ -685,6 +717,22 @@ class TestApproveRejectRequestService:
         assert app2.status.code == "returned_department"
         mock_send_mail.assert_not_called()
 
+    def test_author_approve_does_not_set_has_unseen_changes(self, statuses, make_user):
+        """Повторная отправка автором не выставляет has_unseen_changes."""
+        author = make_user(role_code="mentor", with_department=True)
+        app = self._create_app(author=author, status_code="returned_department")
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=author.department
+        )
+        app.has_unseen_changes = False
+        app.save(update_fields=["has_unseen_changes"])
+
+        service = ProjectApplicationService()
+        service.approve_application(app.id, author)
+
+        app.refresh_from_db()
+        assert app.has_unseen_changes is False
+
     def test_request_changes_sets_has_unseen_changes(self, statuses, make_user):
         """Отправка на доработку выставляет has_unseen_changes."""
         validator = make_user(role_code="department_validator", with_department=True)
@@ -735,6 +783,22 @@ class TestApproveRejectRequestService:
         app.refresh_from_db()
         assert app.has_unseen_changes is False
 
+    def test_get_application_status_logs_by_author_clears_has_unseen_changes(
+        self, statuses, make_user
+    ):
+        """Автор при запросе status_logs сбрасывает has_unseen_changes."""
+        author = make_user(role_code="user", with_department=True)
+        app = self._create_app(author=author, status_code="returned_department")
+        app.has_unseen_changes = True
+        app.save(update_fields=["has_unseen_changes"])
+
+        service = ProjectApplicationService()
+        logs = service.get_application_status_logs(app.id, author)
+
+        assert len(logs) >= 0
+        app.refresh_from_db()
+        assert app.has_unseen_changes is False
+
     def test_get_application_by_validator_keeps_has_unseen_changes(
         self, statuses, make_user
     ):
@@ -750,6 +814,25 @@ class TestApproveRejectRequestService:
 
         service = ProjectApplicationService()
         service.get_application(app.id, validator)
+
+        app.refresh_from_db()
+        assert app.has_unseen_changes is True
+
+    def test_get_application_status_logs_by_validator_keeps_has_unseen_changes(
+        self, statuses, make_user
+    ):
+        """Не-автор при запросе логов не сбрасывает флаг."""
+        author = make_user(role_code="user", with_department=True)
+        validator = make_user(role_code="department_validator", with_department=True)
+        app = self._create_app(author=author, status_code="returned_department")
+        app.has_unseen_changes = True
+        app.save(update_fields=["has_unseen_changes"])
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=validator.department
+        )
+
+        service = ProjectApplicationService()
+        service.get_application_status_logs(app.id, validator)
 
         app.refresh_from_db()
         assert app.has_unseen_changes is True
@@ -1095,6 +1178,25 @@ class TestUpdateAndQueriesService:
 
         app2 = service.return_by_author(app.id, author)
         assert app2.status.code == "returned_author"
+
+    def test_update_success_by_institute_validator_author_returned(
+        self, statuses, make_user, departments
+    ):
+        """institute_validator-автор сохраняет заявку на доработке (POLICY_DEPARTMENT_CAN_SAVE)."""
+        dept = departments["child"]
+        dept.can_save_project_applications = True
+        dept.save(update_fields=["can_save_project_applications"])
+
+        author = make_user(role_code="institute_validator", with_department=True)
+        app = self._create_app(author=author, status_code="returned_department")
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=author.department
+        )
+
+        service = ProjectApplicationService()
+        dto = ProjectApplicationUpdateDTO(title="Updated by institute author")
+        app2 = service.update_application(app.id, dto, author)
+        assert app2.title == "Updated by institute author"
 
     def test_update_success_by_department_validator_as_author(
         self, statuses, make_user

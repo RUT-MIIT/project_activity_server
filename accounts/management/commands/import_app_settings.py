@@ -16,7 +16,7 @@ class Command(BaseCommand):
     help = (
         "Импорт настроек (Settings) из CSV: колонки code, description, value. "
         "По умолчанию: accounts/data/app_settings.csv. "
-        "Типичные ключи: active_semester_code (pk семестра), "
+        "Типичные ключи: active_semester_code, next_semester_code (код семестра), "
         "active_academic_year_code (код учебного года)."
     )
 
@@ -77,7 +77,8 @@ class Command(BaseCommand):
     def _validate_known_keys(self) -> None:
         """Проверка ссылок для active_* ключей (только предупреждение в stdout)."""
         for code, check in (
-            ("active_semester_code", self._check_semester_pk),
+            ("active_semester_code", self._check_semester_code),
+            ("next_semester_code", self._check_semester_code),
             ("active_academic_year_code", self._check_year_code),
         ):
             try:
@@ -90,13 +91,9 @@ class Command(BaseCommand):
             if msg:
                 self.stdout.write(self.style.WARNING(f"{code}: {msg}"))
 
-    def _check_semester_pk(self, raw: str) -> str:
-        try:
-            pk = int(raw)
-        except ValueError:
-            return f"значение «{raw}» не похоже на pk семестра"
-        if not Semester.objects.filter(pk=pk).exists():
-            return f"семестр с pk={pk} не найден"
+    def _check_semester_code(self, raw: str) -> str:
+        if not Semester.objects.filter(code=raw).exists():
+            return f"семестр с code=«{raw}» не найден"
         return ""
 
     def _check_year_code(self, raw: str) -> str:

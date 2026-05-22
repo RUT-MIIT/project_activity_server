@@ -145,7 +145,7 @@ class SettingsAdmin(admin.ModelAdmin):
 
 @admin.register(Semester)
 class SemesterAdmin(admin.ModelAdmin):
-    list_display = ("id", "name", "position", "is_active", "academic_year")
-    search_fields = ("name",)
-    list_filter = ("is_active", "academic_year")
+    list_display = ("id", "code", "name", "position", "academic_year")
+    search_fields = ("code", "name")
+    list_filter = ("academic_year",)
     ordering = ("position",)

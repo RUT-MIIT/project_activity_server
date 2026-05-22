@@ -14,6 +14,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
+from accounts.models import Semester
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
@@ -373,13 +374,35 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         except PermissionError:
             return ProjectApplication.objects.none()
 
+    def _resolve_semester_filter_pk(self, request) -> int | None:
+        """PK семестра из ?semester_id= (id | next | actual) или None, если параметра нет."""
+        if "semester_id" not in request.query_params:
+            return None
+        return Semester.resolve_list_semester_id(
+            request.query_params.get("semester_id")
+        )
+
+    def _filter_queryset_by_semester(self, queryset, request):
+        semester_pk = self._resolve_semester_filter_pk(request)
+        if semester_pk is None:
+            return queryset
+        return queryset.filter(semester_id=semester_pk)
+
+    def _filter_applications_by_semester(self, applications, request):
+        semester_pk = self._resolve_semester_filter_pk(request)
+        if semester_pk is None:
+            return applications
+        return [app for app in applications if app.semester_id == semester_pk]
+
     def list(self, request):
         """GET /api/project-applications/
-        Получение списка заявок с пагинацией
+        Получение списка заявок с пагинацией.
+
+        Query: semester_id — числовой id, ``next`` или ``actual``.
         """
         try:
             # Получаем QuerySet
-            queryset = self.get_queryset()
+            queryset = self._filter_queryset_by_semester(self.get_queryset(), request)
 
             # Применяем пагинацию
             page = self.paginate_queryset(queryset)
@@ -395,6 +418,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             ]
             return Response([dto.to_dict() for dto in list_dtos])
 
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
@@ -752,8 +777,9 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
-            applications = self.service.get_applications_by_status(
-                status_code, request.user
+            applications = self._filter_applications_by_semester(
+                self.service.get_applications_by_status(status_code, request.user),
+                request,
             )
             list_dtos = [
                 self.service.get_application_list_dto(app) for app in applications
@@ -761,6 +787,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
 
             return Response([dto.to_dict() for dto in list_dtos])
 
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
@@ -776,13 +804,18 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         """
         try:
             limit = int(request.query_params.get("limit", 10))
-            applications = self.service.get_recent_applications(limit, request.user)
+            applications = self._filter_applications_by_semester(
+                self.service.get_recent_applications(limit, request.user),
+                request,
+            )
             list_dtos = [
                 self.service.get_application_list_dto(app) for app in applications
             ]
 
             return Response([dto.to_dict() for dto in list_dtos])
 
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
@@ -801,13 +834,15 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
 
         try:
             # Получаем все заявки пользователя без пагинации
-            queryset = self.get_queryset()
+            queryset = self._filter_queryset_by_semester(self.get_queryset(), request)
             applications = list(queryset)
             list_dtos = [
                 self.service.get_application_list_dto(app) for app in applications
             ]
             return Response([dto.to_dict() for dto in list_dtos])
 
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
@@ -827,7 +862,10 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
 
         try:
             # Получаем заявки через сервис с фильтрацией по причастности
-            applications = self.service.get_user_coordination_applications(request.user)
+            applications = self._filter_applications_by_semester(
+                self.service.get_user_coordination_applications(request.user),
+                request,
+            )
 
             # Преобразуем в DTO для списка
             list_dtos = [
@@ -836,6 +874,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
 
             return Response([dto.to_dict() for dto in list_dtos])
 
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
@@ -885,9 +925,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
     def status_logs(self, request, pk=None):
         """GET /api/project-applications/{id}/status_logs/"""
         try:
-            application = self.service.get_application(int(pk), request.user)
-            # Возвращаем логи из модели
-            logs = application.status_logs.all()
+            logs = self.service.get_application_status_logs(int(pk), request.user)
             return Response(
                 [
                     {
@@ -1015,8 +1053,11 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             status_code = request.query_params.get("status")
 
             # Получаем внешние заявки (без пагинации)
-            applications = self.service.get_external_applications(
-                request.user, status_code=status_code
+            applications = self._filter_applications_by_semester(
+                self.service.get_external_applications(
+                    request.user, status_code=status_code
+                ),
+                request,
             )
             list_dtos = [
                 self.service.get_application_list_dto(app) for app in applications
@@ -1026,7 +1067,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ValueError as e:
-            # Ошибки валидации параметров (например, несуществующий статус)
+            # Ошибки валидации параметров (статус, semester_id и т.д.)
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
             return Response(

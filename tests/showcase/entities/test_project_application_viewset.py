@@ -4,7 +4,12 @@ from django.contrib.auth import get_user_model
 import pytest
 from rest_framework.test import APIClient
 
-from accounts.models import Semester
+from accounts.models import (
+    ACTIVE_SEMESTER_SETTING_CODE,
+    NEXT_SEMESTER_SETTING_CODE,
+    Semester,
+    Settings,
+)
 from showcase.models import ApplicationStatus, Institute, ProjectApplication
 
 User = get_user_model()
@@ -235,8 +240,10 @@ class TestSemesterAssignViewSet:
         app_with_semester = self._create_application(service, user, "B")
 
         # Создаем семестры после заявок, чтобы авто-подстановка не сработала
-        target_semester = Semester.objects.create(name="Осень", position=1)
-        other_semester = Semester.objects.create(name="Весна", position=2)
+        target_semester = Semester.objects.create(code="fall", name="Осень", position=1)
+        other_semester = Semester.objects.create(
+            code="spring", name="Весна", position=2
+        )
 
         app_with_semester.semester = other_semester
         app_with_semester.save(update_fields=["semester"])
@@ -258,7 +265,7 @@ class TestSemesterAssignViewSet:
         client = APIClient()
         client.force_authenticate(user=user)
 
-        target_semester = Semester.objects.create(name="Осень", position=1)
+        target_semester = Semester.objects.create(code="fall", name="Осень", position=1)
 
         response = client.post(
             f"/api/showcase/semesters/{target_semester.id}/assign-empty-applications/"
@@ -321,6 +328,104 @@ class TestSemesterAssignViewSet:
 
 
 @pytest.mark.django_db
+class TestProjectApplicationListSemesterFilter:
+    """Фильтр ?semester_id= в GET-списке заявок."""
+
+    @staticmethod
+    def _list_results(response):
+        if isinstance(response.data, dict) and "results" in response.data:
+            return response.data["results"]
+        return response.data
+
+    def _create_app(self, user, semester):
+        from showcase.dto.application import ProjectApplicationCreateDTO
+        from showcase.services.application_service import ProjectApplicationService
+
+        dto = ProjectApplicationCreateDTO(
+            company="Test Company",
+            title="Test Project",
+            company_contacts="Контактные данные представителя",
+            existing_solutions="Описание существующих решений",
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="list-filter@example.com",
+            author_phone="+79990000000",
+            goal="Длинная цель проекта, больше 50 символов для консультации",
+            problem_holder="Носитель проблемы",
+            barrier="Длинное описание барьера",
+            target_institutes=[],
+            project_level="L1",
+            semester_id=semester.id,
+        )
+        return ProjectApplicationService().submit_application(dto, user)
+
+    def test_list_filter_by_numeric_id(self, statuses, make_user):
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        sem_a = Semester.objects.create(code="a", name="A", position=1)
+        sem_b = Semester.objects.create(code="b", name="B", position=2)
+        self._create_app(user, sem_a)
+        self._create_app(user, sem_b)
+
+        response = client.get(
+            f"/api/showcase/project-applications/?semester_id={sem_a.id}"
+        )
+        assert response.status_code == 200
+        results = self._list_results(response)
+        ids = {item["id"] for item in results}
+        apps = ProjectApplication.objects.filter(author=user, semester=sem_a)
+        assert ids == set(apps.values_list("id", flat=True))
+
+    def test_list_filter_by_next(self, statuses, make_user):
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        sem_next = Semester.objects.create(code="next-one", name="Next", position=1)
+        sem_other = Semester.objects.create(code="other", name="Other", position=2)
+        Settings.objects.update_or_create(
+            code=NEXT_SEMESTER_SETTING_CODE,
+            defaults={"value": sem_next.code, "description": ""},
+        )
+        self._create_app(user, sem_next)
+        self._create_app(user, sem_other)
+
+        response = client.get("/api/showcase/project-applications/?semester_id=next")
+        assert response.status_code == 200
+        results = self._list_results(response)
+        assert all(item["semester_id"] == sem_next.id for item in results)
+
+    def test_list_filter_by_actual(self, statuses, make_user):
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        sem_actual = Semester.objects.create(code="act", name="Act", position=1)
+        sem_other = Semester.objects.create(code="oth", name="Oth", position=2)
+        Settings.objects.update_or_create(
+            code=ACTIVE_SEMESTER_SETTING_CODE,
+            defaults={"value": sem_actual.code, "description": ""},
+        )
+        self._create_app(user, sem_actual)
+        self._create_app(user, sem_other)
+
+        response = client.get("/api/showcase/project-applications/?semester_id=actual")
+        assert response.status_code == 200
+        results = self._list_results(response)
+        assert all(item["semester_id"] == sem_actual.id for item in results)
+
+    def test_list_invalid_semester_id_returns_400(self, statuses, make_user):
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.get("/api/showcase/project-applications/?semester_id=bad")
+        assert response.status_code == 400
+
+
+@pytest.mark.django_db
 class TestProjectApplicationSemesterAutoAssign:
     """Автоподстановка семестра при создании заявки."""
 
@@ -340,16 +445,22 @@ class TestProjectApplicationSemesterAutoAssign:
             "project_level": "L1",
         }
 
-    def test_sets_last_active_semester_when_not_provided(self, statuses, make_user):
+    def test_sets_next_semester_from_settings_when_not_provided(
+        self, statuses, make_user
+    ):
         user = make_user(role_code="user", with_department=True)
         client = APIClient()
         client.force_authenticate(user=user)
 
-        Semester.objects.create(name="Old", position=1, is_active=True)
+        Semester.objects.create(code="old", name="Old", position=1)
         target_semester = Semester.objects.create(
-            name="Latest", position=5, is_active=True
+            code="latest", name="Latest", position=5
         )
-        Semester.objects.create(name="Inactive", position=10, is_active=False)
+        Semester.objects.create(code="other", name="Other", position=10)
+        Settings.objects.update_or_create(
+            code=NEXT_SEMESTER_SETTING_CODE,
+            defaults={"value": target_semester.code, "description": ""},
+        )
 
         response = client.post(
             "/api/showcase/project-applications/", self._base_payload(), format="json"
@@ -361,13 +472,13 @@ class TestProjectApplicationSemesterAutoAssign:
         app = ProjectApplication.objects.get(pk=response.data["id"])
         assert app.semester_id == target_semester.id
 
-    def test_leaves_empty_if_no_active_semesters(self, statuses, make_user):
+    def test_leaves_empty_if_next_semester_setting_missing(self, statuses, make_user):
         user = make_user(role_code="user", with_department=True)
         client = APIClient()
         client.force_authenticate(user=user)
 
-        Semester.objects.create(name="Inactive 1", position=1, is_active=False)
-        Semester.objects.create(name="Inactive 2", position=2, is_active=False)
+        Semester.objects.create(code="sem-1", name="Sem 1", position=1)
+        Semester.objects.create(code="sem-2", name="Sem 2", position=2)
 
         response = client.post(
             "/api/showcase/project-applications/", self._base_payload(), format="json"
@@ -384,8 +495,12 @@ class TestProjectApplicationSemesterAutoAssign:
         client = APIClient()
         client.force_authenticate(user=user)
 
-        explicit = Semester.objects.create(name="Explicit", position=2, is_active=True)
-        Semester.objects.create(name="Another", position=5, is_active=True)
+        explicit = Semester.objects.create(code="explicit", name="Explicit", position=2)
+        Semester.objects.create(code="another", name="Another", position=5)
+        Settings.objects.update_or_create(
+            code=NEXT_SEMESTER_SETTING_CODE,
+            defaults={"value": "another", "description": ""},
+        )
 
         payload = self._base_payload()
         payload["semester_id"] = explicit.id

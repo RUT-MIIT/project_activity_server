@@ -136,6 +136,8 @@ class ApplicationCapabilities:
         application_author_id: int,
         updater_id: int,
         user_department_can_save: bool = False,
+        is_user_department_involved: bool = False,
+        is_external: bool = False,
     ) -> tuple[ValidationResult, bool, str]:
         """Бизнес-операция: обновление заявки.
 
@@ -152,23 +154,20 @@ class ApplicationCapabilities:
         if application_status == "approved" and updater_role not in ["admin", "cpds"]:
             validation.add_error("status", "Нельзя обновлять одобренные заявки")
 
-        # Проверка прав на редактирование через матрицу разрешений
-        # В матрице настроено: редактировать может только автор (POLICY_OWN_ONLY) или cpds (POLICY_ALLOW)
-        # Для institute_validator: разрешено, если у подразделения can_save_project_applications = True
+        # Проверка прав на редактирование через ту же матрицу, что и save_changes / available_actions
         is_user_author = application_author_id == updater_id
-        # Для проверки нужен is_user_department_involved, но здесь его нет
-        # Используем упрощенную проверку: автор или cpds
         can_edit = ApplicationCapabilities.can_edit_application(
             current_status=application_status,
             user_role=updater_role,
-            is_user_department_involved=False,  # Не используется для save_changes в новой логике
+            is_user_department_involved=is_user_department_involved,
             is_user_author=is_user_author,
             user_department_can_save=user_department_can_save,
+            is_external=is_external,
         )
 
         if not can_edit:
             validation.add_error(
-                "access", "Редактировать заявку может только автор или сотрудник ЦПДС"
+                "access", "Недостаточно прав для редактирования заявки"
             )
 
         return validation, validation.is_valid, ""
@@ -431,35 +430,35 @@ class ApplicationCapabilities:
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
-                "return_by_author": POLICY_OWN_ONLY,
+                "return_by_author": POLICY_DENY,
             },
             "mentor": {
                 "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_OWN_ONLY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
-                "return_by_author": POLICY_OWN_ONLY,
+                "return_by_author": POLICY_DENY,
             },
             "department_validator": {
                 "save_changes": POLICY_OWN_ONLY,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DENY,
-                "return_by_author": POLICY_OWN_ONLY,
+                "return_by_author": POLICY_DENY,
             },
             "institute_validator": {
                 "save_changes": POLICY_DEPARTMENT_CAN_SAVE,
                 "approve": POLICY_DEPARTMENT_ONLY,
                 "reject": POLICY_DEPARTMENT_ONLY,
                 "request_changes": POLICY_DENY,
-                "return_by_author": POLICY_OWN_ONLY,
+                "return_by_author": POLICY_DENY,
             },
             "cpds": {
                 "save_changes": POLICY_ALLOW,
                 "approve": POLICY_DENY,
                 "reject": POLICY_DENY,
                 "request_changes": POLICY_DENY,
-                "return_by_author": POLICY_OWN_ONLY,
+                "return_by_author": POLICY_DENY,
             },
         },
         "rejected_department": {

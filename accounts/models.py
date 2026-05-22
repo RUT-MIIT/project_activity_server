@@ -212,10 +212,19 @@ class Settings(models.Model):
         return self.code
 
 
+ACTIVE_SEMESTER_SETTING_CODE = "active_semester_code"
+NEXT_SEMESTER_SETTING_CODE = "next_semester_code"
+
+
 class Semester(models.Model):
+    code = models.CharField(
+        max_length=64,
+        unique=True,
+        db_index=True,
+        verbose_name="Код",
+    )
     name = models.CharField(max_length=255, verbose_name="Название семестра")
     position = models.PositiveIntegerField(verbose_name="Позиция для сортировки")
-    is_active = models.BooleanField(default=True, verbose_name="Активен")
     academic_year = models.ForeignKey(
         AcademicYear,
         on_delete=models.SET_NULL,
@@ -231,4 +240,62 @@ class Semester(models.Model):
         ordering = ["position"]
 
     def __str__(self) -> str:
-        return self.name
+        return f"{self.code} — {self.name}"
+
+    @classmethod
+    def _from_setting_code(cls, setting_code: str) -> "Semester | None":
+        try:
+            setting = Settings.objects.get(code=setting_code)
+        except Settings.DoesNotExist:
+            return None
+        code = (setting.value or "").strip()
+        if not code:
+            return None
+        return cls.objects.filter(code=code).first()
+
+    @classmethod
+    def get_active(cls) -> "Semester | None":
+        """Текущий активный семестр (Settings.active_semester_code)."""
+        return cls._from_setting_code(ACTIVE_SEMESTER_SETTING_CODE)
+
+    @classmethod
+    def get_next(cls) -> "Semester | None":
+        """Следующий семестр для новых заявок (Settings.next_semester_code)."""
+        return cls._from_setting_code(NEXT_SEMESTER_SETTING_CODE)
+
+    @classmethod
+    def resolve_list_semester_id(cls, raw: str | None) -> int:
+        """Разбор query-параметра semester_id для GET-списков: id, next, actual."""
+        if raw is None:
+            raise ValueError("semester_id не передан")
+        value = raw.strip()
+        if not value:
+            raise ValueError("Параметр semester_id не может быть пустым")
+
+        lowered = value.lower()
+        if lowered == "next":
+            semester = cls.get_next()
+            if semester is None:
+                raise ValueError(
+                    "Семестр next не настроен (проверьте next_semester_code)"
+                )
+            return semester.pk
+        if lowered == "actual":
+            semester = cls.get_active()
+            if semester is None:
+                raise ValueError(
+                    "Семестр actual не настроен (проверьте active_semester_code)"
+                )
+            return semester.pk
+
+        try:
+            pk = int(value)
+        except ValueError as err:
+            raise ValueError(
+                f"semester_id должен быть числом, 'next' или 'actual', получено: {raw!r}"
+            ) from err
+        if pk <= 0:
+            raise ValueError(f"Некорректный semester_id: {pk}")
+        if not cls.objects.filter(pk=pk).exists():
+            raise ValueError(f"Семестр с id={pk} не найден")
+        return pk

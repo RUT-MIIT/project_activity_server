@@ -26,7 +26,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = departments["parent"]
 
         data = {
@@ -53,7 +55,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = departments["parent"]
 
         # Создаем план
@@ -81,7 +85,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = departments["parent"]
 
         data = {
@@ -101,7 +107,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = departments["parent"]
 
         data = {
@@ -118,7 +126,9 @@ class TestDepartmentPlanViewSetCreate:
     def test_create_plan_unauthorized(self, departments):
         """Ошибка: неавторизованный пользователь."""
         client = APIClient()
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = departments["parent"]
 
         data = {
@@ -137,7 +147,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
 
         data = {
             "department_id": 99999,
@@ -175,7 +187,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = departments["parent"]
 
         data = {
@@ -194,7 +208,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
 
         data = {
             "semester_id": semester.id,
@@ -228,7 +244,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = departments["parent"]
 
         data = {
@@ -246,7 +264,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
 
         data = {
             "department_id": "invalid",
@@ -282,7 +302,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = departments["parent"]
 
         data = {
@@ -301,7 +323,9 @@ class TestDepartmentPlanViewSetCreate:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = departments["parent"]
 
         data = {
@@ -327,7 +351,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         parent_dept = departments["parent"]
         child_dept = departments["child"]
 
@@ -363,7 +389,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         parent_dept = departments["parent"]
 
         # Создаем еще одно верхнеуровневое подразделение
@@ -395,7 +423,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         parent_dept = departments["parent"]
 
         # Удаляем дочернее подразделение
@@ -415,7 +445,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         child_dept = departments["child"]
 
         # Не создаем план для этого подразделения
@@ -438,7 +470,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         child_dept = departments["child"]
 
         # Создаем заявки с разными статусами
@@ -478,7 +512,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         child_dept = departments["child"]
 
         # Не создаем заявки
@@ -496,7 +532,9 @@ class TestDepartmentPlanViewSetList:
     def test_list_unauthorized(self):
         """Ошибка: неавторизованный пользователь."""
         client = APIClient()
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
 
         response = client.get(
             f"/api/showcase/department-plans/?semester_id={semester.id}"
@@ -536,7 +574,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
 
         response = client.get(
             f"/api/showcase/department-plans/?institute_code=UNKNOWN&semester_id={semester.id}"
@@ -551,7 +591,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         institute = Institute.objects.create(
             code="NODEPT", name="No Department", position=2, department=None
         )
@@ -571,8 +613,12 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester1 = Semester.objects.create(name="Осенний семестр 2024", position=1)
-        semester2 = Semester.objects.create(name="Весенний семестр 2025", position=2)
+        semester1 = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
+        semester2 = Semester.objects.create(
+            code="2025-spring", name="Весенний семестр 2025", position=2
+        )
         child_dept = departments["child"]
 
         # Создаем заявки в разных семестрах
@@ -608,7 +654,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         parent_dept = departments["parent"]
         child_dept = departments["child"]
 
@@ -650,7 +698,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         parent_dept = departments["parent"]
         child_dept = departments["child"]
 
@@ -686,7 +736,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         child_dept = departments["child"]
 
         # Создаем заявку без статуса
@@ -715,7 +767,9 @@ class TestDepartmentPlanViewSetList:
         user = make_user(role_code="admin")
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         parent_dept = departments["parent"]
 
         # Создаем дочерние подразделения в разном порядке
@@ -754,7 +808,9 @@ class TestDepartmentPlanViewSetMyDepartmentPlan:
         user = make_user(role_code="admin", with_department=True)
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = user.department
 
         # План для подразделения
@@ -796,7 +852,9 @@ class TestDepartmentPlanViewSetMyDepartmentPlan:
         user = make_user(role_code="admin", with_department=True)
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
         department = user.department
 
         # План не создаем, только заявки
@@ -844,7 +902,9 @@ class TestDepartmentPlanViewSetMyDepartmentPlan:
         user = make_user(role_code="admin", with_department=False)
         client.force_authenticate(user=user)
 
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
 
         response = client.get(
             f"/api/showcase/my-department-plan/?semester_id={semester.id}"
@@ -856,7 +916,9 @@ class TestDepartmentPlanViewSetMyDepartmentPlan:
     def test_my_department_plan_unauthorized(self):
         """Ошибка: неавторизованный пользователь."""
         client = APIClient()
-        semester = Semester.objects.create(name="Осенний семестр 2024", position=1)
+        semester = Semester.objects.create(
+            code="2024-fall", name="Осенний семестр 2024", position=1
+        )
 
         response = client.get(
             f"/api/showcase/my-department-plan/?semester_id={semester.id}"
