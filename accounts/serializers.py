@@ -50,6 +50,7 @@ class AcademicYearSerializer(serializers.ModelSerializer):
 class SemesterSerializer(serializers.ModelSerializer):
     """Сериализатор для семестров."""
 
+    is_active = serializers.SerializerMethodField()
     academic_year = AcademicYearSerializer(read_only=True)
     academic_year_id = serializers.PrimaryKeyRelatedField(
         queryset=AcademicYear.objects.all(),
@@ -66,9 +67,15 @@ class SemesterSerializer(serializers.ModelSerializer):
             "code",
             "name",
             "position",
+            "is_active",
             "academic_year",
             "academic_year_id",
         ]
+        read_only_fields = ["is_active"]
+
+    def get_is_active(self, obj: Semester) -> bool:
+        active_code = self.context.get("active_semester_code")
+        return bool(active_code and obj.code == active_code)
 
 
 class UserSerializer(serializers.ModelSerializer):

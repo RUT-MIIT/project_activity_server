@@ -8,7 +8,14 @@ from rest_framework.test import APIClient
 
 from showcase.models import Institute
 
-from .models import Department, RegistrationRequest, Role, Semester
+from .models import (
+    ACTIVE_SEMESTER_SETTING_CODE,
+    Department,
+    RegistrationRequest,
+    Role,
+    Semester,
+    Settings,
+)
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
@@ -549,6 +556,23 @@ class AccountsApiTests(TestCase):
         response = self.client.get(url)
         self.assertEqual(response.status_code, 200)
         self.assertGreaterEqual(len(response.data), 1)
+
+    def test_semester_list_is_active_from_settings(self):
+        """is_active вычисляется по active_semester_code, без поля в БД."""
+        Semester.objects.create(code="old", name="Старый", position=1)
+        active = Semester.objects.create(code="current", name="Текущий", position=2)
+        Settings.objects.update_or_create(
+            code=ACTIVE_SEMESTER_SETTING_CODE,
+            defaults={"value": active.code, "description": ""},
+        )
+
+        self.auth(self.user.email, self.user_password)
+        response = self.client.get("/api/accounts/semesters/")
+        self.assertEqual(response.status_code, 200)
+
+        by_code = {item["code"]: item["is_active"] for item in response.data}
+        self.assertFalse(by_code["old"])
+        self.assertTrue(by_code["current"])
 
     def test_semester_create_allowed_for_admin_and_cpds(self):
         """Создание семестра разрешено admin/cpds, запрещено обычному пользователю."""

@@ -243,12 +243,22 @@ class Semester(models.Model):
         return f"{self.code} — {self.name}"
 
     @classmethod
-    def _from_setting_code(cls, setting_code: str) -> "Semester | None":
+    def _setting_value(cls, setting_code: str) -> str | None:
         try:
             setting = Settings.objects.get(code=setting_code)
         except Settings.DoesNotExist:
             return None
         code = (setting.value or "").strip()
+        return code or None
+
+    @classmethod
+    def get_active_code(cls) -> str | None:
+        """Код текущего активного семестра (Settings.active_semester_code)."""
+        return cls._setting_value(ACTIVE_SEMESTER_SETTING_CODE)
+
+    @classmethod
+    def _from_setting_code(cls, setting_code: str) -> "Semester | None":
+        code = cls._setting_value(setting_code)
         if not code:
             return None
         return cls.objects.filter(code=code).first()

@@ -157,6 +157,12 @@ class SemesterViewSet(viewsets.ModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
     pagination_class = None
 
+    def get_serializer_context(self):
+        """Один запрос к Settings на ответ — код активного семестра для is_active."""
+        context = super().get_serializer_context()
+        context["active_semester_code"] = Semester.get_active_code()
+        return context
+
     def get_permissions(self):
         """Ограничиваем запись только admin/cpds, чтение — любому аутентифицированному."""
 
