@@ -1,8 +1,8 @@
 import os
 from typing import Iterable
 
-import pandas as pd
 from django.core.management.base import BaseCommand
+import pandas as pd
 
 from showcase.models import ApplicationStatus
 

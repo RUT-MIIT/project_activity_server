@@ -38,6 +38,21 @@ class StudyGroupSerializer(serializers.ModelSerializer):
         ]
 
 
+class StudyGroupListSerializer(serializers.ModelSerializer):
+    """Компактная выдача для списка учебных групп."""
+
+    direction_code = serializers.CharField(source="direction.code", read_only=True)
+
+    class Meta:
+        model = StudyGroup
+        fields = [
+            "id",
+            "name",
+            "course_number",
+            "direction_code",
+        ]
+
+
 class StudyGroupViewSet(viewsets.ReadOnlyModelViewSet):
     """GET /api/teams/study-groups/ — список и просмотр учебных групп."""
 
@@ -45,12 +60,35 @@ class StudyGroupViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
     pagination_class = None
 
+    @staticmethod
+    def _parse_is_end_filter(value: str | None) -> bool | None:
+        """Парсит query-параметр is_end; None — фильтр не применяется."""
+        if value is None:
+            return None
+        normalized = value.lower()
+        if normalized in {"true", "1"}:
+            return True
+        if normalized in {"false", "0"}:
+            return False
+        raise ValueError("Параметр is_end должен быть true или false")
+
     def get_queryset(self):
         service = StudyGroupService()
         return service.list_study_groups(self.request.user)
 
+    def get_serializer_class(self):
+        if getattr(self, "action", None) == "list":
+            return StudyGroupListSerializer
+        return super().get_serializer_class()
+
     def list(self, request: Request, *args, **kwargs) -> Response:
-        queryset = self.get_queryset()
+        try:
+            is_end = self._parse_is_end_filter(request.query_params.get("is_end"))
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+        service = StudyGroupService()
+        queryset = service.list_study_groups(request.user, is_end=is_end)
         serializer = self.get_serializer(queryset, many=True)
         return Response(serializer.data)
 

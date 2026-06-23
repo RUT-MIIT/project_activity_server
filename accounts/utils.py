@@ -25,3 +25,17 @@ def get_root_department(department: Optional[Department]) -> Optional[Department
         current = current.parent
 
     return current
+
+
+def get_department_subtree_ids(root_department_id: int) -> set[int]:
+    """Возвращает id корневого подразделения и всех его потомков."""
+    result = {root_department_id}
+    queue = [root_department_id]
+    while queue:
+        children = list(
+            Department.objects.filter(parent_id__in=queue).values_list("id", flat=True)
+        )
+        new_ids = set(children) - result
+        result.update(new_ids)
+        queue = list(new_ids)
+    return result

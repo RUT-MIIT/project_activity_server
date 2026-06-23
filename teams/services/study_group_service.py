@@ -23,7 +23,9 @@ class StudyGroupService:
         self.repository = StudyGroupRepository()
         self.domain = StudyGroupDomain()
 
-    def list_study_groups(self, user: User) -> "QuerySet[StudyGroup]":
+    def list_study_groups(
+        self, user: User, is_end: bool | None = None
+    ) -> "QuerySet[StudyGroup]":
         if user.is_authenticated and user.department_id:
             try:
                 department = Department.objects.select_related("parent").get(
@@ -34,7 +36,10 @@ class StudyGroupService:
                 pass
 
         queryset = self.repository.get_all()
-        return self.domain.get_filtered_queryset(user, queryset)
+        queryset = self.domain.get_filtered_queryset(user, queryset)
+        if is_end is not None:
+            queryset = queryset.filter(is_end=is_end)
+        return queryset
 
     def get_study_group(self, group_id: int, user: User) -> StudyGroup:
         try:

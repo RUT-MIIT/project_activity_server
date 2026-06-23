@@ -268,6 +268,251 @@ Content-Type: application/json
 
 ---
 
+## Управление пользователями и список проектов
+
+Единые endpoint'ы для ролей **admin**, **cpds** и **institute_validator** (ответственный от института).
+Базовые URL:
+
+- пользователи: `/api/accounts/`
+- проекты: `/api/showcase/`
+
+Токен получается через `POST /api/accounts/login/`.
+
+### Права доступа
+
+| Метод | Endpoint | admin / cpds | institute_validator |
+|-------|----------|--------------|---------------------|
+| GET | `/api/accounts/users/` | все пользователи, кроме админов | пользователи своего института |
+| GET | `/api/accounts/users/{id}/` | то же | то же |
+| PATCH | `/api/accounts/users/{id}/` | да | 403 Forbidden |
+| GET | `/api/showcase/projects/` | все заявки, все статусы | заявки своего института |
+
+---
+
+### 1. Список пользователей
+
+**GET** `/api/accounts/users/`
+
+#### Заголовки
+```
+Authorization: Bearer <jwt-token>
+```
+
+#### Query-параметры
+
+| Параметр | Обязательный | Описание |
+|----------|--------------|----------|
+| `include_authored_projects` | нет | `true` / `1` / `yes` — добавить список проектов, где пользователь является автором |
+
+#### Примеры запросов
+
+```
+GET /api/accounts/users/
+GET /api/accounts/users/?include_authored_projects=true
+```
+
+#### Успешный ответ (200)
+```json
+[
+  {
+    "id": 42,
+    "full_name": "Иванов Иван Иванович",
+    "email": "ivan@example.com",
+    "phone": "+79001234567",
+    "role": {
+      "code": "user",
+      "name": "Пользователь"
+    },
+    "department": {
+      "id": 5,
+      "name": "Кафедра ИТ",
+      "short_name": "ИТ"
+    },
+    "authored_projects_count": 2
+  }
+]
+```
+
+С параметром `include_authored_projects=true` в каждом элементе добавляется поле `authored_projects`:
+
+```json
+{
+  "id": 42,
+  "full_name": "Иванов Иван Иванович",
+  "email": "ivan@example.com",
+  "phone": "+79001234567",
+  "role": {"code": "user", "name": "Пользователь"},
+  "department": {"id": 5, "name": "Кафедра ИТ", "short_name": "ИТ"},
+  "authored_projects_count": 2,
+  "authored_projects": [
+    {
+      "id": 10,
+      "title": "Умный кампус",
+      "status": {"code": "approved", "name": "Одобрена"}
+    }
+  ]
+}
+```
+
+#### Примечания
+- Пользователи с ролью `admin` и `is_staff=true` **не возвращаются** в списке.
+- Для `institute_validator` список автоматически ограничен деревом подразделений его института.
+
+---
+
+### 2. Получение пользователя
+
+**GET** `/api/accounts/users/{id}/`
+
+#### Примеры запросов
+
+```
+GET /api/accounts/users/42/
+GET /api/accounts/users/42/?include_authored_projects=true
+```
+
+#### Успешный ответ (200)
+
+Формат совпадает с элементом списка (см. выше).
+
+#### Ошибки
+- **403** — нет доступа к пользователю (вне области видимости роли)
+- **404** — пользователь не найден
+
+---
+
+### 3. Изменение пользователя
+
+**PATCH** `/api/accounts/users/{id}/`
+
+Доступно только для **admin** и **cpds**. Обновляются только переданные поля.
+
+#### Заголовки
+```
+Authorization: Bearer <jwt-token>
+Content-Type: application/json
+```
+
+#### Тело запроса
+
+| Поле | Тип | Описание |
+|------|-----|----------|
+| `role` | string | Код роли (`user`, `department_validator`, `institute_validator`, …). Нельзя назначить `admin`. |
+| `department_id` | int \| null | ID подразделения. `null` — сбросить подразделение. |
+
+#### Примеры запросов
+
+Изменить роль и подразделение:
+```json
+PATCH /api/accounts/users/42/
+{
+  "role": "department_validator",
+  "department_id": 5
+}
+```
+
+Только роль:
+```json
+PATCH /api/accounts/users/42/
+{
+  "role": "user"
+}
+```
+
+Только подразделение:
+```json
+PATCH /api/accounts/users/42/
+{
+  "department_id": 5
+}
+```
+
+Сбросить подразделение:
+```json
+PATCH /api/accounts/users/42/
+{
+  "department_id": null
+}
+```
+
+#### Успешный ответ (200)
+
+Возвращает обновлённый объект пользователя (формат как в списке).
+
+#### Ошибки
+- **400** — нельзя назначить роль `admin`, нельзя изменять администратора, для роли требуется подразделение
+- **403** — недостаточно прав (например, `institute_validator`)
+
+---
+
+### 4. Список проектов
+
+**GET** `/api/showcase/projects/`
+
+Возвращает заявки (`ProjectApplication`) с полями: наименование, статус, подразделение, автор.
+
+#### Заголовки
+```
+Authorization: Bearer <jwt-token>
+```
+
+#### Query-параметры
+
+| Параметр | Обязательный | Описание |
+|----------|--------------|----------|
+| `semester_id` | нет | ID семестра, либо `actual` (текущий), либо `next` (следующий). Без параметра — все семестры (для admin/cpds). |
+
+#### Примеры запросов
+
+```
+GET /api/showcase/projects/
+GET /api/showcase/projects/?semester_id=3
+GET /api/showcase/projects/?semester_id=actual
+GET /api/showcase/projects/?semester_id=next
+```
+
+#### Успешный ответ (200)
+```json
+[
+  {
+    "id": 10,
+    "title": "Умный кампус",
+    "company": "ООО Тест",
+    "author_name": "Иванов Иван",
+    "author_email": "ivan@example.com",
+    "tags": [
+      {"id": 1, "name": "ИИ"}
+    ],
+    "print_number": "25-00001",
+    "img": "",
+    "status": {
+      "code": "approved",
+      "name": "Одобрена"
+    },
+    "main_department": {
+      "id": 5,
+      "name": "Кафедра ИТ",
+      "short_name": "ИТ"
+    },
+    "author": {
+      "id": 42,
+      "full_name": "Иванов Иван",
+      "email": "ivan@example.com"
+    }
+  }
+]
+```
+
+#### Поведение по ролям
+- **admin / cpds** — все заявки, включая неодобренные; фильтр по институту не применяется.
+- **institute_validator** — только заявки своего института (по причастным подразделениям или целевым институтам).
+
+#### Ошибки
+- **400** — некорректный `semester_id`
+- **403** — недостаточно прав (роль не входит в разрешённые)
+
+---
+
 ## Валидационные правила
 
 ### Обязательные поля

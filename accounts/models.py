@@ -131,7 +131,7 @@ class RegistrationRequest(models.Model):
         null=True,
         blank=True,
     )
-    email = models.EmailField(unique=True, verbose_name="Email")
+    email = models.EmailField(verbose_name="Email")
     phone = models.CharField(max_length=32, verbose_name="Телефон")
     comment = models.TextField(blank=True, null=True, verbose_name="Комментарий")
     reason = models.TextField(blank=True, null=True, verbose_name="Причина отказа")
@@ -164,6 +164,13 @@ class RegistrationRequest(models.Model):
         verbose_name = "Заявка на регистрацию"
         verbose_name_plural = "Заявки на регистрацию"
         ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["email"],
+                condition=models.Q(status="submitted"),
+                name="unique_submitted_registration_email",
+            ),
+        ]
 
     def __str__(self):
         return f"{self.last_name} {self.first_name} <{self.email}> [{self.status}]"

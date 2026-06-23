@@ -222,6 +222,13 @@ class ProjectApplication(models.Model):
         blank=True,
         db_index=True,
     )
+    img = models.CharField(
+        max_length=512,
+        blank=True,
+        default="",
+        null=True,
+        verbose_name="Изображение",
+    )
 
     class Meta:
         verbose_name = "Проектная заявка"
@@ -451,3 +458,36 @@ class DepartmentPlan(models.Model):
 
     def __str__(self):
         return f"{self.department} — {self.semester}: план {self.plan}"
+
+
+class ProjectTrack(models.Model):
+    """Назначение учебной группы на проектную заявку в рамках семестра."""
+
+    semester = models.ForeignKey(
+        "accounts.Semester",
+        on_delete=models.CASCADE,
+        related_name="project_tracks",
+        db_index=True,
+        verbose_name="Семестр",
+    )
+    study_group = models.ForeignKey(
+        "teams.StudyGroup",
+        on_delete=models.CASCADE,
+        related_name="project_tracks",
+        verbose_name="Учебная группа",
+    )
+    project_application = models.ForeignKey(
+        "ProjectApplication",
+        on_delete=models.CASCADE,
+        related_name="project_tracks",
+        verbose_name="Проектная заявка",
+    )
+
+    class Meta:
+        verbose_name = "Проектный трек"
+        verbose_name_plural = "Проектные треки"
+        unique_together = [("semester", "study_group", "project_application")]
+        ordering = ["semester", "study_group", "project_application"]
+
+    def __str__(self) -> str:
+        return f"{self.study_group} — {self.project_application} " f"({self.semester})"

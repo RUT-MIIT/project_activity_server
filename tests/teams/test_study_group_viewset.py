@@ -65,14 +65,9 @@ class TestStudyGroupViewSet:
         assert set(item.keys()) == {
             "id",
             "name",
-            "code",
             "course_number",
-            "is_end",
-            "direction",
-            "institute",
+            "direction_code",
         }
-        assert set(item["direction"].keys()) == {"code", "level", "name"}
-        assert set(item["institute"].keys()) == {"code", "name"}
 
     def test_list_institute_validator_filtered(self, roles, make_user, study_groups):
         user = make_user(role_code="institute_validator", with_department=True)
@@ -84,6 +79,98 @@ class TestStudyGroupViewSet:
         assert response.status_code == 200
         ids = {item["id"] for item in response.data}
         assert ids == {study_groups["own"].id}
+
+    def test_list_without_is_end_returns_active_and_ended(
+        self, roles, make_user, direction, institute
+    ):
+        active = StudyGroup.objects.create(
+            name="Активная",
+            code="active",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        ended = StudyGroup.objects.create(
+            name="Закончившая",
+            code="ended",
+            direction=direction,
+            institute=institute,
+            is_end=True,
+        )
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.get("/api/teams/study-groups/")
+
+        assert response.status_code == 200
+        ids = {item["id"] for item in response.data}
+        assert ids == {active.id, ended.id}
+        assert all("direction_code" in item for item in response.data)
+
+    def test_list_with_is_end_false_returns_only_active(
+        self, roles, make_user, direction, institute
+    ):
+        active = StudyGroup.objects.create(
+            name="Активная",
+            code="active",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        StudyGroup.objects.create(
+            name="Закончившая",
+            code="ended",
+            direction=direction,
+            institute=institute,
+            is_end=True,
+        )
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.get("/api/teams/study-groups/?is_end=false")
+
+        assert response.status_code == 200
+        ids = {item["id"] for item in response.data}
+        assert ids == {active.id}
+
+    def test_list_with_is_end_true_returns_only_ended(
+        self, roles, make_user, direction, institute
+    ):
+        StudyGroup.objects.create(
+            name="Активная",
+            code="active",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        ended = StudyGroup.objects.create(
+            name="Закончившая",
+            code="ended",
+            direction=direction,
+            institute=institute,
+            is_end=True,
+        )
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.get("/api/teams/study-groups/?is_end=true")
+
+        assert response.status_code == 200
+        ids = {item["id"] for item in response.data}
+        assert ids == {ended.id}
+
+    def test_list_with_invalid_is_end_returns_400(self, roles, make_user, study_groups):
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.get("/api/teams/study-groups/?is_end=maybe")
+
+        assert response.status_code == 400
+        assert "is_end" in response.data["error"]
 
     def test_retrieve_admin_success(self, roles, make_user, study_groups):
         user = make_user(role_code="admin")

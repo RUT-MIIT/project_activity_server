@@ -1,7 +1,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core import mail
-from django.db import transaction
+from django.db import IntegrityError, transaction
 from django.db.models import Prefetch
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
@@ -186,6 +186,22 @@ class RegistrationRequestViewSet(viewsets.ModelViewSet):
         if self.action == "create":
             return [permissions.AllowAny()]
         return super().get_permissions()
+
+    def create(self, request, *args, **kwargs):
+        """Создание заявки с обработкой гонки при параллельных запросах."""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        try:
+            self.perform_create(serializer)
+        except IntegrityError:
+            return Response(
+                {"email": ["Заявка с таким email уже подана и ожидает обработки."]},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        headers = self.get_success_headers(serializer.data)
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED, headers=headers
+        )
 
     @transaction.atomic
     @decorators.action(

@@ -41,6 +41,38 @@ class TestStudyGroupService:
         assert study_groups["g1"].id in ids
         assert study_groups["g2"].id in ids
 
+    def test_list_study_groups_filters_by_is_end(
+        self, roles, make_user, direction, institute
+    ):
+        active = StudyGroup.objects.create(
+            name="Active",
+            code="active",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        ended = StudyGroup.objects.create(
+            name="Ended",
+            code="ended",
+            direction=direction,
+            institute=institute,
+            is_end=True,
+        )
+        user = make_user(role_code="admin")
+        service = StudyGroupService()
+
+        all_ids = set(service.list_study_groups(user).values_list("id", flat=True))
+        active_ids = set(
+            service.list_study_groups(user, is_end=False).values_list("id", flat=True)
+        )
+        ended_ids = set(
+            service.list_study_groups(user, is_end=True).values_list("id", flat=True)
+        )
+
+        assert all_ids == {active.id, ended.id}
+        assert active_ids == {active.id}
+        assert ended_ids == {ended.id}
+
     def test_list_study_groups_institute_validator_filtered(
         self, roles, make_user, institute, direction, departments
     ):

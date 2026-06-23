@@ -289,6 +289,109 @@ class AccountsApiTests(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertIn("department", response.data)
 
+    def test_registration_request_resubmit_after_reject(self):
+        """После отклонения заявки можно подать новую с тем же email."""
+        rejected = RegistrationRequest.objects.create(
+            last_name="Сидоров",
+            first_name="Сидор",
+            middle_name="",
+            department=self.dept,
+            email="resubmit@example.com",
+            phone="+79995557788",
+            comment="Первая попытка",
+            status=RegistrationRequest.Status.REJECTED,
+        )
+        url = "/api/accounts/registration-requests/"
+        payload = {
+            "last_name": "Сидоров",
+            "first_name": "Сидор",
+            "middle_name": "",
+            "department": self.dept.id,
+            "email": "resubmit@example.com",
+            "phone": "+79995557788",
+            "comment": "Повторная попытка",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 201)
+        self.assertEqual(
+            RegistrationRequest.objects.filter(email="resubmit@example.com").count(),
+            2,
+        )
+        rejected.refresh_from_db()
+        self.assertEqual(rejected.status, RegistrationRequest.Status.REJECTED)
+        self.assertTrue(
+            RegistrationRequest.objects.filter(
+                email="resubmit@example.com",
+                status=RegistrationRequest.Status.SUBMITTED,
+            ).exists()
+        )
+
+    def test_registration_request_duplicate_submitted_blocked(self):
+        """Повторная подача при активной заявке возвращает ошибку валидации."""
+        RegistrationRequest.objects.create(
+            last_name="Дубль",
+            first_name="Тест",
+            middle_name="",
+            department=self.dept,
+            email="duplicate@example.com",
+            phone="+79990001122",
+            comment="-",
+            status=RegistrationRequest.Status.SUBMITTED,
+        )
+        url = "/api/accounts/registration-requests/"
+        payload = {
+            "last_name": "Дубль",
+            "first_name": "Тест",
+            "middle_name": "",
+            "department": self.dept.id,
+            "email": "duplicate@example.com",
+            "phone": "+79990001122",
+            "comment": "Ещё раз",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email", response.data)
+
+    def test_registration_request_blocked_if_user_exists(self):
+        """Нельзя подать заявку, если пользователь с таким email уже зарегистрирован."""
+        url = "/api/accounts/registration-requests/"
+        payload = {
+            "last_name": "Иванов",
+            "first_name": "Иван",
+            "middle_name": "",
+            "department": self.dept.id,
+            "email": self.user.email,
+            "phone": "+79990000000",
+            "comment": "Хочу доступ",
+        }
+        response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email", response.data)
+
+    def test_registration_request_race_condition_integrity_error(self):
+        """При гонке параллельных запросов возвращается 400, а не 500."""
+        from unittest.mock import patch
+
+        from django.db import IntegrityError
+
+        url = "/api/accounts/registration-requests/"
+        payload = {
+            "last_name": "Гонка",
+            "first_name": "Тест",
+            "middle_name": "",
+            "department": self.dept.id,
+            "email": "race@example.com",
+            "phone": "+79990009988",
+            "comment": "-",
+        }
+        with patch(
+            "accounts.views.RegistrationRequestViewSet.perform_create",
+            side_effect=IntegrityError("unique constraint"),
+        ):
+            response = self.client.post(url, payload, format="json")
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("email", response.data)
+
     def test_registration_request_list_requires_privileged_user(self):
         """Список заявок доступен только is_staff, admin или cpds."""
         url = "/api/accounts/registration-requests/"

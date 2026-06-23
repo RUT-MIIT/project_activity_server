@@ -18,6 +18,25 @@
 - **GET** `/showcase/institutes/` - список институтов
 - **GET** `/showcase/application-statuses/` - список статусов заявок
 
+### 3. Управление пользователями (admin / cpds / institute_validator)
+- **GET** `/api/accounts/users/` - список пользователей
+- **GET** `/api/accounts/users/{id}/` - получение пользователя
+- **PATCH** `/api/accounts/users/{id}/` - изменение роли и/или подразделения (только admin / cpds)
+
+Подробные примеры запросов и ответов: [documentation/API.md](documentation/API.md) (раздел «Управление пользователями и список проектов»).
+
+### 4. Список проектов (admin / cpds / institute_validator)
+- **GET** `/api/showcase/projects/` - список проектов (заявок) с фильтрацией по роли
+
+Примеры:
+```
+GET /api/showcase/projects/
+GET /api/showcase/projects/?semester_id=3
+GET /api/showcase/projects/?semester_id=actual
+```
+
+Подробнее: [documentation/API.md](documentation/API.md) (раздел «Список проектов»).
+
 ## Пример полного запроса на создание заявки
 
 ```json
