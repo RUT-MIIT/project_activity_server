@@ -27,6 +27,11 @@ usage() {
   ./update_prod.sh           # git pull текущей ветки
   ./update_prod.sh main      # git fetch + checkout main + pull
 
+Запуск: только на Linux-сервере (не в Git Bash на Windows).
+  ssh nnd@<сервер>
+  cd ~/project_activity_server
+  ./update_prod.sh
+
 Переменные в .env:
   GUNICORN_SERVICE=project_activity_server
 EOF
@@ -35,6 +40,27 @@ EOF
 if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   usage
   exit 0
+fi
+
+# Скрипт только для Linux-сервера с systemd (не Windows / Git Bash).
+case "$(uname -s 2>/dev/null || echo unknown)" in
+  MINGW*|MSYS*|CYGWIN*|Windows*)
+    log_error "update_prod.sh предназначен для Linux-сервера с gunicorn + systemd."
+    log_error "На Windows запускать не нужно. Подключитесь по SSH:"
+    log_error "  ssh nnd@pd.emiit.ru"
+    log_error "  cd ~/project_activity_server && ./update_prod.sh"
+    exit 1
+    ;;
+esac
+
+if ! command -v systemctl &>/dev/null; then
+  log_error "systemctl не найден. Скрипт рассчитан на продакшен с systemd."
+  exit 1
+fi
+
+if ! command -v sudo &>/dev/null; then
+  log_error "sudo не найден. На сервере установите sudo или запустите systemctl от root."
+  exit 1
 fi
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
