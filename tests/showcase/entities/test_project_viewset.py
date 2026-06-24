@@ -4,7 +4,12 @@ import pytest
 from rest_framework.test import APIClient
 
 from accounts.models import Department, Semester
-from showcase.models import Institute, ProjectApplication, Tag
+from showcase.models import (
+    ApplicationInvolvedDepartment,
+    Institute,
+    ProjectApplication,
+    Tag,
+)
 
 
 def _create_approved_app(
@@ -148,6 +153,82 @@ class TestProjectViewSet:
         assert item["status"]["code"] == "approved"
         assert "main_department" in item
         assert "author" in item
+        assert "creation_date" in item
+        assert item["creation_date"] == own_app.creation_date.isoformat()
+
+    def test_list_returns_top_level_involved_department_from_child(
+        self, roles, make_user, statuses, institute, departments
+    ):
+        semester = Semester.objects.create(code="s1", name="S1", position=1)
+        user = make_user(role_code="institute_validator", with_department=True)
+
+        app = _create_approved_app(
+            semester=semester,
+            statuses=statuses,
+            institute=institute,
+            title="С кафедрой",
+        )
+        ApplicationInvolvedDepartment.objects.create(
+            application=app,
+            department=departments["child"],
+        )
+
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.get(f"/api/showcase/projects/?semester_id={semester.id}")
+
+        assert response.status_code == 200
+        item = response.data[0]
+        assert item["main_department"] == {
+            "id": departments["parent"].id,
+            "name": departments["parent"].name,
+            "short_name": departments["parent"].short_name,
+        }
+
+    def test_list_returns_top_level_involved_department_when_parent_involved(
+        self, roles, make_user, statuses, institute, departments
+    ):
+        semester = Semester.objects.create(code="s1", name="S1", position=1)
+        user = make_user(role_code="institute_validator", with_department=True)
+
+        app = _create_approved_app(
+            semester=semester,
+            statuses=statuses,
+            institute=institute,
+            title="С институтом",
+        )
+        ApplicationInvolvedDepartment.objects.create(
+            application=app,
+            department=departments["parent"],
+        )
+
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.get(f"/api/showcase/projects/?semester_id={semester.id}")
+
+        assert response.status_code == 200
+        item = response.data[0]
+        assert item["main_department"]["id"] == departments["parent"].id
+
+    def test_list_main_department_null_without_involved_departments(
+        self, roles, make_user, statuses, institute
+    ):
+        semester = Semester.objects.create(code="s1", name="S1", position=1)
+        user = make_user(role_code="institute_validator", with_department=True)
+
+        _create_approved_app(
+            semester=semester,
+            statuses=statuses,
+            institute=institute,
+            title="Без подразделений",
+        )
+
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.get(f"/api/showcase/projects/?semester_id={semester.id}")
+
+        assert response.status_code == 200
+        assert response.data[0]["main_department"] is None
 
     def test_list_admin_includes_non_approved(
         self, roles, make_user, statuses, institute

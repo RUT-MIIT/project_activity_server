@@ -9,8 +9,14 @@ from typing import Sequence
 from django.core.management.base import BaseCommand, CommandError
 from django.db import models, transaction
 
-from accounts.models import Semester
-from showcase.models import ApplicationStatus, Institute, ProjectApplication, Tag
+from accounts.models import Department, Semester
+from showcase.models import (
+    ApplicationInvolvedDepartment,
+    ApplicationStatus,
+    Institute,
+    ProjectApplication,
+    Tag,
+)
 from teams.models import Direction, StudyGroup
 
 INSTITUTE_CODE = "IEF"
@@ -232,6 +238,7 @@ class Command(BaseCommand):
                 existing_solutions="Существующие решения на рынке не покрывают потребности полностью.",
             )
             application.target_institutes.add(institute)
+            self._add_involved_departments(application=application, institute=institute)
 
             tag_count = random.randint(1, min(3, len(tags)))
             selected_tags = random.sample(tags, k=tag_count)
@@ -242,6 +249,33 @@ class Command(BaseCommand):
                 self.stdout.write(f"  проектов создано: {created}/{count}")
 
         return created
+
+    def _add_involved_departments(
+        self, *, application: ProjectApplication, institute: Institute
+    ) -> None:
+        """Добавляет причастные подразделения института к заявке."""
+        department = institute.department
+        if department is None:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"У института {institute.code} нет связанного подразделения, "
+                    f"причастное подразделение не добавлено для заявки {application.pk}"
+                )
+            )
+            return
+
+        ApplicationInvolvedDepartment.objects.get_or_create(
+            application=application,
+            department=department,
+        )
+
+        children = list(Department.objects.filter(parent=department))
+        if children:
+            child = random.choice(children)
+            ApplicationInvolvedDepartment.objects.get_or_create(
+                application=application,
+                department=child,
+            )
 
     def _create_study_groups(
         self,

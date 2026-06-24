@@ -35,12 +35,16 @@ class ProjectRepository:
             queryset.distinct()
             .select_related(
                 "status",
-                "main_department",
                 "author",
                 "author__role",
                 "semester",
             )
-            .prefetch_related("tags", "target_institutes")
+            .prefetch_related(
+                "tags",
+                "target_institutes",
+                "involved_departments__department",
+                "involved_departments__department__parent",
+            )
             .order_by("-creation_date")
         )
 
