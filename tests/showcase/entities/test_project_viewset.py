@@ -230,7 +230,7 @@ class TestProjectViewSet:
         assert response.status_code == 200
         assert response.data[0]["main_department"] is None
 
-    def test_list_admin_includes_non_approved(
+    def test_list_admin_excludes_non_approved(
         self, roles, make_user, statuses, institute
     ):
         semester = Semester.objects.create(code="s1", name="S1", position=1)
@@ -262,7 +262,7 @@ class TestProjectViewSet:
 
         assert response.status_code == 200
         ids = {item["id"] for item in response.data}
-        assert ids == {approved_app.id, pending.id}
+        assert ids == {approved_app.id}
 
     def test_list_excludes_other_institute(
         self, roles, make_user, statuses, institute, other_institute
@@ -292,7 +292,7 @@ class TestProjectViewSet:
         assert ids == {own_app.id}
         assert other_app.id not in ids
 
-    def test_list_validator_includes_non_approved(
+    def test_list_validator_excludes_non_approved(
         self, roles, make_user, statuses, institute
     ):
         semester = Semester.objects.create(code="s1", name="S1", position=1)
@@ -324,4 +324,4 @@ class TestProjectViewSet:
 
         assert response.status_code == 200
         ids = {item["id"] for item in response.data}
-        assert ids == {approved_app.id, pending.id}
+        assert ids == {approved_app.id}

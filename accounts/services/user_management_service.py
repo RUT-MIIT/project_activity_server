@@ -77,6 +77,8 @@ class UserManagementService:
         *,
         role_code: str | None = None,
         department_id: int | None = None,
+        email: str | None = None,
+        phone: str | None = None,
         fields_set: set[str],
     ) -> User:
         """Частичное обновление пользователя."""
@@ -118,6 +120,14 @@ class UserManagementService:
                     ) from err
             update_fields.append("department")
 
+        if "email" in fields_set:
+            if email is None:
+                raise ValueError("Поле email не может быть пустым")
+            update_fields.append("email")
+
+        if "phone" in fields_set:
+            update_fields.append("phone")
+
         if not update_fields:
             return target
 
@@ -131,5 +141,7 @@ class UserManagementService:
             target,
             role=role if "role" in fields_set else None,
             department=department if "department_id" in fields_set else None,
+            email=email if "email" in fields_set else None,
+            phone=phone if "phone" in fields_set else None,
             update_fields=update_fields,
         )

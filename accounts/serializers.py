@@ -117,7 +117,7 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.Serializer):
-    """Сериализатор частичного обновления пользователя (роль, подразделение)."""
+    """Сериализатор частичного обновления пользователя."""
 
     role = serializers.PrimaryKeyRelatedField(
         queryset=Role.objects.filter(is_active=True),
@@ -129,6 +129,26 @@ class UserUpdateSerializer(serializers.Serializer):
         required=False,
         allow_null=True,
     )
+    email = serializers.EmailField(required=False)
+    phone = serializers.CharField(
+        max_length=20,
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+    )
+
+    def validate_email(self, value: str) -> str:
+        """Проверяет уникальность email с учётом обновляемого пользователя."""
+        normalized_email = User.objects.normalize_email(value)
+        user_id = self.context.get("user_id")
+        queryset = User.objects.filter(email=normalized_email)
+        if user_id is not None:
+            queryset = queryset.exclude(pk=user_id)
+        if queryset.exists():
+            raise serializers.ValidationError(
+                "Пользователь с таким email уже существует."
+            )
+        return normalized_email
 
 
 class CustomResetPasswordForm(_PasswordResetForm):

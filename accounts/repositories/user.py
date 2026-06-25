@@ -75,6 +75,8 @@ class UserRepository:
         *,
         role=None,
         department=None,
+        email: str | None = None,
+        phone: str | None = None,
         update_fields: list[str],
     ) -> User:
         """Сохраняет изменения пользователя."""
@@ -82,5 +84,9 @@ class UserRepository:
             user.role = role
         if department is not None:
             user.department = department
+        if email is not None:
+            user.email = email
+        if "phone" in update_fields:
+            user.phone = phone
         user.save(update_fields=update_fields)
         return user

@@ -1,6 +1,7 @@
 from django.urls import path
 from rest_framework.routers import DefaultRouter
 
+from showcase.entities.ApplicationDashboard import ApplicationDashboardViewSet
 from showcase.entities.ApplicationStatus import ApplicationStatusViewSet
 from showcase.entities.DepartmentPlan import DepartmentPlanViewSet
 from showcase.entities.Institute import InstituteViewSet
@@ -60,7 +61,18 @@ project_track_statistics = ProjectTrackViewSet.as_view(
     }
 )
 
+application_dashboard = ApplicationDashboardViewSet.as_view(
+    {
+        "get": "retrieve",
+    }
+)
+
 urlpatterns = [
+    path(
+        "project-applications/dashboard/",
+        application_dashboard,
+        name="project-application-dashboard",
+    ),
     path(
         "project-tracks/groups/",
         project_track_groups_list,

@@ -61,7 +61,11 @@ class UserManagementViewSet(viewsets.ViewSet):
 
     def partial_update(self, request: Request, pk: str | None = None) -> Response:
         """PATCH /api/accounts/users/{id}/ — частичное обновление."""
-        serializer = UserUpdateSerializer(data=request.data, partial=True)
+        serializer = UserUpdateSerializer(
+            data=request.data,
+            partial=True,
+            context={"user_id": int(pk)},
+        )
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
@@ -80,6 +84,8 @@ class UserManagementViewSet(viewsets.ViewSet):
                 int(pk),
                 role_code=role_code,
                 department_id=department.id if department else None,
+                email=serializer.validated_data.get("email"),
+                phone=serializer.validated_data.get("phone"),
                 fields_set=fields_set,
             )
             refreshed = service.get_user(request.user, user.id)

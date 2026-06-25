@@ -114,6 +114,43 @@ class TestUserManagementViewSet:
         assert response.status_code == 400
         assert "администратора" in response.data["error"]
 
+    def test_patch_email_and_phone(self, make_user):
+        admin = make_user(role_code="admin")
+        target = make_user(role_code="user", email="old@example.com")
+        target.phone = "+79990000001"
+        target.save(update_fields=["phone"])
+        client = APIClient()
+        client.force_authenticate(user=admin)
+
+        response = client.patch(
+            f"/api/accounts/users/{target.id}/",
+            {"email": "new@example.com", "phone": "+79991112233"},
+            format="json",
+        )
+
+        assert response.status_code == 200
+        assert response.data["email"] == "new@example.com"
+        assert response.data["phone"] == "+79991112233"
+        target.refresh_from_db()
+        assert target.email == "new@example.com"
+        assert target.phone == "+79991112233"
+
+    def test_patch_duplicate_email_returns_400(self, make_user):
+        admin = make_user(role_code="admin")
+        make_user(role_code="user", email="taken@example.com")
+        target = make_user(role_code="user", email="patch4@example.com")
+        client = APIClient()
+        client.force_authenticate(user=admin)
+
+        response = client.patch(
+            f"/api/accounts/users/{target.id}/",
+            {"email": "taken@example.com"},
+            format="json",
+        )
+
+        assert response.status_code == 400
+        assert "email" in response.data
+
     def test_validator_sees_only_institute_users(
         self, make_user, departments, institute
     ):

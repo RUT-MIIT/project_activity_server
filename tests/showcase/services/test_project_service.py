@@ -60,7 +60,7 @@ class TestProjectService:
         )
         assert ids == {own.id}
 
-    def test_list_projects_includes_non_approved_for_validator(
+    def test_list_projects_excludes_non_approved_for_validator(
         self, make_user, statuses, institute
     ):
         semester = Semester.objects.create(code="s1", name="S1", position=1)
@@ -84,9 +84,9 @@ class TestProjectService:
         ids = set(
             service.list_projects(user, str(semester.id)).values_list("id", flat=True)
         )
-        assert ids == {pending.id}
+        assert ids == set()
 
-    def test_list_projects_admin_sees_all_statuses(
+    def test_list_projects_admin_sees_only_approved(
         self, make_user, statuses, institute, other_institute
     ):
         semester = Semester.objects.create(code="s1", name="S1", position=1)
@@ -124,9 +124,9 @@ class TestProjectService:
         ids = set(
             service.list_projects(admin, str(semester.id)).values_list("id", flat=True)
         )
-        assert ids == {approved.id, pending.id}
+        assert ids == {approved.id}
 
-    def test_list_projects_admin_without_semester_returns_all(
+    def test_list_projects_admin_without_semester_returns_only_approved(
         self, make_user, statuses, institute
     ):
         semester1 = Semester.objects.create(code="s1", name="S1", position=1)
@@ -146,7 +146,7 @@ class TestProjectService:
             problem_holder="Носитель",
             barrier="Длинный барьер больше пятидесяти символов для валидации",
         )
-        app2 = ProjectApplication.objects.create(
+        ProjectApplication.objects.create(
             title="S2",
             company="ООО",
             author_lastname="Петров",
@@ -160,7 +160,7 @@ class TestProjectService:
         )
 
         ids = set(service.list_projects(admin, None).values_list("id", flat=True))
-        assert ids == {app1.id, app2.id}
+        assert ids == {app1.id}
 
     def test_list_projects_raises_for_regular_user(self, make_user, statuses):
         semester = Semester.objects.create(code="s1", name="S1", position=1)

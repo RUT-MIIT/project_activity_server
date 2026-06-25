@@ -16,7 +16,7 @@ class ProjectRepository:
     ) -> QuerySet[ProjectApplication]:
         """Список заявок с фильтрацией по институту и семестру."""
 
-        queryset = ProjectApplication.objects.all()
+        queryset = ProjectApplication.objects.filter(status__code="approved")
 
         if semester_id is not None:
             queryset = queryset.filter(semester_id=semester_id)

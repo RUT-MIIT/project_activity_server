@@ -58,7 +58,18 @@ def get_user_institute_codes(user: User) -> list[str]:
 
 def get_department_ids_for_institute_codes(institute_codes: list[str]) -> set[int]:
     """ID подразделений в деревьях институтов (корень и все потомки)."""
+    by_code = get_department_ids_by_institute_code(institute_codes)
     result: set[int] = set()
+    for dept_ids in by_code.values():
+        result |= dept_ids
+    return result
+
+
+def get_department_ids_by_institute_code(
+    institute_codes: list[str],
+) -> dict[str, set[int]]:
+    """ID подразделений для каждого института (корень и все потомки)."""
+    result: dict[str, set[int]] = {code: set() for code in institute_codes}
     institutes = Institute.objects.filter(
         code__in=institute_codes,
         is_active=True,
@@ -68,7 +79,7 @@ def get_department_ids_for_institute_codes(institute_codes: list[str]) -> set[in
             continue
         root = get_root_department(institute.department)
         if root is not None:
-            result |= get_department_subtree_ids(root.id)
+            result[institute.code] = get_department_subtree_ids(root.id)
     return result
 
 

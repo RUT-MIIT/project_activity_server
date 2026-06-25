@@ -104,6 +104,24 @@ class TestUserManagementService:
         assert updated.role.code == "department_validator"
         assert updated.department_id == departments["child"].id
 
+    def test_update_user_changes_email_and_phone(self, make_user):
+        admin = make_user(role_code="admin")
+        target = make_user(role_code="user", email="old@example.com")
+        target.phone = "+79990000001"
+        target.save(update_fields=["phone"])
+        service = UserManagementService()
+
+        updated = service.update_user(
+            admin,
+            target.id,
+            email="new@example.com",
+            phone="+79992223344",
+            fields_set={"email", "phone"},
+        )
+        updated.refresh_from_db()
+        assert updated.email == "new@example.com"
+        assert updated.phone == "+79992223344"
+
     def test_update_user_validator_raises_permission_error(self, make_user):
         validator = make_user(role_code="institute_validator", with_department=True)
         target = make_user(role_code="user", email="target2@example.com")
