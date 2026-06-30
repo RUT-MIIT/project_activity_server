@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.contrib.auth.tokens import default_token_generator
 from django.core import mail
@@ -436,8 +437,9 @@ class AccountsApiTests(TestCase):
         self.assertTrue(
             self.user_model.objects.filter(email="petrov@example.com").exists()
         )
-        # Письмо отправлено
+        # Письмо отправлено с адресом портала
         self.assertGreaterEqual(len(mail.outbox), 1)
+        self.assertIn(settings.FRONT_END.rstrip("/"), mail.outbox[-1].body)
         # В ответе присутствует роль назначенного пользователя
         self.assertIn("role", response.data)
         self.assertEqual(response.data["role"]["code"], self.role_user.code)

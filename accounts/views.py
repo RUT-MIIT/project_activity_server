@@ -266,6 +266,7 @@ class RegistrationRequestViewSet(viewsets.ModelViewSet):
                 "first_name": reg_request.first_name,
                 "email": reg_request.email,
                 "password": password,
+                "front_end": settings.FRONT_END.rstrip("/"),
             },
         )
         try:
