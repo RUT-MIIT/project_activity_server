@@ -63,6 +63,9 @@ RATING_CHART_SERIES_COLORS: dict[str, str] = {
     "rejected": GROUP_COLORS["rejected"],
 }
 
+INSTITUTE_LEVEL_CATEGORY_KEY = "from_institute"
+INSTITUTE_LEVEL_CATEGORY_LABEL = "От института"
+
 VALID_APPLICATION_TYPES: frozenset[str] = frozenset({"all", "external", "internal"})
 
 

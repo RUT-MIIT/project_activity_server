@@ -14,6 +14,8 @@ from accounts.models import Department
 from accounts.utils import get_department_subtree_ids
 from showcase.domain.application_dashboard import (
     FINAL_RESOLUTION_STATUS_CODES,
+    INSTITUTE_LEVEL_CATEGORY_KEY,
+    INSTITUTE_LEVEL_CATEGORY_LABEL,
     STATUS_GROUPS,
     ApplicationDashboardDomain,
     DashboardFilters,
@@ -341,6 +343,55 @@ class ApplicationDashboardRepository:
 
         return {str(dept_id): app_ids for dept_id, app_ids in tmp.items()}
 
+    def _build_institute_level_dimension_map(
+        self,
+        queryset: QuerySet[ProjectApplication],
+        anchor_department_id: int,
+        child_department_ids: set[int],
+    ) -> dict[str, set[int]]:
+        """Заявки, привязанные к anchor, но не к дочерним подразделениям рейтинга."""
+        anchor_app_ids = set(
+            queryset.filter(
+                Q(main_department_id=anchor_department_id)
+                | Q(involved_departments__department_id=anchor_department_id)
+            )
+            .values_list("id", flat=True)
+            .distinct()
+        )
+        if not anchor_app_ids:
+            return {}
+
+        if child_department_ids:
+            child_app_ids = set(
+                queryset.filter(
+                    Q(main_department_id__in=child_department_ids)
+                    | Q(involved_departments__department_id__in=child_department_ids)
+                )
+                .values_list("id", flat=True)
+                .distinct()
+            )
+            institute_level_ids = anchor_app_ids - child_app_ids
+        else:
+            institute_level_ids = anchor_app_ids
+
+        if not institute_level_ids:
+            return {}
+        return {INSTITUTE_LEVEL_CATEGORY_KEY: institute_level_ids}
+
+    @staticmethod
+    def _institute_level_category_dict(
+        anchor_department_id: int,
+        institute_code: str | None = None,
+    ) -> dict:
+        """Категория «От института» для рейтинга по подразделениям."""
+        return {
+            "id": None,
+            "name": INSTITUTE_LEVEL_CATEGORY_LABEL,
+            "short_name": INSTITUTE_LEVEL_CATEGORY_LABEL,
+            "parent_id": anchor_department_id,
+            "code": institute_code,
+        }
+
     def get_rating_chart_data(
         self,
         queryset: QuerySet[ProjectApplication],
@@ -436,7 +487,11 @@ class ApplicationDashboardRepository:
                 "name"
             )
         )
-        return self._categories_data_by_departments_list(queryset, departments)
+        return self._categories_data_by_departments_list(
+            queryset,
+            departments,
+            anchor_department_id=institute.department_id,
+        )
 
     def _categories_data_by_departments(
         self,
@@ -449,15 +504,29 @@ class ApplicationDashboardRepository:
         )
         if not departments:
             departments = self._leaf_departments_in_subtree(department_id)
-        return self._categories_data_by_departments_list(queryset, departments)
+        return self._categories_data_by_departments_list(
+            queryset,
+            departments,
+            anchor_department_id=department_id,
+        )
 
     def _categories_data_by_departments_list(
         self,
         queryset: QuerySet[ProjectApplication],
         departments: list[Department],
+        anchor_department_id: int | None = None,
     ) -> list[dict]:
         """Общая логика сбора данных по списку подразделений."""
         dimension_map = self._build_department_dimension_map(queryset, departments)
+        if anchor_department_id is not None:
+            child_ids = {dept.id for dept in departments}
+            institute_level_map = self._build_institute_level_dimension_map(
+                queryset,
+                anchor_department_id,
+                child_ids,
+            )
+            dimension_map.update(institute_level_map)
+
         stats = self._aggregate_by_dimension(queryset, dimension_map)
         external_stats = self._aggregate_external_share(queryset, dimension_map)
         institute_codes = self._get_department_institute_code_map()
@@ -481,6 +550,31 @@ class ApplicationDashboardRepository:
                     "external_percent": external["percent"],
                 }
             )
+
+        if INSTITUTE_LEVEL_CATEGORY_KEY in dimension_map:
+            key = INSTITUTE_LEVEL_CATEGORY_KEY
+            counts = stats.get(key, {g: 0 for g in STATUS_GROUPS})
+            total = sum(counts.values())
+            if total > 0:
+                external = external_stats[key]
+                anchor_code = (
+                    institute_codes.get(anchor_department_id)
+                    if anchor_department_id is not None
+                    else None
+                )
+                categories_data.append(
+                    {
+                        "key": key,
+                        "category": self._institute_level_category_dict(
+                            anchor_department_id,
+                            institute_code=anchor_code,
+                        ),
+                        "total": total,
+                        "counts": counts,
+                        "external_count": external["external_count"],
+                        "external_percent": external["percent"],
+                    }
+                )
 
         categories_data.sort(key=lambda item: item["total"], reverse=True)
         return categories_data

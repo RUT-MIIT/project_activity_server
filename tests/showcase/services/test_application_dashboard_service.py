@@ -479,6 +479,119 @@ class TestApplicationDashboardService:
         )
         assert data["rating_chart"]["dimension"] == "department"
 
+    def test_rating_chart_shows_from_institute_row_for_parent_only_apps(
+        self, statuses, institute, semester, departments, make_user
+    ):
+        """Заявки только на уровне института попадают в строку «От института»."""
+        _create_app(
+            semester=semester,
+            status=statuses["approved"],
+            main_department=departments["child"],
+            institute=institute,
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["created"],
+            main_department=departments["parent"],
+            institute=institute,
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["rejected"],
+            main_department=departments["parent"],
+            institute=institute,
+        )
+
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=None,
+            department_id_raw=str(departments["parent"].pk),
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        categories = data["rating_chart"]["categories"]
+        from_institute = next(
+            (item for item in categories if item["name"] == "От института"),
+            None,
+        )
+        assert from_institute is not None
+        assert from_institute["id"] is None
+        assert from_institute["parent_id"] == departments["parent"].id
+
+        from_institute_index = categories.index(from_institute)
+        series = data["rating_chart"]["series"]
+        assert series[0]["data"][from_institute_index] == 0
+        assert series[1]["data"][from_institute_index] == 1
+        assert series[2]["data"][from_institute_index] == 1
+
+    def test_rating_chart_from_institute_excludes_apps_with_child_department(
+        self, statuses, institute, semester, departments, make_user
+    ):
+        """Заявка с кафедрой не дублируется в строке «От института»."""
+        _create_app(
+            semester=semester,
+            status=statuses["approved"],
+            main_department=departments["parent"],
+            involved_department=departments["child"],
+            institute=institute,
+        )
+
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=None,
+            department_id_raw=str(departments["parent"].pk),
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        categories = data["rating_chart"]["categories"]
+        assert not any(item["name"] == "От института" for item in categories)
+        child_category = next(
+            item for item in categories if item["id"] == departments["child"].id
+        )
+        child_index = categories.index(child_category)
+        assert data["rating_chart"]["series"][0]["data"][child_index] == 1
+
+    def test_rating_chart_from_institute_with_institute_filter(
+        self, statuses, institute, semester, departments, make_user
+    ):
+        """При фильтре по институту строка «От института» тоже отображается."""
+        _create_app(
+            semester=semester,
+            status=statuses["approved"],
+            main_department=departments["parent"],
+            institute=institute,
+        )
+
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=institute.code,
+            department_id_raw=None,
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        categories = data["rating_chart"]["categories"]
+        from_institute = next(
+            (item for item in categories if item["name"] == "От института"),
+            None,
+        )
+        assert from_institute is not None
+        assert from_institute["code"] == institute.code
+
     def test_rating_chart_series_has_three_categories(
         self, statuses, institute, semester, departments, make_user
     ):
