@@ -313,14 +313,20 @@ class ApplicationDashboardRepository:
     ) -> dict[str, set[int]]:
         """Строит карту department_id -> множество id заявок (как в DepartmentPlan)."""
         dept_list = list(departments)
-        dept_ids = {dept.id for dept in dept_list}
-        if not dept_ids:
+        if not dept_list:
             return {}
+
+        subtree_by_displayed: dict[int, set[int]] = {
+            dept.id: get_department_subtree_ids(dept.id) for dept in dept_list
+        }
+        all_covered_ids: set[int] = set()
+        for subtree_ids in subtree_by_displayed.values():
+            all_covered_ids |= subtree_ids
 
         rows = (
             queryset.filter(
-                Q(main_department_id__in=dept_ids)
-                | Q(involved_departments__department_id__in=dept_ids)
+                Q(main_department_id__in=all_covered_ids)
+                | Q(involved_departments__department_id__in=all_covered_ids)
             )
             .values(
                 "id",
@@ -331,14 +337,19 @@ class ApplicationDashboardRepository:
             .distinct()
         )
 
-        tmp: dict[int, set[int]] = {dept_id: set() for dept_id in dept_ids}
+        tmp: dict[int, set[int]] = {dept.id: set() for dept in dept_list}
         for row in rows:
             app_id = row["id"]
-            for dept_id in (
+            linked_departments = (
                 row["main_department_id"],
                 row["involved_departments__department_id"],
-            ):
-                if dept_id is not None and dept_id in dept_ids:
+            )
+            for dept_id, subtree_ids in subtree_by_displayed.items():
+                if any(
+                    dept_link in subtree_ids
+                    for dept_link in linked_departments
+                    if dept_link is not None
+                ):
                     tmp[dept_id].add(app_id)
 
         return {str(dept_id): app_ids for dept_id, app_ids in tmp.items()}
@@ -346,37 +357,19 @@ class ApplicationDashboardRepository:
     def _build_institute_level_dimension_map(
         self,
         queryset: QuerySet[ProjectApplication],
-        anchor_department_id: int,
-        child_department_ids: set[int],
+        dimension_map: dict[str, set[int]],
     ) -> dict[str, set[int]]:
-        """Заявки, привязанные к anchor, но не к дочерним подразделениям рейтинга."""
-        anchor_app_ids = set(
-            queryset.filter(
-                Q(main_department_id=anchor_department_id)
-                | Q(involved_departments__department_id=anchor_department_id)
-            )
-            .values_list("id", flat=True)
-            .distinct()
-        )
-        if not anchor_app_ids:
-            return {}
+        """Заявки из queryset, не попавшие ни в одну дочернюю категорию рейтинга."""
+        assigned_app_ids: set[int] = set()
+        for key, app_ids in dimension_map.items():
+            if key == INSTITUTE_LEVEL_CATEGORY_KEY:
+                continue
+            assigned_app_ids |= app_ids
 
-        if child_department_ids:
-            child_app_ids = set(
-                queryset.filter(
-                    Q(main_department_id__in=child_department_ids)
-                    | Q(involved_departments__department_id__in=child_department_ids)
-                )
-                .values_list("id", flat=True)
-                .distinct()
-            )
-            institute_level_ids = anchor_app_ids - child_app_ids
-        else:
-            institute_level_ids = anchor_app_ids
-
-        if not institute_level_ids:
+        orphan_ids = set(queryset.values_list("id", flat=True)) - assigned_app_ids
+        if not orphan_ids:
             return {}
-        return {INSTITUTE_LEVEL_CATEGORY_KEY: institute_level_ids}
+        return {INSTITUTE_LEVEL_CATEGORY_KEY: orphan_ids}
 
     @staticmethod
     def _institute_level_category_dict(
@@ -519,11 +512,9 @@ class ApplicationDashboardRepository:
         """Общая логика сбора данных по списку подразделений."""
         dimension_map = self._build_department_dimension_map(queryset, departments)
         if anchor_department_id is not None:
-            child_ids = {dept.id for dept in departments}
             institute_level_map = self._build_institute_level_dimension_map(
                 queryset,
-                anchor_department_id,
-                child_ids,
+                dimension_map,
             )
             dimension_map.update(institute_level_map)
 

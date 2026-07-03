@@ -593,6 +593,42 @@ class TestApplicationDashboardService:
         assert from_institute["id"] == institute.department_id
         assert from_institute["code"] == institute.code
 
+    def test_rating_chart_nested_department_rolls_up_to_direct_child(
+        self, statuses, institute, semester, departments, make_user
+    ):
+        """Заявка на вложенном подразделении учитывается в прямой дочерней кафедре."""
+        nested = Department.objects.create(
+            name="Nested Dept",
+            short_name="ND",
+            parent=departments["child"],
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["approved"],
+            main_department=nested,
+            institute=institute,
+        )
+
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=institute.code,
+            department_id_raw=None,
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        categories = data["rating_chart"]["categories"]
+        child_category = next(
+            item for item in categories if item["id"] == departments["child"].id
+        )
+        child_index = categories.index(child_category)
+        assert data["rating_chart"]["series"][0]["data"][child_index] == 1
+        assert not any(item["name"] == "От института" for item in categories)
+
     def test_rating_chart_series_has_three_categories(
         self, statuses, institute, semester, departments, make_user
     ):
