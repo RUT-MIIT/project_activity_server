@@ -385,7 +385,7 @@ class ApplicationDashboardRepository:
     ) -> dict:
         """Категория «От института» для рейтинга по подразделениям."""
         return {
-            "id": None,
+            "id": anchor_department_id,
             "name": INSTITUTE_LEVEL_CATEGORY_LABEL,
             "short_name": INSTITUTE_LEVEL_CATEGORY_LABEL,
             "parent_id": anchor_department_id,

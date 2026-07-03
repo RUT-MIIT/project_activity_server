@@ -520,7 +520,7 @@ class TestApplicationDashboardService:
             None,
         )
         assert from_institute is not None
-        assert from_institute["id"] is None
+        assert from_institute["id"] == departments["parent"].id
         assert from_institute["parent_id"] == departments["parent"].id
 
         from_institute_index = categories.index(from_institute)
@@ -590,6 +590,7 @@ class TestApplicationDashboardService:
             None,
         )
         assert from_institute is not None
+        assert from_institute["id"] == institute.department_id
         assert from_institute["code"] == institute.code
 
     def test_rating_chart_series_has_three_categories(
