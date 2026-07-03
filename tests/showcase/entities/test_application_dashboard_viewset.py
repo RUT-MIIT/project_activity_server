@@ -3,7 +3,7 @@
 import pytest
 from rest_framework.test import APIClient
 
-from accounts.models import Department, Semester
+from accounts.models import Semester
 from showcase.models import ApplicationInvolvedDepartment, ProjectApplication
 
 
@@ -75,7 +75,12 @@ class TestApplicationDashboardViewSet:
         data = response.json()
         assert data["summary_cards"]["cards"][0]["value"] == 1
         assert data["rating_chart"]["id"] == "rating_chart"
+        assert data["external_share_chart"]["id"] == "external_share_chart"
         assert data["status_distribution"]["id"] == "status_distribution"
+        assert (
+            data["application_type_distribution"]["id"]
+            == "application_type_distribution"
+        )
         assert data["daily_dynamics"]["id"] == "daily_dynamics"
         assert data["oldest_in_progress"]["id"] == "oldest_in_progress"
         assert data["filters_applied"]["semester_id"] == semester.pk

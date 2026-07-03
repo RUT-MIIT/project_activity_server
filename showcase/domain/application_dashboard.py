@@ -49,6 +49,20 @@ GROUP_COLORS: dict[str, str] = {
     "in_progress": "orange",
 }
 
+RATING_CHART_SERIES: tuple[str, ...] = ("approved", "in_work", "rejected")
+
+RATING_CHART_SERIES_LABELS: dict[str, str] = {
+    "approved": GROUP_LABELS["approved"],
+    "in_work": "В работе",
+    "rejected": GROUP_LABELS["rejected"],
+}
+
+RATING_CHART_SERIES_COLORS: dict[str, str] = {
+    "approved": GROUP_COLORS["approved"],
+    "in_work": GROUP_COLORS["in_progress"],
+    "rejected": GROUP_COLORS["rejected"],
+}
+
 VALID_APPLICATION_TYPES: frozenset[str] = frozenset({"all", "external", "internal"})
 
 

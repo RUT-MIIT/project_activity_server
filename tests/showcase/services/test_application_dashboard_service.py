@@ -97,11 +97,13 @@ class TestApplicationDashboardService:
             "filters_applied",
             "summary_cards",
             "rating_chart",
+            "external_share_chart",
             "status_distribution",
+            "application_type_distribution",
             "daily_dynamics",
             "oldest_in_progress",
         }
-        assert len(data["summary_cards"]["cards"]) == 4
+        assert len(data["summary_cards"]["cards"]) == 5
         assert data["summary_cards"]["cards"][0]["id"] == "total"
         assert data["summary_cards"]["cards"][0]["value"] == 1
 
@@ -203,6 +205,49 @@ class TestApplicationDashboardService:
         )
         assert data["summary_cards"]["cards"][0]["value"] == 1
 
+    def test_in_work_card_is_total_minus_approved_minus_rejected(
+        self, statuses, semester, departments, make_user
+    ):
+        """Карточка in_work = total - approved - rejected."""
+        _create_app(
+            semester=semester,
+            status=statuses["approved"],
+            main_department=departments["child"],
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["rejected"],
+            main_department=departments["child"],
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["created"],
+            main_department=departments["child"],
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["await_department"],
+            main_department=departments["child"],
+        )
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=None,
+            department_id_raw=None,
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        cards = {card["id"]: card for card in data["summary_cards"]["cards"]}
+        assert cards["total"]["value"] == 4
+        assert cards["approved"]["value"] == 1
+        assert cards["rejected"]["value"] == 1
+        assert cards["in_work"]["value"] == 2
+        assert cards["in_work"]["label"] == "В РАБОТЕ"
+
     def test_resolution_time_metrics(self, statuses, semester, departments, make_user):
         """Среднее и медиана времени до решения."""
         app = _create_app(
@@ -231,7 +276,7 @@ class TestApplicationDashboardService:
             days_raw=None,
         )
 
-        avg_card = data["summary_cards"]["cards"][3]
+        avg_card = data["summary_cards"]["cards"][4]
         assert avg_card["id"] == "avg_resolution_days"
         assert avg_card["value"] >= 0
 
@@ -293,6 +338,124 @@ class TestApplicationDashboardService:
                 days_raw=None,
             )
 
+    def test_rating_chart_departments_sorted_by_total_desc(
+        self, statuses, institute, semester, departments, make_user
+    ):
+        """Рейтинг по подразделениям отсортирован по убыванию числа заявок."""
+        dept_a = Department.objects.create(
+            name="Dept A", short_name="DA", parent=departments["parent"]
+        )
+        dept_b = Department.objects.create(
+            name="Dept B", short_name="DB", parent=departments["parent"]
+        )
+        dept_c = Department.objects.create(
+            name="Dept C", short_name="DC", parent=departments["parent"]
+        )
+
+        for _ in range(3):
+            _create_app(
+                semester=semester,
+                status=statuses["approved"],
+                main_department=dept_b,
+                institute=institute,
+            )
+        for _ in range(2):
+            _create_app(
+                semester=semester,
+                status=statuses["created"],
+                main_department=dept_c,
+                institute=institute,
+            )
+        _create_app(
+            semester=semester,
+            status=statuses["rejected"],
+            main_department=dept_a,
+            institute=institute,
+        )
+
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=institute.code,
+            department_id_raw=None,
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        assert data["rating_chart"]["dimension"] == "department"
+        category_ids = [
+            category["id"] for category in data["rating_chart"]["categories"]
+        ]
+        our_departments = {dept_a.id, dept_b.id, dept_c.id}
+        sorted_our = [dept_id for dept_id in category_ids if dept_id in our_departments]
+        assert sorted_our == [dept_b.id, dept_c.id, dept_a.id]
+
+    def test_external_share_chart_by_departments(
+        self, statuses, institute, semester, departments, make_user
+    ):
+        """Доля внешних заявок считается по каждому подразделению."""
+        dept_a = Department.objects.create(
+            name="Dept A", short_name="DA", parent=departments["parent"]
+        )
+        dept_b = Department.objects.create(
+            name="Dept B", short_name="DB", parent=departments["parent"]
+        )
+
+        _create_app(
+            semester=semester,
+            status=statuses["created"],
+            main_department=dept_a,
+            institute=institute,
+            is_external=True,
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["created"],
+            main_department=dept_a,
+            institute=institute,
+            is_external=False,
+        )
+        for _ in range(3):
+            _create_app(
+                semester=semester,
+                status=statuses["created"],
+                main_department=dept_b,
+                institute=institute,
+                is_external=True,
+            )
+
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=institute.code,
+            department_id_raw=None,
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        chart = data["external_share_chart"]
+        assert chart["id"] == "external_share_chart"
+        assert chart["dimension"] == "department"
+        assert chart["type"] == "vertical_bar"
+
+        items_by_id = {item["category"]["id"]: item for item in chart["items"]}
+        assert items_by_id[dept_a.id]["total"] == 2
+        assert items_by_id[dept_a.id]["external_count"] == 1
+        assert items_by_id[dept_a.id]["percent"] == 50.0
+        assert items_by_id[dept_b.id]["total"] == 3
+        assert items_by_id[dept_b.id]["external_count"] == 3
+        assert items_by_id[dept_b.id]["percent"] == 100.0
+
+        percents = chart["series"][0]["data"]
+        assert percents[0] == 100.0
+        assert percents[1] == 50.0
+
     def test_rating_chart_switches_to_departments_with_department_filter(
         self, statuses, institute, semester, departments, make_user
     ):
@@ -316,13 +479,136 @@ class TestApplicationDashboardService:
         )
         assert data["rating_chart"]["dimension"] == "department"
 
-    def test_status_distribution_segments(
-        self, statuses, semester, departments, make_user
+    def test_rating_chart_series_has_three_categories(
+        self, statuses, institute, semester, departments, make_user
     ):
-        """Распределение по статусам содержит 4 сегмента."""
+        """rating_chart.series содержит только approved, in_work, rejected."""
         _create_app(
             semester=semester,
             status=statuses["approved"],
+            main_department=departments["child"],
+            institute=institute,
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["rejected"],
+            main_department=departments["child"],
+            institute=institute,
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["created"],
+            main_department=departments["child"],
+            institute=institute,
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["await_department"],
+            main_department=departments["child"],
+            institute=institute,
+        )
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=None,
+            department_id_raw=None,
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        series = data["rating_chart"]["series"]
+        assert [item["id"] for item in series] == ["approved", "in_work", "rejected"]
+        assert len(series) == 3
+
+        institute_index = next(
+            index
+            for index, category in enumerate(data["rating_chart"]["categories"])
+            if category["id"] == institute.department_id
+        )
+        assert series[0]["data"][institute_index] == 1
+        assert series[1]["data"][institute_index] == 2
+        assert series[2]["data"][institute_index] == 1
+
+    def test_category_includes_institute_code(
+        self, statuses, institute, semester, departments, make_user
+    ):
+        """Объект подразделения в categories содержит code института."""
+        _create_app(
+            semester=semester,
+            status=statuses["approved"],
+            main_department=departments["child"],
+            institute=institute,
+        )
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=None,
+            department_id_raw=None,
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        category = data["rating_chart"]["categories"][0]
+        assert category["id"] == institute.department_id
+        assert category["code"] == institute.code
+
+    def test_department_child_includes_parent_institute_code(
+        self, statuses, institute, semester, departments, make_user
+    ):
+        """Дочернее подразделение получает code института из иерархии."""
+        _create_app(
+            semester=semester,
+            status=statuses["approved"],
+            main_department=departments["child"],
+            institute=institute,
+        )
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=institute.code,
+            department_id_raw=None,
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        category = next(
+            item
+            for item in data["rating_chart"]["categories"]
+            if item["id"] == departments["child"].id
+        )
+        assert category["code"] == institute.code
+
+    def test_status_distribution_segments(
+        self, statuses, semester, departments, make_user
+    ):
+        """Распределение по статусам: approved, in_work, rejected."""
+        _create_app(
+            semester=semester,
+            status=statuses["approved"],
+            main_department=departments["child"],
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["created"],
+            main_department=departments["child"],
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["await_department"],
+            main_department=departments["child"],
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["returned_department"],
             main_department=departments["child"],
         )
         user = make_user(role_code="admin")
@@ -336,7 +622,55 @@ class TestApplicationDashboardService:
             application_type_raw=None,
             days_raw=None,
         )
-        assert len(data["status_distribution"]["segments"]) == 4
+
+        segments = data["status_distribution"]["segments"]
+        assert [segment["group"] for segment in segments] == [
+            "approved",
+            "in_work",
+            "rejected",
+        ]
+        assert len(segments) == 3
+
+        segments_by_group = {segment["group"]: segment for segment in segments}
+        assert segments_by_group["approved"]["count"] == 1
+        assert segments_by_group["in_work"]["count"] == 3
+        assert segments_by_group["in_work"]["label"] == "В работе"
+        assert segments_by_group["rejected"]["count"] == 0
+
+    def test_application_type_distribution_pie_segments(
+        self, statuses, semester, departments, make_user
+    ):
+        """pie chart по внутренним/внешним заявкам содержит 2 сегмента."""
+        _create_app(
+            semester=semester,
+            status=statuses["created"],
+            main_department=departments["child"],
+            is_external=False,
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["created"],
+            main_department=departments["child"],
+            is_external=True,
+        )
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=None,
+            department_id_raw=None,
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        widget = data["application_type_distribution"]
+        assert widget["type"] == "pie"
+        assert len(widget["segments"]) == 2
+        segments = {s["group"]: s for s in widget["segments"]}
+        assert segments["internal"]["count"] == 1
+        assert segments["external"]["count"] == 1
 
     def test_oldest_in_progress_no_n_plus_one_queries(
         self, statuses, semester, departments, make_user
@@ -377,5 +711,43 @@ class TestApplicationDashboardService:
 
         queries_for_five = count_oldest_queries(5)
         queries_for_twenty = count_oldest_queries(20)
+
+        assert queries_for_twenty <= queries_for_five + 1
+
+    def test_dashboard_department_code_map_no_n_plus_one_queries(
+        self, statuses, institute, semester, departments, make_user
+    ):
+        """Построение code для подразделений не даёт N+1 при росте числа заявок."""
+        from django.db import connection
+        from django.test.utils import CaptureQueriesContext
+
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+
+        def count_dashboard_queries(app_count: int) -> int:
+            ProjectApplication.objects.filter(semester=semester).delete()
+            for index in range(app_count):
+                _create_app(
+                    semester=semester,
+                    status=statuses["created"],
+                    main_department=departments["child"],
+                    institute=institute,
+                    title=f"Проект {index}",
+                )
+
+            with CaptureQueriesContext(connection) as context:
+                service.get_dashboard(
+                    user=user,
+                    semester_id_raw=str(semester.pk),
+                    institute_code=institute.code,
+                    department_id_raw=None,
+                    status_raw=None,
+                    application_type_raw=None,
+                    days_raw=None,
+                )
+            return len(context.captured_queries)
+
+        queries_for_five = count_dashboard_queries(5)
+        queries_for_twenty = count_dashboard_queries(20)
 
         assert queries_for_twenty <= queries_for_five + 1

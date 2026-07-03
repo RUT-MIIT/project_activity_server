@@ -30,6 +30,58 @@ class ApplicationDashboardRepository:
 
     def __init__(self) -> None:
         self.domain = ApplicationDashboardDomain()
+        self._department_institute_code_map: dict[int, str] | None = None
+
+    def _get_department_institute_code_map(self) -> dict[int, str]:
+        """Возвращает кэшированную карту department_id -> institute.code."""
+        if self._department_institute_code_map is None:
+            self._department_institute_code_map = (
+                self._build_department_institute_code_map()
+            )
+        return self._department_institute_code_map
+
+    @staticmethod
+    def _build_department_institute_code_map() -> dict[int, str]:
+        """Строит карту department_id -> institute.code без N+1."""
+        parent_by_id: dict[int, int | None] = dict(
+            Department.objects.values_list("id", "parent_id")
+        )
+        children_by_parent: dict[int, list[int]] = defaultdict(list)
+        for dept_id, parent_id in parent_by_id.items():
+            if parent_id is not None:
+                children_by_parent[parent_id].append(dept_id)
+
+        def subtree_ids(root_id: int) -> set[int]:
+            result = {root_id}
+            queue = [root_id]
+            while queue:
+                current = queue.pop()
+                for child_id in children_by_parent.get(current, []):
+                    if child_id not in result:
+                        result.add(child_id)
+                        queue.append(child_id)
+            return result
+
+        def root_id(dept_id: int) -> int:
+            current = dept_id
+            while parent_by_id.get(current) is not None:
+                current = parent_by_id[current]
+            return current
+
+        institutes = (
+            Institute.objects.filter(is_active=True, department_id__isnull=False)
+            .only("code", "department_id")
+            .order_by("position")
+        )
+
+        code_by_dept: dict[int, str] = {}
+        for institute in institutes:
+            institute_root_id = root_id(institute.department_id)
+            for dept_id in subtree_ids(institute_root_id):
+                if dept_id not in code_by_dept:
+                    code_by_dept[dept_id] = institute.code
+
+        return code_by_dept
 
     @staticmethod
     def _institute_access_q(institute_codes: list[str], prefix: str = "") -> Q:
@@ -171,6 +223,43 @@ class ApplicationDashboardRepository:
 
         return result
 
+    def _aggregate_external_share(
+        self,
+        queryset: QuerySet[ProjectApplication],
+        dimension_map: dict[str, set[int]],
+    ) -> dict[str, dict[str, int | float]]:
+        """Считает долю внешних заявок по каждому измерению."""
+        result: dict[str, dict[str, int | float]] = {
+            key: {"external_count": 0, "percent": 0.0} for key in dimension_map
+        }
+
+        all_app_ids: set[int] = set()
+        for app_ids in dimension_map.values():
+            all_app_ids.update(app_ids)
+        if not all_app_ids:
+            return result
+
+        external_by_app = dict(
+            queryset.filter(id__in=all_app_ids).values_list("id", "is_external")
+        )
+
+        for key, app_ids in dimension_map.items():
+            total = len(app_ids)
+            external_count = sum(1 for app_id in app_ids if external_by_app.get(app_id))
+            percent = round((external_count / total) * 100, 1) if total else 0.0
+            result[key] = {"external_count": external_count, "percent": percent}
+
+        return result
+
+    @staticmethod
+    def _external_share_color(percent: float) -> str:
+        """Цвет столбца по порогам доли внешних заявок."""
+        if percent < 30:
+            return "green"
+        if percent <= 40:
+            return "orange"
+        return "red"
+
     def _build_institute_dimension_map(
         self,
         queryset: QuerySet[ProjectApplication],
@@ -258,67 +347,143 @@ class ApplicationDashboardRepository:
         filters: DashboardFilters,
     ) -> dict:
         """Данные для горизонтального stacked bar."""
-        if filters.department_id is not None:
-            return self._rating_by_departments(queryset, filters.department_id)
-        if filters.institute_code:
-            return self._rating_by_institute_departments(
-                queryset, filters.institute_code
-            )
-        return self._rating_by_institutes(queryset)
+        categories_data, dimension = self._get_rating_categories_data(queryset, filters)
+        return self._format_rating_chart(categories_data, dimension=dimension)
 
-    def _rating_by_institutes(self, queryset: QuerySet[ProjectApplication]) -> dict:
-        """Рейтинг по институтам."""
-        institutes = list(Institute.objects.filter(is_active=True).order_by("position"))
+    def get_external_share_chart_data(
+        self,
+        queryset: QuerySet[ProjectApplication],
+        filters: DashboardFilters,
+    ) -> dict:
+        """Доля внешних заявок по подразделениям или институтам."""
+        categories_data, dimension = self._get_rating_categories_data(queryset, filters)
+        sorted_data = sorted(
+            categories_data,
+            key=lambda item: item["external_percent"],
+            reverse=True,
+        )
+        return self._format_external_share_chart(sorted_data, dimension=dimension)
+
+    def _get_rating_categories_data(
+        self,
+        queryset: QuerySet[ProjectApplication],
+        filters: DashboardFilters,
+    ) -> tuple[list[dict], str]:
+        """Собирает данные категорий для рейтинга и доли внешних заявок."""
+        if filters.department_id is not None:
+            return (
+                self._categories_data_by_departments(queryset, filters.department_id),
+                "department",
+            )
+        if filters.institute_code:
+            return (
+                self._categories_data_by_institute_departments(
+                    queryset, filters.institute_code
+                ),
+                "department",
+            )
+        return self._categories_data_by_institutes(queryset), "institute"
+
+    def _categories_data_by_institutes(
+        self, queryset: QuerySet[ProjectApplication]
+    ) -> list[dict]:
+        """Данные категорий рейтинга по институтам."""
+        institutes = list(
+            Institute.objects.filter(is_active=True)
+            .select_related("department")
+            .order_by("position")
+        )
         dimension_map = self._build_institute_dimension_map(queryset, institutes)
         stats = self._aggregate_by_dimension(queryset, dimension_map)
+        external_stats = self._aggregate_external_share(queryset, dimension_map)
 
         categories_data = []
         for inst in institutes:
             counts = stats.get(inst.code, {g: 0 for g in STATUS_GROUPS})
             total = sum(counts.values())
+            external = external_stats[inst.code]
             categories_data.append(
                 {
                     "key": inst.code,
-                    "label": inst.code,
+                    "category": self._department_to_dict(
+                        inst.department,
+                        institute_code=inst.code,
+                    ),
                     "total": total,
                     "counts": counts,
+                    "external_count": external["external_count"],
+                    "external_percent": external["percent"],
                 }
             )
 
         categories_data.sort(key=lambda item: item["total"], reverse=True)
-        return self._format_rating_chart(categories_data, dimension="institute")
+        return categories_data
 
-    def _rating_by_institute_departments(
+    def _categories_data_by_institute_departments(
         self,
         queryset: QuerySet[ProjectApplication],
         institute_code: str,
-    ) -> dict:
-        """Рейтинг по дочерним подразделениям института."""
+    ) -> list[dict]:
+        """Данные категорий рейтинга по дочерним подразделениям института."""
         institute = Institute.objects.select_related("department").get(
             code=institute_code
         )
         if institute.department_id is None:
-            return self._format_rating_chart([], dimension="department")
+            return []
 
         departments = list(
             Department.objects.filter(parent_id=institute.department_id).order_by(
                 "name"
             )
         )
-        return self._rating_by_departments_list(queryset, departments)
+        return self._categories_data_by_departments_list(queryset, departments)
 
-    def _rating_by_departments(
+    def _categories_data_by_departments(
         self,
         queryset: QuerySet[ProjectApplication],
         department_id: int,
-    ) -> dict:
-        """Рейтинг по дочерним подразделениям выбранного подразделения."""
+    ) -> list[dict]:
+        """Данные категорий рейтинга по дочерним подразделениям."""
         departments = list(
             Department.objects.filter(parent_id=department_id).order_by("name")
         )
         if not departments:
             departments = self._leaf_departments_in_subtree(department_id)
-        return self._rating_by_departments_list(queryset, departments)
+        return self._categories_data_by_departments_list(queryset, departments)
+
+    def _categories_data_by_departments_list(
+        self,
+        queryset: QuerySet[ProjectApplication],
+        departments: list[Department],
+    ) -> list[dict]:
+        """Общая логика сбора данных по списку подразделений."""
+        dimension_map = self._build_department_dimension_map(queryset, departments)
+        stats = self._aggregate_by_dimension(queryset, dimension_map)
+        external_stats = self._aggregate_external_share(queryset, dimension_map)
+        institute_codes = self._get_department_institute_code_map()
+
+        categories_data = []
+        for dept in departments:
+            key = str(dept.id)
+            counts = stats.get(key, {g: 0 for g in STATUS_GROUPS})
+            total = sum(counts.values())
+            external = external_stats[key]
+            categories_data.append(
+                {
+                    "key": key,
+                    "category": self._department_to_dict(
+                        dept,
+                        institute_code=institute_codes.get(dept.id),
+                    ),
+                    "total": total,
+                    "counts": counts,
+                    "external_count": external["external_count"],
+                    "external_percent": external["percent"],
+                }
+            )
+
+        categories_data.sort(key=lambda item: item["total"], reverse=True)
+        return categories_data
 
     @staticmethod
     def _leaf_departments_in_subtree(department_id: int) -> list[Department]:
@@ -331,42 +496,32 @@ class ApplicationDashboardRepository:
         leaf_ids = subtree_ids - parent_ids_in_subtree
         return [dept for dept in all_depts if dept.id in leaf_ids]
 
-    def _rating_by_departments_list(
-        self,
-        queryset: QuerySet[ProjectApplication],
-        departments: list[Department],
-    ) -> dict:
-        """Общая логика рейтинга по списку подразделений."""
-        dimension_map = self._build_department_dimension_map(queryset, departments)
-        stats = self._aggregate_by_dimension(queryset, dimension_map)
-
-        categories_data = []
-        for dept in departments:
-            key = str(dept.id)
-            counts = stats.get(key, {g: 0 for g in STATUS_GROUPS})
-            total = sum(counts.values())
-            label = dept.short_name or dept.name
-            categories_data.append(
-                {"key": key, "label": label, "total": total, "counts": counts}
-            )
-
-        categories_data.sort(key=lambda item: item["total"], reverse=True)
-        return self._format_rating_chart(categories_data, dimension="department")
-
     @staticmethod
     def _format_rating_chart(categories_data: list[dict], dimension: str) -> dict:
         """Форматирует данные рейтинга для API."""
-        from showcase.domain.application_dashboard import GROUP_COLORS, GROUP_LABELS
+        from showcase.domain.application_dashboard import (
+            RATING_CHART_SERIES,
+            RATING_CHART_SERIES_COLORS,
+            RATING_CHART_SERIES_LABELS,
+        )
 
-        categories = [item["label"] for item in categories_data]
+        categories = [item["category"] for item in categories_data]
         series = []
-        for group in STATUS_GROUPS:
+        for group in RATING_CHART_SERIES:
+            if group == "in_work":
+                data = [
+                    item["counts"].get("pending", 0)
+                    + item["counts"].get("in_progress", 0)
+                    for item in categories_data
+                ]
+            else:
+                data = [item["counts"].get(group, 0) for item in categories_data]
             series.append(
                 {
                     "id": group,
-                    "name": GROUP_LABELS[group],
-                    "color": GROUP_COLORS[group],
-                    "data": [item["counts"].get(group, 0) for item in categories_data],
+                    "name": RATING_CHART_SERIES_LABELS[group],
+                    "color": RATING_CHART_SERIES_COLORS[group],
+                    "data": data,
                 }
             )
 
@@ -390,9 +545,69 @@ class ApplicationDashboardRepository:
             "series": series,
         }
 
+    @staticmethod
+    def _format_external_share_chart(
+        categories_data: list[dict], dimension: str
+    ) -> dict:
+        """Форматирует данные доли внешних заявок для API."""
+        categories = [item["category"] for item in categories_data]
+        items = [
+            {
+                "category": item["category"],
+                "total": item["total"],
+                "external_count": item["external_count"],
+                "percent": item["external_percent"],
+                "color": ApplicationDashboardRepository._external_share_color(
+                    item["external_percent"]
+                ),
+            }
+            for item in categories_data
+        ]
+
+        if dimension == "department":
+            title = "Доля внешних по подразделениям"
+            subtitle = (
+                "% внешних заявок от общего числа по каждому подразделению — "
+                "для сравнимости"
+            )
+        else:
+            title = "Доля внешних по институтам"
+            subtitle = (
+                "% внешних заявок от общего числа по каждому институту — "
+                "для сравнимости"
+            )
+
+        return {
+            "id": "external_share_chart",
+            "title": title,
+            "subtitle": subtitle,
+            "type": "vertical_bar",
+            "dimension": dimension,
+            "categories": categories,
+            "items": items,
+            "series": [
+                {
+                    "id": "external_share",
+                    "name": "Доля внешних",
+                    "unit": "%",
+                    "data": [item["external_percent"] for item in categories_data],
+                    "colors": [
+                        ApplicationDashboardRepository._external_share_color(
+                            item["external_percent"]
+                        )
+                        for item in categories_data
+                    ],
+                }
+            ],
+        }
+
     def get_status_distribution(self, queryset: QuerySet[ProjectApplication]) -> dict:
-        """Доли заявок по группам статусов."""
-        from showcase.domain.application_dashboard import GROUP_COLORS, GROUP_LABELS
+        """Доли заявок по группам статусов (согласовано / в работе / отклонено)."""
+        from showcase.domain.application_dashboard import (
+            RATING_CHART_SERIES,
+            RATING_CHART_SERIES_COLORS,
+            RATING_CHART_SERIES_LABELS,
+        )
 
         aggregates = queryset.aggregate(
             total=Count("id"),
@@ -405,16 +620,19 @@ class ApplicationDashboardRepository:
         )
         total = aggregates["total"]
         segments = []
-        for group in STATUS_GROUPS:
-            count = aggregates[f"count_{group}"]
+        for group in RATING_CHART_SERIES:
+            if group == "in_work":
+                count = aggregates["count_pending"] + aggregates["count_in_progress"]
+            else:
+                count = aggregates[f"count_{group}"]
             percent = round((count / total) * 100, 1) if total else 0.0
             segments.append(
                 {
                     "group": group,
-                    "label": GROUP_LABELS[group],
+                    "label": RATING_CHART_SERIES_LABELS[group],
                     "count": count,
                     "percent": percent,
-                    "color": GROUP_COLORS[group],
+                    "color": RATING_CHART_SERIES_COLORS[group],
                 }
             )
 
@@ -426,6 +644,45 @@ class ApplicationDashboardRepository:
             ),
             "type": "percent_stacked_bar",
             "segments": segments,
+        }
+
+    def get_application_type_distribution(
+        self, queryset: QuerySet[ProjectApplication]
+    ) -> dict:
+        """Доли внутренних/внешних заявок."""
+        aggregates = queryset.aggregate(
+            total=Count("id"),
+            external_count=Count("id", filter=Q(is_external=True)),
+            internal_count=Count("id", filter=Q(is_external=False)),
+        )
+        total = aggregates["total"]
+        external_count = aggregates["external_count"]
+        internal_count = aggregates["internal_count"]
+
+        external_pct = round((external_count / total) * 100, 1) if total else 0.0
+        internal_pct = round((internal_count / total) * 100, 1) if total else 0.0
+
+        return {
+            "id": "application_type_distribution",
+            "title": "Доли заявок по типу",
+            "subtitle": "Внутренние vs внешние",
+            "type": "pie",
+            "segments": [
+                {
+                    "group": "internal",
+                    "label": "Внутренние",
+                    "count": internal_count,
+                    "percent": internal_pct,
+                    "color": "blue",
+                },
+                {
+                    "group": "external",
+                    "label": "Внешние",
+                    "count": external_count,
+                    "percent": external_pct,
+                    "color": "teal",
+                },
+            ],
         }
 
     def get_daily_dynamics(
@@ -528,7 +785,7 @@ class ApplicationDashboardRepository:
         in_progress_qs = (
             queryset.filter(status__code__in=STATUS_GROUPS["in_progress"])
             .select_related("main_department")
-            .prefetch_related("target_institutes")
+            .prefetch_related("target_institutes__department")
             .annotate(
                 last_status_change_at=Subquery(last_status_log.values("changed_at")[:1])
             )
@@ -536,6 +793,7 @@ class ApplicationDashboardRepository:
 
         today = timezone.localdate()
         items: list[dict] = []
+        institute_codes = self._get_department_institute_code_map()
 
         for app in in_progress_qs:
             reference = app.last_status_change_at or app.creation_date
@@ -545,20 +803,25 @@ class ApplicationDashboardRepository:
                 reference_date = reference
             days = (today - reference_date).days
 
-            institute_code = ""
+            department_obj = None
             targets = list(app.target_institutes.all())
-            if targets:
-                institute_code = targets[0].code
+            if targets and getattr(targets[0], "department", None) is not None:
+                target_department = targets[0].department
+                department_obj = self._department_to_dict(
+                    target_department,
+                    institute_code=institute_codes.get(target_department.id),
+                )
             elif app.main_department:
-                institute_code = (
-                    app.main_department.short_name or app.main_department.name
+                department_obj = self._department_to_dict(
+                    app.main_department,
+                    institute_code=institute_codes.get(app.main_department_id),
                 )
 
             items.append(
                 {
                     "application_number": app.print_number or f"#{app.pk}",
                     "days": days,
-                    "institute_code": institute_code,
+                    "institute_code": department_obj,
                 }
             )
 
@@ -569,4 +832,20 @@ class ApplicationDashboardRepository:
             "subtitle": "Заявки с наибольшим временем в статусе «В работе»",
             "type": "table",
             "items": items[:limit],
+        }
+
+    @staticmethod
+    def _department_to_dict(
+        department: Department | None,
+        institute_code: str | None = None,
+    ) -> dict | None:
+        """Преобразует подразделение в JSON-совместимый объект для API."""
+        if department is None:
+            return None
+        return {
+            "id": department.id,
+            "name": department.name,
+            "short_name": department.short_name,
+            "parent_id": department.parent_id,
+            "code": institute_code,
         }

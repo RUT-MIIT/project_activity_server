@@ -88,7 +88,13 @@ class ApplicationDashboardService:
             },
             summary_cards=SummaryCardsDTO(summary_data).to_dict(),
             rating_chart=self.repository.get_rating_chart_data(queryset, filters),
+            external_share_chart=self.repository.get_external_share_chart_data(
+                queryset, filters
+            ),
             status_distribution=self.repository.get_status_distribution(queryset),
+            application_type_distribution=(
+                self.repository.get_application_type_distribution(queryset)
+            ),
             daily_dynamics=self.repository.get_daily_dynamics(queryset, days),
             oldest_in_progress=self.repository.get_oldest_in_progress(queryset),
         )
