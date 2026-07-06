@@ -38,7 +38,7 @@ def _create_app(
     status: ApplicationStatus,
     main_department: Department | None = None,
     involved_department: Department | None = None,
-    is_external: bool = False,
+    is_internal_customer: bool = False,
     title: str = "Проект",
     institute: Institute | None = None,
 ) -> ProjectApplication:
@@ -51,7 +51,7 @@ def _create_app(
         semester=semester,
         status=status,
         main_department=main_department,
-        is_external=is_external,
+        is_internal_customer=is_internal_customer,
         goal="Длинная цель проекта больше пятидесяти символов для валидации",
         problem_holder="Носитель",
         barrier="Длинный барьер больше пятидесяти символов для валидации",
@@ -157,13 +157,13 @@ class TestApplicationDashboardService:
             semester=semester,
             status=statuses["created"],
             main_department=departments["child"],
-            is_external=True,
+            is_internal_customer=False,
         )
         _create_app(
             semester=semester,
             status=statuses["created"],
             main_department=departments["child"],
-            is_external=False,
+            is_internal_customer=True,
         )
         user = make_user(role_code="admin")
         service = ApplicationDashboardService()
@@ -409,14 +409,14 @@ class TestApplicationDashboardService:
             status=statuses["created"],
             main_department=dept_a,
             institute=institute,
-            is_external=True,
+            is_internal_customer=False,
         )
         _create_app(
             semester=semester,
             status=statuses["created"],
             main_department=dept_a,
             institute=institute,
-            is_external=False,
+            is_internal_customer=True,
         )
         for _ in range(3):
             _create_app(
@@ -424,7 +424,7 @@ class TestApplicationDashboardService:
                 status=statuses["created"],
                 main_department=dept_b,
                 institute=institute,
-                is_external=True,
+                is_internal_customer=False,
             )
 
         user = make_user(role_code="admin")
@@ -795,13 +795,13 @@ class TestApplicationDashboardService:
             semester=semester,
             status=statuses["created"],
             main_department=departments["child"],
-            is_external=False,
+            is_internal_customer=True,
         )
         _create_app(
             semester=semester,
             status=statuses["created"],
             main_department=departments["child"],
-            is_external=True,
+            is_internal_customer=False,
         )
         user = make_user(role_code="admin")
         service = ApplicationDashboardService()

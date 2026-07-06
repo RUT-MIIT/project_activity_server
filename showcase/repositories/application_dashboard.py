@@ -114,9 +114,9 @@ class ApplicationDashboardRepository:
         )
 
         if filters.application_type == "external":
-            queryset = queryset.filter(is_external=True)
+            queryset = queryset.filter(is_internal_customer=False)
         elif filters.application_type == "internal":
-            queryset = queryset.filter(is_external=False)
+            queryset = queryset.filter(is_internal_customer=True)
 
         if filters.department_id is not None:
             dept_ids = self.domain.resolve_department_subtree_ids(filters.department_id)
@@ -230,7 +230,7 @@ class ApplicationDashboardRepository:
         queryset: QuerySet[ProjectApplication],
         dimension_map: dict[str, set[int]],
     ) -> dict[str, dict[str, int | float]]:
-        """Считает долю внешних заявок по каждому измерению."""
+        """Считает долю внешних заявок (is_internal_customer=False) по каждому измерению."""
         result: dict[str, dict[str, int | float]] = {
             key: {"external_count": 0, "percent": 0.0} for key in dimension_map
         }
@@ -241,13 +241,19 @@ class ApplicationDashboardRepository:
         if not all_app_ids:
             return result
 
-        external_by_app = dict(
-            queryset.filter(id__in=all_app_ids).values_list("id", "is_external")
+        internal_customer_by_app = dict(
+            queryset.filter(id__in=all_app_ids).values_list(
+                "id", "is_internal_customer"
+            )
         )
 
         for key, app_ids in dimension_map.items():
             total = len(app_ids)
-            external_count = sum(1 for app_id in app_ids if external_by_app.get(app_id))
+            external_count = sum(
+                1
+                for app_id in app_ids
+                if not internal_customer_by_app.get(app_id, False)
+            )
             percent = round((external_count / total) * 100, 1) if total else 0.0
             result[key] = {"external_count": external_count, "percent": percent}
 
@@ -734,11 +740,11 @@ class ApplicationDashboardRepository:
     def get_application_type_distribution(
         self, queryset: QuerySet[ProjectApplication]
     ) -> dict:
-        """Доли внутренних/внешних заявок."""
+        """Доли внутренних/внешних заявок по полю is_internal_customer."""
         aggregates = queryset.aggregate(
             total=Count("id"),
-            external_count=Count("id", filter=Q(is_external=True)),
-            internal_count=Count("id", filter=Q(is_external=False)),
+            external_count=Count("id", filter=Q(is_internal_customer=False)),
+            internal_count=Count("id", filter=Q(is_internal_customer=True)),
         )
         total = aggregates["total"]
         external_count = aggregates["external_count"]
