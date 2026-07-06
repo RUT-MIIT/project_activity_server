@@ -3,7 +3,7 @@
 import pytest
 
 from accounts.models import Department
-from accounts.utils import get_root_department
+from accounts.utils import get_root_department, is_cpds_department
 
 
 @pytest.mark.django_db
@@ -46,3 +46,20 @@ class TestGetRootDepartment:
         root = get_root_department(None)
 
         assert root is None
+
+
+@pytest.mark.django_db
+class TestIsCpdsDepartment:
+    """Тесты для функции is_cpds_department."""
+
+    def test_cpds_department_detected_by_short_name(self):
+        dept = Department.objects.create(
+            name="Центр проектного развития", short_name="ЦПДС"
+        )
+        assert is_cpds_department(dept) is True
+
+    def test_regular_department_is_not_cpds(self, departments):
+        assert is_cpds_department(departments["parent"]) is False
+
+    def test_none_is_not_cpds(self):
+        assert is_cpds_department(None) is False

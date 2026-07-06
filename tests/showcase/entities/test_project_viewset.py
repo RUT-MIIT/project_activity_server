@@ -210,6 +210,38 @@ class TestProjectViewSet:
         item = response.data[0]
         assert item["main_department"]["id"] == departments["parent"].id
 
+    def test_list_main_department_ignores_cpds_involved_department(
+        self, roles, make_user, statuses, institute, departments
+    ):
+        """ЦПДС в причастных не должно подменять основное подразделение проекта."""
+        semester = Semester.objects.create(code="s1", name="S1", position=1)
+        user = make_user(role_code="institute_validator", with_department=True)
+        cpds_department, _ = Department.objects.get_or_create(
+            short_name="ЦПДС", defaults={"name": "Центр проектного развития"}
+        )
+
+        app = _create_approved_app(
+            semester=semester,
+            statuses=statuses,
+            institute=institute,
+            title="С ЦПДС и институтом",
+        )
+        ApplicationInvolvedDepartment.objects.create(
+            application=app,
+            department=cpds_department,
+        )
+        ApplicationInvolvedDepartment.objects.create(
+            application=app,
+            department=departments["parent"],
+        )
+
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.get(f"/api/showcase/projects/?semester_id={semester.id}")
+
+        assert response.status_code == 200
+        assert response.data[0]["main_department"]["id"] == departments["parent"].id
+
     def test_list_main_department_null_without_involved_departments(
         self, roles, make_user, statuses, institute
     ):

@@ -4,6 +4,15 @@ from typing import Optional
 
 from accounts.models import Department
 
+CPDS_DEPARTMENT_SHORT_NAME = "ЦПДС"
+
+
+def is_cpds_department(department: Optional[Department]) -> bool:
+    """Проверяет, что подразделение — ЦПДС (координирующее, не основное)."""
+    return (
+        department is not None and department.short_name == CPDS_DEPARTMENT_SHORT_NAME
+    )
+
 
 def get_root_department(department: Optional[Department]) -> Optional[Department]:
     """Находит корневое подразделение в иерархии.

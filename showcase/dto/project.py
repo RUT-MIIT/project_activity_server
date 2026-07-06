@@ -3,7 +3,7 @@
 from typing import Any
 
 from accounts.models import Department
-from accounts.utils import get_root_department
+from accounts.utils import get_root_department, is_cpds_department
 from showcase.models import ProjectApplication
 
 
@@ -37,15 +37,21 @@ class ProjectListDTO:
     def _top_level_involved_department(
         application: ProjectApplication,
     ) -> Department | None:
-        """Возвращает причастное подразделение верхнего уровня (без родителя)."""
+        """Возвращает причастное подразделение верхнего уровня (без родителя).
+
+        ЦПДС исключается: оно попадает в причастные как координирующее
+        подразделение при согласовании заявки, а не как основное.
+        """
         for involved in application.involved_departments.all():
             department = involved.department
-            if department.parent is None:
+            if department.parent is None and not is_cpds_department(department):
                 return department
 
         for involved in application.involved_departments.all():
+            if is_cpds_department(involved.department):
+                continue
             root = get_root_department(involved.department)
-            if root is not None:
+            if root is not None and not is_cpds_department(root):
                 return root
 
         return None
