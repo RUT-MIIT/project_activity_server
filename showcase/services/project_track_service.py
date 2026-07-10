@@ -16,6 +16,8 @@ from showcase.dto.project_track import (
     ProjectTrackDeleteDTO,
     ProjectTrackGroupDetailDTO,
     ProjectTrackGroupListDTO,
+    ProjectTrackProjectDetailDTO,
+    ProjectTrackProjectListDTO,
     ProjectTrackReadDTO,
     ProjectTrackStatisticsDTO,
 )
@@ -126,6 +128,24 @@ class ProjectTrackService:
         )
         return [ProjectTrackGroupListDTO(group).to_dict() for group in groups]
 
+    def list_projects(
+        self,
+        user: User,
+        institute_code: str | None,
+        semester_id_raw: str,
+    ) -> list[dict]:
+        """Список проектов семестра со счётчиком назначенных групп."""
+        semester_id, accessible_codes, resolved_institute_code = (
+            self._resolve_institute_semester(user, institute_code, semester_id_raw)
+        )
+
+        applications = self.repository.list_projects_with_counts(
+            institute_code=resolved_institute_code,
+            semester_id=semester_id,
+            accessible_institute_codes=accessible_codes,
+        )
+        return [ProjectTrackProjectListDTO(app).to_dict() for app in applications]
+
     def get_group_detail(
         self,
         user: User,
@@ -169,6 +189,39 @@ class ProjectTrackService:
             )
         )
         return ProjectTrackGroupDetailDTO(group, applications).to_dict()
+
+    def get_project_detail(
+        self,
+        user: User,
+        project_id: int,
+        institute_code: str | None,
+        semester_id_raw: str,
+    ) -> dict:
+        """Детали проекта с назначенными группами."""
+        semester_id, _, resolved_institute_code = self._resolve_institute_semester(
+            user, institute_code, semester_id_raw
+        )
+
+        application = self.repository.get_application_by_id(
+            project_id, institute_code=resolved_institute_code
+        )
+        if application is None:
+            raise ValueError(f"Проектная заявка с id={project_id} не найдена")
+        if application.status.code != "approved":
+            raise ValueError(
+                f"Заявка id={application.pk} не одобрена (статус: {application.status.code})"
+            )
+        if application.semester_id != semester_id:
+            raise ValueError(f"Заявка id={application.pk} относится к другому семестру")
+
+        groups = list(
+            self.repository.get_project_assigned_groups(
+                project_id=project_id,
+                semester_id=semester_id,
+                institute_code=resolved_institute_code,
+            )
+        )
+        return ProjectTrackProjectDetailDTO(application, groups).to_dict()
 
     def get_statistics(
         self,
@@ -285,8 +338,9 @@ class ProjectTrackService:
         self._check_manage_permission(user)
         self._ensure_user_department(user)
 
+        semester_id = Semester.resolve_list_semester_id(dto.semester_id)
         track = self.repository.get_by_keys(
-            dto.semester_id,
+            semester_id,
             dto.group_id,
             dto.project_application_id,
         )

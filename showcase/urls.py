@@ -55,6 +55,18 @@ project_track_group_detail = ProjectTrackViewSet.as_view(
     }
 )
 
+project_track_projects_list = ProjectTrackViewSet.as_view(
+    {
+        "get": "list_projects",
+    }
+)
+
+project_track_project_detail = ProjectTrackViewSet.as_view(
+    {
+        "get": "retrieve_project",
+    }
+)
+
 project_track_statistics = ProjectTrackViewSet.as_view(
     {
         "get": "statistics",
@@ -82,6 +94,16 @@ urlpatterns = [
         "project-tracks/groups/<int:group_id>/",
         project_track_group_detail,
         name="project-track-group-detail",
+    ),
+    path(
+        "project-tracks/projects/",
+        project_track_projects_list,
+        name="project-track-projects-list",
+    ),
+    path(
+        "project-tracks/projects/<int:project_id>/",
+        project_track_project_detail,
+        name="project-track-project-detail",
     ),
     path(
         "project-tracks/statistics/",

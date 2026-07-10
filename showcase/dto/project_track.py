@@ -58,7 +58,7 @@ class ProjectTrackDeleteDTO:
 
     def __init__(
         self,
-        semester_id: int,
+        semester_id: str,
         group_id: int,
         project_application_id: int,
     ):
@@ -162,6 +162,75 @@ class ProjectTrackGroupDetailDTO:
             "course_number": self.course_number,
             "direction": self.direction,
             "projects": self.projects,
+        }
+
+
+class ProjectTrackProjectListDTO:
+    """DTO проекта со счётчиком назначенных групп."""
+
+    def __init__(self, application) -> None:
+        self.id = application.id
+        self.title = application.title or ""
+        self.print_number = application.print_number or ""
+        self.author_name = (
+            f"{application.author_lastname} {application.author_firstname}".strip()
+        )
+        self.assigned_groups_count = application.assigned_groups_count
+
+    def to_dict(self) -> dict[str, Any]:
+        """Преобразует DTO в словарь для API."""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "print_number": self.print_number,
+            "author_name": self.author_name,
+            "assigned_groups_count": self.assigned_groups_count,
+        }
+
+
+class ProjectTrackProjectGroupDTO:
+    """DTO группы в деталях проекта."""
+
+    def __init__(self, group) -> None:
+        self.id = group.id
+        self.name = group.name
+        self.course_number = group.course_number
+        self.direction = {
+            "code": group.direction.code,
+            "level": group.direction.level,
+            "name": group.direction.name,
+        }
+
+    def to_dict(self) -> dict[str, Any]:
+        """Преобразует DTO в словарь для API."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "course_number": self.course_number,
+            "direction": self.direction,
+        }
+
+
+class ProjectTrackProjectDetailDTO:
+    """DTO деталей проекта с назначенными группами."""
+
+    def __init__(self, application, groups: list) -> None:
+        self.id = application.id
+        self.title = application.title or ""
+        self.print_number = application.print_number or ""
+        self.author_name = (
+            f"{application.author_lastname} {application.author_firstname}".strip()
+        )
+        self.groups = [ProjectTrackProjectGroupDTO(group).to_dict() for group in groups]
+
+    def to_dict(self) -> dict[str, Any]:
+        """Преобразует DTO в словарь для API."""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "print_number": self.print_number,
+            "author_name": self.author_name,
+            "groups": self.groups,
         }
 
 

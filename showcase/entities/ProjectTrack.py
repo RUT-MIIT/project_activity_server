@@ -29,7 +29,7 @@ class ProjectTrackAssignSerializer(serializers.Serializer):
 class ProjectTrackDeleteSerializer(serializers.Serializer):
     """Сериализатор для удаления связки группа — проект."""
 
-    semester_id = serializers.IntegerField(required=True)
+    semester_id = serializers.CharField(required=True)
     group_id = serializers.IntegerField(min_value=1, required=True)
     project_application_id = serializers.IntegerField(min_value=1, required=True)
 
@@ -87,7 +87,7 @@ class ProjectTrackViewSet(viewsets.ViewSet):
             return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
 
     def list_groups(self, request: Request) -> Response:
-        """GET /api/showcase/project-tracks/groups/?semester_id=...&institute_code=..."""
+        """GET /api/showcase/project-tracks/groups/."""
         institute_code, semester_id_raw = self._parse_query_params(request)
         error_response = self._validate_semester_param(semester_id_raw)
         if error_response is not None:
@@ -102,8 +102,24 @@ class ProjectTrackViewSet(viewsets.ViewSet):
         except PermissionError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
 
+    def list_projects(self, request: Request) -> Response:
+        """GET /api/showcase/project-tracks/projects/."""
+        institute_code, semester_id_raw = self._parse_query_params(request)
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = ProjectTrackService()
+            items = service.list_projects(request.user, institute_code, semester_id_raw)
+            return Response(items)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
     def retrieve_group(self, request: Request, group_id: int) -> Response:
-        """GET /api/showcase/project-tracks/groups/{id}/?semester_id=...&institute_code=..."""
+        """GET /api/showcase/project-tracks/groups/{id}/."""
         institute_code, semester_id_raw = self._parse_query_params(request)
         error_response = self._validate_semester_param(semester_id_raw)
         if error_response is not None:
@@ -120,8 +136,26 @@ class ProjectTrackViewSet(viewsets.ViewSet):
         except PermissionError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
 
+    def retrieve_project(self, request: Request, project_id: int) -> Response:
+        """GET /api/showcase/project-tracks/projects/{id}/."""
+        institute_code, semester_id_raw = self._parse_query_params(request)
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = ProjectTrackService()
+            detail = service.get_project_detail(
+                request.user, project_id, institute_code, semester_id_raw
+            )
+            return Response(detail)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_404_NOT_FOUND)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
     def statistics(self, request: Request) -> Response:
-        """GET /api/showcase/project-tracks/statistics/?semester_id=...&institute_code=..."""
+        """GET /api/showcase/project-tracks/statistics/."""
         institute_code, semester_id_raw = self._parse_query_params(request)
         error_response = self._validate_semester_param(semester_id_raw)
         if error_response is not None:
@@ -162,7 +196,7 @@ class ProjectTrackViewSet(viewsets.ViewSet):
             service = ProjectTrackService()
             dto = ProjectTrackDeleteDTO.from_dict(serializer.validated_data)
             service.delete_track(request.user, dto)
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response({"message": "OK"}, status=status.HTTP_200_OK)
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_404_NOT_FOUND)
         except PermissionError as exc:

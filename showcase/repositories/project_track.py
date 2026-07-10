@@ -21,13 +21,17 @@ class ProjectTrackRepository:
         if not department_ids:
             return Q(pk__in=[])
 
-        return Q(**{f"{prefix}involved_departments__department_id__in": department_ids})
+        return Q(
+            **{
+                f"{prefix}involved_departments__department_id__in": department_ids,
+            }
+        )
 
     @classmethod
     def _application_institute_access_q(
         cls, institute_codes: list[str], prefix: str = ""
     ) -> Q:
-        """Q-фильтр: заявка доступна институту по involved_departments или target_institutes."""
+        """Q-фильтр: заявка доступна институту по involved_departments/target_institutes."""
         if not institute_codes:
             return Q(pk__in=[])
 
@@ -190,6 +194,39 @@ class ProjectTrackRepository:
 
         return queryset
 
+    def list_projects_with_counts(
+        self,
+        institute_code: str,
+        semester_id: int,
+        accessible_institute_codes: list[str] | None,
+    ) -> QuerySet[ProjectApplication]:
+        """Список одобренных проектов семестра со счётчиком назначенных групп."""
+        queryset = (
+            ProjectApplication.objects.filter(
+                semester_id=semester_id,
+                status__code="approved",
+            )
+            .filter(self._application_institute_access_q([institute_code]))
+            .annotate(
+                assigned_groups_count=Count(
+                    "project_tracks",
+                    distinct=True,
+                    filter=Q(
+                        project_tracks__semester_id=semester_id,
+                        project_tracks__study_group__institute_id=institute_code,
+                        project_tracks__study_group__is_end=False,
+                    ),
+                )
+            )
+            .distinct()
+            .order_by("title")
+        )
+
+        # Параметр accessible_institute_codes здесь не влияет на результат:
+        # доступ валидируется на уровне service по institute_code.
+        _ = accessible_institute_codes
+        return queryset
+
     def get_group_by_id(self, group_id: int) -> StudyGroup | None:
         """Возвращает группу по id или None."""
         try:
@@ -215,6 +252,44 @@ class ProjectTrackRepository:
             .filter(self._application_institute_access_q([institute_code]))
             .distinct()
             .order_by("title")
+        )
+
+    def get_application_by_id(
+        self, project_id: int, *, institute_code: str | None = None
+    ) -> ProjectApplication | None:
+        """Возвращает проектную заявку по id или None.
+
+        Если передан institute_code — дополнительно фильтрует по доступности заявки институту.
+        """
+        try:
+            queryset = ProjectApplication.objects.select_related(
+                "status", "semester"
+            ).prefetch_related("involved_departments", "target_institutes")
+            if institute_code is not None:
+                queryset = queryset.filter(
+                    self._application_institute_access_q([institute_code])
+                ).distinct()
+            return queryset.get(pk=project_id)
+        except ProjectApplication.DoesNotExist:
+            return None
+
+    def get_project_assigned_groups(
+        self,
+        project_id: int,
+        semester_id: int,
+        institute_code: str,
+    ) -> QuerySet[StudyGroup]:
+        """Активные группы института, назначенные на проект в семестре."""
+        return (
+            StudyGroup.objects.filter(
+                institute_id=institute_code,
+                is_end=False,
+                project_tracks__project_application_id=project_id,
+                project_tracks__semester_id=semester_id,
+            )
+            .select_related("direction")
+            .distinct()
+            .order_by("name")
         )
 
     def get_statistics(
