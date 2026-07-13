@@ -523,6 +523,27 @@ class TestProjectTrackService:
         assert stats["average_projects_per_group"] == 0.5
         assert stats["groups_without_projects"] == 1
 
+    def test_get_statistics_without_institute_code_aggregated(
+        self,
+        roles,
+        make_user,
+        institute,
+        other_institute,
+        semester,
+        track_data,
+    ):
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        stats = service.get_statistics(user, None, str(semester.id))
+        assert "overall" in stats
+        assert "by_institute" in stats
+        assert stats["overall"]["total_projects"] == 2
+        assert stats["overall"]["distributed_projects"] == 1
+        assert len(stats["by_institute"]) == 2
+        by_code = {item["institute_code"]: item for item in stats["by_institute"]}
+        assert by_code[institute.code]["distributed_projects"] == 1
+        assert by_code[other_institute.code]["distributed_projects"] == 0
+
     def test_list_groups_validator_without_institute_code_service(
         self, roles, make_user, institute, semester, track_data
     ):

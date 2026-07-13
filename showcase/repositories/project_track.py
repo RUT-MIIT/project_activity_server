@@ -6,7 +6,7 @@ from itertools import product
 
 from django.db.models import Count, Q, QuerySet
 
-from showcase.models import ProjectApplication, ProjectTrack
+from showcase.models import Institute, ProjectApplication, ProjectTrack
 from teams.domain.institute_access import get_department_ids_for_institute_codes
 from teams.models import StudyGroup
 
@@ -348,3 +348,61 @@ class ProjectTrackRepository:
             "average_projects_per_group": average,
             "groups_without_projects": groups_without_projects,
         }
+
+    def get_statistics_overall(self, semester_id: int) -> dict[str, int | float]:
+        """Агрегированная статистика по всем активным институтам."""
+        groups_qs = StudyGroup.objects.filter(
+            is_end=False,
+            institute__is_active=True,
+        )
+        total_groups = groups_qs.count()
+
+        tracks_qs = ProjectTrack.objects.filter(
+            semester_id=semester_id,
+            study_group__is_end=False,
+            study_group__institute__is_active=True,
+            project_application__status__code="approved",
+        )
+
+        total_tracks = tracks_qs.count()
+        distributed_projects = (
+            tracks_qs.values("project_application_id").distinct().count()
+        )
+
+        groups_with_projects = tracks_qs.values("study_group_id").distinct().count()
+        groups_without_projects = total_groups - groups_with_projects
+
+        total_projects = ProjectApplication.objects.filter(
+            status__code="approved",
+            semester_id=semester_id,
+        ).count()
+
+        average = round(total_tracks / total_groups, 1) if total_groups > 0 else 0.0
+
+        return {
+            "total_projects": total_projects,
+            "distributed_projects": distributed_projects,
+            "average_projects_per_group": average,
+            "groups_without_projects": groups_without_projects,
+        }
+
+    def list_statistics_by_institutes(
+        self, semester_id: int
+    ) -> list[dict[str, int | float | str]]:
+        """Статистика по каждому активному институту."""
+        institutes = Institute.objects.filter(is_active=True).order_by("position")
+        result: list[dict[str, int | float | str]] = []
+        for institute in institutes:
+            stats = self.get_statistics(
+                institute_code=institute.code,
+                semester_id=semester_id,
+                accessible_institute_codes=None,
+            )
+            result.append(
+                {
+                    "institute_code": institute.code,
+                    "institute_name": institute.name,
+                    **stats,
+                }
+            )
+        return result

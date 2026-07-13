@@ -46,6 +46,16 @@ class ProjectTrackDomain:
         return get_accessible_institute_codes(user)
 
     @classmethod
+    def can_view_aggregated_statistics(cls, user: User) -> bool:
+        """True для admin/cpds/staff — статистика без institute_code."""
+        if not user or not user.is_authenticated:
+            return False
+        if user.is_staff:
+            return True
+        role_code = cls.get_role_code(user)
+        return role_code in {"admin", "cpds"}
+
+    @classmethod
     def resolve_institute_code(cls, user: User, institute_code: str | None) -> str:
         """Определяет код института: из параметра или по умолчанию для validator."""
         accessible_codes = cls.get_accessible_institute_codes(user)

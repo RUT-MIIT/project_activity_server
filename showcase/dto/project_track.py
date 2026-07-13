@@ -257,3 +257,64 @@ class ProjectTrackStatisticsDTO:
             "average_projects_per_group": self.average_projects_per_group,
             "groups_without_projects": self.groups_without_projects,
         }
+
+
+class ProjectTrackInstituteStatisticsDTO(ProjectTrackStatisticsDTO):
+    """DTO статистики по одному институту."""
+
+    def __init__(
+        self,
+        institute_code: str,
+        institute_name: str,
+        total_projects: int,
+        distributed_projects: int,
+        average_projects_per_group: float,
+        groups_without_projects: int,
+    ) -> None:
+        super().__init__(
+            total_projects=total_projects,
+            distributed_projects=distributed_projects,
+            average_projects_per_group=average_projects_per_group,
+            groups_without_projects=groups_without_projects,
+        )
+        self.institute_code = institute_code
+        self.institute_name = institute_name
+
+    def to_dict(self) -> dict[str, Any]:
+        """Преобразует DTO в словарь для API."""
+        return {
+            "institute_code": self.institute_code,
+            "institute_name": self.institute_name,
+            **super().to_dict(),
+        }
+
+
+class ProjectTrackAggregatedStatisticsDTO:
+    """DTO агрегированной статистики по всем институтам."""
+
+    def __init__(
+        self,
+        overall: dict[str, int | float],
+        by_institute: list[dict[str, int | float | str]],
+    ) -> None:
+        self.overall = overall
+        self.by_institute = by_institute
+
+    def to_dict(self) -> dict[str, Any]:
+        """Преобразует DTO в словарь для API."""
+        return {
+            "overall": ProjectTrackStatisticsDTO(**self.overall).to_dict(),
+            "by_institute": [
+                ProjectTrackInstituteStatisticsDTO(
+                    institute_code=str(item["institute_code"]),
+                    institute_name=str(item["institute_name"]),
+                    total_projects=int(item["total_projects"]),
+                    distributed_projects=int(item["distributed_projects"]),
+                    average_projects_per_group=float(
+                        item["average_projects_per_group"]
+                    ),
+                    groups_without_projects=int(item["groups_without_projects"]),
+                ).to_dict()
+                for item in self.by_institute
+            ],
+        }

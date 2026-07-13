@@ -78,6 +78,18 @@ class TestProjectTrackDomain:
         with pytest.raises(ValueError, match="institute_code обязателен"):
             ProjectTrackDomain.resolve_institute_code(user, None)
 
+    def test_can_view_aggregated_statistics_admin(self, roles, make_user):
+        user = make_user(role_code="admin")
+        assert ProjectTrackDomain.can_view_aggregated_statistics(user) is True
+
+    def test_can_view_aggregated_statistics_cpds(self, roles, make_user):
+        user = make_user(role_code="cpds")
+        assert ProjectTrackDomain.can_view_aggregated_statistics(user) is True
+
+    def test_can_view_aggregated_statistics_validator_denied(self, roles, make_user):
+        user = make_user(role_code="institute_validator", with_department=True)
+        assert ProjectTrackDomain.can_view_aggregated_statistics(user) is False
+
     def test_resolve_institute_code_validator_other_denied(
         self, roles, make_user, institute
     ):

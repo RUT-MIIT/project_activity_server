@@ -11,6 +11,7 @@ from django.db.models import QuerySet
 from accounts.models import Department, Semester
 from showcase.domain.project_track import ProjectTrackDomain
 from showcase.dto.project_track import (
+    ProjectTrackAggregatedStatisticsDTO,
     ProjectTrackAssignDTO,
     ProjectTrackAssignResultDTO,
     ProjectTrackDeleteDTO,
@@ -230,6 +231,17 @@ class ProjectTrackService:
         semester_id_raw: str,
     ) -> dict:
         """Статистика распределения проектов по группам."""
+        self._check_manage_permission(user)
+
+        if institute_code is None and self.domain.can_view_aggregated_statistics(user):
+            semester_id = Semester.resolve_list_semester_id(semester_id_raw)
+            overall = self.repository.get_statistics_overall(semester_id)
+            by_institute = self.repository.list_statistics_by_institutes(semester_id)
+            return ProjectTrackAggregatedStatisticsDTO(
+                overall=overall,
+                by_institute=by_institute,
+            ).to_dict()
+
         semester_id, accessible_codes, resolved_institute_code = (
             self._resolve_institute_semester(user, institute_code, semester_id_raw)
         )

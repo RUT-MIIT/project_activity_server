@@ -478,6 +478,46 @@ class TestProjectTrackGroupsViewSet:
         assert response.status_code == 200
         assert response.data["total_projects"] == 1
 
+    def test_statistics_admin_without_institute_code_returns_aggregated(
+        self, roles, make_user, institute, other_institute, semester, track_setup
+    ):
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.get(
+            f"/api/showcase/project-tracks/statistics/?semester_id={semester.id}"
+        )
+        assert response.status_code == 200
+        assert "overall" in response.data
+        assert "by_institute" in response.data
+        assert response.data["overall"]["total_projects"] == 2
+        assert response.data["overall"]["distributed_projects"] == 1
+        assert len(response.data["by_institute"]) == 2
+        by_code = {
+            item["institute_code"]: item for item in response.data["by_institute"]
+        }
+        assert by_code[institute.code]["institute_name"] == institute.name
+        assert by_code[institute.code]["distributed_projects"] == 1
+        assert by_code[other_institute.code]["institute_name"] == other_institute.name
+        assert by_code[other_institute.code]["distributed_projects"] == 0
+
+    def test_statistics_cpds_without_institute_code_returns_aggregated(
+        self, roles, make_user, institute, semester, track_setup
+    ):
+        user = make_user(role_code="cpds")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.get(
+            f"/api/showcase/project-tracks/statistics/?semester_id={semester.id}"
+        )
+        assert response.status_code == 200
+        assert "overall" in response.data
+        assert "by_institute" in response.data
+        assert all(
+            "institute_code" in item and "institute_name" in item
+            for item in response.data["by_institute"]
+        )
+
     def test_statistics_admin_success(
         self,
         roles,
