@@ -40,6 +40,11 @@ class StudyGroup(models.Model):
         default="",
         verbose_name="Код",
     )
+    enrollment_year = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Год набора",
+    )
     direction = models.ForeignKey(
         Direction,
         on_delete=models.PROTECT,
