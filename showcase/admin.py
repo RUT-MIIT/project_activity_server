@@ -9,6 +9,9 @@ from .models import (
     ProjectApplication,
     ProjectApplicationComment,
     ProjectApplicationStatusLog,
+    ProjectTrack,
+    ProjectTrackApplication,
+    ProjectTrackGroup,
     Tag,
 )
 
@@ -187,3 +190,94 @@ class DepartmentPlanAdmin(admin.ModelAdmin):
     ordering = ("semester", "department")
     verbose_name = "План подразделения"
     verbose_name_plural = "Планы подразделений"
+
+
+class ProjectTrackGroupInline(admin.TabularInline):
+    """Инлайн учебных групп в проектном треке."""
+
+    model = ProjectTrackGroup
+    extra = 0
+    raw_id_fields = ("study_group",)
+    verbose_name = "Учебная группа"
+    verbose_name_plural = "Учебные группы"
+
+
+class ProjectTrackApplicationInline(admin.TabularInline):
+    """Инлайн проектных заявок в проектном треке."""
+
+    model = ProjectTrackApplication
+    extra = 0
+    raw_id_fields = ("project_application",)
+    verbose_name = "Проектная заявка"
+    verbose_name_plural = "Проектные заявки"
+
+
+@admin.register(ProjectTrack)
+class ProjectTrackAdmin(admin.ModelAdmin):
+    """Админка проектных треков."""
+
+    list_display = (
+        "name",
+        "semester",
+        "department",
+        "author",
+        "max_teams",
+        "groups_count",
+        "applications_count",
+    )
+    list_filter = ("semester", "department")
+    search_fields = (
+        "name",
+        "description",
+        "department__name",
+        "author__email",
+        "author__last_name",
+    )
+    autocomplete_fields = ("semester", "department", "author")
+    ordering = ("semester", "name")
+    inlines = [ProjectTrackGroupInline, ProjectTrackApplicationInline]
+
+    fieldsets = (
+        (
+            "Основная информация",
+            {
+                "fields": (
+                    "name",
+                    "description",
+                    "department",
+                    "semester",
+                    "author",
+                    "max_teams",
+                )
+            },
+        ),
+    )
+
+    @admin.display(description="Групп")
+    def groups_count(self, obj: ProjectTrack) -> int:
+        """Количество групп в треке."""
+        if (
+            hasattr(obj, "_prefetched_objects_cache")
+            and "group_links" in obj._prefetched_objects_cache
+        ):
+            return len(obj.group_links.all())
+        return obj.group_links.count()
+
+    @admin.display(description="Заявок")
+    def applications_count(self, obj: ProjectTrack) -> int:
+        """Количество заявок в треке."""
+        if (
+            hasattr(obj, "_prefetched_objects_cache")
+            and "application_links" in obj._prefetched_objects_cache
+        ):
+            return len(obj.application_links.all())
+        return obj.application_links.count()
+
+    def get_queryset(self, request):
+        """Оптимизирует список треков."""
+        return (
+            super()
+            .get_queryset(request)
+            .select_related("semester", "department", "author")
+            .prefetch_related("group_links", "application_links")
+        )

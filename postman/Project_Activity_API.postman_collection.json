@@ -1,0 +1,2698 @@
+{
+  "info": {
+    "name": "Project Activity API",
+    "description": "Полный API: accounts + teams + showcase.\n\n## Environments\n- **local**: baseUrl = http://localhost:8000\n- **prod**: baseUrl = https://pd.emiit.ru\n\n## Авторизация\nCollection-level: `Authorization: Bearer {{token}}`.\n\nПеременные ролей: `token_admin`, `token_cpds`, `token_institute_validator`.\n1. Выполните Login (admin/cpds/institute_validator) — test-script сохранит access.\n2. Или Use token: … — скопирует нужный token_* → token.\n3. Публичные запросы помечены noauth.\n\n## Префиксы\n- `/api/accounts/` — auth, users, roles, semesters\n- `/api/teams/` — teams, directions, study-groups\n- `/api/showcase/` — applications, tracks, tags, projects",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "roleCode",
+      "value": "user"
+    },
+    {
+      "key": "statusCode",
+      "value": "created"
+    },
+    {
+      "key": "directionCode",
+      "value": "09.03.01"
+    },
+    {
+      "key": "tagId",
+      "value": "1"
+    },
+    {
+      "key": "memberId",
+      "value": "1"
+    },
+    {
+      "key": "registrationId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "login",
+                ""
+              ]
+            },
+            "description": "JWT login. Ответ: {access, refresh, user}.\nTest-script сохраняет access в token_admin и token.\nBody: email, password (credentials admin).",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.access && json.user && json.user.role) {",
+                  "    const role = json.user.role;",
+                  "    const key = 'token_' + role;",
+                  "    pm.environment.set(key, json.access);",
+                  "    pm.environment.set('token', json.access);",
+                  "    console.log('Saved access to ' + key + ' and token');",
+                  "}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (cpds)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "login",
+                ""
+              ]
+            },
+            "description": "Login под ролью cpds → token_cpds + token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{cpdsEmail}}\",\n  \"password\": \"{{cpdsPassword}}\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.access && json.user && json.user.role) {",
+                  "    const role = json.user.role;",
+                  "    const key = 'token_' + role;",
+                  "    pm.environment.set(key, json.access);",
+                  "    pm.environment.set('token', json.access);",
+                  "    console.log('Saved access to ' + key + ' and token');",
+                  "}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Login (institute_validator)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/login/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "login",
+                ""
+              ]
+            },
+            "description": "Login под ролью institute_validator → token_institute_validator + token.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{validatorEmail}}\",\n  \"password\": \"{{validatorPassword}}\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "const json = pm.response.json();",
+                  "if (json.access && json.user && json.user.role) {",
+                  "    const role = json.user.role;",
+                  "    const key = 'token_' + role;",
+                  "    pm.environment.set(key, json.access);",
+                  "    pm.environment.set('token', json.access);",
+                  "    console.log('Saved access to ' + key + ' and token');",
+                  "}",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Use token: admin",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/user/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "user",
+                ""
+              ]
+            },
+            "description": "Копирует token_admin → token и проверяет /user/."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set('roleToUse', 'admin');",
+                  "const role = pm.variables.get('roleToUse');",
+                  "const key = 'token_' + role;",
+                  "const value = pm.environment.get(key);",
+                  "if (!value) {",
+                  "    throw new Error('Environment variable ' + key + ' is empty. Login as ' + role + ' first.');",
+                  "}",
+                  "pm.environment.set('token', value);",
+                  "console.log('Active token set from ' + key);",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Use token: cpds",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/user/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "user",
+                ""
+              ]
+            },
+            "description": "Копирует token_cpds → token и проверяет /user/."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set('roleToUse', 'cpds');",
+                  "const role = pm.variables.get('roleToUse');",
+                  "const key = 'token_' + role;",
+                  "const value = pm.environment.get(key);",
+                  "if (!value) {",
+                  "    throw new Error('Environment variable ' + key + ' is empty. Login as ' + role + ' first.');",
+                  "}",
+                  "pm.environment.set('token', value);",
+                  "console.log('Active token set from ' + key);",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Use token: institute_validator",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/user/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "user",
+                ""
+              ]
+            },
+            "description": "Копирует token_institute_validator → token и проверяет /user/."
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.variables.set('roleToUse', 'institute_validator');",
+                  "const role = pm.variables.get('roleToUse');",
+                  "const key = 'token_' + role;",
+                  "const value = pm.environment.get(key);",
+                  "if (!value) {",
+                  "    throw new Error('Environment variable ' + key + ' is empty. Login as ' + role + ' first.');",
+                  "}",
+                  "pm.environment.set('token', value);",
+                  "console.log('Active token set from ' + key);",
+                  ""
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "User me",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/user/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "user",
+                ""
+              ]
+            },
+            "description": "Текущий пользователь. Auth: JWT. Response: UserSerializer."
+          }
+        },
+        {
+          "name": "Password reset",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/password/reset/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "password",
+                "reset",
+                ""
+              ]
+            },
+            "description": "Публичный. Body: {email}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Password reset confirm",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/password/reset/confirm/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "password",
+                "reset",
+                "confirm",
+                ""
+              ]
+            },
+            "description": "Публичный. Body: {uid, token, new_password}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"uid\": \"\",\n  \"token\": \"\",\n  \"new_password\": \"\"\n}"
+            },
+            "auth": {
+              "type": "noauth"
+            }
+          }
+        },
+        {
+          "name": "Password change",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/accounts/password/change/",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "accounts",
+                "password",
+                "change",
+                ""
+              ]
+            },
+            "description": "Auth: JWT. Body: {current_password, new_password}.",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"current_password\": \"\",\n  \"new_password\": \"\"\n}"
+            }
+          }
+        }
+      ],
+      "description": "Логин JWT и переключение активного Bearer {{token}}."
+    },
+    {
+      "name": "Accounts",
+      "item": [
+        {
+          "name": "Departments",
+          "item": [
+            {
+              "name": "List departments",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/departments/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "departments",
+                    ""
+                  ]
+                },
+                "description": "Список подразделений. Публичный (AllowAny).",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Get department",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/departments/{{departmentId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "departments",
+                    "{{departmentId}}",
+                    ""
+                  ]
+                },
+                "description": "Детали подразделения. Auth: JWT."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Roles",
+          "item": [
+            {
+              "name": "List roles",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/roles/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "roles",
+                    ""
+                  ]
+                },
+                "description": "Активные роли. Auth: JWT. {code, name, requires_department, is_active}."
+              }
+            },
+            {
+              "name": "Get role",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/roles/{{roleCode}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "roles",
+                    "{{roleCode}}",
+                    ""
+                  ]
+                },
+                "description": "Роль по code. Auth: JWT."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Semesters",
+          "item": [
+            {
+              "name": "List semesters",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/semesters/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "semesters",
+                    ""
+                  ]
+                },
+                "description": "Список семестров. Auth: JWT (любая роль)."
+              }
+            },
+            {
+              "name": "Get semester",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/semesters/{{semesterId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "semesters",
+                    "{{semesterId}}",
+                    ""
+                  ]
+                },
+                "description": "Детали семестра."
+              }
+            },
+            {
+              "name": "Create semester",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/semesters/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "semesters",
+                    ""
+                  ]
+                },
+                "description": "Создание. Роли: admin/cpds/staff. Body: {code, name, position, academic_year_id?}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"code\": \"2026-1\",\n  \"name\": \"Весна 2026\",\n  \"position\": 1\n}"
+                }
+              }
+            },
+            {
+              "name": "Update semester (PATCH)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/semesters/{{semesterId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "semesters",
+                    "{{semesterId}}",
+                    ""
+                  ]
+                },
+                "description": "Частичное обновление. Роли: admin/cpds/staff.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Обновлённый семестр\",\n  \"position\": 2\n}"
+                }
+              }
+            },
+            {
+              "name": "Delete semester",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/semesters/{{semesterId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "semesters",
+                    "{{semesterId}}",
+                    ""
+                  ]
+                },
+                "description": "Удаление. Роли: admin/cpds/staff."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Users",
+          "item": [
+            {
+              "name": "List users",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/users/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "users",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "include_authored_projects",
+                      "value": "true",
+                      "disabled": true,
+                      "description": "Добавить authored_projects[]"
+                    }
+                  ]
+                },
+                "description": "Роли: admin, cpds, institute_validator (+ staff).\nQuery: include_authored_projects=true.\ninstitute_validator — только свой институт; admin/cpds — все кроме admin/staff."
+              }
+            },
+            {
+              "name": "Get user",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/users/{{userId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "users",
+                    "{{userId}}",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "include_authored_projects",
+                      "value": "true",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Детали пользователя. Scope как у list."
+              }
+            },
+            {
+              "name": "Update user (PATCH)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/users/{{userId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "users",
+                    "{{userId}}",
+                    ""
+                  ]
+                },
+                "description": "Только admin/cpds. Поля: role (код), department_id, email, phone.\nНельзя назначить role=admin. institute_validator → 403.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role\": \"department_validator\",\n  \"department_id\": {{departmentId}}\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Registration requests",
+          "item": [
+            {
+              "name": "Create registration request",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/registration-requests/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "registration-requests",
+                    ""
+                  ]
+                },
+                "description": "Публичная заявка на регистрацию.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"last_name\": \"Иванов\",\n  \"first_name\": \"Иван\",\n  \"middle_name\": \"Иванович\",\n  \"department\": {{departmentId}},\n  \"email\": \"new.user@example.com\",\n  \"phone\": \"+79001234567\",\n  \"comment\": \"\"\n}"
+                },
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "List registration requests",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/registration-requests/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "registration-requests",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "status",
+                      "value": "submitted",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Manage: admin/cpds/staff. Query: status=submitted|approved|rejected."
+              }
+            },
+            {
+              "name": "Get registration request",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/registration-requests/{{registrationId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "registration-requests",
+                    "{{registrationId}}",
+                    ""
+                  ]
+                },
+                "description": "Детали заявки. Manage: admin/cpds/staff."
+              }
+            },
+            {
+              "name": "Approve registration",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/registration-requests/{{registrationId}}/approve/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "registration-requests",
+                    "{{registrationId}}",
+                    "approve",
+                    ""
+                  ]
+                },
+                "description": "AdminUser или cpds. Body: {role_id, department_id?}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role_id\": \"user\",\n  \"department_id\": {{departmentId}}\n}"
+                }
+              }
+            },
+            {
+              "name": "Reject registration",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/accounts/registration-requests/{{registrationId}}/reject/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "accounts",
+                    "registration-requests",
+                    "{{registrationId}}",
+                    "reject",
+                    ""
+                  ]
+                },
+                "description": "AdminUser или cpds. Body: {reason?}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reason\": \"Недостаточно данных\"\n}"
+                }
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Teams",
+      "item": [
+        {
+          "name": "Teams CRUD",
+          "item": [
+            {
+              "name": "List teams",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/teams/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "teams",
+                    ""
+                  ]
+                },
+                "description": "Список команд. Auth: JWT."
+              }
+            },
+            {
+              "name": "My teams",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/teams/my/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "teams",
+                    "my",
+                    ""
+                  ]
+                },
+                "description": "Команды текущего пользователя."
+              }
+            },
+            {
+              "name": "Create team",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/teams/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "teams",
+                    ""
+                  ]
+                },
+                "description": "Body: {name, description?, leader_id?, project_application_id?}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Команда Alpha\",\n  \"description\": \"Описание\",\n  \"project_application_id\": {{applicationId}}\n}"
+                }
+              }
+            },
+            {
+              "name": "Get team",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/teams/{{teamId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "teams",
+                    "{{teamId}}",
+                    ""
+                  ]
+                },
+                "description": "Детали команды с members[]."
+              }
+            },
+            {
+              "name": "Update team (PATCH)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/teams/{{teamId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "teams",
+                    "{{teamId}}",
+                    ""
+                  ]
+                },
+                "description": "Write: leader команды / admin / cpds / staff.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Команда Beta\",\n  \"description\": \"Обновлено\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Delete team",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/teams/{{teamId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "teams",
+                    "{{teamId}}",
+                    ""
+                  ]
+                },
+                "description": "Write: leader / admin / cpds / staff."
+              }
+            },
+            {
+              "name": "Add member",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/teams/{{teamId}}/members/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "teams",
+                    "{{teamId}}",
+                    "members",
+                    ""
+                  ]
+                },
+                "description": "Body: {user_id, role?: \"leader\"|\"member\"}.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user_id\": {{userId}},\n  \"role\": \"member\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Remove member",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/teams/{{teamId}}/members/{{memberId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "teams",
+                    "{{teamId}}",
+                    "members",
+                    "{{memberId}}",
+                    ""
+                  ]
+                },
+                "description": "Нельзя удалить leader."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Directions",
+          "item": [
+            {
+              "name": "List directions",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/directions/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "directions",
+                    ""
+                  ]
+                },
+                "description": "Auth: JWT. institute_validator — фильтр по своим институтам."
+              }
+            },
+            {
+              "name": "Get direction",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/directions/{{directionCode}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "directions",
+                    "{{directionCode}}",
+                    ""
+                  ]
+                },
+                "description": "lookup по code. {code, level, name}."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Study groups",
+          "item": [
+            {
+              "name": "List study groups",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/study-groups/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "study-groups",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "is_end",
+                      "value": "false",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Query: is_end=true|false. institute_validator — свой институт."
+              }
+            },
+            {
+              "name": "Get study group",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/study-groups/{{groupId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "study-groups",
+                    "{{groupId}}",
+                    ""
+                  ]
+                },
+                "description": "Детали с direction и institute."
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Showcase",
+      "item": [
+        {
+          "name": "Project Tracks",
+          "item": [
+            {
+              "name": "CRUD",
+              "item": [
+                {
+                  "name": "List tracks",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/?semester_id={{semesterId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}",
+                          "description": "Обязательный. ID или actual/next"
+                        },
+                        {
+                          "key": "department_id",
+                          "value": "{{departmentId}}",
+                          "disabled": true,
+                          "description": "Опционально"
+                        },
+                        {
+                          "key": "institute_code",
+                          "value": "{{instituteCode}}",
+                          "disabled": true,
+                          "description": "Опционально"
+                        }
+                      ]
+                    },
+                    "description": "Список треков. Обязателен semester_id (id | actual | next).\nРоли: admin, cpds, institute_validator, staff."
+                  }
+                },
+                {
+                  "name": "Create track",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        ""
+                      ]
+                    },
+                    "description": "Создание. Поля: name*, department_id*, semester_id*, description?, max_teams?\nauthor_id из текущего пользователя.",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Трек ИЭУ\",\n  \"description\": \"Описание трека\",\n  \"department_id\": {{departmentId}},\n  \"semester_id\": {{semesterId}},\n  \"max_teams\": 100\n}"
+                    }
+                  }
+                },
+                {
+                  "name": "Get track",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/{{trackId}}/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "{{trackId}}",
+                        ""
+                      ]
+                    },
+                    "description": "Детали с groups[] и applications[]."
+                  }
+                },
+                {
+                  "name": "Update track (PATCH)",
+                  "request": {
+                    "method": "PATCH",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/{{trackId}}/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "{{trackId}}",
+                        ""
+                      ]
+                    },
+                    "description": "Опциональные поля: name, description, department_id, semester_id, max_teams.",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"name\": \"Обновлённый трек\",\n  \"description\": \"Новое описание\",\n  \"max_teams\": 50\n}"
+                    }
+                  }
+                },
+                {
+                  "name": "Delete track",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/{{trackId}}/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "{{trackId}}",
+                        ""
+                      ]
+                    },
+                    "description": "Каскадно удаляет связи. Ответ 204."
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Groups in track",
+              "item": [
+                {
+                  "name": "Add groups to track",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/{{trackId}}/groups/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "{{trackId}}",
+                        "groups",
+                        ""
+                      ]
+                    },
+                    "description": "Body: {group_ids}. Дубликаты пропускаются. Ответ — полный трек.",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"group_ids\": [1, 2]\n}"
+                    }
+                  }
+                },
+                {
+                  "name": "Remove group from track",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/{{trackId}}/groups/{{groupId}}/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "{{trackId}}",
+                        "groups",
+                        "{{groupId}}",
+                        ""
+                      ]
+                    },
+                    "description": "Удалить группу из трека. Ответ — полный трек."
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Applications in track",
+              "item": [
+                {
+                  "name": "Add applications to track",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/{{trackId}}/applications/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "{{trackId}}",
+                        "applications",
+                        ""
+                      ]
+                    },
+                    "description": "Только approved заявки, semester совпадает. Body: {application_ids}.",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"application_ids\": [1, 2]\n}"
+                    }
+                  }
+                },
+                {
+                  "name": "Remove application from track",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/{{trackId}}/applications/{{applicationId}}/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "{{trackId}}",
+                        "applications",
+                        "{{applicationId}}",
+                        ""
+                      ]
+                    },
+                    "description": "Удалить заявку из трека. Ответ — полный трек."
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Auxiliary (groups / projects / statistics)",
+              "item": [
+                {
+                  "name": "List study groups (via tracks)",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/groups/?semester_id={{semesterId}}&institute_code={{instituteCode}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "groups",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}"
+                        },
+                        {
+                          "key": "institute_code",
+                          "value": "{{instituteCode}}"
+                        }
+                      ]
+                    },
+                    "description": "Группы с assigned_projects_count. semester_id обязателен."
+                  }
+                },
+                {
+                  "name": "Get study group detail (via tracks)",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/groups/{{groupId}}/?semester_id={{semesterId}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "groups",
+                        "{{groupId}}",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}"
+                        },
+                        {
+                          "key": "institute_code",
+                          "value": "{{instituteCode}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Группа + projects[]."
+                  }
+                },
+                {
+                  "name": "List projects (via tracks)",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/projects/?semester_id={{semesterId}}&institute_code={{instituteCode}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "projects",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}"
+                        },
+                        {
+                          "key": "institute_code",
+                          "value": "{{instituteCode}}"
+                        }
+                      ]
+                    },
+                    "description": "Одобренные заявки с assigned_groups_count."
+                  }
+                },
+                {
+                  "name": "Get project detail (via tracks)",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/projects/{{applicationId}}/?semester_id={{semesterId}}&institute_code={{instituteCode}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "projects",
+                        "{{applicationId}}",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}"
+                        },
+                        {
+                          "key": "institute_code",
+                          "value": "{{instituteCode}}"
+                        }
+                      ]
+                    },
+                    "description": "Заявка + groups[]."
+                  }
+                },
+                {
+                  "name": "Statistics",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-tracks/statistics/?semester_id={{semesterId}}&institute_code={{instituteCode}}",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-tracks",
+                        "statistics",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}"
+                        },
+                        {
+                          "key": "institute_code",
+                          "value": "{{instituteCode}}",
+                          "description": "Без параметра — агрегат (admin/cpds)"
+                        }
+                      ]
+                    },
+                    "description": "Статистика распределения. Без institute_code (admin/cpds): {overall, by_institute}."
+                  }
+                }
+              ]
+            }
+          ],
+          "description": "CRUD треков. Роли: admin, cpds, institute_validator, staff."
+        },
+        {
+          "name": "Project Applications",
+          "item": [
+            {
+              "name": "CRUD",
+              "item": [
+                {
+                  "name": "List my applications (list)",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}",
+                          "disabled": true
+                        },
+                        {
+                          "key": "page",
+                          "value": "1",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Пагинация (20). Query: semester_id?, page?. Заявки текущего пользователя."
+                  }
+                },
+                {
+                  "name": "Create application",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        ""
+                      ]
+                    },
+                    "description": "Обязательные: title, company, company_contacts, problem_holder, goal, barrier, existing_solutions. Auth: JWT. 201.",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"title\": \"Система управления проектными заявками\",\n  \"company\": \"ООО Тестовая компания\",\n  \"company_contacts\": \"ivan@example.com, +79001234567\",\n  \"problem_holder\": \"Кафедра ИТ\",\n  \"goal\": \"Автоматизировать процесс согласования\",\n  \"barrier\": \"Нет единой системы\",\n  \"existing_solutions\": \"Таблицы Excel\",\n  \"description\": \"Описание проекта\",\n  \"target_institutes\": [\"{{instituteCode}}\"],\n  \"tags\": [],\n  \"needs_consultation\": false,\n  \"is_internal_customer\": false,\n  \"semester_id\": {{semesterId}},\n  \"main_department_id\": {{departmentId}}\n}"
+                    }
+                  }
+                },
+                {
+                  "name": "Get application",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        ""
+                      ]
+                    },
+                    "description": "Полная заявка + available_actions[]."
+                  }
+                },
+                {
+                  "name": "Update application (PATCH)",
+                  "request": {
+                    "method": "PATCH",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        ""
+                      ]
+                    },
+                    "description": "Все поля опциональны.",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"title\": \"Обновлённое название\",\n  \"goal\": \"Новая цель\"\n}"
+                    }
+                  }
+                },
+                {
+                  "name": "Delete application",
+                  "request": {
+                    "method": "DELETE",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        ""
+                      ]
+                    },
+                    "description": "Удаление заявки (ModelViewSet destroy)."
+                  }
+                },
+                {
+                  "name": "Create simple (public)",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/simple/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "simple",
+                        ""
+                      ]
+                    },
+                    "description": "Без авторизации. is_external=true. Те же обязательные поля.",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"title\": \"Система управления проектными заявками\",\n  \"company\": \"ООО Тестовая компания\",\n  \"company_contacts\": \"ivan@example.com, +79001234567\",\n  \"problem_holder\": \"Кафедра ИТ\",\n  \"goal\": \"Автоматизировать процесс согласования\",\n  \"barrier\": \"Нет единой системы\",\n  \"existing_solutions\": \"Таблицы Excel\",\n  \"description\": \"Описание проекта\",\n  \"target_institutes\": [\"{{instituteCode}}\"],\n  \"tags\": [],\n  \"needs_consultation\": false,\n  \"is_internal_customer\": false,\n  \"semester_id\": {{semesterId}},\n  \"main_department_id\": {{departmentId}}\n}"
+                    },
+                    "auth": {
+                      "type": "noauth"
+                    }
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Workflow",
+              "item": [
+                {
+                  "name": "Approve",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/approve/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        "approve",
+                        ""
+                      ]
+                    },
+                    "description": "Одобрение. Права по ApplicationCapabilities (роль + статус)."
+                  }
+                },
+                {
+                  "name": "Reject",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/reject/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        "reject",
+                        ""
+                      ]
+                    },
+                    "description": "Отклонение. Body: {reason?} optional.",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"reason\": \"Не соответствует требованиям\"\n}"
+                    }
+                  }
+                },
+                {
+                  "name": "Request changes",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/request_changes/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        "request_changes",
+                        ""
+                      ]
+                    },
+                    "description": "Отправка на доработку."
+                  }
+                },
+                {
+                  "name": "Transfer to institute",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/transfer_to_institute/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        "transfer_to_institute",
+                        ""
+                      ]
+                    },
+                    "description": "Body: {\"code\": \"INST_CODE\"} обязателен.",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"code\": \"{{instituteCode}}\"\n}"
+                    }
+                  }
+                },
+                {
+                  "name": "Return by author",
+                  "request": {
+                    "method": "POST",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/return_by_author/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        "return_by_author",
+                        ""
+                      ]
+                    },
+                    "description": "Отзыв автором → returned_author."
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Lists",
+              "item": [
+                {
+                  "name": "By status",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/by_status/?status=created",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "by_status",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "status",
+                          "value": "created"
+                        },
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Только admin/moderator. Query: status*, semester_id?"
+                  }
+                },
+                {
+                  "name": "Recent",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/recent/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "recent",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "limit",
+                          "value": "10",
+                          "disabled": true
+                        },
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Только admin/moderator. Query: limit? (default 10), semester_id?"
+                  }
+                },
+                {
+                  "name": "My applications",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/my_applications/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "my_applications",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Заявки текущего пользователя."
+                  }
+                },
+                {
+                  "name": "Coordination",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/coordination/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "coordination",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Заявки для координации (причастные, не approved/rejected)."
+                  }
+                },
+                {
+                  "name": "External",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/external/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "external",
+                        ""
+                      ],
+                      "query": [
+                        {
+                          "key": "status",
+                          "value": "created",
+                          "disabled": true
+                        },
+                        {
+                          "key": "semester_id",
+                          "value": "{{semesterId}}",
+                          "disabled": true
+                        }
+                      ]
+                    },
+                    "description": "Внешние заявки (is_external=true). Auth: JWT."
+                  }
+                }
+              ]
+            },
+            {
+              "name": "Comments & logs",
+              "item": [
+                {
+                  "name": "Status logs",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/status_logs/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        "status_logs",
+                        ""
+                      ]
+                    },
+                    "description": "История смены статусов."
+                  }
+                },
+                {
+                  "name": "List comments",
+                  "request": {
+                    "method": "GET",
+                    "header": [],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/comments/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        "comments",
+                        ""
+                      ]
+                    },
+                    "description": "Все комментарии к заявке."
+                  }
+                },
+                {
+                  "name": "Add comment",
+                  "request": {
+                    "method": "POST",
+                    "header": [
+                      {
+                        "key": "Content-Type",
+                        "value": "application/json"
+                      }
+                    ],
+                    "url": {
+                      "raw": "{{baseUrl}}/api/showcase/project-applications/{{applicationId}}/add_comment/",
+                      "host": [
+                        "{{baseUrl}}"
+                      ],
+                      "path": [
+                        "api",
+                        "showcase",
+                        "project-applications",
+                        "{{applicationId}}",
+                        "add_comment",
+                        ""
+                      ]
+                    },
+                    "description": "Body: {\"field\": \"goal\", \"text\": \"...\"}.",
+                    "body": {
+                      "mode": "raw",
+                      "raw": "{\n  \"field\": \"goal\",\n  \"text\": \"Уточните формулировку цели\"\n}"
+                    }
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "name": "Application Dashboard",
+          "item": [
+            {
+              "name": "Get dashboard",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/project-applications/dashboard/?semester_id={{semesterId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "project-applications",
+                    "dashboard",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "{{semesterId}}"
+                    },
+                    {
+                      "key": "institute_code",
+                      "value": "{{instituteCode}}",
+                      "disabled": true
+                    },
+                    {
+                      "key": "department_id",
+                      "value": "{{departmentId}}",
+                      "disabled": true
+                    },
+                    {
+                      "key": "status",
+                      "value": "pending",
+                      "disabled": true,
+                      "description": "approved,rejected,pending,in_progress (через запятую)"
+                    },
+                    {
+                      "key": "application_type",
+                      "value": "all",
+                      "disabled": true
+                    },
+                    {
+                      "key": "days",
+                      "value": "30",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Дашборд заявок. Роли: admin, cpds, institute_validator, staff.\nQuery: semester_id*, institute_code?, department_id?, status?, application_type? (all|external|internal), days? (default 30, max 366)."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tags",
+          "item": [
+            {
+              "name": "List tags",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/tags/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "tags",
+                    ""
+                  ]
+                },
+                "description": "Публичный. {id, name, category, is_base}.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Get tag",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/tags/{{tagId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "tags",
+                    "{{tagId}}",
+                    ""
+                  ]
+                },
+                "description": "Публичный. TagReadDTO с departments[].",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Create tag",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/tags/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "tags",
+                    ""
+                  ]
+                },
+                "description": "Manage: admin/cpds/institute_validator/staff.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"ИИ\",\n  \"category\": \"tech\",\n  \"department_id\": {{departmentId}}\n}"
+                }
+              }
+            },
+            {
+              "name": "Update tag (PATCH)",
+              "request": {
+                "method": "PATCH",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/tags/{{tagId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "tags",
+                    "{{tagId}}",
+                    ""
+                  ]
+                },
+                "description": "Manage roles.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Искусственный интеллект\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Delete tag",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/tags/{{tagId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "tags",
+                    "{{tagId}}",
+                    ""
+                  ]
+                },
+                "description": "Manage roles. 204."
+              }
+            },
+            {
+              "name": "Attach department",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/tags/{{tagId}}/attach-department/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "tags",
+                    "{{tagId}}",
+                    "attach-department",
+                    ""
+                  ]
+                },
+                "description": "Body: {department_id}.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"department_id\": {{departmentId}}\n}"
+                }
+              }
+            },
+            {
+              "name": "Detach department",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/tags/{{tagId}}/detach-department/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "tags",
+                    "{{tagId}}",
+                    "detach-department",
+                    ""
+                  ]
+                },
+                "description": "Body: {department_id}.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"department_id\": {{departmentId}}\n}"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Institutes",
+          "item": [
+            {
+              "name": "List institutes",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/institutes/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "institutes",
+                    ""
+                  ]
+                },
+                "description": "Публичный. Активные институты {code, name, department_id}.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            },
+            {
+              "name": "Get institute",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/institutes/{{instituteCode}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "institutes",
+                    "{{instituteCode}}",
+                    ""
+                  ]
+                },
+                "description": "lookup по code. Публичный.",
+                "auth": {
+                  "type": "noauth"
+                }
+              }
+            }
+          ]
+        },
+        {
+          "name": "Application statuses",
+          "item": [
+            {
+              "name": "List statuses",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/application-statuses/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "application-statuses",
+                    ""
+                  ]
+                },
+                "description": "Auth: JWT. [{code, name}]."
+              }
+            },
+            {
+              "name": "Get status",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/application-statuses/{{statusCode}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "application-statuses",
+                    "{{statusCode}}",
+                    ""
+                  ]
+                },
+                "description": "lookup по code."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Department plans",
+          "item": [
+            {
+              "name": "Create / upsert plan",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/department-plans/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "department-plans",
+                    ""
+                  ]
+                },
+                "description": "Body: {department_id, semester_id, plan}. Auth: JWT.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"department_id\": {{departmentId}},\n  \"semester_id\": {{semesterId}},\n  \"plan\": 10\n}"
+                }
+              }
+            },
+            {
+              "name": "List plans",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/department-plans/?semester_id={{semesterId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "department-plans",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "{{semesterId}}"
+                    },
+                    {
+                      "key": "institute_code",
+                      "value": "{{instituteCode}}",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Query: semester_id*, institute_code?. Статистика по подразделениям."
+              }
+            },
+            {
+              "name": "My department plan",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/department-plans/my-department-plan/?semester_id={{semesterId}}",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "department-plans",
+                    "my-department-plan",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "{{semesterId}}"
+                    }
+                  ]
+                },
+                "description": "План подразделения текущего пользователя. Query: semester_id*."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Projects",
+          "item": [
+            {
+              "name": "List approved projects",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/projects/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "projects",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "{{semesterId}}",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Одобренные заявки. Роли: admin, cpds, institute_validator, staff.\nQuery: semester_id? (id|actual|next)."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Semesters (showcase)",
+          "item": [
+            {
+              "name": "Assign empty applications to semester",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/showcase/semesters/{{semesterId}}/assign-empty-applications/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "showcase",
+                    "semesters",
+                    "{{semesterId}}",
+                    "assign-empty-applications",
+                    ""
+                  ]
+                },
+                "description": "Назначить семестр всем заявкам без semester_id. Роли: admin, cpds. 204."
+              }
+            }
+          ]
+        }
+      ],
+      "description": "API витрины: треки, заявки, справочники, дашборд."
+    }
+  ]
+}

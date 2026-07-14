@@ -3,6 +3,7 @@
 from collections.abc import Iterable
 
 from django.db.models import Q
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.request import Request
@@ -24,7 +25,9 @@ class DepartmentPlanViewSet(viewsets.ViewSet):
     """ViewSet для операций с планами подразделений."""
 
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = DepartmentPlanSerializer
 
+    @extend_schema(tags=["showcase"], request=DepartmentPlanSerializer)
     def create(self, request: Request) -> Response:
         """POST /api/showcase/department-plans/
 
@@ -163,6 +166,7 @@ class DepartmentPlanViewSet(viewsets.ViewSet):
 
         return stats_dict
 
+    @extend_schema(tags=["showcase"], summary="Список планов подразделений")
     def list(self, request: Request) -> Response:
         """GET /api/showcase/department-plans/?institute_code=INST&semester_id=1
 
@@ -227,6 +231,9 @@ class DepartmentPlanViewSet(viewsets.ViewSet):
 
         return Response(result)
 
+    @extend_schema(
+        tags=["showcase"], summary="План подразделения текущего пользователя"
+    )
     @action(detail=False, methods=["get"], url_path="my-department-plan")
     def my_department_plan(self, request: Request) -> Response:
         """GET /api/showcase/my-department-plan/?semester_id=ID

@@ -19,5 +19,6 @@ django-cors-headers
 python-dotenv
 djangorestframework-simplejwt
 drf-yasg
+drf-spectacular>=0.27.0
 django-allauth
 gunicorn

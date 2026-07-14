@@ -1,5 +1,7 @@
 """ViewSet дашборда проектных заявок."""
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -13,7 +15,60 @@ class ApplicationDashboardViewSet(viewsets.ViewSet):
     """API дашборда проектных заявок."""
 
     permission_classes = [IsAuthenticated, ProjectTrackPermission]
+    serializer_class = None
 
+    def get_serializer_class(self):
+        from rest_framework import serializers
+
+        class _Empty(serializers.Serializer):
+            pass
+
+        return _Empty
+
+    @extend_schema(
+        tags=["showcase"],
+        parameters=[
+            OpenApiParameter(
+                name="semester_id",
+                type=OpenApiTypes.STR,
+                required=True,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="institute_code",
+                type=OpenApiTypes.STR,
+                required=False,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="department_id",
+                type=OpenApiTypes.INT,
+                required=False,
+                location=OpenApiParameter.QUERY,
+            ),
+            OpenApiParameter(
+                name="status",
+                type=OpenApiTypes.STR,
+                required=False,
+                location=OpenApiParameter.QUERY,
+                description="approved,rejected,pending,in_progress (через запятую)",
+            ),
+            OpenApiParameter(
+                name="application_type",
+                type=OpenApiTypes.STR,
+                required=False,
+                location=OpenApiParameter.QUERY,
+                description="all | external | internal",
+            ),
+            OpenApiParameter(
+                name="days",
+                type=OpenApiTypes.INT,
+                required=False,
+                location=OpenApiParameter.QUERY,
+            ),
+        ],
+        summary="Дашборд проектных заявок",
+    )
     def retrieve(self, request: Request) -> Response:
         """GET /api/showcase/project-applications/dashboard/"""
         semester_id_raw = request.query_params.get("semester_id")

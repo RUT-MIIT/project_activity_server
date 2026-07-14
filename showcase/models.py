@@ -461,8 +461,20 @@ class DepartmentPlan(models.Model):
 
 
 class ProjectTrack(models.Model):
-    """Назначение учебной группы на проектную заявку в рамках семестра."""
+    """Проектный трек — контейнер для назначения групп и заявок в рамках семестра."""
 
+    name = models.CharField(max_length=255, verbose_name="Название")
+    description = models.TextField(
+        blank=True,
+        default="",
+        verbose_name="Описание",
+    )
+    department = models.ForeignKey(
+        "accounts.Department",
+        on_delete=models.CASCADE,
+        related_name="project_tracks",
+        verbose_name="Подразделение",
+    )
     semester = models.ForeignKey(
         "accounts.Semester",
         on_delete=models.CASCADE,
@@ -470,24 +482,74 @@ class ProjectTrack(models.Model):
         db_index=True,
         verbose_name="Семестр",
     )
-    study_group = models.ForeignKey(
-        "teams.StudyGroup",
-        on_delete=models.CASCADE,
-        related_name="project_tracks",
-        verbose_name="Учебная группа",
+    author = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="authored_project_tracks",
+        verbose_name="Автор",
     )
-    project_application = models.ForeignKey(
-        "ProjectApplication",
-        on_delete=models.CASCADE,
-        related_name="project_tracks",
-        verbose_name="Проектная заявка",
+    max_teams = models.PositiveIntegerField(
+        default=100,
+        validators=[MinValueValidator(1)],
+        verbose_name="Максимум групп",
     )
 
     class Meta:
         verbose_name = "Проектный трек"
         verbose_name_plural = "Проектные треки"
-        unique_together = [("semester", "study_group", "project_application")]
-        ordering = ["semester", "study_group", "project_application"]
+        ordering = ["semester", "name"]
 
     def __str__(self) -> str:
-        return f"{self.study_group} — {self.project_application} " f"({self.semester})"
+        return f"{self.name} ({self.semester})"
+
+
+class ProjectTrackGroup(models.Model):
+    """Связь проектного трека с учебной группой."""
+
+    project_track = models.ForeignKey(
+        ProjectTrack,
+        on_delete=models.CASCADE,
+        related_name="group_links",
+        verbose_name="Проектный трек",
+    )
+    study_group = models.ForeignKey(
+        "teams.StudyGroup",
+        on_delete=models.CASCADE,
+        related_name="track_group_links",
+        verbose_name="Учебная группа",
+    )
+
+    class Meta:
+        verbose_name = "Группа в проектном треке"
+        verbose_name_plural = "Группы в проектных треках"
+        unique_together = [("project_track", "study_group")]
+        ordering = ["project_track", "study_group__name"]
+
+    def __str__(self) -> str:
+        return f"{self.project_track} — {self.study_group}"
+
+
+class ProjectTrackApplication(models.Model):
+    """Связь проектного трека с проектной заявкой."""
+
+    project_track = models.ForeignKey(
+        ProjectTrack,
+        on_delete=models.CASCADE,
+        related_name="application_links",
+        verbose_name="Проектный трек",
+    )
+    project_application = models.ForeignKey(
+        "ProjectApplication",
+        on_delete=models.CASCADE,
+        related_name="track_application_links",
+        verbose_name="Проектная заявка",
+    )
+
+    class Meta:
+        verbose_name = "Заявка в проектном треке"
+        verbose_name_plural = "Заявки в проектных треках"
+        unique_together = [("project_track", "project_application")]
+        ordering = ["project_track", "project_application__title"]
+
+    def __str__(self) -> str:
+        return f"{self.project_track} — {self.project_application}"

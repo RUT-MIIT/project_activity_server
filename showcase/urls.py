@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
 from showcase.entities.ApplicationDashboard import ApplicationDashboardViewSet
@@ -35,43 +35,7 @@ router.register(r"department-plans", DepartmentPlanViewSet, basename="department
 
 router.register(r"projects", ProjectViewSet, basename="project")
 
-project_track_list = ProjectTrackViewSet.as_view(
-    {
-        "get": "list",
-        "post": "create",
-        "delete": "remove",
-    }
-)
-
-project_track_groups_list = ProjectTrackViewSet.as_view(
-    {
-        "get": "list_groups",
-    }
-)
-
-project_track_group_detail = ProjectTrackViewSet.as_view(
-    {
-        "get": "retrieve_group",
-    }
-)
-
-project_track_projects_list = ProjectTrackViewSet.as_view(
-    {
-        "get": "list_projects",
-    }
-)
-
-project_track_project_detail = ProjectTrackViewSet.as_view(
-    {
-        "get": "retrieve_project",
-    }
-)
-
-project_track_statistics = ProjectTrackViewSet.as_view(
-    {
-        "get": "statistics",
-    }
-)
+router.register(r"project-tracks", ProjectTrackViewSet, basename="project-track")
 
 application_dashboard = ApplicationDashboardViewSet.as_view(
     {
@@ -85,31 +49,5 @@ urlpatterns = [
         application_dashboard,
         name="project-application-dashboard",
     ),
-    path(
-        "project-tracks/groups/",
-        project_track_groups_list,
-        name="project-track-groups-list",
-    ),
-    path(
-        "project-tracks/groups/<int:group_id>/",
-        project_track_group_detail,
-        name="project-track-group-detail",
-    ),
-    path(
-        "project-tracks/projects/",
-        project_track_projects_list,
-        name="project-track-projects-list",
-    ),
-    path(
-        "project-tracks/projects/<int:project_id>/",
-        project_track_project_detail,
-        name="project-track-project-detail",
-    ),
-    path(
-        "project-tracks/statistics/",
-        project_track_statistics,
-        name="project-track-statistics",
-    ),
-    path("project-tracks/", project_track_list, name="project-track-list"),
-    *router.urls,
+    path("", include(router.urls)),
 ]

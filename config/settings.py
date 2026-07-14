@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     "django_filters",
     "rest_framework_simplejwt",
     "drf_yasg",
+    "drf_spectacular",
     "accounts",
     "showcase",
     "teams",
@@ -150,6 +151,46 @@ REST_FRAMEWORK = {
     "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# OpenAPI 3 (drf-spectacular) — схема для Swagger UI и импорта в Postman
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Project Activity API",
+    "DESCRIPTION": (
+        "API проектной деятельности студентов.\n\n"
+        "## Авторизация\n"
+        "JWT Bearer: получите `access` через `POST /api/accounts/login/`, "
+        "затем Authorize → `Bearer <access>`.\n\n"
+        "## Postman\n"
+        "Импортируйте схему: Import → Link → "
+        "`http://localhost:8000/api/schema/` (local) "
+        "или `https://pd.emiit.ru/api/schema/` (prod). "
+        "Включите синхронизацию с источником (Keep in sync / Update from definition)."
+    ),
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
+    "COMPONENT_SPLIT_REQUEST": True,
+    "SCHEMA_PATH_PREFIX": r"/api/",
+    "SECURITY": [{"bearerAuth": []}],
+    "APPEND_COMPONENTS": {
+        "securitySchemes": {
+            "bearerAuth": {
+                "type": "http",
+                "scheme": "bearer",
+                "bearerFormat": "JWT",
+                "description": "JWT access token из /api/accounts/login/",
+            }
+        }
+    },
+    "TAGS": [
+        {"name": "accounts", "description": "Auth, пользователи, роли, семестры"},
+        {"name": "teams", "description": "Команды, направления, учебные группы"},
+        {"name": "showcase", "description": "Заявки, треки, справочники витрины"},
+    ],
+    "PREPROCESSING_HOOKS": [
+        "config.schema.exclude_auth_api_duplicate",
+    ],
 }
 
 # Кастомная модель пользователя

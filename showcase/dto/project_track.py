@@ -7,90 +7,173 @@ from typing import Any
 from showcase.models import ProjectTrack
 
 
-class ProjectTrackAssignDTO:
-    """DTO для массового назначения групп на проекты."""
+class ProjectTrackCreateDTO:
+    """DTO для создания проектного трека."""
 
     def __init__(
         self,
+        name: str,
+        department_id: int,
         semester_id: int,
-        group_ids: list[int],
-        project_application_ids: list[int],
+        description: str = "",
+        max_teams: int = 100,
     ):
+        self.name = name
+        self.description = description
+        self.department_id = department_id
         self.semester_id = semester_id
-        self.group_ids = group_ids
-        self.project_application_ids = project_application_ids
+        self.max_teams = max_teams
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> ProjectTrackAssignDTO:
+    def from_dict(cls, data: dict[str, Any]) -> ProjectTrackCreateDTO:
         """Создаёт DTO из словаря."""
         return cls(
+            name=data["name"],
+            department_id=data["department_id"],
             semester_id=data["semester_id"],
-            group_ids=data["group_ids"],
-            project_application_ids=data["project_application_ids"],
+            description=data.get("description", ""),
+            max_teams=data.get("max_teams", 100),
         )
 
 
-class ProjectTrackReadDTO:
-    """DTO для чтения проектного трека."""
+class ProjectTrackUpdateDTO:
+    """DTO для обновления проектного трека."""
 
-    def __init__(self, track: ProjectTrack):
-        self.id = track.id
-        self.semester_id = track.semester_id
-        self.group_id = track.study_group_id
-        self.group_name = track.study_group.name
-        self.project_application_id = track.project_application_id
-        self.project_title = track.project_application.title or ""
+    def __init__(
+        self,
+        name: str | None = None,
+        description: str | None = None,
+        department_id: int | None = None,
+        semester_id: int | None = None,
+        max_teams: int | None = None,
+    ):
+        self.name = name
+        self.description = description
+        self.department_id = department_id
+        self.semester_id = semester_id
+        self.max_teams = max_teams
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectTrackUpdateDTO:
+        """Создаёт DTO из словаря."""
+        return cls(
+            name=data.get("name"),
+            description=data.get("description"),
+            department_id=data.get("department_id"),
+            semester_id=data.get("semester_id"),
+            max_teams=data.get("max_teams"),
+        )
+
+    def to_update_dict(self) -> dict[str, Any]:
+        """Возвращает только переданные поля для обновления."""
+        result: dict[str, Any] = {}
+        if self.name is not None:
+            result["name"] = self.name
+        if self.description is not None:
+            result["description"] = self.description
+        if self.department_id is not None:
+            result["department_id"] = self.department_id
+        if self.semester_id is not None:
+            result["semester_id"] = self.semester_id
+        if self.max_teams is not None:
+            result["max_teams"] = self.max_teams
+        return result
+
+
+class ProjectTrackGroupItemDTO:
+    """DTO группы в проектном треке."""
+
+    def __init__(self, group) -> None:
+        self.id = group.id
+        self.name = group.name
+        self.course_number = group.course_number
 
     def to_dict(self) -> dict[str, Any]:
         """Преобразует DTO в словарь для API."""
         return {
             "id": self.id,
-            "semester_id": self.semester_id,
-            "group_id": self.group_id,
-            "group_name": self.group_name,
-            "project_application_id": self.project_application_id,
-            "project_title": self.project_title,
+            "name": self.name,
+            "course_number": self.course_number,
         }
 
 
-class ProjectTrackDeleteDTO:
-    """DTO для удаления связки группа — проект."""
+class ProjectTrackApplicationItemDTO:
+    """DTO заявки в проектном треке."""
 
-    def __init__(
-        self,
-        semester_id: str,
-        group_id: int,
-        project_application_id: int,
-    ):
-        self.semester_id = semester_id
-        self.group_id = group_id
-        self.project_application_id = project_application_id
+    def __init__(self, application) -> None:
+        self.id = application.id
+        self.title = application.title or ""
+        self.print_number = application.print_number or ""
 
-    @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> ProjectTrackDeleteDTO:
-        """Создаёт DTO из словаря."""
-        return cls(
-            semester_id=data["semester_id"],
-            group_id=data["group_id"],
-            project_application_id=data["project_application_id"],
-        )
-
-
-class ProjectTrackAssignResultDTO:
-    """DTO результата массового назначения."""
-
-    def __init__(self, created: int, skipped: int, total_requested: int):
-        self.created = created
-        self.skipped = skipped
-        self.total_requested = total_requested
-
-    def to_dict(self) -> dict[str, int]:
+    def to_dict(self) -> dict[str, Any]:
         """Преобразует DTO в словарь для API."""
         return {
-            "created": self.created,
-            "skipped": self.skipped,
-            "total_requested": self.total_requested,
+            "id": self.id,
+            "title": self.title,
+            "print_number": self.print_number,
         }
+
+
+class ProjectTrackReadDTO:
+    """DTO для чтения проектного трека."""
+
+    def __init__(self, track: ProjectTrack, *, include_relations: bool = True) -> None:
+        self.id = track.id
+        self.name = track.name
+        self.description = track.description
+        self.department_id = track.department_id
+        self.semester_id = track.semester_id
+        self.author_id = track.author_id
+        self.max_teams = track.max_teams
+        self.groups: list[dict[str, Any]] = []
+        self.applications: list[dict[str, Any]] = []
+
+        if include_relations:
+            for link in track.group_links.all():
+                self.groups.append(ProjectTrackGroupItemDTO(link.study_group).to_dict())
+
+            for link in track.application_links.all():
+                self.applications.append(
+                    ProjectTrackApplicationItemDTO(link.project_application).to_dict()
+                )
+
+    def to_dict(self) -> dict[str, Any]:
+        """Преобразует DTO в словарь для API."""
+        return {
+            "id": self.id,
+            "name": self.name,
+            "description": self.description,
+            "department_id": self.department_id,
+            "semester_id": self.semester_id,
+            "author_id": self.author_id,
+            "max_teams": self.max_teams,
+            "groups": self.groups,
+            "applications": self.applications,
+        }
+
+
+class ProjectTrackAddGroupsDTO:
+    """DTO для добавления групп в трек."""
+
+    def __init__(self, group_ids: list[int]):
+        self.group_ids = group_ids
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectTrackAddGroupsDTO:
+        """Создаёт DTO из словаря."""
+        return cls(group_ids=data["group_ids"])
+
+
+class ProjectTrackAddApplicationsDTO:
+    """DTO для добавления заявок в трек."""
+
+    def __init__(self, application_ids: list[int]):
+        self.application_ids = application_ids
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> ProjectTrackAddApplicationsDTO:
+        """Создаёт DTO из словаря."""
+        return cls(application_ids=data["application_ids"])
 
 
 class ProjectTrackGroupListDTO:

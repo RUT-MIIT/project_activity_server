@@ -3,18 +3,22 @@
 import pytest
 from rest_framework.test import APIClient
 
-from accounts.models import ACTIVE_SEMESTER_SETTING_CODE, Department, Semester, Settings
+from accounts.models import Department
 from showcase.models import (
     ApplicationInvolvedDepartment,
     Institute,
     ProjectApplication,
     ProjectTrack,
+    ProjectTrackApplication,
+    ProjectTrackGroup,
 )
 from teams.models import Direction, StudyGroup
 
 
 @pytest.fixture
 def semester(db):
+    from accounts.models import Semester
+
     return Semester.objects.create(code="s1", name="S1", position=1)
 
 
@@ -40,9 +44,9 @@ def other_institute(departments):
 
 def _create_approved_app(
     *,
-    semester: Semester,
-    statuses: dict,
-    involved_department: Department | None = None,
+    semester,
+    statuses,
+    involved_department=None,
     title: str = "Проект",
 ) -> ProjectApplication:
     app = ProjectApplication.objects.create(
@@ -65,672 +69,250 @@ def _create_approved_app(
     return app
 
 
+def _create_track_with_links(
+    *,
+    name: str,
+    semester,
+    department,
+    author,
+    group,
+    application,
+) -> ProjectTrack:
+    track = ProjectTrack.objects.create(
+        name=name,
+        description="",
+        department=department,
+        semester=semester,
+        author=author,
+    )
+    ProjectTrackGroup.objects.create(project_track=track, study_group=group)
+    ProjectTrackApplication.objects.create(
+        project_track=track,
+        project_application=application,
+    )
+    return track
+
+
 @pytest.fixture
-def track_setup(statuses, institute, other_institute, direction, semester, departments):
+def track_setup(statuses, institute, direction, semester, departments, make_user):
+    admin = make_user(role_code="admin")
     own_group = StudyGroup.objects.create(
         name="Группа 1",
         code="g1",
         direction=direction,
         institute=institute,
     )
-    other_group = StudyGroup.objects.create(
-        name="Группа 2",
-        code="g2",
-        direction=direction,
-        institute=other_institute,
-    )
     own_app = _create_approved_app(
         semester=semester,
         statuses=statuses,
         involved_department=departments["child"],
     )
-    other_child = Department.objects.create(
-        name="Other Child",
-        short_name="OC",
-        parent=other_institute.department,
-    )
-    other_app = _create_approved_app(
+    track = _create_track_with_links(
+        name="Трек 1",
         semester=semester,
-        statuses=statuses,
-        involved_department=other_child,
-        title="Чужой",
-    )
-    track = ProjectTrack.objects.create(
-        semester=semester,
-        study_group=own_group,
-        project_application=own_app,
+        department=departments["child"],
+        author=admin,
+        group=own_group,
+        application=own_app,
     )
     return {
+        "admin": admin,
         "own_group": own_group,
-        "other_group": other_group,
         "own_app": own_app,
-        "other_app": other_app,
         "track": track,
     }
 
 
 @pytest.mark.django_db
 class TestProjectTrackViewSet:
-    def test_list_unauthenticated_returns_401(self, institute, semester):
+    def test_list_unauthenticated_returns_401(self, semester):
         client = APIClient()
         response = client.get(
-            f"/api/showcase/project-tracks/?institute_code={institute.code}"
-            f"&semester_id={semester.id}"
+            f"/api/showcase/project-tracks/?semester_id={semester.id}"
         )
         assert response.status_code == 401
 
-    def test_list_user_returns_403(self, roles, make_user, institute, semester):
+    def test_list_user_returns_403(self, roles, make_user, semester):
         user = make_user(role_code="user")
         client = APIClient()
         client.force_authenticate(user=user)
         response = client.get(
-            f"/api/showcase/project-tracks/?institute_code={institute.code}"
-            f"&semester_id={semester.id}"
+            f"/api/showcase/project-tracks/?semester_id={semester.id}"
         )
         assert response.status_code == 403
 
-    def test_list_missing_params_returns_400(
-        self, roles, make_user, institute, semester
-    ):
+    def test_list_missing_semester_returns_400(self, roles, make_user):
         user = make_user(role_code="admin")
         client = APIClient()
         client.force_authenticate(user=user)
         response = client.get("/api/showcase/project-tracks/")
         assert response.status_code == 400
 
-    def test_list_admin_success(
-        self, roles, make_user, institute, semester, track_setup
-    ):
+    def test_list_admin_success(self, roles, make_user, semester, track_setup):
         user = make_user(role_code="admin")
         client = APIClient()
         client.force_authenticate(user=user)
         response = client.get(
-            f"/api/showcase/project-tracks/?institute_code={institute.code}"
-            f"&semester_id={semester.id}"
+            f"/api/showcase/project-tracks/?semester_id={semester.id}"
         )
         assert response.status_code == 200
         assert len(response.data) == 1
-        item = response.data[0]
-        assert item["id"] == track_setup["track"].id
-        assert item["group_id"] == track_setup["own_group"].id
-        assert item["project_application_id"] == track_setup["own_app"].id
+        assert response.data[0]["name"] == "Трек 1"
+        assert len(response.data[0]["groups"]) == 1
+        assert len(response.data[0]["applications"]) == 1
 
-    def test_list_validator_own_institute(
-        self, roles, make_user, institute, semester, track_setup
-    ):
-        user = make_user(role_code="institute_validator", with_department=True)
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/?institute_code={institute.code}"
-            f"&semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert len(response.data) == 1
-
-    def test_post_creates_tracks(
-        self, roles, make_user, institute, semester, direction, statuses, departments
-    ):
-        group = StudyGroup.objects.create(
-            name="Новая",
-            code="new",
-            direction=direction,
-            institute=institute,
-        )
-        app = _create_approved_app(
-            semester=semester,
-            statuses=statuses,
-            involved_department=departments["child"],
-        )
+    def test_create_track(self, roles, make_user, semester, departments):
         user = make_user(role_code="admin")
         client = APIClient()
         client.force_authenticate(user=user)
         response = client.post(
             "/api/showcase/project-tracks/",
             {
+                "name": "Новый трек",
+                "department_id": departments["child"].id,
                 "semester_id": semester.id,
-                "group_ids": [group.id],
-                "project_application_ids": [app.id],
             },
             format="json",
         )
         assert response.status_code == 201
-        assert response.data["created"] == 1
-        assert response.data["skipped"] == 0
+        assert response.data["name"] == "Новый трек"
+        assert response.data["max_teams"] == 100
 
-    def test_post_idempotent(self, roles, make_user, institute, semester, track_setup):
+    def test_retrieve_track(self, roles, make_user, track_setup):
         user = make_user(role_code="admin")
         client = APIClient()
         client.force_authenticate(user=user)
-        payload = {
-            "semester_id": semester.id,
-            "group_ids": [track_setup["own_group"].id],
-            "project_application_ids": [track_setup["own_app"].id],
-        }
-        response = client.post("/api/showcase/project-tracks/", payload, format="json")
-        assert response.status_code == 201
-        assert response.data["created"] == 0
-        assert response.data["skipped"] == 1
-        assert ProjectTrack.objects.count() == 1
+        response = client.get(
+            f"/api/showcase/project-tracks/{track_setup['track'].id}/"
+        )
+        assert response.status_code == 200
+        assert len(response.data["groups"]) == 1
+        assert len(response.data["applications"]) == 1
 
-    def test_post_validator_other_group_403(
-        self, roles, make_user, institute, semester, track_setup
-    ):
-        user = make_user(role_code="institute_validator", with_department=True)
+    def test_partial_update_track(self, roles, make_user, track_setup):
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.patch(
+            f"/api/showcase/project-tracks/{track_setup['track'].id}/",
+            {"name": "Обновлённый"},
+            format="json",
+        )
+        assert response.status_code == 200
+        assert response.data["name"] == "Обновлённый"
+
+    def test_destroy_track(self, roles, make_user, track_setup):
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.delete(
+            f"/api/showcase/project-tracks/{track_setup['track'].id}/"
+        )
+        assert response.status_code == 204
+        assert not ProjectTrack.objects.filter(pk=track_setup["track"].id).exists()
+
+    def test_add_groups(self, roles, make_user, institute, direction, track_setup):
+        group = StudyGroup.objects.create(
+            name="Г2",
+            code="g2",
+            direction=direction,
+            institute=institute,
+        )
+        user = make_user(role_code="admin")
         client = APIClient()
         client.force_authenticate(user=user)
         response = client.post(
-            "/api/showcase/project-tracks/",
-            {
-                "semester_id": semester.id,
-                "group_ids": [track_setup["other_group"].id],
-                "project_application_ids": [track_setup["own_app"].id],
-            },
-            format="json",
-        )
-        assert response.status_code == 403
-
-    def test_delete_success(self, roles, make_user, track_setup, semester):
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        track_id = track_setup["track"].id
-        response = client.delete(
-            "/api/showcase/project-tracks/",
-            {
-                "semester_id": str(semester.id),
-                "group_id": track_setup["own_group"].id,
-                "project_application_id": track_setup["own_app"].id,
-            },
+            f"/api/showcase/project-tracks/{track_setup['track'].id}/groups/",
+            {"group_ids": [group.id]},
             format="json",
         )
         assert response.status_code == 200
-        assert response.data["message"] == "OK"
-        assert not ProjectTrack.objects.filter(pk=track_id).exists()
+        assert len(response.data["groups"]) == 2
 
-    def test_delete_accepts_semester_actual(
-        self, roles, make_user, track_setup, semester
-    ):
-        Settings.objects.update_or_create(
-            code=ACTIVE_SEMESTER_SETTING_CODE,
-            defaults={"value": semester.code, "description": ""},
-        )
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        track_id = track_setup["track"].id
-        response = client.delete(
-            "/api/showcase/project-tracks/",
-            {
-                "semester_id": "actual",
-                "group_id": track_setup["own_group"].id,
-                "project_application_id": track_setup["own_app"].id,
-            },
-            format="json",
-        )
-        assert response.status_code == 200
-        assert response.data["message"] == "OK"
-        assert not ProjectTrack.objects.filter(pk=track_id).exists()
-
-    def test_delete_validator_other_track_403(
-        self, roles, make_user, semester, statuses, other_institute, direction
-    ):
-        other_group = StudyGroup.objects.create(
-            name="Чужая",
-            code="og",
-            direction=direction,
-            institute=other_institute,
-        )
-        other_app = _create_approved_app(
-            semester=semester,
-            statuses=statuses,
-            involved_department=Department.objects.create(
-                name="Other Child",
-                short_name="OC",
-                parent=other_institute.department,
-            ),
-        )
-        _track = ProjectTrack.objects.create(
-            semester=semester,
-            study_group=other_group,
-            project_application=other_app,
-        )
-        user = make_user(role_code="institute_validator", with_department=True)
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.delete(
-            "/api/showcase/project-tracks/",
-            {
-                "semester_id": semester.id,
-                "group_id": other_group.id,
-                "project_application_id": other_app.id,
-            },
-            format="json",
-        )
-        assert response.status_code == 403
-
-    def test_delete_not_found(self, roles, make_user, semester):
+    def test_remove_group(self, roles, make_user, track_setup):
         user = make_user(role_code="admin")
         client = APIClient()
         client.force_authenticate(user=user)
         response = client.delete(
-            "/api/showcase/project-tracks/",
-            {
-                "semester_id": semester.id,
-                "group_id": 99999,
-                "project_application_id": 99999,
-            },
-            format="json",
-        )
-        assert response.status_code == 404
-
-
-@pytest.mark.django_db
-class TestProjectTrackGroupsViewSet:
-    def test_list_groups_missing_semester_returns_400(
-        self, roles, make_user, institute, semester
-    ):
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/groups/?institute_code={institute.code}"
-        )
-        assert response.status_code == 400
-
-    def test_list_groups_validator_without_institute_code(
-        self, roles, make_user, institute, semester, direction, track_setup
-    ):
-        user = make_user(role_code="institute_validator", with_department=True)
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/groups/?semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert len(response.data) == 1
-
-    def test_list_groups_admin_without_institute_code_returns_400(
-        self, roles, make_user, semester
-    ):
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/groups/?semester_id={semester.id}"
-        )
-        assert response.status_code == 400
-        assert "institute_code" in response.data["error"]
-
-    def test_list_groups_admin_success(
-        self, roles, make_user, institute, semester, direction, track_setup
-    ):
-        empty_group = StudyGroup.objects.create(
-            name="Группа пустая",
-            code="g-empty",
-            direction=direction,
-            institute=institute,
-        )
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/groups/?institute_code={institute.code}"
-            f"&semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert len(response.data) == 2
-        by_id = {item["id"]: item for item in response.data}
-        assert by_id[track_setup["own_group"].id]["assigned_projects_count"] == 1
-        assert by_id[empty_group.id]["assigned_projects_count"] == 0
-        assert by_id[track_setup["own_group"].id]["direction"]["code"] == direction.code
-        assert by_id[track_setup["own_group"].id]["course_number"] == 1
-
-    def test_list_groups_validator_other_institute_403(
-        self, roles, make_user, other_institute, semester, track_setup
-    ):
-        user = make_user(role_code="institute_validator", with_department=True)
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/groups/?institute_code={other_institute.code}"
-            f"&semester_id={semester.id}"
-        )
-        assert response.status_code == 403
-
-    def test_retrieve_group_validator_without_institute_code(
-        self, roles, make_user, institute, semester, track_setup
-    ):
-        track_setup["own_app"].print_number = "25-00001"
-        track_setup["own_app"].save(update_fields=["print_number"])
-        user = make_user(role_code="institute_validator", with_department=True)
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/groups/{track_setup['own_group'].id}/"
-            f"?semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert len(response.data["projects"]) == 1
-
-    def test_retrieve_group_with_projects(
-        self, roles, make_user, institute, semester, track_setup
-    ):
-        track_setup["own_app"].print_number = "25-00001"
-        track_setup["own_app"].save(update_fields=["print_number"])
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/groups/{track_setup['own_group'].id}/"
-            f"?institute_code={institute.code}&semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert response.data["id"] == track_setup["own_group"].id
-        assert response.data["direction"]["level"] == "бакалавриат"
-        assert len(response.data["projects"]) == 1
-        project = response.data["projects"][0]
-        assert project["id"] == track_setup["own_app"].id
-        assert project["title"] == track_setup["own_app"].title
-        assert project["print_number"] == "25-00001"
-        assert project["author_name"] == "Иванов Иван"
-
-    def test_retrieve_group_empty_projects(
-        self, roles, make_user, institute, semester, direction
-    ):
-        group = StudyGroup.objects.create(
-            name="Без проектов",
-            code="g0",
-            direction=direction,
-            institute=institute,
-        )
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/groups/{group.id}/"
-            f"?institute_code={institute.code}&semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert response.data["projects"] == []
-
-    def test_retrieve_group_wrong_institute_returns_404(
-        self, roles, make_user, institute, other_institute, semester, track_setup
-    ):
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/groups/{track_setup['other_group'].id}/"
-            f"?institute_code={institute.code}&semester_id={semester.id}"
-        )
-        assert response.status_code == 404
-
-    def test_statistics_validator_without_institute_code(
-        self, roles, make_user, institute, semester, track_setup
-    ):
-        user = make_user(role_code="institute_validator", with_department=True)
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/statistics/?semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert response.data["total_projects"] == 1
-
-    def test_statistics_admin_without_institute_code_returns_aggregated(
-        self, roles, make_user, institute, other_institute, semester, track_setup
-    ):
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/statistics/?semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert "overall" in response.data
-        assert "by_institute" in response.data
-        assert response.data["overall"]["total_projects"] == 2
-        assert response.data["overall"]["distributed_projects"] == 1
-        assert len(response.data["by_institute"]) == 2
-        by_code = {
-            item["institute_code"]: item for item in response.data["by_institute"]
-        }
-        assert by_code[institute.code]["institute_name"] == institute.name
-        assert by_code[institute.code]["distributed_projects"] == 1
-        assert by_code[other_institute.code]["institute_name"] == other_institute.name
-        assert by_code[other_institute.code]["distributed_projects"] == 0
-
-    def test_statistics_cpds_without_institute_code_returns_aggregated(
-        self, roles, make_user, institute, semester, track_setup
-    ):
-        user = make_user(role_code="cpds")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/statistics/?semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert "overall" in response.data
-        assert "by_institute" in response.data
-        assert all(
-            "institute_code" in item and "institute_name" in item
-            for item in response.data["by_institute"]
-        )
-
-    def test_statistics_admin_success(
-        self,
-        roles,
-        make_user,
-        institute,
-        semester,
-        direction,
-        statuses,
-        departments,
-        track_setup,
-    ):
-        StudyGroup.objects.create(
-            name="Группа без проектов",
-            code="g-empty",
-            direction=direction,
-            institute=institute,
-        )
-        _extra_app = _create_approved_app(
-            semester=semester,
-            statuses=statuses,
-            involved_department=departments["child"],
-            title="Второй проект",
-        )
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/statistics/?institute_code={institute.code}"
-            f"&semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert response.data["total_projects"] == 2
-        assert response.data["distributed_projects"] == 1
-        assert response.data["average_projects_per_group"] == 0.5
-        assert response.data["groups_without_projects"] == 1
-
-    def test_statistics_missing_params_returns_400(
-        self, roles, make_user, institute, semester
-    ):
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get("/api/showcase/project-tracks/statistics/")
-        assert response.status_code == 400
-
-
-@pytest.mark.django_db
-class TestProjectTrackProjectsViewSet:
-    def test_list_projects_missing_semester_returns_400(
-        self, roles, make_user, institute, semester
-    ):
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/projects/?institute_code={institute.code}"
-        )
-        assert response.status_code == 400
-
-    def test_list_projects_validator_without_institute_code(
-        self,
-        roles,
-        make_user,
-        institute,
-        semester,
-        direction,
-        statuses,
-        departments,
-        track_setup,
-    ):
-        _create_approved_app(
-            semester=semester,
-            statuses=statuses,
-            involved_department=departments["child"],
-            title="Второй проект",
-        )
-        user = make_user(role_code="institute_validator", with_department=True)
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/projects/?semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert len(response.data) == 2
-        by_id = {item["id"]: item for item in response.data}
-        assert by_id[track_setup["own_app"].id]["assigned_groups_count"] == 1
-
-    def test_list_projects_admin_without_institute_code_returns_400(
-        self, roles, make_user, semester
-    ):
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/projects/?semester_id={semester.id}"
-        )
-        assert response.status_code == 400
-        assert "institute_code" in response.data["error"]
-
-    def test_list_projects_admin_success(
-        self,
-        roles,
-        make_user,
-        institute,
-        semester,
-        statuses,
-        departments,
-        track_setup,
-    ):
-        extra_app = _create_approved_app(
-            semester=semester,
-            statuses=statuses,
-            involved_department=departments["child"],
-            title="Второй проект",
-        )
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/projects/?institute_code={institute.code}"
-            f"&semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert len(response.data) == 2
-        by_id = {item["id"]: item for item in response.data}
-        assert by_id[track_setup["own_app"].id]["assigned_groups_count"] == 1
-        assert by_id[extra_app.id]["assigned_groups_count"] == 0
-
-    def test_list_projects_validator_other_institute_403(
-        self, roles, make_user, other_institute, semester, track_setup
-    ):
-        user = make_user(role_code="institute_validator", with_department=True)
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/projects/"
-            f"?institute_code={other_institute.code}&semester_id={semester.id}"
-        )
-        assert response.status_code == 403
-
-    def test_retrieve_project_validator_without_institute_code(
-        self, roles, make_user, semester, track_setup
-    ):
-        track_setup["own_app"].print_number = "25-00001"
-        track_setup["own_app"].save(update_fields=["print_number"])
-        user = make_user(role_code="institute_validator", with_department=True)
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/projects/{track_setup['own_app'].id}/"
-            f"?semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert len(response.data["groups"]) == 1
-
-    def test_retrieve_project_with_groups(
-        self, roles, make_user, institute, semester, track_setup
-    ):
-        track_setup["own_app"].print_number = "25-00001"
-        track_setup["own_app"].save(update_fields=["print_number"])
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/projects/{track_setup['own_app'].id}/"
-            f"?institute_code={institute.code}&semester_id={semester.id}"
-        )
-        assert response.status_code == 200
-        assert response.data["id"] == track_setup["own_app"].id
-        assert len(response.data["groups"]) == 1
-        group = response.data["groups"][0]
-        assert group["id"] == track_setup["own_group"].id
-        assert group["direction"]["level"] == "бакалавриат"
-
-    def test_retrieve_project_empty_groups(
-        self, roles, make_user, institute, semester, statuses, departments
-    ):
-        app = _create_approved_app(
-            semester=semester,
-            statuses=statuses,
-            involved_department=departments["child"],
-            title="Без групп",
-        )
-        user = make_user(role_code="admin")
-        client = APIClient()
-        client.force_authenticate(user=user)
-        response = client.get(
-            f"/api/showcase/project-tracks/projects/{app.id}/"
-            f"?institute_code={institute.code}&semester_id={semester.id}"
+            f"/api/showcase/project-tracks/{track_setup['track'].id}/"
+            f"groups/{track_setup['own_group'].id}/"
         )
         assert response.status_code == 200
         assert response.data["groups"] == []
 
-    def test_retrieve_project_wrong_institute_returns_404(
-        self, roles, make_user, institute, semester, track_setup
+    def test_add_applications(
+        self, roles, make_user, semester, statuses, departments, track_setup
     ):
+        app = _create_approved_app(
+            semester=semester,
+            statuses=statuses,
+            involved_department=departments["child"],
+            title="Второй",
+        )
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.post(
+            f"/api/showcase/project-tracks/{track_setup['track'].id}/applications/",
+            {"application_ids": [app.id]},
+            format="json",
+        )
+        assert response.status_code == 200
+        assert len(response.data["applications"]) == 2
+
+    def test_remove_application(self, roles, make_user, track_setup):
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.delete(
+            f"/api/showcase/project-tracks/{track_setup['track'].id}/"
+            f"applications/{track_setup['own_app'].id}/"
+        )
+        assert response.status_code == 200
+        assert response.data["applications"] == []
+
+
+@pytest.mark.django_db
+class TestProjectTrackGroupsViewSet:
+    def test_list_groups(self, roles, make_user, institute, semester, track_setup):
         user = make_user(role_code="admin")
         client = APIClient()
         client.force_authenticate(user=user)
         response = client.get(
-            f"/api/showcase/project-tracks/projects/{track_setup['other_app'].id}/"
+            f"/api/showcase/project-tracks/groups/"
             f"?institute_code={institute.code}&semester_id={semester.id}"
         )
-        assert response.status_code == 404
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["assigned_projects_count"] == 1
 
-    def test_retrieve_project_multiple_involved_departments(
-        self, roles, make_user, institute, semester, departments, track_setup
-    ):
-        """Заявка с несколькими причастными подразделениями одного института возвращает 200."""
-        ApplicationInvolvedDepartment.objects.create(
-            application=track_setup["own_app"],
-            department=departments["parent"],
+    def test_retrieve_group(self, roles, make_user, institute, semester, track_setup):
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.get(
+            f"/api/showcase/project-tracks/groups/{track_setup['own_group'].id}/"
+            f"?institute_code={institute.code}&semester_id={semester.id}"
         )
+        assert response.status_code == 200
+        assert len(response.data["projects"]) == 1
+
+
+@pytest.mark.django_db
+class TestProjectTrackProjectsViewSet:
+    def test_list_projects(self, roles, make_user, institute, semester, track_setup):
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.get(
+            f"/api/showcase/project-tracks/projects/"
+            f"?institute_code={institute.code}&semester_id={semester.id}"
+        )
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        assert response.data[0]["assigned_groups_count"] == 1
+
+    def test_retrieve_project(self, roles, make_user, institute, semester, track_setup):
         user = make_user(role_code="admin")
         client = APIClient()
         client.force_authenticate(user=user)
@@ -739,8 +321,18 @@ class TestProjectTrackProjectsViewSet:
             f"?institute_code={institute.code}&semester_id={semester.id}"
         )
         assert response.status_code == 200
-        assert response.data["id"] == track_setup["own_app"].id
         assert len(response.data["groups"]) == 1
-        assert {g["id"] for g in response.data["groups"]} == {
-            track_setup["own_group"].id
-        }
+
+
+@pytest.mark.django_db
+class TestProjectTrackStatisticsViewSet:
+    def test_statistics(self, roles, make_user, institute, semester, track_setup):
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.get(
+            f"/api/showcase/project-tracks/statistics/"
+            f"?institute_code={institute.code}&semester_id={semester.id}"
+        )
+        assert response.status_code == 200
+        assert response.data["distributed_projects"] == 1

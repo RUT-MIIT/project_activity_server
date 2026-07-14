@@ -5,7 +5,9 @@ from django.db import IntegrityError, transaction
 from django.db.models import Prefetch
 from django.template.loader import render_to_string
 from django.utils.crypto import get_random_string
+from drf_spectacular.utils import extend_schema
 from rest_framework import decorators, permissions, status, viewsets
+from rest_framework.generics import GenericAPIView
 from rest_framework.permissions import AllowAny
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -59,6 +61,9 @@ class LoginView(TokenObtainPairView):
 
 
 class UserMeView(APIView):
+    @extend_schema(
+        tags=["accounts"], responses=UserSerializer, summary="Текущий пользователь"
+    )
     def get(self, request):
         # Используем select_related и prefetch_related для оптимизации запроса
         user = (
@@ -75,11 +80,13 @@ class UserMeView(APIView):
         return Response(serializer.data)
 
 
-class PasswordResetView(APIView):
+class PasswordResetView(GenericAPIView):
     permission_classes = [AllowAny]
+    serializer_class = PasswordResetSerializer
 
+    @extend_schema(tags=["accounts"], summary="Сброс пароля")
     def post(self, request):
-        serializer = PasswordResetSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save(request=request)
             return Response(
@@ -89,11 +96,13 @@ class PasswordResetView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PasswordResetConfirmView(APIView):
+class PasswordResetConfirmView(GenericAPIView):
     permission_classes = [AllowAny]
+    serializer_class = PasswordResetConfirmSerializer
 
+    @extend_schema(tags=["accounts"], summary="Подтверждение сброса пароля")
     def post(self, request: Request) -> Response:
-        serializer = PasswordResetConfirmSerializer(data=request.data)
+        serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -102,17 +111,17 @@ class PasswordResetConfirmView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PasswordChangeView(APIView):
+class PasswordChangeView(GenericAPIView):
     permission_classes = [permissions.IsAuthenticated]
+    serializer_class = PasswordChangeSerializer
 
+    @extend_schema(tags=["accounts"], summary="Смена пароля")
     def post(self, request: Request) -> Response:
         """
         Сменяет пароль текущего пользователя после проверки текущего пароля.
         """
 
-        serializer = PasswordChangeSerializer(
-            data=request.data, context={"request": request}
-        )
+        serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save()
         return Response(

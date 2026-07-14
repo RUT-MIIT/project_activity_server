@@ -1,5 +1,7 @@
 """ViewSet для управления пользователями."""
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter, extend_schema, extend_schema_view
 from rest_framework import status, viewsets
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
@@ -10,12 +12,38 @@ from accounts.permissions import UserManagementPermission
 from accounts.serializers import UserUpdateSerializer
 from accounts.services.user_management_service import UserManagementService
 
+_INCLUDE_PROJECTS = OpenApiParameter(
+    name="include_authored_projects",
+    type=OpenApiTypes.STR,
+    location=OpenApiParameter.QUERY,
+    required=False,
+    description="true / 1 / yes — добавить authored_projects[]",
+)
 
+
+@extend_schema_view(
+    list=extend_schema(
+        tags=["accounts"],
+        parameters=[_INCLUDE_PROJECTS],
+        summary="Список пользователей",
+    ),
+    retrieve=extend_schema(
+        tags=["accounts"],
+        parameters=[_INCLUDE_PROJECTS],
+        summary="Детали пользователя",
+    ),
+    partial_update=extend_schema(
+        tags=["accounts"],
+        request=UserUpdateSerializer,
+        summary="Обновить пользователя",
+    ),
+)
 class UserManagementViewSet(viewsets.ViewSet):
     """API управления пользователями: список, деталь, частичное обновление."""
 
     permission_classes = [IsAuthenticated, UserManagementPermission]
     pagination_class = None
+    serializer_class = UserUpdateSerializer
 
     @staticmethod
     def _parse_include_authored_projects(request: Request) -> bool:

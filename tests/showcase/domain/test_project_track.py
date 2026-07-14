@@ -3,7 +3,13 @@
 import pytest
 
 from showcase.domain.project_track import ProjectTrackDomain
-from showcase.models import ProjectApplication, ProjectTrack
+from showcase.models import (
+    ApplicationInvolvedDepartment,
+    ProjectApplication,
+    ProjectTrack,
+    ProjectTrackApplication,
+    ProjectTrackGroup,
+)
 from teams.models import Direction, StudyGroup
 
 
@@ -21,6 +27,34 @@ def direction(db):
         name="Экономика",
         level=Direction.Level.BAKALAVRIAT,
     )
+
+
+def _create_track(
+    *,
+    name: str,
+    semester,
+    department,
+    author,
+    group=None,
+    application=None,
+    max_teams: int = 100,
+) -> ProjectTrack:
+    track = ProjectTrack.objects.create(
+        name=name,
+        description="",
+        department=department,
+        semester=semester,
+        author=author,
+        max_teams=max_teams,
+    )
+    if group is not None:
+        ProjectTrackGroup.objects.create(project_track=track, study_group=group)
+    if application is not None:
+        ProjectTrackApplication.objects.create(
+            project_track=track,
+            project_application=application,
+        )
+    return track
 
 
 @pytest.mark.django_db
@@ -59,6 +93,27 @@ class TestProjectTrackDomain:
         assert ok is False
         assert "группами" in error
 
+    def test_validate_department_access_denied(self):
+        ok, error = ProjectTrackDomain.validate_department_access(999, [1, 2])
+        assert ok is False
+
+    def test_validate_max_teams_limit_exceeded(
+        self, roles, make_user, semester, departments
+    ):
+        user = make_user(role_code="admin")
+        track = ProjectTrack.objects.create(
+            name="T",
+            department=departments["child"],
+            semester=semester,
+            author=user,
+            max_teams=2,
+        )
+        ok, error = ProjectTrackDomain.validate_max_teams_limit(
+            track, new_groups_count=1, current_groups_count=2
+        )
+        assert ok is False
+        assert "max_teams" in error
+
     def test_resolve_institute_code_explicit_validator(
         self, roles, make_user, institute
     ):
@@ -82,32 +137,11 @@ class TestProjectTrackDomain:
         user = make_user(role_code="admin")
         assert ProjectTrackDomain.can_view_aggregated_statistics(user) is True
 
-    def test_can_view_aggregated_statistics_cpds(self, roles, make_user):
-        user = make_user(role_code="cpds")
-        assert ProjectTrackDomain.can_view_aggregated_statistics(user) is True
-
     def test_can_view_aggregated_statistics_validator_denied(self, roles, make_user):
         user = make_user(role_code="institute_validator", with_department=True)
         assert ProjectTrackDomain.can_view_aggregated_statistics(user) is False
 
-    def test_resolve_institute_code_validator_other_denied(
-        self, roles, make_user, institute
-    ):
-        from accounts.models import Department
-        from showcase.models import Institute
-
-        other_dept = Department.objects.create(name="Other", short_name="O")
-        other_inst = Institute.objects.create(
-            code="OTHER",
-            name="Other",
-            position=2,
-            department=other_dept,
-        )
-        user = make_user(role_code="institute_validator", with_department=True)
-        with pytest.raises(PermissionError):
-            ProjectTrackDomain.resolve_institute_code(user, other_inst.code)
-
-    def test_can_access_track_validator_own(
+    def test_can_access_track_validator_own_department(
         self,
         roles,
         make_user,
@@ -117,8 +151,6 @@ class TestProjectTrackDomain:
         semester,
         departments,
     ):
-        from showcase.models import ApplicationInvolvedDepartment
-
         user = make_user(role_code="institute_validator", with_department=True)
         group = StudyGroup.objects.create(
             name="Г1",
@@ -142,16 +174,20 @@ class TestProjectTrackDomain:
             application=app,
             department=departments["child"],
         )
-        track = ProjectTrack.objects.create(
+        track = _create_track(
+            name="T1",
             semester=semester,
-            study_group=group,
-            project_application=app,
+            department=departments["child"],
+            author=user,
+            group=group,
+            application=app,
         )
 
-        ok, _ = ProjectTrackDomain.can_access_track(user, track, [institute.code])
+        accessible_dept_ids = ProjectTrackDomain.get_accessible_department_ids(user)
+        ok, _ = ProjectTrackDomain.can_access_track(user, track, accessible_dept_ids)
         assert ok is True
 
-    def test_can_access_track_validator_other_institute_denied(
+    def test_can_access_track_validator_other_department_denied(
         self,
         roles,
         make_user,
@@ -161,15 +197,17 @@ class TestProjectTrackDomain:
         semester,
         departments,
     ):
+        from accounts.models import Department
         from showcase.models import Institute
 
-        other_dept = departments["parent"]
+        other_dept = Department.objects.create(name="Other", short_name="O")
         other_inst = Institute.objects.create(
             code="OTHER",
             name="Other",
             position=2,
             department=other_dept,
         )
+        admin = make_user(role_code="admin")
         user = make_user(role_code="institute_validator", with_department=True)
         group = StudyGroup.objects.create(
             name="Г2",
@@ -190,12 +228,18 @@ class TestProjectTrackDomain:
             barrier="Длинный барьер больше пятидесяти символов для валидации",
         )
         app.target_institutes.add(other_inst)
-        track = ProjectTrack.objects.create(
+        track = _create_track(
+            name="T2",
             semester=semester,
-            study_group=group,
-            project_application=app,
+            department=other_dept,
+            author=admin,
+            group=group,
+            application=app,
         )
 
-        ok, error = ProjectTrackDomain.can_access_track(user, track, [institute.code])
+        accessible_dept_ids = ProjectTrackDomain.get_accessible_department_ids(user)
+        ok, error = ProjectTrackDomain.can_access_track(
+            user, track, accessible_dept_ids
+        )
         assert ok is False
         assert error

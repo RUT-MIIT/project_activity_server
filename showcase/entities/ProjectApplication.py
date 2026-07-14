@@ -7,6 +7,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
+from drf_spectacular.utils import extend_schema
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -263,6 +264,12 @@ class SemesterViewSet(viewsets.ViewSet):
         super().__init__(**kwargs)
         self.service = ProjectApplicationService()
 
+    @extend_schema(
+        tags=["showcase"],
+        summary="Назначить семестр заявкам без semester_id",
+        request=None,
+        responses={204: None},
+    )
     @action(
         detail=True,
         methods=["post"],

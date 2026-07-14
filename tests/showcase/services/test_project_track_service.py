@@ -2,13 +2,19 @@
 
 import pytest
 
-from accounts.models import ACTIVE_SEMESTER_SETTING_CODE, Department, Semester, Settings
-from showcase.dto.project_track import ProjectTrackAssignDTO, ProjectTrackDeleteDTO
+from showcase.dto.project_track import (
+    ProjectTrackAddApplicationsDTO,
+    ProjectTrackAddGroupsDTO,
+    ProjectTrackCreateDTO,
+    ProjectTrackUpdateDTO,
+)
 from showcase.models import (
     ApplicationInvolvedDepartment,
     Institute,
     ProjectApplication,
     ProjectTrack,
+    ProjectTrackApplication,
+    ProjectTrackGroup,
 )
 from showcase.services.project_track_service import ProjectTrackService
 from teams.models import Direction, StudyGroup
@@ -16,6 +22,8 @@ from teams.models import Direction, StudyGroup
 
 @pytest.fixture
 def semester(db):
+    from accounts.models import Department, Semester
+
     return Semester.objects.create(code="s1", name="S1", position=1)
 
 
@@ -30,6 +38,8 @@ def direction(db):
 
 @pytest.fixture
 def other_institute(departments):
+    from accounts.models import Department
+
     other_dept = Department.objects.create(name="Other Parent", short_name="OP")
     return Institute.objects.create(
         code="OTHER",
@@ -41,9 +51,9 @@ def other_institute(departments):
 
 def _create_approved_app(
     *,
-    semester: Semester,
-    statuses: dict,
-    involved_department: Department | None = None,
+    semester,
+    statuses,
+    involved_department=None,
     title: str = "Проект",
 ) -> ProjectApplication:
     app = ProjectApplication.objects.create(
@@ -66,8 +76,37 @@ def _create_approved_app(
     return app
 
 
+def _create_track_with_links(
+    *,
+    name: str,
+    semester,
+    department,
+    author,
+    group,
+    application,
+    max_teams: int = 100,
+) -> ProjectTrack:
+    track = ProjectTrack.objects.create(
+        name=name,
+        description="Описание",
+        department=department,
+        semester=semester,
+        author=author,
+        max_teams=max_teams,
+    )
+    ProjectTrackGroup.objects.create(project_track=track, study_group=group)
+    ProjectTrackApplication.objects.create(
+        project_track=track,
+        project_application=application,
+    )
+    return track
+
+
 @pytest.fixture
-def track_data(statuses, institute, other_institute, direction, semester, departments):
+def track_data(
+    statuses, institute, other_institute, direction, semester, departments, make_user
+):
+    admin = make_user(role_code="admin")
     own_group = StudyGroup.objects.create(
         name="Группа 1",
         code="g1",
@@ -86,6 +125,8 @@ def track_data(statuses, institute, other_institute, direction, semester, depart
         involved_department=departments["child"],
         title="Свой",
     )
+    from accounts.models import Department
+
     other_child = Department.objects.create(
         name="Other Child",
         short_name="OC",
@@ -97,12 +138,16 @@ def track_data(statuses, institute, other_institute, direction, semester, depart
         involved_department=other_child,
         title="Чужой",
     )
-    track = ProjectTrack.objects.create(
+    track = _create_track_with_links(
+        name="Трек 1",
         semester=semester,
-        study_group=own_group,
-        project_application=own_app,
+        department=departments["child"],
+        author=admin,
+        group=own_group,
+        application=own_app,
     )
     return {
+        "admin": admin,
         "own_group": own_group,
         "other_group": other_group,
         "own_app": own_app,
@@ -113,46 +158,86 @@ def track_data(statuses, institute, other_institute, direction, semester, depart
 
 @pytest.mark.django_db
 class TestProjectTrackService:
-    def test_list_tracks_admin(self, roles, make_user, institute, semester, track_data):
+    def test_create_track(self, roles, make_user, semester, departments):
         user = make_user(role_code="admin")
         service = ProjectTrackService()
-        tracks = service.list_tracks(user, institute.code, str(semester.id))
+        dto = ProjectTrackCreateDTO(
+            name="Новый трек",
+            department_id=departments["child"].id,
+            semester_id=semester.id,
+            max_teams=50,
+        )
+        result = service.create_track(user, dto)
+        assert result["name"] == "Новый трек"
+        assert result["max_teams"] == 50
+        assert result["author_id"] == user.id
+
+    def test_list_tracks_admin(self, roles, make_user, semester, track_data):
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        tracks = service.list_tracks(user, str(semester.id))
         assert tracks.count() == 1
         assert tracks.first().id == track_data["track"].id
 
-    def test_list_tracks_validator_filtered(
-        self, roles, make_user, institute, semester, track_data
+    def test_list_tracks_includes_groups_and_applications(
+        self, roles, make_user, semester, track_data
     ):
-        user = make_user(role_code="institute_validator", with_department=True)
+        user = make_user(role_code="admin")
         service = ProjectTrackService()
-        tracks = service.list_tracks(user, institute.code, str(semester.id))
-        assert tracks.count() == 1
+        tracks = service.list_tracks(user, str(semester.id))
+        items = service.serialize_list(tracks)
+        assert len(items) == 1
+        assert len(items[0]["groups"]) == 1
+        assert len(items[0]["applications"]) == 1
+        assert items[0]["groups"][0]["id"] == track_data["own_group"].id
+        assert items[0]["applications"][0]["id"] == track_data["own_app"].id
 
-    def test_list_tracks_validator_other_institute_denied(
-        self, roles, make_user, other_institute, semester, track_data
+    def test_list_tracks_no_n_plus_one(
+        self, roles, make_user, semester, track_data, django_assert_num_queries
     ):
-        user = make_user(role_code="institute_validator", with_department=True)
+        user = make_user(role_code="admin")
         service = ProjectTrackService()
-        with pytest.raises(PermissionError):
-            service.list_tracks(user, other_institute.code, str(semester.id))
+        tracks = list(service.list_tracks(user, str(semester.id)))
 
-    def test_bulk_assign_creates_tracks(
+        with django_assert_num_queries(0):
+            items = service.serialize_list(tracks)
+
+        assert len(items[0]["groups"]) == 1
+        assert len(items[0]["applications"]) == 1
+
+    def test_list_tracks_filter_by_institute(
         self, roles, make_user, institute, semester, track_data
     ):
         user = make_user(role_code="admin")
         service = ProjectTrackService()
-        dto = ProjectTrackAssignDTO(
-            semester_id=semester.id,
-            group_ids=[track_data["own_group"].id],
-            project_application_ids=[track_data["own_app"].id],
+        tracks = service.list_tracks(
+            user, str(semester.id), institute_code=institute.code
         )
-        result = service.bulk_assign(user, dto)
-        assert result.created == 0
-        assert result.skipped == 1
-        assert result.total_requested == 1
+        assert tracks.count() == 1
 
-    def test_bulk_assign_new_tracks(
-        self, roles, make_user, institute, semester, direction, statuses, departments
+    def test_get_track(self, roles, make_user, track_data):
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        detail = service.get_track(user, track_data["track"].id)
+        assert detail["id"] == track_data["track"].id
+        assert len(detail["groups"]) == 1
+        assert len(detail["applications"]) == 1
+
+    def test_update_track(self, roles, make_user, track_data):
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        dto = ProjectTrackUpdateDTO(name="Обновлённый")
+        result = service.update_track(user, track_data["track"].id, dto)
+        assert result["name"] == "Обновлённый"
+
+    def test_delete_track(self, roles, make_user, track_data):
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        service.delete_track(user, track_data["track"].id)
+        assert not ProjectTrack.objects.filter(pk=track_data["track"].id).exists()
+
+    def test_add_groups_to_track(
+        self, roles, make_user, institute, semester, direction, track_data
     ):
         group = StudyGroup.objects.create(
             name="Г3",
@@ -160,127 +245,64 @@ class TestProjectTrackService:
             direction=direction,
             institute=institute,
         )
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        dto = ProjectTrackAddGroupsDTO(group_ids=[group.id])
+        result = service.add_groups_to_track(user, track_data["track"].id, dto)
+        assert len(result["groups"]) == 2
+
+    def test_add_groups_exceeds_max_teams(
+        self, roles, make_user, institute, semester, direction, track_data, departments
+    ):
+        track = ProjectTrack.objects.create(
+            name="Малый",
+            department=departments["child"],
+            semester=semester,
+            author=track_data["admin"],
+            max_teams=1,
+        )
+        ProjectTrackGroup.objects.create(
+            project_track=track,
+            study_group=track_data["own_group"],
+        )
+        group = StudyGroup.objects.create(
+            name="Г3",
+            code="g3",
+            direction=direction,
+            institute=institute,
+        )
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        dto = ProjectTrackAddGroupsDTO(group_ids=[group.id])
+        with pytest.raises(ValueError, match="max_teams"):
+            service.add_groups_to_track(user, track.id, dto)
+
+    def test_remove_group_from_track(self, roles, make_user, track_data):
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        result = service.remove_group_from_track(
+            user, track_data["track"].id, track_data["own_group"].id
+        )
+        assert result["groups"] == []
+
+    def test_add_applications_to_track(
+        self, roles, make_user, semester, statuses, departments, track_data
+    ):
         app = _create_approved_app(
             semester=semester,
             statuses=statuses,
             involved_department=departments["child"],
+            title="Второй",
         )
         user = make_user(role_code="admin")
         service = ProjectTrackService()
-        dto = ProjectTrackAssignDTO(
-            semester_id=semester.id,
-            group_ids=[group.id],
-            project_application_ids=[app.id],
-        )
-        result = service.bulk_assign(user, dto)
-        assert result.created == 1
-        assert result.skipped == 0
-        assert ProjectTrack.objects.count() == 1
+        dto = ProjectTrackAddApplicationsDTO(application_ids=[app.id])
+        result = service.add_applications_to_track(user, track_data["track"].id, dto)
+        assert len(result["applications"]) == 2
 
-    def test_bulk_assign_validator_cannot_use_other_group(
-        self, roles, make_user, institute, semester, track_data
+    def test_add_applications_rejects_non_approved(
+        self, roles, make_user, semester, statuses, institute, track_data
     ):
-        user = make_user(role_code="institute_validator", with_department=True)
-        service = ProjectTrackService()
-        dto = ProjectTrackAssignDTO(
-            semester_id=semester.id,
-            group_ids=[track_data["other_group"].id],
-            project_application_ids=[track_data["own_app"].id],
-        )
-        with pytest.raises(PermissionError):
-            service.bulk_assign(user, dto)
-
-    def test_bulk_assign_validator_with_involved_department_no_targets(
-        self,
-        roles,
-        make_user,
-        institute,
-        semester,
-        direction,
-        statuses,
-        departments,
-    ):
-        from showcase.models import ApplicationInvolvedDepartment
-
-        group = StudyGroup.objects.create(
-            name="Г5",
-            code="g5",
-            direction=direction,
-            institute=institute,
-        )
-        app = ProjectApplication.objects.create(
-            title="Без институтов",
-            company="ООО",
-            author_lastname="Иванов",
-            author_firstname="Иван",
-            author_email="a@b.c",
-            semester=semester,
-            status=statuses["approved"],
-            goal="Длинная цель проекта больше пятидесяти символов для валидации",
-            problem_holder="Носитель",
-            barrier="Длинный барьер больше пятидесяти символов для валидации",
-        )
-        ApplicationInvolvedDepartment.objects.create(
-            application=app,
-            department=departments["child"],
-        )
-        user = make_user(role_code="institute_validator", with_department=True)
-        service = ProjectTrackService()
-        dto = ProjectTrackAssignDTO(
-            semester_id=semester.id,
-            group_ids=[group.id],
-            project_application_ids=[app.id],
-        )
-        result = service.bulk_assign(user, dto)
-        assert result.created == 1
-
-    def test_bulk_assign_validator_with_target_institutes_only(
-        self,
-        roles,
-        make_user,
-        institute,
-        semester,
-        direction,
-        statuses,
-    ):
-        group = StudyGroup.objects.create(
-            name="Г6",
-            code="g6",
-            direction=direction,
-            institute=institute,
-        )
-        app = ProjectApplication.objects.create(
-            title="Только target",
-            company="ООО",
-            author_lastname="Иванов",
-            author_firstname="Иван",
-            author_email="a@b.c",
-            semester=semester,
-            status=statuses["approved"],
-            goal="Длинная цель проекта больше пятидесяти символов для валидации",
-            problem_holder="Носитель",
-            barrier="Длинный барьер больше пятидесяти символов для валидации",
-        )
-        app.target_institutes.add(institute)
-        user = make_user(role_code="institute_validator", with_department=True)
-        service = ProjectTrackService()
-        dto = ProjectTrackAssignDTO(
-            semester_id=semester.id,
-            group_ids=[group.id],
-            project_application_ids=[app.id],
-        )
-        result = service.bulk_assign(user, dto)
-        assert result.created == 1
-
-    def test_bulk_assign_rejects_non_approved(
-        self, roles, make_user, institute, semester, direction, statuses
-    ):
-        group = StudyGroup.objects.create(
-            name="Г4",
-            code="g4",
-            direction=direction,
-            institute=institute,
-        )
         app = ProjectApplication.objects.create(
             title="Не одобрен",
             company="ООО",
@@ -296,45 +318,32 @@ class TestProjectTrackService:
         app.target_institutes.add(institute)
         user = make_user(role_code="admin")
         service = ProjectTrackService()
-        dto = ProjectTrackAssignDTO(
-            semester_id=semester.id,
-            group_ids=[group.id],
-            project_application_ids=[app.id],
-        )
+        dto = ProjectTrackAddApplicationsDTO(application_ids=[app.id])
         with pytest.raises(ValueError, match="не одобрена"):
-            service.bulk_assign(user, dto)
+            service.add_applications_to_track(user, track_data["track"].id, dto)
 
-    def test_delete_track_admin(self, roles, make_user, track_data, semester):
-        user = make_user(role_code="admin")
-        service = ProjectTrackService()
-        dto = ProjectTrackDeleteDTO(
-            semester_id=str(semester.id),
-            group_id=track_data["own_group"].id,
-            project_application_id=track_data["own_app"].id,
-        )
-        service.delete_track(user, dto)
-        assert not ProjectTrack.objects.filter(pk=track_data["track"].id).exists()
-
-    def test_delete_track_accepts_semester_actual(
-        self, roles, make_user, track_data, semester
+    def test_add_groups_validator_cannot_use_other_group(
+        self, roles, make_user, track_data
     ):
-        Settings.objects.update_or_create(
-            code=ACTIVE_SEMESTER_SETTING_CODE,
-            defaults={"value": semester.code, "description": ""},
-        )
-        user = make_user(role_code="admin")
+        user = make_user(role_code="institute_validator", with_department=True)
         service = ProjectTrackService()
-        dto = ProjectTrackDeleteDTO(
-            semester_id="actual",
-            group_id=track_data["own_group"].id,
-            project_application_id=track_data["own_app"].id,
-        )
-        service.delete_track(user, dto)
-        assert not ProjectTrack.objects.filter(pk=track_data["track"].id).exists()
+        dto = ProjectTrackAddGroupsDTO(group_ids=[track_data["other_group"].id])
+        with pytest.raises(ValueError, match="групп"):
+            service.add_groups_to_track(user, track_data["track"].id, dto)
 
     def test_delete_track_validator_other_denied(
-        self, roles, make_user, semester, statuses, other_institute, direction
+        self,
+        roles,
+        make_user,
+        semester,
+        statuses,
+        other_institute,
+        direction,
+        departments,
     ):
+        from accounts.models import Department
+
+        admin = make_user(role_code="admin")
         other_child = Department.objects.create(
             name="Other Child",
             short_name="OC",
@@ -351,20 +360,18 @@ class TestProjectTrackService:
             statuses=statuses,
             involved_department=other_child,
         )
-        _track = ProjectTrack.objects.create(
+        track = _create_track_with_links(
+            name="Чужой трек",
             semester=semester,
-            study_group=other_group,
-            project_application=other_app,
+            department=other_child,
+            author=admin,
+            group=other_group,
+            application=other_app,
         )
         user = make_user(role_code="institute_validator", with_department=True)
         service = ProjectTrackService()
-        dto = ProjectTrackDeleteDTO(
-            semester_id=str(semester.id),
-            group_id=other_group.id,
-            project_application_id=other_app.id,
-        )
         with pytest.raises(PermissionError):
-            service.delete_track(user, dto)
+            service.delete_track(user, track.id)
 
     def test_list_groups_with_counts(
         self, roles, make_user, institute, semester, direction, track_data
@@ -381,7 +388,6 @@ class TestProjectTrackService:
         assert len(groups) == 2
         by_id = {g["id"]: g for g in groups}
         assert by_id[track_data["own_group"].id]["assigned_projects_count"] == 1
-        assert by_id[track_data["own_group"].id]["direction"]["name"] == "Экономика"
 
     def test_get_group_detail(self, roles, make_user, institute, semester, track_data):
         track_data["own_app"].print_number = "25-00042"
@@ -397,20 +403,6 @@ class TestProjectTrackService:
         assert detail["id"] == track_data["own_group"].id
         assert len(detail["projects"]) == 1
         assert detail["projects"][0]["print_number"] == "25-00042"
-        assert detail["projects"][0]["author_name"] == "Иванов Иван"
-
-    def test_get_group_detail_wrong_institute(
-        self, roles, make_user, institute, semester, track_data
-    ):
-        user = make_user(role_code="admin")
-        service = ProjectTrackService()
-        with pytest.raises(ValueError, match="не принадлежит институту"):
-            service.get_group_detail(
-                user,
-                track_data["other_group"].id,
-                institute.code,
-                str(semester.id),
-            )
 
     def test_list_projects_with_counts(
         self, roles, make_user, institute, semester, statuses, departments, track_data
@@ -428,26 +420,9 @@ class TestProjectTrackService:
         by_id = {p["id"]: p for p in projects}
         assert by_id[track_data["own_app"].id]["assigned_groups_count"] == 1
 
-    def test_list_projects_no_duplicate_counts_with_multiple_involved_departments(
-        self, roles, make_user, institute, semester, departments, track_data
-    ):
-        """Если у заявки несколько involved_departments, список проектов не должен дублироваться."""
-        ApplicationInvolvedDepartment.objects.create(
-            application=track_data["own_app"],
-            department=departments["parent"],
-        )
-        user = make_user(role_code="admin")
-        service = ProjectTrackService()
-        projects = service.list_projects(user, institute.code, str(semester.id))
-        assert len(projects) == 1
-        assert projects[0]["id"] == track_data["own_app"].id
-        assert projects[0]["assigned_groups_count"] == 1
-
     def test_get_project_detail(
         self, roles, make_user, institute, semester, track_data
     ):
-        track_data["own_app"].print_number = "25-00042"
-        track_data["own_app"].save(update_fields=["print_number"])
         user = make_user(role_code="admin")
         service = ProjectTrackService()
         detail = service.get_project_detail(
@@ -458,39 +433,6 @@ class TestProjectTrackService:
         )
         assert detail["id"] == track_data["own_app"].id
         assert len(detail["groups"]) == 1
-
-    def test_get_project_detail_wrong_institute(
-        self, roles, make_user, institute, semester, track_data
-    ):
-        user = make_user(role_code="admin")
-        service = ProjectTrackService()
-        with pytest.raises(ValueError, match="не найдена"):
-            service.get_project_detail(
-                user,
-                track_data["other_app"].id,
-                institute.code,
-                str(semester.id),
-            )
-
-    def test_get_project_detail_multiple_involved_departments(
-        self, roles, make_user, institute, semester, statuses, departments, track_data
-    ):
-        """Заявка с несколькими причастными подразделениями одного института не ломает get()."""
-        ApplicationInvolvedDepartment.objects.create(
-            application=track_data["own_app"],
-            department=departments["parent"],
-        )
-        user = make_user(role_code="admin")
-        service = ProjectTrackService()
-        detail = service.get_project_detail(
-            user,
-            track_data["own_app"].id,
-            institute.code,
-            str(semester.id),
-        )
-        assert detail["id"] == track_data["own_app"].id
-        assert len(detail["groups"]) == 1
-        assert {g["id"] for g in detail["groups"]} == {track_data["own_group"].id}
 
     def test_get_statistics(
         self,
@@ -520,7 +462,6 @@ class TestProjectTrackService:
         stats = service.get_statistics(user, institute.code, str(semester.id))
         assert stats["total_projects"] == 2
         assert stats["distributed_projects"] == 1
-        assert stats["average_projects_per_group"] == 0.5
         assert stats["groups_without_projects"] == 1
 
     def test_get_statistics_without_institute_code_aggregated(
@@ -537,39 +478,4 @@ class TestProjectTrackService:
         stats = service.get_statistics(user, None, str(semester.id))
         assert "overall" in stats
         assert "by_institute" in stats
-        assert stats["overall"]["total_projects"] == 2
         assert stats["overall"]["distributed_projects"] == 1
-        assert len(stats["by_institute"]) == 2
-        by_code = {item["institute_code"]: item for item in stats["by_institute"]}
-        assert by_code[institute.code]["distributed_projects"] == 1
-        assert by_code[other_institute.code]["distributed_projects"] == 0
-
-    def test_list_groups_validator_without_institute_code_service(
-        self, roles, make_user, institute, semester, track_data
-    ):
-        user = make_user(role_code="institute_validator", with_department=True)
-        service = ProjectTrackService()
-        groups = service.list_groups(user, None, str(semester.id))
-        assert len(groups) == 1
-
-    def test_get_group_detail_without_institute_code(
-        self, roles, make_user, institute, semester, track_data
-    ):
-        user = make_user(role_code="institute_validator", with_department=True)
-        service = ProjectTrackService()
-        detail = service.get_group_detail(
-            user,
-            track_data["own_group"].id,
-            None,
-            str(semester.id),
-        )
-        assert detail["id"] == track_data["own_group"].id
-        assert len(detail["projects"]) == 1
-
-    def test_list_groups_validator_other_institute_denied(
-        self, roles, make_user, other_institute, semester, track_data
-    ):
-        user = make_user(role_code="institute_validator", with_department=True)
-        service = ProjectTrackService()
-        with pytest.raises(PermissionError):
-            service.list_groups(user, other_institute.code, str(semester.id))

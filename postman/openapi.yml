@@ -1,0 +1,4148 @@
+openapi: 3.0.3
+info:
+  title: Project Activity API
+  version: 1.0.0
+  description: |-
+    API проектной деятельности студентов.
+
+    ## Авторизация
+    JWT Bearer: получите `access` через `POST /api/accounts/login/`, затем Authorize → `Bearer <access>`.
+
+    ## Postman
+    Импортируйте схему: Import → Link → `http://localhost:8000/api/schema/` (local) или `https://pd.emiit.ru/api/schema/` (prod). Включите синхронизацию с источником (Keep in sync / Update from definition).
+paths:
+  /api/accounts/departments/:
+    get:
+      operationId: accounts_departments_list
+      description: |-
+        ViewSet только для чтения подразделений/кафедр.
+
+        Список подразделений должен быть доступен всем пользователям (AllowAny),
+        чтобы пользователь мог выбрать своё подразделение ещё до авторизации.
+        Другие действия (detail) по умолчанию требуют авторизации.
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Department'
+          description: ''
+  /api/accounts/departments/{id}/:
+    get:
+      operationId: accounts_departments_retrieve
+      description: |-
+        ViewSet только для чтения подразделений/кафедр.
+
+        Список подразделений должен быть доступен всем пользователям (AllowAny),
+        чтобы пользователь мог выбрать своё подразделение ещё до авторизации.
+        Другие действия (detail) по умолчанию требуют авторизации.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Подразделение.
+        required: true
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Department'
+          description: ''
+  /api/accounts/login/:
+    post:
+      operationId: accounts_login_create
+      description: |-
+        Takes a set of user credentials and returns an access and refresh JSON web
+        token pair to prove the authentication of those credentials.
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPairRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPairRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomTokenObtainPairRequest'
+        required: true
+      security:
+      - bearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/accounts/password/change/:
+    post:
+      operationId: accounts_password_change_create
+      description: Сменяет пароль текущего пользователя после проверки текущего пароля.
+      summary: Смена пароля
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordChangeRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/accounts/password/reset/:
+    post:
+      operationId: accounts_password_reset_create
+      summary: Сброс пароля
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordReset'
+          description: ''
+  /api/accounts/password/reset/confirm/:
+    post:
+      operationId: accounts_password_reset_confirm_create
+      summary: Подтверждение сброса пароля
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PasswordResetConfirm'
+          description: ''
+  /api/accounts/registration-requests/:
+    get:
+      operationId: accounts_registration_requests_list
+      parameters:
+      - in: query
+        name: status
+        schema:
+          type: string
+          title: Статус
+          enum:
+          - approved
+          - rejected
+          - submitted
+        description: |-
+          * `submitted` - Подана
+          * `approved` - Одобрена
+          * `rejected` - Отклонена
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/RegistrationRequest'
+          description: ''
+    post:
+      operationId: accounts_registration_requests_create
+      description: Создание заявки с обработкой гонки при параллельных запросах.
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationRequestCreate'
+          description: ''
+  /api/accounts/registration-requests/{id}/:
+    get:
+      operationId: accounts_registration_requests_retrieve
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Заявка на регистрацию.
+        required: true
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationRequest'
+          description: ''
+    put:
+      operationId: accounts_registration_requests_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Заявка на регистрацию.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationRequest'
+          description: ''
+    patch:
+      operationId: accounts_registration_requests_partial_update
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Заявка на регистрацию.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedRegistrationRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedRegistrationRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedRegistrationRequestRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationRequest'
+          description: ''
+    delete:
+      operationId: accounts_registration_requests_destroy
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Заявка на регистрацию.
+        required: true
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/accounts/registration-requests/{id}/approve/:
+    post:
+      operationId: accounts_registration_requests_approve_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Заявка на регистрацию.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationRequest'
+          description: ''
+  /api/accounts/registration-requests/{id}/reject/:
+    post:
+      operationId: accounts_registration_requests_reject_create
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Заявка на регистрацию.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegistrationRequestRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RegistrationRequest'
+          description: ''
+  /api/accounts/roles/:
+    get:
+      operationId: accounts_roles_list
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Role'
+          description: ''
+  /api/accounts/roles/{code}/:
+    get:
+      operationId: accounts_roles_retrieve
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+          title: Код роли
+        description: A unique value identifying this Роль.
+        required: true
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Role'
+          description: ''
+  /api/accounts/semesters/:
+    get:
+      operationId: accounts_semesters_list
+      description: CRUD для семестров. Чтение — для аутентифицированных, управление
+        — admin/cpds.
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Semester'
+          description: ''
+    post:
+      operationId: accounts_semesters_create
+      description: CRUD для семестров. Чтение — для аутентифицированных, управление
+        — admin/cpds.
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemesterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SemesterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SemesterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Semester'
+          description: ''
+  /api/accounts/semesters/{id}/:
+    get:
+      operationId: accounts_semesters_retrieve
+      description: CRUD для семестров. Чтение — для аутентифицированных, управление
+        — admin/cpds.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Семестр.
+        required: true
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Semester'
+          description: ''
+    put:
+      operationId: accounts_semesters_update
+      description: CRUD для семестров. Чтение — для аутентифицированных, управление
+        — admin/cpds.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Семестр.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SemesterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SemesterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SemesterRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Semester'
+          description: ''
+    patch:
+      operationId: accounts_semesters_partial_update
+      description: CRUD для семестров. Чтение — для аутентифицированных, управление
+        — admin/cpds.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Семестр.
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedSemesterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedSemesterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedSemesterRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Semester'
+          description: ''
+    delete:
+      operationId: accounts_semesters_destroy
+      description: CRUD для семестров. Чтение — для аутентифицированных, управление
+        — admin/cpds.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Семестр.
+        required: true
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/accounts/user/:
+    get:
+      operationId: accounts_user_retrieve
+      summary: Текущий пользователь
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/accounts/users/:
+    get:
+      operationId: accounts_users_list
+      description: GET /api/accounts/users/ — список пользователей.
+      summary: Список пользователей
+      parameters:
+      - in: query
+        name: include_authored_projects
+        schema:
+          type: string
+        description: true / 1 / yes — добавить authored_projects[]
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserUpdate'
+          description: ''
+  /api/accounts/users/{id}/:
+    get:
+      operationId: accounts_users_retrieve
+      description: GET /api/accounts/users/{id}/ — деталь пользователя.
+      summary: Детали пользователя
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: include_authored_projects
+        schema:
+          type: string
+        description: true / 1 / yes — добавить authored_projects[]
+      tags:
+      - accounts
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+    patch:
+      operationId: accounts_users_partial_update
+      description: PATCH /api/accounts/users/{id}/ — частичное обновление.
+      summary: Обновить пользователя
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - accounts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserUpdate'
+          description: ''
+  /api/showcase/application-statuses/:
+    get:
+      operationId: showcase_application_statuses_list
+      description: |-
+        ViewSet только для чтения статусов заявок на проекты.
+        Доступен только для аутентифицированных пользователей.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedApplicationStatusReadList'
+          description: ''
+  /api/showcase/application-statuses/{code}/:
+    get:
+      operationId: showcase_application_statuses_retrieve
+      description: |-
+        ViewSet только для чтения статусов заявок на проекты.
+        Доступен только для аутентифицированных пользователей.
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+          title: Код статуса
+        description: A unique value identifying this Статус заявки.
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApplicationStatusRead'
+          description: ''
+  /api/showcase/department-plans/:
+    get:
+      operationId: showcase_department_plans_list
+      description: |-
+        GET /api/showcase/department-plans/?institute_code=INST&semester_id=1
+
+        Получение планов дочерних подразделений с количеством заявок по статусам.
+        Если `institute_code` не передан - возвращаются подразделения верхнего уровня.
+      summary: Список планов подразделений
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/DepartmentPlan'
+          description: ''
+    post:
+      operationId: showcase_department_plans_create
+      description: |-
+        POST /api/showcase/department-plans/
+
+        Установка плана для подразделения на семестр.
+        Тело запроса: {"department_id": 1, "semester_id": 1, "plan": 10}
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepartmentPlanRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DepartmentPlanRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DepartmentPlanRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentPlan'
+          description: ''
+  /api/showcase/department-plans/my-department-plan/:
+    get:
+      operationId: showcase_department_plans_my_department_plan_retrieve
+      description: |-
+        GET /api/showcase/my-department-plan/?semester_id=ID
+
+        Возвращает план и статистику заявок для подразделения текущего пользователя.
+      summary: План подразделения текущего пользователя
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepartmentPlan'
+          description: ''
+  /api/showcase/institutes/:
+    get:
+      operationId: showcase_institutes_list
+      description: Переопределяем list для возврата всех институтов без пагинации.
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Institute'
+          description: ''
+  /api/showcase/institutes/{code}/:
+    get:
+      operationId: showcase_institutes_retrieve
+      description: |-
+        ViewSet только для чтения институтов/академий.
+        Доступен для всех пользователей.
+        Без пагинации - возвращает все активные институты.
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+          title: Код института
+        description: A unique value identifying this Институт.
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Institute'
+          description: ''
+  /api/showcase/project-applications/:
+    get:
+      operationId: showcase_project_applications_list
+      description: |-
+        GET /api/project-applications/
+        Получение списка заявок с пагинацией.
+
+        Query: semester_id — числовой id, ``next`` или ``actual``.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedProjectApplicationCreateList'
+          description: ''
+    post:
+      operationId: showcase_project_applications_create
+      description: |-
+        POST /api/project-applications/
+        Создание заявки - только обработка HTTP
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/{id}/:
+    get:
+      operationId: showcase_project_applications_retrieve
+      description: |-
+        GET /api/project-applications/{id}/
+        Получение заявки по ID с доступными действиями
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+    put:
+      operationId: showcase_project_applications_update
+      description: |-
+        PUT /api/project-applications/{id}/
+        Полное обновление заявки
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationUpdateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationUpdate'
+          description: ''
+    patch:
+      operationId: showcase_project_applications_partial_update
+      description: |-
+        PATCH /api/project-applications/{id}/
+        Частичное обновление заявки
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectApplicationUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectApplicationUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectApplicationUpdateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationUpdate'
+          description: ''
+    delete:
+      operationId: showcase_project_applications_destroy
+      description: |-
+        Упрощенный ViewSet - только обработка HTTP запросов.
+
+        Вся бизнес-логика вынесена в ApplicationService.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/showcase/project-applications/{id}/add_comment/:
+    post:
+      operationId: showcase_project_applications_add_comment_create
+      description: |-
+        POST /api/project-applications/{id}/add_comment/
+        Добавление комментария к заявке
+        Тело: {"field": "goal", "text": "Комментарий"}
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/{id}/approve/:
+    post:
+      operationId: showcase_project_applications_approve_create
+      description: |-
+        POST /api/project-applications/{id}/approve/
+        Одобрение заявки
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/{id}/comments/:
+    get:
+      operationId: showcase_project_applications_comments_retrieve
+      description: |-
+        GET /api/project-applications/{id}/comments/
+        Получение всех комментариев к заявке
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/{id}/reject/:
+    post:
+      operationId: showcase_project_applications_reject_create
+      description: |-
+        POST /api/project-applications/{id}/reject/
+        Отклонение заявки
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/{id}/request_changes/:
+    post:
+      operationId: showcase_project_applications_request_changes_create
+      description: |-
+        POST /api/project-applications/{id}/request_changes/
+        Запрос изменений (отправка на доработку)
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/{id}/return_by_author/:
+    post:
+      operationId: showcase_project_applications_return_by_author_create
+      description: |-
+        POST /api/project-applications/{id}/return_by_author/
+        Отзыв заявки автором (перевод в статус returned_author).
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/{id}/status_logs/:
+    get:
+      operationId: showcase_project_applications_status_logs_retrieve
+      description: GET /api/project-applications/{id}/status_logs/
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/{id}/transfer_to_institute/:
+    post:
+      operationId: showcase_project_applications_transfer_to_institute_create
+      description: |-
+        POST /api/project-applications/{id}/transfer_to_institute/
+        Передача заявки в институт по коду института.
+
+        Ожидает в теле запроса параметр:
+        - code (str): код института из модели Institute.code
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/by_status/:
+    get:
+      operationId: showcase_project_applications_by_status_retrieve
+      description: |-
+        GET /api/project-applications/by_status/?status=created
+        Получение заявок по статусу (только для админов/модераторов)
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/coordination/:
+    get:
+      operationId: showcase_project_applications_coordination_retrieve
+      description: |-
+        GET /api/project-applications/coordination/
+        Заявки для координации: где пользователь причастен и статус не approved/rejected
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/dashboard/:
+    get:
+      operationId: showcase_project_applications_dashboard_retrieve
+      description: GET /api/showcase/project-applications/dashboard/
+      summary: Дашборд проектных заявок
+      parameters:
+      - in: query
+        name: application_type
+        schema:
+          type: string
+        description: all | external | internal
+      - in: query
+        name: days
+        schema:
+          type: integer
+      - in: query
+        name: department_id
+        schema:
+          type: integer
+      - in: query
+        name: institute_code
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: string
+        required: true
+      - in: query
+        name: status
+        schema:
+          type: string
+        description: approved,rejected,pending,in_progress (через запятую)
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/showcase/project-applications/external/:
+    get:
+      operationId: showcase_project_applications_external_retrieve
+      description: |-
+        GET /api/project-applications/external/
+        Получение списка всех внешних заявок (is_external=True)
+        Требуется авторизация
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/my_applications/:
+    get:
+      operationId: showcase_project_applications_my_applications_retrieve
+      description: GET /api/project-applications/my_applications/
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/recent/:
+    get:
+      operationId: showcase_project_applications_recent_retrieve
+      description: |-
+        GET /api/project-applications/recent/
+        Получение последних заявок (только для админов/модераторов)
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-applications/simple/:
+    post:
+      operationId: showcase_project_applications_simple_create
+      description: |-
+        POST /api/project-applications/simple/
+        Создание заявки без авторизации
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectApplicationCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectApplicationCreate'
+          description: ''
+  /api/showcase/project-tracks/:
+    get:
+      operationId: showcase_project_tracks_list
+      description: GET /api/showcase/project-tracks/ с фильтрами semester_id, department_id.
+      summary: Список проектных треков
+      parameters:
+      - in: query
+        name: department_id
+        schema:
+          type: integer
+      - in: query
+        name: institute_code
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: string
+        description: ID семестра либо actual / next
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+    post:
+      operationId: showcase_project_tracks_create
+      description: POST /api/showcase/project-tracks/ — создание трека.
+      summary: Создать проектный трек
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectTrackCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectTrackCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectTrackCreateRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+  /api/showcase/project-tracks/{id}/:
+    get:
+      operationId: showcase_project_tracks_retrieve
+      description: GET /api/showcase/project-tracks/{id}/.
+      summary: Детали проектного трека
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+    patch:
+      operationId: showcase_project_tracks_partial_update
+      description: PATCH /api/showcase/project-tracks/{id}/.
+      summary: Обновить проектный трек
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectTrackUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectTrackUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedProjectTrackUpdateRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+    delete:
+      operationId: showcase_project_tracks_destroy
+      description: DELETE /api/showcase/project-tracks/{id}/.
+      summary: Удалить проектный трек
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/showcase/project-tracks/{id}/applications/:
+    post:
+      operationId: showcase_project_tracks_applications_create
+      description: POST /api/showcase/project-tracks/{id}/applications/.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectTrackAddApplicationsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectTrackAddApplicationsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectTrackAddApplicationsRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+  /api/showcase/project-tracks/{id}/applications/{application_id}/:
+    delete:
+      operationId: showcase_project_tracks_applications_destroy
+      description: DELETE /api/showcase/project-tracks/{id}/applications/{application_id}/.
+      parameters:
+      - in: path
+        name: application_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/showcase/project-tracks/{id}/groups/:
+    post:
+      operationId: showcase_project_tracks_groups_create
+      description: POST /api/showcase/project-tracks/{id}/groups/.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProjectTrackAddGroupsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ProjectTrackAddGroupsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ProjectTrackAddGroupsRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+  /api/showcase/project-tracks/{id}/groups/{group_id}/:
+    delete:
+      operationId: showcase_project_tracks_groups_destroy
+      description: DELETE /api/showcase/project-tracks/{id}/groups/{group_id}/.
+      parameters:
+      - in: path
+        name: group_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/showcase/project-tracks/groups/:
+    get:
+      operationId: showcase_project_tracks_groups_retrieve
+      description: GET /api/showcase/project-tracks/groups/.
+      summary: Учебные группы института через треки
+      parameters:
+      - in: query
+        name: institute_code
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: string
+        description: ID семестра либо actual / next
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+  /api/showcase/project-tracks/groups/{group_id}/:
+    get:
+      operationId: showcase_project_tracks_groups_retrieve_2
+      description: GET /api/showcase/project-tracks/groups/{id}/.
+      summary: Детали учебной группы через треки
+      parameters:
+      - in: path
+        name: group_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: query
+        name: institute_code
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: string
+        description: ID семестра либо actual / next
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+  /api/showcase/project-tracks/projects/:
+    get:
+      operationId: showcase_project_tracks_projects_retrieve
+      description: GET /api/showcase/project-tracks/projects/.
+      summary: Проекты (заявки) института через треки
+      parameters:
+      - in: query
+        name: institute_code
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: string
+        description: ID семестра либо actual / next
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+  /api/showcase/project-tracks/projects/{project_id}/:
+    get:
+      operationId: showcase_project_tracks_projects_retrieve_2
+      description: GET /api/showcase/project-tracks/projects/{id}/.
+      summary: Детали проекта через треки
+      parameters:
+      - in: query
+        name: institute_code
+        schema:
+          type: string
+      - in: path
+        name: project_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      - in: query
+        name: semester_id
+        schema:
+          type: string
+        description: ID семестра либо actual / next
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+  /api/showcase/project-tracks/statistics/:
+    get:
+      operationId: showcase_project_tracks_statistics_retrieve
+      description: GET /api/showcase/project-tracks/statistics/.
+      summary: Статистика распределения по трекам
+      parameters:
+      - in: query
+        name: institute_code
+        schema:
+          type: string
+      - in: query
+        name: semester_id
+        schema:
+          type: string
+        description: ID семестра либо actual / next
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProjectTrackCreate'
+          description: ''
+  /api/showcase/projects/:
+    get:
+      operationId: showcase_projects_list
+      description: GET /api/showcase/projects/ — список проектов с role-based фильтрацией.
+      summary: Список одобренных проектов
+      parameters:
+      - in: query
+        name: semester_id
+        schema:
+          type: string
+        description: ID семестра либо actual / next
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/showcase/projects/{id}/:
+    get:
+      operationId: showcase_projects_retrieve
+      description: GET /api/showcase/projects/ — список проектов с role-based фильтрацией.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Проектная заявка.
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          description: No response body
+  /api/showcase/semesters/{id}/assign-empty-applications/:
+    post:
+      operationId: showcase_semesters_assign_empty_applications_create
+      description: |-
+        POST /api/semesters/{id}/assign-empty-applications
+
+        Присваивает переданный семестр всем заявкам без установленного семестра.
+        Доступно только для ролей admin и cpds.
+        Возвращает 204 No Content.
+      summary: Назначить семестр заявкам без semester_id
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/showcase/tags/:
+    get:
+      operationId: showcase_tags_list
+      description: GET /api/showcase/tags/ - список тегов с фильтрацией по ролям.
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Tag'
+          description: ''
+    post:
+      operationId: showcase_tags_create
+      description: POST /api/showcase/tags/ - создание тега.
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/showcase/tags/{id}/:
+    get:
+      operationId: showcase_tags_retrieve
+      description: GET /api/showcase/tags/{id}/ - получение тега с проверкой доступа.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Тег.
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+    put:
+      operationId: showcase_tags_update
+      description: PUT /api/showcase/tags/{id}/ - полное обновление тега.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Тег.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+    patch:
+      operationId: showcase_tags_partial_update
+      description: PATCH /api/showcase/tags/{id}/ - частичное обновление тега.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Тег.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTagRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+    delete:
+      operationId: showcase_tags_destroy
+      description: DELETE /api/showcase/tags/{id}/ - удаление тега.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Тег.
+        required: true
+      tags:
+      - showcase
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/showcase/tags/{id}/attach-department/:
+    post:
+      operationId: showcase_tags_attach_department_create
+      description: POST /api/showcase/tags/{id}/attach-department/ - присоединение
+        подразделения к тегу.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Тег.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/showcase/tags/{id}/detach-department/:
+    post:
+      operationId: showcase_tags_detach_department_create
+      description: POST /api/showcase/tags/{id}/detach-department/ - отцепление подразделения
+        от тега.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Тег.
+        required: true
+      tags:
+      - showcase
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TagRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Tag'
+          description: ''
+  /api/teams/directions/:
+    get:
+      operationId: teams_directions_list
+      description: GET /api/teams/directions/ — список и просмотр направлений.
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Direction'
+          description: ''
+  /api/teams/directions/{code}/:
+    get:
+      operationId: teams_directions_retrieve
+      description: GET /api/teams/directions/ — список и просмотр направлений.
+      parameters:
+      - in: path
+        name: code
+        schema:
+          type: string
+          pattern: ^[^/]+$
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Direction'
+          description: ''
+  /api/teams/study-groups/:
+    get:
+      operationId: teams_study_groups_list
+      description: GET /api/teams/study-groups/ — список и просмотр учебных групп.
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StudyGroupList'
+          description: ''
+  /api/teams/study-groups/{id}/:
+    get:
+      operationId: teams_study_groups_retrieve
+      description: GET /api/teams/study-groups/ — список и просмотр учебных групп.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Учебная группа.
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StudyGroup'
+          description: ''
+  /api/teams/teams/:
+    get:
+      operationId: teams_teams_list
+      description: CRUD для команд и управления участниками.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedTeamList'
+          description: ''
+    post:
+      operationId: teams_teams_create
+      description: CRUD для команд и управления участниками.
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/teams/teams/{id}/:
+    get:
+      operationId: teams_teams_retrieve
+      description: CRUD для команд и управления участниками.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Команда.
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+    put:
+      operationId: teams_teams_update
+      description: CRUD для команд и управления участниками.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Команда.
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+    patch:
+      operationId: teams_teams_partial_update
+      description: CRUD для команд и управления участниками.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Команда.
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTeamRequest'
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+    delete:
+      operationId: teams_teams_destroy
+      description: CRUD для команд и управления участниками.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Команда.
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/teams/teams/{id}/members/:
+    post:
+      operationId: teams_teams_members_create
+      description: POST /api/teams/teams/{id}/members/ — добавить участника.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Команда.
+        required: true
+      tags:
+      - teams
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TeamRequest'
+        required: true
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+  /api/teams/teams/{id}/members/{member_id}/:
+    delete:
+      operationId: teams_teams_members_destroy
+      description: DELETE /api/teams/teams/{id}/members/{member_id}/ — удалить участника.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this Команда.
+        required: true
+      - in: path
+        name: member_id
+        schema:
+          type: string
+          pattern: ^\d+$
+        required: true
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/teams/teams/my/:
+    get:
+      operationId: teams_teams_my_retrieve
+      description: GET /api/teams/teams/my/ — команды текущего пользователя.
+      tags:
+      - teams
+      security:
+      - jwtAuth: []
+      - bearerAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Team'
+          description: ''
+components:
+  schemas:
+    AcademicYear:
+      type: object
+      description: Сериализатор учебного года (краткий).
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          title: Код
+          maxLength: 64
+        name:
+          type: string
+          title: Название
+          maxLength: 255
+      required:
+      - code
+      - id
+      - name
+    AcademicYearRequest:
+      type: object
+      description: Сериализатор учебного года (краткий).
+      properties:
+        code:
+          type: string
+          minLength: 1
+          title: Код
+          maxLength: 64
+        name:
+          type: string
+          minLength: 1
+          title: Название
+          maxLength: 255
+      required:
+      - code
+      - name
+    ApplicationStatusRead:
+      type: object
+      description: |-
+        Сериализатор для отображения (чтения) статусов заявок на проекты.
+        Используется для GET-запросов.
+      properties:
+        code:
+          type: string
+          title: Код статуса
+          maxLength: 50
+        name:
+          type: string
+          title: Название статуса
+          maxLength: 100
+      required:
+      - code
+      - name
+    CustomTokenObtainPairRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          writeOnly: true
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    Department:
+      type: object
+      description: Сериализатор для подразделений/кафедр.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название подразделения
+          maxLength: 255
+        short_name:
+          type: string
+          title: Краткое название
+          maxLength: 64
+      required:
+      - id
+      - name
+      - short_name
+    DepartmentPlan:
+      type: object
+      description: Сериализатор для создания/обновления плана подразделения.
+      properties:
+        department_id:
+          type: integer
+        semester_id:
+          type: integer
+        plan:
+          type: integer
+          minimum: 0
+      required:
+      - department_id
+      - plan
+      - semester_id
+    DepartmentPlanRequest:
+      type: object
+      description: Сериализатор для создания/обновления плана подразделения.
+      properties:
+        department_id:
+          type: integer
+        semester_id:
+          type: integer
+        plan:
+          type: integer
+          minimum: 0
+      required:
+      - department_id
+      - plan
+      - semester_id
+    DepartmentRequest:
+      type: object
+      description: Сериализатор для подразделений/кафедр.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название подразделения
+          maxLength: 255
+        short_name:
+          type: string
+          minLength: 1
+          title: Краткое название
+          maxLength: 64
+      required:
+      - name
+      - short_name
+    Direction:
+      type: object
+      description: Сериализатор направления подготовки.
+      properties:
+        code:
+          type: string
+          title: Код направления
+          maxLength: 9
+        level:
+          allOf:
+          - $ref: '#/components/schemas/LevelEnum'
+          title: Уровень подготовки
+        name:
+          type: string
+          title: Название
+          maxLength: 512
+      required:
+      - code
+      - level
+      - name
+    DirectionNested:
+      type: object
+      properties:
+        code:
+          type: string
+          title: Код направления
+          maxLength: 9
+        level:
+          allOf:
+          - $ref: '#/components/schemas/LevelEnum'
+          title: Уровень подготовки
+        name:
+          type: string
+          title: Название
+          maxLength: 512
+      required:
+      - code
+      - level
+      - name
+    Institute:
+      type: object
+      description: Сериализатор для институтов/академий.
+      properties:
+        code:
+          type: string
+          title: Код института
+          maxLength: 50
+        name:
+          type: string
+          title: Название института
+          maxLength: 100
+        department_id:
+          type: integer
+          readOnly: true
+      required:
+      - code
+      - department_id
+      - name
+    InstituteNested:
+      type: object
+      properties:
+        code:
+          type: string
+          title: Код института
+          maxLength: 50
+        name:
+          type: string
+          title: Название института
+          maxLength: 100
+      required:
+      - code
+      - name
+    LevelEnum:
+      enum:
+      - бакалавриат
+      - специалитет
+      type: string
+      description: |-
+        * `бакалавриат` - Бакалавриат
+        * `специалитет` - Специалитет
+    PaginatedApplicationStatusReadList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApplicationStatusRead'
+    PaginatedProjectApplicationCreateList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/ProjectApplicationCreate'
+    PaginatedTeamList:
+      type: object
+      required:
+      - count
+      - results
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Team'
+    PasswordChangeRequest:
+      type: object
+      description: Сериализатор для смены пароля аутентифицированного пользователя.
+      properties:
+        current_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 8
+      required:
+      - current_password
+      - new_password
+    PasswordReset:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+      required:
+      - email
+    PasswordResetConfirm:
+      type: object
+      properties:
+        uid:
+          type: string
+        token:
+          type: string
+      required:
+      - token
+      - uid
+    PasswordResetConfirmRequest:
+      type: object
+      properties:
+        uid:
+          type: string
+          minLength: 1
+        token:
+          type: string
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 8
+      required:
+      - new_password
+      - token
+      - uid
+    PasswordResetRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+    PatchedProjectApplicationUpdateRequest:
+      type: object
+      description: Сериализатор только для валидации HTTP данных при обновлении.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        company:
+          type: string
+          minLength: 1
+          maxLength: 255
+        author_lastname:
+          type: string
+          minLength: 1
+          maxLength: 100
+        author_firstname:
+          type: string
+          minLength: 1
+          maxLength: 100
+        author_middlename:
+          type: string
+          maxLength: 100
+        author_email:
+          type: string
+          format: email
+          minLength: 1
+        author_phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        author_role:
+          type: string
+          maxLength: 100
+        author_division:
+          type: string
+          maxLength: 200
+        company_contacts:
+          type: string
+        target_institutes:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+        tags:
+          type: array
+          items:
+            type: integer
+        project_level:
+          type: string
+          maxLength: 100
+        problem_holder:
+          type: string
+          minLength: 1
+        goal:
+          type: string
+          minLength: 1
+        barrier:
+          type: string
+          minLength: 1
+        existing_solutions:
+          type: string
+        context:
+          type: string
+        stakeholders:
+          type: string
+        recommended_tools:
+          type: string
+        experts:
+          type: string
+        additional_materials:
+          type: string
+        needs_consultation:
+          type: boolean
+        main_department_id:
+          type: integer
+          nullable: true
+        is_internal_customer:
+          type: boolean
+        semester_id:
+          type: integer
+          nullable: true
+    PatchedProjectTrackUpdateRequest:
+      type: object
+      description: Сериализатор для обновления проектного трека.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+        department_id:
+          type: integer
+          minimum: 1
+        semester_id:
+          type: integer
+          minimum: 1
+        max_teams:
+          type: integer
+          minimum: 1
+    PatchedRegistrationRequestRequest:
+      type: object
+      properties:
+        last_name:
+          type: string
+          minLength: 1
+          title: Фамилия
+          maxLength: 150
+        first_name:
+          type: string
+          minLength: 1
+          title: Имя
+          maxLength: 150
+        middle_name:
+          type: string
+          title: Отчество
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        phone:
+          type: string
+          minLength: 1
+          title: Телефон
+          maxLength: 32
+        comment:
+          type: string
+          nullable: true
+          title: Комментарий
+        reason:
+          type: string
+          nullable: true
+          title: Причина отказа
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          title: Статус
+    PatchedSemesterRequest:
+      type: object
+      description: Сериализатор для семестров.
+      properties:
+        code:
+          type: string
+          minLength: 1
+          title: Код
+          maxLength: 64
+        name:
+          type: string
+          minLength: 1
+          title: Название семестра
+          maxLength: 255
+        position:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Позиция для сортировки
+        academic_year_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+    PatchedTagRequest:
+      type: object
+      description: Сериализатор для тегов.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название тега
+          maxLength: 255
+        category:
+          type: string
+          title: Категория тега
+          maxLength: 255
+        is_base:
+          type: boolean
+          title: Базовый тег
+    PatchedTeamRequest:
+      type: object
+      description: Сериализатор команды.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+        leader_id:
+          type: integer
+          writeOnly: true
+        project_application_id:
+          type: integer
+          nullable: true
+    PatchedUserUpdateRequest:
+      type: object
+      description: Сериализатор частичного обновления пользователя.
+      properties:
+        role:
+          type: string
+          minLength: 1
+          title: Код роли
+        department_id:
+          type: integer
+          nullable: true
+        email:
+          type: string
+          format: email
+          minLength: 1
+        phone:
+          type: string
+          nullable: true
+          maxLength: 20
+    ProjectApplicationCreate:
+      type: object
+      description: |-
+        Сериализатор для технической валидации HTTP данных.
+
+        ОТВЕТСТВЕННОСТЬ:
+        - Типы данных (CharField, EmailField, BooleanField)
+        - Форматы (email, URL, даты)
+        - Длина строк (max_length)
+        - Обязательные поля (required=True)
+
+        Бизнес-правила проверяются в ProjectApplicationDomain.validate_create()
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        company:
+          type: string
+          maxLength: 255
+        author_lastname:
+          type: string
+          maxLength: 100
+        author_firstname:
+          type: string
+          maxLength: 100
+        author_middlename:
+          type: string
+          maxLength: 100
+        author_email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        author_phone:
+          type: string
+          maxLength: 20
+        author_role:
+          type: string
+          maxLength: 100
+        author_division:
+          type: string
+          maxLength: 200
+        company_contacts:
+          type: string
+        target_institutes:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+        tags:
+          type: array
+          items:
+            type: integer
+        project_level:
+          type: string
+          maxLength: 100
+        problem_holder:
+          type: string
+        goal:
+          type: string
+        barrier:
+          type: string
+        existing_solutions:
+          type: string
+        context:
+          type: string
+        stakeholders:
+          type: string
+        recommended_tools:
+          type: string
+        experts:
+          type: string
+        additional_materials:
+          type: string
+        needs_consultation:
+          type: boolean
+        main_department_id:
+          type: integer
+          nullable: true
+        is_internal_customer:
+          type: boolean
+        semester_id:
+          type: integer
+          nullable: true
+      required:
+      - barrier
+      - company
+      - company_contacts
+      - existing_solutions
+      - goal
+      - problem_holder
+      - title
+    ProjectApplicationCreateRequest:
+      type: object
+      description: |-
+        Сериализатор для технической валидации HTTP данных.
+
+        ОТВЕТСТВЕННОСТЬ:
+        - Типы данных (CharField, EmailField, BooleanField)
+        - Форматы (email, URL, даты)
+        - Длина строк (max_length)
+        - Обязательные поля (required=True)
+
+        Бизнес-правила проверяются в ProjectApplicationDomain.validate_create()
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+        company:
+          type: string
+          minLength: 1
+          maxLength: 255
+        author_lastname:
+          type: string
+          maxLength: 100
+        author_firstname:
+          type: string
+          maxLength: 100
+        author_middlename:
+          type: string
+          maxLength: 100
+        author_email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        author_phone:
+          type: string
+          maxLength: 20
+        author_role:
+          type: string
+          maxLength: 100
+        author_division:
+          type: string
+          maxLength: 200
+        company_contacts:
+          type: string
+          minLength: 1
+        target_institutes:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+        tags:
+          type: array
+          items:
+            type: integer
+        project_level:
+          type: string
+          maxLength: 100
+        problem_holder:
+          type: string
+          minLength: 1
+        goal:
+          type: string
+          minLength: 1
+        barrier:
+          type: string
+          minLength: 1
+        existing_solutions:
+          type: string
+          minLength: 1
+        context:
+          type: string
+        stakeholders:
+          type: string
+        recommended_tools:
+          type: string
+        experts:
+          type: string
+        additional_materials:
+          type: string
+        needs_consultation:
+          type: boolean
+        main_department_id:
+          type: integer
+          nullable: true
+        is_internal_customer:
+          type: boolean
+        semester_id:
+          type: integer
+          nullable: true
+      required:
+      - barrier
+      - company
+      - company_contacts
+      - existing_solutions
+      - goal
+      - problem_holder
+      - title
+    ProjectApplicationUpdate:
+      type: object
+      description: Сериализатор только для валидации HTTP данных при обновлении.
+      properties:
+        title:
+          type: string
+          maxLength: 255
+        company:
+          type: string
+          maxLength: 255
+        author_lastname:
+          type: string
+          maxLength: 100
+        author_firstname:
+          type: string
+          maxLength: 100
+        author_middlename:
+          type: string
+          maxLength: 100
+        author_email:
+          type: string
+          format: email
+        author_phone:
+          type: string
+          maxLength: 20
+        author_role:
+          type: string
+          maxLength: 100
+        author_division:
+          type: string
+          maxLength: 200
+        company_contacts:
+          type: string
+        target_institutes:
+          type: array
+          items:
+            type: string
+            maxLength: 50
+        tags:
+          type: array
+          items:
+            type: integer
+        project_level:
+          type: string
+          maxLength: 100
+        problem_holder:
+          type: string
+        goal:
+          type: string
+        barrier:
+          type: string
+        existing_solutions:
+          type: string
+        context:
+          type: string
+        stakeholders:
+          type: string
+        recommended_tools:
+          type: string
+        experts:
+          type: string
+        additional_materials:
+          type: string
+        needs_consultation:
+          type: boolean
+        main_department_id:
+          type: integer
+          nullable: true
+        is_internal_customer:
+          type: boolean
+        semester_id:
+          type: integer
+          nullable: true
+    ProjectApplicationUpdateRequest:
+      type: object
+      description: Сериализатор только для валидации HTTP данных при обновлении.
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 255
+        company:
+          type: string
+          minLength: 1
+          maxLength: 255
+        author_lastname:
+          type: string
+          minLength: 1
+          maxLength: 100
+        author_firstname:
+          type: string
+          minLength: 1
+          maxLength: 100
+        author_middlename:
+          type: string
+          maxLength: 100
+        author_email:
+          type: string
+          format: email
+          minLength: 1
+        author_phone:
+          type: string
+          minLength: 1
+          maxLength: 20
+        author_role:
+          type: string
+          maxLength: 100
+        author_division:
+          type: string
+          maxLength: 200
+        company_contacts:
+          type: string
+        target_institutes:
+          type: array
+          items:
+            type: string
+            minLength: 1
+            maxLength: 50
+        tags:
+          type: array
+          items:
+            type: integer
+        project_level:
+          type: string
+          maxLength: 100
+        problem_holder:
+          type: string
+          minLength: 1
+        goal:
+          type: string
+          minLength: 1
+        barrier:
+          type: string
+          minLength: 1
+        existing_solutions:
+          type: string
+        context:
+          type: string
+        stakeholders:
+          type: string
+        recommended_tools:
+          type: string
+        experts:
+          type: string
+        additional_materials:
+          type: string
+        needs_consultation:
+          type: boolean
+        main_department_id:
+          type: integer
+          nullable: true
+        is_internal_customer:
+          type: boolean
+        semester_id:
+          type: integer
+          nullable: true
+    ProjectTrackAddApplicationsRequest:
+      type: object
+      description: Сериализатор для добавления заявок в трек.
+      properties:
+        application_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+      required:
+      - application_ids
+    ProjectTrackAddGroupsRequest:
+      type: object
+      description: Сериализатор для добавления групп в трек.
+      properties:
+        group_ids:
+          type: array
+          items:
+            type: integer
+            minimum: 1
+      required:
+      - group_ids
+    ProjectTrackCreate:
+      type: object
+      description: Сериализатор для создания проектного трека.
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+          default: ''
+        department_id:
+          type: integer
+          minimum: 1
+        semester_id:
+          type: integer
+          minimum: 1
+        max_teams:
+          type: integer
+          minimum: 1
+          default: 100
+      required:
+      - department_id
+      - name
+      - semester_id
+    ProjectTrackCreateRequest:
+      type: object
+      description: Сериализатор для создания проектного трека.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 255
+        description:
+          type: string
+          default: ''
+        department_id:
+          type: integer
+          minimum: 1
+        semester_id:
+          type: integer
+          minimum: 1
+        max_teams:
+          type: integer
+          minimum: 1
+          default: 100
+      required:
+      - department_id
+      - name
+      - semester_id
+    RegistrationRequest:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        last_name:
+          type: string
+          title: Фамилия
+          maxLength: 150
+        first_name:
+          type: string
+          title: Имя
+          maxLength: 150
+        middle_name:
+          type: string
+          title: Отчество
+          maxLength: 150
+        department:
+          allOf:
+          - $ref: '#/components/schemas/Department'
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          title: Телефон
+          maxLength: 32
+        comment:
+          type: string
+          nullable: true
+          title: Комментарий
+        reason:
+          type: string
+          nullable: true
+          title: Причина отказа
+        role:
+          allOf:
+          - $ref: '#/components/schemas/Role'
+          readOnly: true
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          title: Статус
+        actor:
+          allOf:
+          - $ref: '#/components/schemas/UserShort'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата изменения
+      required:
+      - actor
+      - created_at
+      - department
+      - email
+      - first_name
+      - id
+      - last_name
+      - phone
+      - role
+      - updated_at
+    RegistrationRequestCreate:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        last_name:
+          type: string
+          title: Фамилия
+          maxLength: 150
+        first_name:
+          type: string
+          title: Имя
+          maxLength: 150
+        middle_name:
+          type: string
+          title: Отчество
+          maxLength: 150
+        department:
+          type: integer
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          title: Телефон
+          maxLength: 32
+        comment:
+          type: string
+          nullable: true
+          title: Комментарий
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          readOnly: true
+          title: Статус
+      required:
+      - created_at
+      - department
+      - email
+      - first_name
+      - id
+      - last_name
+      - phone
+      - status
+    RegistrationRequestCreateRequest:
+      type: object
+      properties:
+        last_name:
+          type: string
+          minLength: 1
+          title: Фамилия
+          maxLength: 150
+        first_name:
+          type: string
+          minLength: 1
+          title: Имя
+          maxLength: 150
+        middle_name:
+          type: string
+          title: Отчество
+          maxLength: 150
+        department:
+          type: integer
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        phone:
+          type: string
+          minLength: 1
+          title: Телефон
+          maxLength: 32
+        comment:
+          type: string
+          nullable: true
+          title: Комментарий
+      required:
+      - department
+      - email
+      - first_name
+      - last_name
+      - phone
+    RegistrationRequestRequest:
+      type: object
+      properties:
+        last_name:
+          type: string
+          minLength: 1
+          title: Фамилия
+          maxLength: 150
+        first_name:
+          type: string
+          minLength: 1
+          title: Имя
+          maxLength: 150
+        middle_name:
+          type: string
+          title: Отчество
+          maxLength: 150
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+        phone:
+          type: string
+          minLength: 1
+          title: Телефон
+          maxLength: 32
+        comment:
+          type: string
+          nullable: true
+          title: Комментарий
+        reason:
+          type: string
+          nullable: true
+          title: Причина отказа
+        status:
+          allOf:
+          - $ref: '#/components/schemas/StatusEnum'
+          title: Статус
+      required:
+      - email
+      - first_name
+      - last_name
+      - phone
+    Role:
+      type: object
+      description: Сериализатор для ролей пользователей.
+      properties:
+        code:
+          type: string
+          title: Код роли
+          maxLength: 50
+        name:
+          type: string
+          title: Название роли
+          maxLength: 255
+        requires_department:
+          type: boolean
+          title: Требует указания подразделения
+        is_active:
+          type: boolean
+          title: Активна
+      required:
+      - code
+      - name
+    RoleEnum:
+      enum:
+      - leader
+      - member
+      type: string
+      description: |-
+        * `leader` - Руководитель
+        * `member` - Участник
+    RoleRequest:
+      type: object
+      description: Сериализатор для ролей пользователей.
+      properties:
+        code:
+          type: string
+          minLength: 1
+          title: Код роли
+          maxLength: 50
+        name:
+          type: string
+          minLength: 1
+          title: Название роли
+          maxLength: 255
+        requires_department:
+          type: boolean
+          title: Требует указания подразделения
+        is_active:
+          type: boolean
+          title: Активна
+      required:
+      - code
+      - name
+    Semester:
+      type: object
+      description: Сериализатор для семестров.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        code:
+          type: string
+          title: Код
+          maxLength: 64
+        name:
+          type: string
+          title: Название семестра
+          maxLength: 255
+        position:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Позиция для сортировки
+        is_active:
+          type: boolean
+          readOnly: true
+        academic_year:
+          allOf:
+          - $ref: '#/components/schemas/AcademicYear'
+          readOnly: true
+      required:
+      - academic_year
+      - code
+      - id
+      - is_active
+      - name
+      - position
+    SemesterRequest:
+      type: object
+      description: Сериализатор для семестров.
+      properties:
+        code:
+          type: string
+          minLength: 1
+          title: Код
+          maxLength: 64
+        name:
+          type: string
+          minLength: 1
+          title: Название семестра
+          maxLength: 255
+        position:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Позиция для сортировки
+        academic_year_id:
+          type: integer
+          writeOnly: true
+          nullable: true
+      required:
+      - code
+      - name
+      - position
+    StatusEnum:
+      enum:
+      - submitted
+      - approved
+      - rejected
+      type: string
+      description: |-
+        * `submitted` - Подана
+        * `approved` - Одобрена
+        * `rejected` - Отклонена
+    StudyGroup:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 255
+        code:
+          type: string
+          title: Код
+          maxLength: 64
+        course_number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Номер курса
+        is_end:
+          type: boolean
+          title: Закончили обучение
+        direction:
+          allOf:
+          - $ref: '#/components/schemas/DirectionNested'
+          readOnly: true
+        institute:
+          allOf:
+          - $ref: '#/components/schemas/InstituteNested'
+          readOnly: true
+      required:
+      - direction
+      - id
+      - institute
+      - name
+    StudyGroupList:
+      type: object
+      description: Компактная выдача для списка учебных групп.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 255
+        course_number:
+          type: integer
+          maximum: 9223372036854775807
+          minimum: 0
+          format: int64
+          title: Номер курса
+        direction_code:
+          type: string
+          readOnly: true
+      required:
+      - direction_code
+      - id
+      - name
+    Tag:
+      type: object
+      description: Сериализатор для тегов.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название тега
+          maxLength: 255
+        category:
+          type: string
+          title: Категория тега
+          maxLength: 255
+        is_base:
+          type: boolean
+          title: Базовый тег
+      required:
+      - id
+      - name
+    TagRequest:
+      type: object
+      description: Сериализатор для тегов.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название тега
+          maxLength: 255
+        category:
+          type: string
+          title: Категория тега
+          maxLength: 255
+        is_base:
+          type: boolean
+          title: Базовый тег
+      required:
+      - name
+    Team:
+      type: object
+      description: Сериализатор команды.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        name:
+          type: string
+          title: Название
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+        leader:
+          allOf:
+          - $ref: '#/components/schemas/TeamMemberUser'
+          readOnly: true
+        project_application_id:
+          type: integer
+          nullable: true
+        members:
+          type: array
+          items:
+            $ref: '#/components/schemas/TeamMember'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата создания
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата изменения
+      required:
+      - created_at
+      - id
+      - leader
+      - members
+      - name
+      - updated_at
+    TeamMember:
+      type: object
+      description: Сериализатор участника команды.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user:
+          allOf:
+          - $ref: '#/components/schemas/TeamMemberUser'
+          readOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Роль в команде
+        joined_at:
+          type: string
+          format: date-time
+          readOnly: true
+          title: Дата вступления
+      required:
+      - id
+      - joined_at
+      - user
+    TeamMemberRequest:
+      type: object
+      description: Сериализатор участника команды.
+      properties:
+        user_id:
+          type: integer
+          writeOnly: true
+        role:
+          allOf:
+          - $ref: '#/components/schemas/RoleEnum'
+          title: Роль в команде
+      required:
+      - user_id
+    TeamMemberUser:
+      type: object
+      description: Краткое представление пользователя в составе команды.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        full_name:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - full_name
+      - id
+    TeamMemberUserRequest:
+      type: object
+      description: Краткое представление пользователя в составе команды.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+      required:
+      - email
+    TeamRequest:
+      type: object
+      description: Сериализатор команды.
+      properties:
+        name:
+          type: string
+          minLength: 1
+          title: Название
+          maxLength: 255
+        description:
+          type: string
+          title: Описание
+        leader_id:
+          type: integer
+          writeOnly: true
+        project_application_id:
+          type: integer
+          nullable: true
+      required:
+      - name
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        first_name:
+          type: string
+          maxLength: 150
+        last_name:
+          type: string
+          maxLength: 150
+        middle_name:
+          type: string
+          maxLength: 150
+        role:
+          type: string
+          title: Роль
+          nullable: true
+        phone:
+          type: string
+          nullable: true
+          title: Телефон
+          maxLength: 20
+        department:
+          allOf:
+          - $ref: '#/components/schemas/Department'
+          readOnly: true
+        institute_code:
+          type: string
+          nullable: true
+          description: |-
+            Возвращает код института, сопоставленного с подразделением пользователя.
+
+            Если у пользователя нет подразделения или нет подходящего института,
+            возвращает None.
+          readOnly: true
+      required:
+      - department
+      - email
+      - first_name
+      - id
+      - institute_code
+      - last_name
+    UserShort:
+      type: object
+      description: Краткий сериализатор пользователя для отображения в других сущностях.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        full_name:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - full_name
+      - id
+    UserShortRequest:
+      type: object
+      description: Краткий сериализатор пользователя для отображения в других сущностях.
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+          maxLength: 254
+      required:
+      - email
+    UserUpdate:
+      type: object
+      description: Сериализатор частичного обновления пользователя.
+      properties:
+        role:
+          type: string
+          title: Код роли
+        department_id:
+          type: integer
+          nullable: true
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+          nullable: true
+          maxLength: 20
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token из /api/accounts/login/
+    jwtAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+tags:
+- name: accounts
+  description: Auth, пользователи, роли, семестры
+- name: teams
+  description: Команды, направления, учебные группы
+- name: showcase
+  description: Заявки, треки, справочники витрины

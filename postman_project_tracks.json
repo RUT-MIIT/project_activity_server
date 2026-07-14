@@ -1,0 +1,371 @@
+{
+  "info": {
+    "name": "Project Tracks",
+    "description": "CRUD проектных треков и управление группами/заявками.\n\nАвторизация: Bearer token (роль admin, cpds или institute_validator).\nБазовый URL: {{baseUrl}} = http://localhost:8000/api/showcase",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8000/api/showcase"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "trackId",
+      "value": "1"
+    },
+    {
+      "key": "groupId",
+      "value": "1"
+    },
+    {
+      "key": "applicationId",
+      "value": "1"
+    },
+    {
+      "key": "semesterId",
+      "value": "1"
+    },
+    {
+      "key": "departmentId",
+      "value": "1"
+    },
+    {
+      "key": "instituteCode",
+      "value": "INST-1"
+    }
+  ],
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "item": [
+    {
+      "name": "CRUD",
+      "item": [
+        {
+          "name": "List tracks",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/?semester_id={{semesterId}}&department_id={{departmentId}}&institute_code={{instituteCode}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", ""],
+              "query": [
+                {
+                  "key": "semester_id",
+                  "value": "{{semesterId}}",
+                  "description": "Обязательный. ID семестра или actual/next"
+                },
+                {
+                  "key": "department_id",
+                  "value": "{{departmentId}}",
+                  "description": "Опционально. Фильтр по подразделению",
+                  "disabled": true
+                },
+                {
+                  "key": "institute_code",
+                  "value": "{{instituteCode}}",
+                  "description": "Опционально. Фильтр по институту",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Список треков. Обязателен semester_id."
+          }
+        },
+        {
+          "name": "Create track",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Трек ИЭУ\",\n  \"description\": \"Описание трека\",\n  \"department_id\": {{departmentId}},\n  \"semester_id\": {{semesterId}},\n  \"max_teams\": 100\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", ""]
+            },
+            "description": "Создание трека.\n\nПоля:\n- name (required)\n- department_id (required)\n- semester_id (required)\n- description (optional, default \"\")\n- max_teams (optional, default 100)\n\nauthor_id берётся из текущего пользователя."
+          }
+        },
+        {
+          "name": "Get track",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/{{trackId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "{{trackId}}", ""]
+            },
+            "description": "Детали трека с вложенными groups[] и applications[]."
+          }
+        },
+        {
+          "name": "Update track (PATCH)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Обновлённый трек\",\n  \"description\": \"Новое описание\",\n  \"max_teams\": 50\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/{{trackId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "{{trackId}}", ""]
+            },
+            "description": "Частичное обновление. Все поля опциональны: name, description, department_id, semester_id, max_teams."
+          }
+        },
+        {
+          "name": "Delete track",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/{{trackId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "{{trackId}}", ""]
+            },
+            "description": "Удаление трека (каскадно удаляются связи с группами и заявками). Ответ 204."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Groups in track",
+      "item": [
+        {
+          "name": "Add groups to track",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"group_ids\": [1, 2]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/{{trackId}}/groups/",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "{{trackId}}", "groups", ""]
+            },
+            "description": "Добавить учебные группы в трек.\n\nВалидации:\n- группа существует и не is_end\n- доступна по институту пользователя\n- не превышен max_teams\n\nДубликаты пропускаются. Ответ — полный трек."
+          }
+        },
+        {
+          "name": "Remove group from track",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/{{trackId}}/groups/{{groupId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "{{trackId}}", "groups", "{{groupId}}", ""]
+            },
+            "description": "Удалить группу из трека. Ответ — полный трек."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Applications in track",
+      "item": [
+        {
+          "name": "Add applications to track",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"application_ids\": [1, 2]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/{{trackId}}/applications/",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "{{trackId}}", "applications", ""]
+            },
+            "description": "Добавить проектные заявки в трек.\n\nВалидации:\n- статус approved\n- semester заявки = semester трека\n- доступна по институту\n\nДубликаты пропускаются. Ответ — полный трек."
+          }
+        },
+        {
+          "name": "Remove application from track",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/{{trackId}}/applications/{{applicationId}}/",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "project-tracks",
+                "{{trackId}}",
+                "applications",
+                "{{applicationId}}",
+                ""
+              ]
+            },
+            "description": "Удалить заявку из трека. Ответ — полный трек."
+          }
+        }
+      ]
+    },
+    {
+      "name": "Auxiliary (groups / projects / statistics)",
+      "item": [
+        {
+          "name": "List study groups",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/groups/?institute_code={{instituteCode}}&semester_id={{semesterId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "groups", ""],
+              "query": [
+                {
+                  "key": "semester_id",
+                  "value": "{{semesterId}}",
+                  "description": "Обязательный"
+                },
+                {
+                  "key": "institute_code",
+                  "value": "{{instituteCode}}",
+                  "description": "Опционален для institute_validator с одним институтом"
+                }
+              ]
+            },
+            "description": "Группы института с assigned_projects_count (через общие треки)."
+          }
+        },
+        {
+          "name": "Get study group detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/groups/{{groupId}}/?institute_code={{instituteCode}}&semester_id={{semesterId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "groups", "{{groupId}}", ""],
+              "query": [
+                {
+                  "key": "semester_id",
+                  "value": "{{semesterId}}"
+                },
+                {
+                  "key": "institute_code",
+                  "value": "{{instituteCode}}",
+                  "disabled": true
+                }
+              ]
+            },
+            "description": "Детали группы + projects[], назначенные через треки."
+          }
+        },
+        {
+          "name": "List projects",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/projects/?institute_code={{instituteCode}}&semester_id={{semesterId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "projects", ""],
+              "query": [
+                {
+                  "key": "semester_id",
+                  "value": "{{semesterId}}"
+                },
+                {
+                  "key": "institute_code",
+                  "value": "{{instituteCode}}"
+                }
+              ]
+            },
+            "description": "Одобренные заявки с assigned_groups_count."
+          }
+        },
+        {
+          "name": "Get project detail",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/projects/{{applicationId}}/?institute_code={{instituteCode}}&semester_id={{semesterId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "projects", "{{applicationId}}", ""],
+              "query": [
+                {
+                  "key": "semester_id",
+                  "value": "{{semesterId}}"
+                },
+                {
+                  "key": "institute_code",
+                  "value": "{{instituteCode}}"
+                }
+              ]
+            },
+            "description": "Детали заявки + groups[], назначенные через треки."
+          }
+        },
+        {
+          "name": "Statistics",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/project-tracks/statistics/?institute_code={{instituteCode}}&semester_id={{semesterId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["project-tracks", "statistics", ""],
+              "query": [
+                {
+                  "key": "semester_id",
+                  "value": "{{semesterId}}"
+                },
+                {
+                  "key": "institute_code",
+                  "value": "{{instituteCode}}",
+                  "description": "Без параметра — агрегированная статистика (только admin/cpds)",
+                  "disabled": false
+                }
+              ]
+            },
+            "description": "Статистика распределения. Без institute_code (admin/cpds): { overall, by_institute }."
+          }
+        }
+      ]
+    }
+  ]
+}

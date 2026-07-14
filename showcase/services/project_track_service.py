@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
 from django.contrib.auth import get_user_model
@@ -11,22 +12,23 @@ from django.db.models import QuerySet
 from accounts.models import Department, Semester
 from showcase.domain.project_track import ProjectTrackDomain
 from showcase.dto.project_track import (
+    ProjectTrackAddApplicationsDTO,
+    ProjectTrackAddGroupsDTO,
     ProjectTrackAggregatedStatisticsDTO,
-    ProjectTrackAssignDTO,
-    ProjectTrackAssignResultDTO,
-    ProjectTrackDeleteDTO,
+    ProjectTrackCreateDTO,
     ProjectTrackGroupDetailDTO,
     ProjectTrackGroupListDTO,
     ProjectTrackProjectDetailDTO,
     ProjectTrackProjectListDTO,
     ProjectTrackReadDTO,
     ProjectTrackStatisticsDTO,
+    ProjectTrackUpdateDTO,
 )
 from showcase.models import Institute, ProjectTrack
 from showcase.repositories.project_track import ProjectTrackRepository
 
 if TYPE_CHECKING:
-    from accounts.models import User
+    from accounts.models import User as UserType
 
 User = get_user_model()
 
@@ -38,7 +40,7 @@ class ProjectTrackService:
         self.repository = ProjectTrackRepository()
         self.domain = ProjectTrackDomain()
 
-    def _ensure_user_department(self, user: User) -> None:
+    def _ensure_user_department(self, user: UserType) -> None:
         """Подгружает подразделение пользователя для проверки институтов."""
         if user.department_id and not getattr(user.department, "parent", None):
             try:
@@ -55,6 +57,11 @@ class ProjectTrackService:
         if not can_manage:
             raise PermissionError(error)
 
+    def _get_accessible_department_ids(self, user: User) -> list[int] | None:
+        """Возвращает доступные подразделения пользователя."""
+        self._ensure_user_department(user)
+        return self.domain.get_accessible_department_ids(user)
+
     def _resolve_institute_semester(
         self,
         user: User,
@@ -63,7 +70,7 @@ class ProjectTrackService:
         *,
         institute_code_required: bool = True,
     ) -> tuple[int, list[str] | None, str]:
-        """Валидирует доступ и возвращает semester_id, коды институтов и institute_code."""
+        """Валидирует доступ; возвращает semester_id, коды институтов и institute_code."""
         self._check_manage_permission(user)
         self._ensure_user_department(user)
 
@@ -92,24 +99,239 @@ class ProjectTrackService:
 
         return semester_id, accessible_codes, resolved_institute_code
 
+    def _get_track_with_access(self, user: User, track_id: int) -> ProjectTrack:
+        """Возвращает трек с проверкой доступа."""
+        self._check_manage_permission(user)
+        accessible_department_ids = self._get_accessible_department_ids(user)
+
+        track = self.repository.get_by_id(track_id)
+        if track is None:
+            raise ValueError(f"Проектный трек с id={track_id} не найден")
+
+        can_access, error = self.domain.can_access_track(
+            user, track, accessible_department_ids
+        )
+        if not can_access:
+            raise PermissionError(error)
+
+        return track
+
     def list_tracks(
         self,
         user: User,
-        institute_code: str,
         semester_id_raw: str,
+        *,
+        department_id: int | None = None,
+        institute_code: str | None = None,
     ) -> QuerySet[ProjectTrack]:
-        """Список треков по институту и семестру."""
-        semester_id, accessible_codes, resolved_institute_code = (
-            self._resolve_institute_semester(
-                user, institute_code, semester_id_raw, institute_code_required=False
+        """Список треков по фильтрам."""
+        self._check_manage_permission(user)
+        accessible_department_ids = self._get_accessible_department_ids(user)
+
+        semester_id = Semester.resolve_list_semester_id(semester_id_raw)
+
+        if institute_code:
+            accessible_codes = self.domain.get_accessible_institute_codes(user)
+            if accessible_codes is not None and institute_code not in accessible_codes:
+                raise PermissionError(
+                    "Недостаточно прав для просмотра треков указанного института"
+                )
+            if not Institute.objects.filter(code=institute_code).exists():
+                raise ValueError(f"Институт с кодом={institute_code} не найден")
+
+        if department_id is not None:
+            ok, error = self.domain.validate_department_access(
+                department_id, accessible_department_ids
             )
+            if not ok:
+                raise PermissionError(error)
+
+        return self.repository.list_tracks(
+            semester_id,
+            department_id=department_id,
+            institute_code=institute_code,
+            accessible_department_ids=accessible_department_ids,
         )
 
-        return self.repository.list_by_institute_and_semester(
-            institute_code=resolved_institute_code,
-            semester_id=semester_id,
-            accessible_institute_codes=accessible_codes,
+    def get_track(self, user: User, track_id: int) -> dict:
+        """Возвращает детали трека."""
+        track = self._get_track_with_access(user, track_id)
+        return ProjectTrackReadDTO(track).to_dict()
+
+    @transaction.atomic
+    def create_track(self, user: User, dto: ProjectTrackCreateDTO) -> dict:
+        """Создаёт проектный трек."""
+        self._check_manage_permission(user)
+        accessible_department_ids = self._get_accessible_department_ids(user)
+
+        if not dto.name.strip():
+            raise ValueError("Поле name не может быть пустым")
+
+        if not Department.objects.filter(pk=dto.department_id).exists():
+            raise ValueError(f"Подразделение с id={dto.department_id} не найдено")
+
+        if not Semester.objects.filter(pk=dto.semester_id).exists():
+            raise ValueError(f"Семестр с id={dto.semester_id} не найден")
+
+        ok, error = self.domain.validate_department_access(
+            dto.department_id, accessible_department_ids
         )
+        if not ok:
+            raise PermissionError(error)
+
+        track = self.repository.create(
+            name=dto.name.strip(),
+            description=dto.description,
+            department_id=dto.department_id,
+            semester_id=dto.semester_id,
+            author_id=user.pk,
+            max_teams=dto.max_teams,
+        )
+        track = self.repository.get_by_id(track.pk)
+        return ProjectTrackReadDTO(track).to_dict()
+
+    @transaction.atomic
+    def update_track(
+        self, user: User, track_id: int, dto: ProjectTrackUpdateDTO
+    ) -> dict:
+        """Обновляет основные поля трека."""
+        track = self._get_track_with_access(user, track_id)
+        accessible_department_ids = self._get_accessible_department_ids(user)
+        update_data = dto.to_update_dict()
+
+        if not update_data:
+            raise ValueError("Не переданы поля для обновления")
+
+        if "name" in update_data and not update_data["name"].strip():
+            raise ValueError("Поле name не может быть пустым")
+        if "name" in update_data:
+            update_data["name"] = update_data["name"].strip()
+
+        if "department_id" in update_data:
+            if not Department.objects.filter(pk=update_data["department_id"]).exists():
+                raise ValueError(
+                    f"Подразделение с id={update_data['department_id']} не найдено"
+                )
+            ok, error = self.domain.validate_department_access(
+                update_data["department_id"], accessible_department_ids
+            )
+            if not ok:
+                raise PermissionError(error)
+
+        if "semester_id" in update_data:
+            if not Semester.objects.filter(pk=update_data["semester_id"]).exists():
+                raise ValueError(f"Семестр с id={update_data['semester_id']} не найден")
+
+        self.repository.update(track, **update_data)
+        track = self.repository.get_by_id(track_id)
+        return ProjectTrackReadDTO(track).to_dict()
+
+    @transaction.atomic
+    def delete_track(self, user: User, track_id: int) -> None:
+        """Удаляет проектный трек."""
+        track = self._get_track_with_access(user, track_id)
+        self.repository.delete(track)
+
+    @transaction.atomic
+    def add_groups_to_track(
+        self, user: User, track_id: int, dto: ProjectTrackAddGroupsDTO
+    ) -> dict:
+        """Добавляет группы в трек."""
+        track = self._get_track_with_access(user, track_id)
+        accessible_codes = self.domain.get_accessible_institute_codes(user)
+
+        if not dto.group_ids:
+            raise ValueError("Список group_ids не может быть пустым")
+
+        groups = list(self.repository.get_groups_by_ids(dto.group_ids))
+        found_ids = {group.pk for group in groups}
+        missing = set(dto.group_ids) - found_ids
+        if missing:
+            raise ValueError(f"Учебные группы не найдены: {sorted(missing)}")
+
+        for group in groups:
+            ok, error = self.domain.validate_study_group_for_track(
+                group, accessible_codes
+            )
+            if not ok:
+                raise ValueError(error)
+
+        existing_ids = self.repository.get_existing_group_ids(track.pk, dto.group_ids)
+        new_group_ids = [gid for gid in dto.group_ids if gid not in existing_ids]
+
+        current_count = self.repository.count_groups(track.pk)
+        ok, error = self.domain.validate_max_teams_limit(
+            track, len(new_group_ids), current_groups_count=current_count
+        )
+        if not ok:
+            raise ValueError(error)
+
+        self.repository.add_groups(track.pk, new_group_ids)
+        track = self.repository.get_by_id(track_id)
+        return ProjectTrackReadDTO(track).to_dict()
+
+    @transaction.atomic
+    def remove_group_from_track(self, user: User, track_id: int, group_id: int) -> dict:
+        """Удаляет группу из трека."""
+        track = self._get_track_with_access(user, track_id)
+
+        if not self.repository.remove_group(track.pk, group_id):
+            raise ValueError(f"Группа id={group_id} не привязана к треку id={track_id}")
+
+        track = self.repository.get_by_id(track_id)
+        return ProjectTrackReadDTO(track).to_dict()
+
+    @transaction.atomic
+    def add_applications_to_track(
+        self, user: User, track_id: int, dto: ProjectTrackAddApplicationsDTO
+    ) -> dict:
+        """Добавляет заявки в трек."""
+        track = self._get_track_with_access(user, track_id)
+        accessible_codes = self.domain.get_accessible_institute_codes(user)
+
+        if not dto.application_ids:
+            raise ValueError("Список application_ids не может быть пустым")
+
+        applications = list(
+            self.repository.get_applications_by_ids(dto.application_ids)
+        )
+        found_ids = {app.pk for app in applications}
+        missing = set(dto.application_ids) - found_ids
+        if missing:
+            raise ValueError(f"Проектные заявки не найдены: {sorted(missing)}")
+
+        for application in applications:
+            ok, error = self.domain.validate_application_for_track(
+                application, track, accessible_codes
+            )
+            if not ok:
+                raise ValueError(error)
+
+        existing_ids = self.repository.get_existing_application_ids(
+            track.pk, dto.application_ids
+        )
+        new_application_ids = [
+            app_id for app_id in dto.application_ids if app_id not in existing_ids
+        ]
+        self.repository.add_applications(track.pk, new_application_ids)
+
+        track = self.repository.get_by_id(track_id)
+        return ProjectTrackReadDTO(track).to_dict()
+
+    @transaction.atomic
+    def remove_application_from_track(
+        self, user: User, track_id: int, application_id: int
+    ) -> dict:
+        """Удаляет заявку из трека."""
+        track = self._get_track_with_access(user, track_id)
+
+        if not self.repository.remove_application(track.pk, application_id):
+            raise ValueError(
+                f"Заявка id={application_id} не привязана к треку id={track_id}"
+            )
+
+        track = self.repository.get_by_id(track_id)
+        return ProjectTrackReadDTO(track).to_dict()
 
     def list_groups(
         self,
@@ -210,7 +432,8 @@ class ProjectTrackService:
             raise ValueError(f"Проектная заявка с id={project_id} не найдена")
         if application.status.code != "approved":
             raise ValueError(
-                f"Заявка id={application.pk} не одобрена (статус: {application.status.code})"
+                f"Заявка id={application.pk} не одобрена "
+                f"(статус: {application.status.code})"
             )
         if application.semester_id != semester_id:
             raise ValueError(f"Заявка id={application.pk} относится к другому семестру")
@@ -253,123 +476,7 @@ class ProjectTrackService:
         )
         return ProjectTrackStatisticsDTO(**stats).to_dict()
 
-    def _validate_assign_input(self, dto: ProjectTrackAssignDTO) -> None:
-        """Валидирует входные данные для массового назначения."""
-        if not dto.group_ids:
-            raise ValueError("Список group_ids не может быть пустым")
-        if not dto.project_application_ids:
-            raise ValueError("Список project_application_ids не может быть пустым")
-
-        if not Semester.objects.filter(pk=dto.semester_id).exists():
-            raise ValueError(f"Семестр с id={dto.semester_id} не найден")
-
-    def _validate_groups(
-        self,
-        group_ids: list[int],
-        accessible_codes: list[str] | None,
-    ) -> None:
-        """Проверяет существование и доступность групп."""
-        groups = list(self.repository.get_groups_by_ids(group_ids))
-        found_ids = {group.pk for group in groups}
-        missing = set(group_ids) - found_ids
-        if missing:
-            raise ValueError(f"Учебные группы не найдены: {sorted(missing)}")
-
-        group_institute_codes = {group.institute_id for group in groups}
-        ok, error = self.domain.validate_group_institute_codes(
-            group_institute_codes, accessible_codes
-        )
-        if not ok:
-            raise PermissionError(error)
-
-    def _validate_applications(
-        self,
-        application_ids: list[int],
-        semester_id: int,
-        accessible_codes: list[str] | None,
-    ) -> None:
-        """Проверяет существование и доступность заявок."""
-        applications = list(self.repository.get_applications_by_ids(application_ids))
-        found_ids = {app.pk for app in applications}
-        missing = set(application_ids) - found_ids
-        if missing:
-            raise ValueError(f"Проектные заявки не найдены: {sorted(missing)}")
-
-        for app in applications:
-            if app.status.code != "approved":
-                raise ValueError(
-                    f"Заявка id={app.pk} не одобрена (статус: {app.status.code})"
-                )
-            if app.semester_id != semester_id:
-                raise ValueError(f"Заявка id={app.pk} относится к другому семестру")
-
-            ok, error = self.domain.validate_application_access(app, accessible_codes)
-            if not ok:
-                raise PermissionError(error)
-
-    @transaction.atomic
-    def bulk_assign(
-        self, user: User, dto: ProjectTrackAssignDTO
-    ) -> ProjectTrackAssignResultDTO:
-        """Массовое назначение групп на проекты."""
-        self._check_manage_permission(user)
-        self._ensure_user_department(user)
-        self._validate_assign_input(dto)
-
-        accessible_codes = self.domain.get_accessible_institute_codes(user)
-        self._validate_groups(dto.group_ids, accessible_codes)
-        self._validate_applications(
-            dto.project_application_ids,
-            dto.semester_id,
-            accessible_codes,
-        )
-
-        total_requested = len(dto.group_ids) * len(dto.project_application_ids)
-        existing_pairs = self.repository.get_existing_pairs(
-            dto.semester_id,
-            dto.group_ids,
-            dto.project_application_ids,
-        )
-        skipped = len(existing_pairs)
-        self.repository.bulk_create_tracks(
-            dto.semester_id,
-            dto.group_ids,
-            dto.project_application_ids,
-        )
-        created = total_requested - skipped
-
-        return ProjectTrackAssignResultDTO(
-            created=created,
-            skipped=skipped,
-            total_requested=total_requested,
-        )
-
-    @transaction.atomic
-    def delete_track(self, user: User, dto: ProjectTrackDeleteDTO) -> None:
-        """Удаляет проектный трек по семестру, группе и заявке."""
-        self._check_manage_permission(user)
-        self._ensure_user_department(user)
-
-        semester_id = Semester.resolve_list_semester_id(dto.semester_id)
-        track = self.repository.get_by_keys(
-            semester_id,
-            dto.group_id,
-            dto.project_application_id,
-        )
-        if track is None:
-            raise ValueError(
-                "Проектный трек для указанных semester_id, group_id "
-                "и project_application_id не найден"
-            )
-
-        accessible_codes = self.domain.get_accessible_institute_codes(user)
-        can_access, error = self.domain.can_access_track(user, track, accessible_codes)
-        if not can_access:
-            raise PermissionError(error)
-
-        self.repository.delete(track)
-
     @staticmethod
-    def serialize_list(tracks: QuerySet[ProjectTrack]) -> list[dict]:
-        """Сериализует список треков."""
+    def serialize_list(tracks: Iterable[ProjectTrack]) -> list[dict]:
+        """Сериализует список треков с группами и заявками."""
         return [ProjectTrackReadDTO(track).to_dict() for track in tracks]
