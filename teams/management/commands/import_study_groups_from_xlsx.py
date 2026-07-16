@@ -1,33 +1,37 @@
-"""Идемпотентный импорт учебных групп ИЭФ из Excel."""
+"""Идемпотентный импорт учебных групп из Excel для любого института."""
 
 from __future__ import annotations
 
 from pathlib import Path
 
-from django.apps import apps
 from django.core.management.base import BaseCommand, CommandError
 import pandas as pd
 
 from showcase.models import Institute
 from teams.models import Direction, StudyGroup
 
-DEFAULT_FILENAME = "groups_01_09_with_abbrev.xlsx"
 DEFAULT_SHEET = "groups"
 DEFAULT_BASE_YEAR = 2027  # учебный год 2026/2027: 1 курс -> 2026, 4 курс -> 2023
 
 
 class Command(BaseCommand):
     help = (
-        "Импорт учебных групп из Excel-листа groups. "
-        "Ожидается файл с листом 'groups', содержащим уникальные группы. "
-        "Институт фиксированный: IEF."
+        "Импорт учебных групп из Excel-листа groups для указанного института. "
+        "Институт задаётся обязательно через --institute (код из Institute)."
     )
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--file",
             type=str,
-            help=f"Путь к .xlsx (по умолчанию: {DEFAULT_FILENAME} в корне проекта)",
+            required=True,
+            help="Путь к .xlsx с листом groups (например data/ВИШ_01_09_аббр.xlsx)",
+        )
+        parser.add_argument(
+            "--institute",
+            type=str,
+            required=True,
+            help="Код института (Institute.code), например IEF, VISH, ITTSY",
         )
         parser.add_argument(
             "--sheet",
@@ -38,7 +42,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--clear",
             action="store_true",
-            help="Удалить все группы института IEF перед импортом",
+            help="Удалить все группы выбранного института перед импортом",
         )
         parser.add_argument(
             "--base-year",
@@ -52,11 +56,15 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        path = self._resolve_path(options.get("file"))
+        path = Path(options["file"]).resolve()
         if not path.is_file():
             raise CommandError(f"Файл не найден: {path}")
 
-        institute = self._get_institute()
+        institute_code = str(options["institute"]).strip().upper()
+        if not institute_code:
+            raise CommandError("Параметр --institute не может быть пустым")
+
+        institute = self._get_institute(institute_code)
         if options["clear"]:
             deleted, _ = StudyGroup.objects.filter(institute=institute).delete()
             self.stdout.write(f"Удалено групп института {institute.code}: {deleted}")
@@ -84,15 +92,17 @@ class Command(BaseCommand):
                 updated += 1
 
         self.stdout.write(
-            self.style.SUCCESS(f"Готово: создано {created}, обновлено {updated}")
+            self.style.SUCCESS(
+                f"Готово ({institute.code}): создано {created}, обновлено {updated}"
+            )
         )
 
-    def _get_institute(self) -> Institute:
+    def _get_institute(self, code: str) -> Institute:
         try:
-            return Institute.objects.get(code="IEF")
+            return Institute.objects.get(code=code)
         except Institute.DoesNotExist as exc:
             raise CommandError(
-                'Институт с кодом "IEF" не найден (сначала import_institutes)'
+                f'Институт с кодом "{code}" не найден (сначала import_institutes)'
             ) from exc
 
     def _read_groups_sheet(self, path: Path, sheet_name: str) -> pd.DataFrame:
@@ -107,9 +117,9 @@ class Command(BaseCommand):
         if df.empty:
             raise CommandError("Лист groups пуст")
 
-        # В файле колонок немного и они стабильны по позиции:
-        # 0: уровень, 1: направление/спец., 2: форма, 3: курс,
-        # 4: код направления, 5: дата окончания, 6: аббревиатура группы, 7: год набора
+        # Колонки листа groups по позиции:
+        # 0: специальность, 1: профиль/программа, 2: форма, 3: курс,
+        # 4: код направления, 5: дата окончания, 6: аббревиатура группы, 7: год приёма
         if df.shape[1] < 8:
             raise CommandError(
                 "Неожиданная структура листа groups: ожидалось >= 8 колонок"
@@ -137,8 +147,8 @@ class Command(BaseCommand):
         course_number = self._parse_course(line_no=line_no, value=course_raw)
 
         # Фильтрация: магистратуру и бакалавриат 1 курса не импортируем.
-        # Магистратура имеет код направления вида **.04.**
-        # Бакалавриат — **.03.**, и нам не нужен 1 курс.
+        # Магистратура — код направления **.04.**
+        # Бакалавриат — **.03.**, 1 курс пропускаем.
         direction_code_str = (
             "" if direction_code_raw is None else str(direction_code_raw)
         )
@@ -146,10 +156,8 @@ class Command(BaseCommand):
         if len(parts) >= 2:
             level_part = parts[1]
             if level_part == "04":
-                # Магистратура — полностью пропускаем.
                 return None
             if level_part == "03" and course_number == 1:
-                # Бакалавриат 1 курса — пропускаем.
                 return None
 
         direction_code = self._get_or_create_direction(
@@ -195,9 +203,8 @@ class Command(BaseCommand):
         if not name:
             name = direction_code
 
-        # В исходном Excel текстовые поля могут быть в "битой" кодировке,
-        # поэтому уровень подготовки надёжно определить не всегда возможно.
-        # Для корректного импорта групп создаём направление с безопасным дефолтом.
+        # Уровень по умолчанию — бакалавриат: текстовые поля отчёта
+        # не всегда надёжно отражают уровень подготовки.
         Direction.objects.create(
             code=direction_code,
             level=Direction.Level.BAKALAVRIAT,
@@ -215,8 +222,3 @@ class Command(BaseCommand):
                 f"(base_year={base_year}, курс={course_number})"
             )
         return enrollment_year
-
-    def _resolve_path(self, file_arg: str | None) -> Path:
-        if file_arg:
-            return Path(file_arg).resolve()
-        return Path(apps.get_app_config("config").path).parent / DEFAULT_FILENAME
