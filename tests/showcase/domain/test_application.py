@@ -307,6 +307,22 @@ class TestCanChangeStatus:
         assert can_change is True
         assert error == ""
 
+    def test_can_change_status_allow_institute_to_approve_from_await_department(self):
+        """Институт может согласовать заявку на шаге кафедры."""
+        can_change, error = ProjectApplicationDomain.can_change_status(
+            "await_department", "approved_institute", "institute_validator"
+        )
+        assert can_change is True
+        assert error == ""
+
+    def test_can_change_status_allow_institute_to_reject_from_await_department(self):
+        """Институт может отклонить заявку на шаге кафедры."""
+        can_change, error = ProjectApplicationDomain.can_change_status(
+            "await_department", "rejected_institute", "institute_validator"
+        )
+        assert can_change is True
+        assert error == ""
+
     def test_can_change_status_forbidden_transition(self):
         """Запрещённый переход возвращает False с сообщением об ошибке."""
         can_change, error = ProjectApplicationDomain.can_change_status(
