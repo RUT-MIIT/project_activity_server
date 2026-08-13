@@ -478,6 +478,28 @@ class TestApproveRejectRequestService:
             application=app2, department=cpds_department
         ).exists()
 
+    def test_approve_institute_from_await_department_goes_to_await_cpds(
+        self, statuses, make_user
+    ):
+        """institute_validator может согласовать await_department, подменяя шаг кафедры."""
+        validator = make_user(role_code="institute_validator", with_department=True)
+        app = self._create_app(author=validator, status_code="await_department")
+        cpds_department = Department.objects.create(
+            name="Центр проектного развития", short_name="ЦПДС"
+        )
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=validator.department
+        )
+
+        service = ProjectApplicationService()
+        app2 = service.approve_application(app.id, validator)
+
+        app2.refresh_from_db()
+        assert app2.status.code == "await_cpds"
+        assert ApplicationInvolvedDepartment.objects.filter(
+            application=app2, department=cpds_department
+        ).exists()
+
     def test_approve_cpds_from_await_cpds(self, statuses, make_user):
         """cpds: может одобрять заявки в статусе await_cpds (переход в approved разрешен)."""
         cpds = make_user(role_code="cpds", with_department=True)
@@ -696,6 +718,34 @@ class TestApproveRejectRequestService:
         mock_send_mail.assert_called_once()
         message = mock_send_mail.call_args.kwargs["message"]
         assert "not good" in message
+
+    @patch(
+        "showcase.services.application_notification_service.mail.send_mail",
+    )
+    def test_reject_institute_from_await_department_to_final(
+        self, mock_send_mail, statuses, make_user
+    ):
+        """institute_validator может отклонить await_department, подменяя шаг кафедры."""
+        validator = make_user(role_code="institute_validator", with_department=True)
+        author = make_user(role_code="user", with_department=True)
+        app = self._create_app(author=author, status_code="await_department")
+        ApplicationInvolvedDepartment.objects.create(
+            application=app, department=validator.department
+        )
+
+        service = ProjectApplicationService()
+        app2 = service.reject_application(app.id, validator, reason="не подходит")
+
+        assert app2.status.code == "rejected"
+        assert (
+            ProjectApplicationStatusLog.objects.filter(
+                application=app, action_type="status_change"
+            ).count()
+            == 2
+        )
+        mock_send_mail.assert_called_once()
+        message = mock_send_mail.call_args.kwargs["message"]
+        assert "не подходит" in message
 
     def test_request_changes_without_author_email_skips_mail(self, statuses, make_user):
         """Без email автора письмо не отправляется, статус меняется."""

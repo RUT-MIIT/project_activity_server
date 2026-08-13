@@ -209,8 +209,10 @@ class ProjectApplicationDomain:
             ],
             "await_department": [
                 "approved_department",
+                "approved_institute",
                 "rejected",
                 "rejected_department",
+                "rejected_institute",
                 "returned_department",
                 "returned_institute",
                 "returned_author",
