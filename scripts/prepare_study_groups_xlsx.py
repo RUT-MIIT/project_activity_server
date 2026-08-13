@@ -1,8 +1,13 @@
 """
 Подготовка Excel контингента к импорту учебных групп.
 
-Из отчёта 1С (маркеры «Группа : XXX(...)» + строки студентов) собирает
-листы students и groups с аббревиатурой и годом приёма — как ИЭФ_01_09_аббр.xlsx.
+Поддерживаются два формата отчёта 1С:
+
+1. С маркерами «Группа : XXX(...)» в строках (ИЭФ, ВИШ и др.).
+3. Плоская таблица с колонкой «Группа» в заголовке (ЮИ, ИПСС и др.).
+4. Без колонки «Группа» — синтетические коды по профилю+курсу+направлению (АВТ, АГА).
+
+На выходе — листы students и groups с аббревиатурой и годом приёма.
 """
 
 from __future__ import annotations
@@ -56,6 +61,7 @@ HEADER_ALIASES: dict[str, str] = {
     "дата планового окончания": "Дата планового окончания",
     "снилс": "СНИЛС",
     "id_student": "ID_student",
+    "группа": "Группа",
 }
 
 
@@ -152,6 +158,174 @@ def _cell_str(row: pd.Series, col_idx: int | None) -> str:
     return str(value).strip()
 
 
+def _student_row(
+    row: pd.Series,
+    col_map: dict[str, int],
+    id_col: int,
+    group_abbrev: str,
+) -> dict[str, Any]:
+    """Собирает словарь студента для выходного листа students."""
+    course_raw = row.iloc[col_map["Курс"]] if "Курс" in col_map else None
+    end_raw = (
+        row.iloc[col_map["Дата планового окончания"]]
+        if "Дата планового окончания" in col_map
+        else None
+    )
+    enrollment_year = _parse_enrollment_year(end_raw, course_raw)
+
+    return {
+        "ФИО (полное)": _cell_str(row, col_map.get("ФИО (полное)")),
+        "Специальность": _cell_str(row, col_map.get("Специальность")),
+        "Кафедра": _cell_str(row, col_map.get("Кафедра")),
+        "Профиль/специализация/программа": _cell_str(
+            row, col_map.get("Профиль/специализация/программа")
+        ),
+        "Форма обучения": _cell_str(row, col_map.get("Форма обучения")),
+        "Курс": course_raw,
+        "Код специальности": _cell_str(row, col_map.get("Код специальности")),
+        "Направление специальности": _cell_str(
+            row, col_map.get("Направление специальности")
+        ),
+        "Дата планового окончания": end_raw,
+        "СНИЛС": _cell_str(row, col_map.get("СНИЛС")),
+        "ID_student": row.iloc[id_col],
+        "Аббревеатура группа": group_abbrev,
+        "Год приема": enrollment_year,
+    }
+
+
+def _parse_students_flat_table(
+    raw: pd.DataFrame,
+    header_row_idx: int,
+    col_map: dict[str, int],
+    id_col: int,
+) -> list[dict[str, Any]]:
+    """Парсит плоский отчёт: аббревиатура группы в колонке «Группа»."""
+    group_col = col_map.get("Группа")
+    if group_col is None:
+        return []
+
+    students: list[dict[str, Any]] = []
+    for r in range(header_row_idx + 1, len(raw)):
+        row = raw.iloc[r]
+        if not _looks_like_student_id(row.iloc[id_col]):
+            continue
+
+        group_abbrev = _cell_str(row, group_col)
+        if not group_abbrev:
+            continue
+
+        students.append(_student_row(row, col_map, id_col, group_abbrev))
+
+    return students
+
+
+def _parse_students_with_markers(
+    raw: pd.DataFrame,
+    header_row_idx: int,
+    col_map: dict[str, int],
+    id_col: int,
+) -> list[dict[str, Any]]:
+    """Парсит отчёт с маркерами «Группа : XXX(...)» в строках."""
+    students: list[dict[str, Any]] = []
+    current_abbrev: str | None = None
+
+    for r in range(header_row_idx + 1, len(raw)):
+        row = raw.iloc[r]
+
+        for c in range(raw.shape[1]):
+            value = row.iloc[c]
+            if isinstance(value, str) and value.strip():
+                maybe = _extract_group_abbrev_from_text(value)
+                if maybe:
+                    current_abbrev = maybe
+                    break
+
+        if not _looks_like_student_id(row.iloc[id_col]):
+            continue
+        if not current_abbrev:
+            continue
+
+        student = _student_row(row, col_map, id_col, current_abbrev)
+        student["ФИО (полное)"] = _fio_from_row(row, col_map)
+        students.append(student)
+
+    return students
+
+
+def _profile_index_map(profiles: list[str]) -> dict[str, str]:
+    """Нумерует уникальные профили: P01, P02, …"""
+    unique_profiles = sorted({profile for profile in profiles if profile})
+    return {profile: f"P{index:02d}" for index, profile in enumerate(unique_profiles, 1)}
+
+
+def _synthetic_group_code(
+    institute: str,
+    profile: str,
+    course: str,
+    direction_code: str,
+    profile_indexes: dict[str, str],
+) -> str:
+    """Строит код группы для отчётов без колонки «Группа»."""
+    profile_key = profile_indexes.get(profile, "P00")
+    direction_part = direction_code.replace(".", "")
+    try:
+        course_part = int(str(course).strip())
+    except ValueError as exc:
+        raise ValueError(f"Некорректный курс «{course}» для синтетической группы") from exc
+    return f"{institute}-{direction_part}-{course_part:01d}-{profile_key}"
+
+
+def _parse_students_synthetic(
+    raw: pd.DataFrame,
+    header_row_idx: int,
+    col_map: dict[str, int],
+    id_col: int,
+    institute: str,
+) -> list[dict[str, Any]]:
+    """Парсит отчёт без групп: одна группа на профиль+курс+направление."""
+    profile_col = col_map.get("Профиль/специализация/программа")
+    course_col = col_map.get("Курс")
+    direction_col = col_map.get("Код специальности")
+    if profile_col is None or course_col is None or direction_col is None:
+        return []
+
+    row_keys: list[tuple[str, str, str]] = []
+    parsed_rows: list[tuple[pd.Series, tuple[str, str, str]]] = []
+
+    for r in range(header_row_idx + 1, len(raw)):
+        row = raw.iloc[r]
+        if not _looks_like_student_id(row.iloc[id_col]):
+            continue
+
+        profile = _cell_str(row, profile_col)
+        course = _cell_str(row, course_col)
+        direction_code = _cell_str(row, direction_col)
+        if not profile or not course or not direction_code:
+            continue
+
+        key = (profile, course, direction_code)
+        row_keys.append(key)
+        parsed_rows.append((row, key))
+
+    if not parsed_rows:
+        return []
+
+    profile_indexes = _profile_index_map([profile for profile, _, _ in row_keys])
+    students: list[dict[str, Any]] = []
+    for row, (profile, course, direction_code) in parsed_rows:
+        group_abbrev = _synthetic_group_code(
+            institute=institute,
+            profile=profile,
+            course=course,
+            direction_code=direction_code,
+            profile_indexes=profile_indexes,
+        )
+        students.append(_student_row(row, col_map, id_col, group_abbrev))
+
+    return students
+
+
 def _fio_from_row(row: pd.Series, col_map: dict[str, int]) -> str:
     """
     ФИО в отчёте часто в колонке 1 (рядом с маркером группы),
@@ -174,7 +348,11 @@ def _fio_from_row(row: pd.Series, col_map: dict[str, int]) -> str:
     return ""
 
 
-def prepare_workbook(input_path: Path, output_path: Path) -> None:
+def prepare_workbook(
+    input_path: Path,
+    output_path: Path,
+    institute: str | None = None,
+) -> None:
     """Читает отчёт контингента и сохраняет students + groups."""
     engine = "xlrd" if input_path.suffix.lower() == ".xls" else "openpyxl"
     raw = pd.read_excel(
@@ -190,60 +368,29 @@ def prepare_workbook(input_path: Path, output_path: Path) -> None:
     header_row_idx, col_map = _find_header_row(raw)
     id_col = col_map["ID_student"]
 
-    students: list[dict[str, Any]] = []
-    current_abbrev: str | None = None
-
-    for r in range(header_row_idx + 1, len(raw)):
-        row = raw.iloc[r]
-
-        # Обновляем текущую группу по маркеру в любой ячейке строки
-        for c in range(raw.shape[1]):
-            value = row.iloc[c]
-            if isinstance(value, str) and value.strip():
-                maybe = _extract_group_abbrev_from_text(value)
-                if maybe:
-                    current_abbrev = maybe
-                    break
-
-        if not _looks_like_student_id(row.iloc[id_col]):
-            continue
-        if not current_abbrev:
-            continue
-
-        course_raw = row.iloc[col_map["Курс"]] if "Курс" in col_map else None
-        end_raw = (
-            row.iloc[col_map["Дата планового окончания"]]
-            if "Дата планового окончания" in col_map
-            else None
-        )
-        enrollment_year = _parse_enrollment_year(end_raw, course_raw)
-
-        students.append(
-            {
-                "ФИО (полное)": _fio_from_row(row, col_map),
-                "Специальность": _cell_str(row, col_map.get("Специальность")),
-                "Кафедра": _cell_str(row, col_map.get("Кафедра")),
-                "Профиль/специализация/программа": _cell_str(
-                    row, col_map.get("Профиль/специализация/программа")
-                ),
-                "Форма обучения": _cell_str(row, col_map.get("Форма обучения")),
-                "Курс": course_raw,
-                "Код специальности": _cell_str(row, col_map.get("Код специальности")),
-                "Направление специальности": _cell_str(
-                    row, col_map.get("Направление специальности")
-                ),
-                "Дата планового окончания": end_raw,
-                "СНИЛС": _cell_str(row, col_map.get("СНИЛС")),
-                "ID_student": row.iloc[id_col],
-                "Аббревеатура группа": current_abbrev,
-                "Год приема": enrollment_year,
-            }
-        )
+    if "Группа" in col_map:
+        students = _parse_students_flat_table(raw, header_row_idx, col_map, id_col)
+        format_hint = "колонка «Группа» в заголовке"
+    else:
+        students = _parse_students_with_markers(raw, header_row_idx, col_map, id_col)
+        if students:
+            format_hint = "маркеры «Группа : ...»"
+        else:
+            institute_code = (institute or "").strip().upper()
+            if not institute_code:
+                raise ValueError(
+                    "В отчёте нет колонки «Группа» и маркеров групп. "
+                    "Укажите --institute для синтетических кодов групп (АВТ, АГА и др.)."
+                )
+            students = _parse_students_synthetic(
+                raw, header_row_idx, col_map, id_col, institute_code
+            )
+            format_hint = f"синтетические группы (--institute {institute_code})"
 
     if not students:
         raise ValueError(
             "Не найдено строк студентов с аббревиатурой группы. "
-            "Проверьте формат отчёта (маркеры «Группа : ...»)."
+            f"Проверьте формат отчёта ({format_hint})."
         )
 
     students_df = pd.DataFrame(students, columns=STUDENT_COLUMNS)
@@ -283,12 +430,25 @@ def build_parser() -> argparse.ArgumentParser:
         required=True,
         help="Путь к выходному .xlsx (students + groups).",
     )
+    parser.add_argument(
+        "--institute",
+        type=str,
+        default=None,
+        help=(
+            "Код института (AVT, AGA, …) — обязателен для отчётов без колонки "
+            "«Группа», когда коды групп строятся из профиля+курса+направления."
+        ),
+    )
     return parser
 
 
 def main() -> None:
     args = build_parser().parse_args()
-    prepare_workbook(input_path=args.input, output_path=args.output)
+    prepare_workbook(
+        input_path=args.input,
+        output_path=args.output,
+        institute=args.institute,
+    )
     print(f"Сохранено: {args.output}")
 
 
