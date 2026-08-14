@@ -65,6 +65,18 @@ class StudyGroup(models.Model):
         default=False,
         verbose_name="Закончили обучение",
     )
+    profile = models.CharField(
+        max_length=512,
+        blank=True,
+        default="",
+        verbose_name="Профиль",
+    )
+    form = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        verbose_name="Форма обучения",
+    )
 
     class Meta:
         verbose_name = "Учебная группа"

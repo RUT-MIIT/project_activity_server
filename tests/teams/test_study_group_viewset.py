@@ -202,3 +202,24 @@ class TestStudyGroupViewSet:
 
         assert response.status_code == 200
         assert response.data["name"] == study_groups["own"].name
+
+    def test_retrieve_includes_optional_profile_and_form(
+        self, roles, make_user, direction, institute
+    ):
+        group = StudyGroup.objects.create(
+            name="Группа с профилем",
+            code="gp1",
+            direction=direction,
+            institute=institute,
+            profile="Прикладная информатика",
+            form="Очная",
+        )
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.get(f"/api/teams/study-groups/{group.id}/")
+
+        assert response.status_code == 200
+        assert response.data["profile"] == "Прикладная информатика"
+        assert response.data["form"] == "Очная"

@@ -14,6 +14,8 @@ class StudyGroupReadDTO:
         self.code = group.code
         self.course_number = group.course_number
         self.is_end = group.is_end
+        self.profile = group.profile
+        self.form = group.form
         self.direction = {
             "code": group.direction.code,
             "level": group.direction.level,
@@ -31,6 +33,8 @@ class StudyGroupReadDTO:
             "code": self.code,
             "course_number": self.course_number,
             "is_end": self.is_end,
+            "profile": self.profile,
+            "form": self.form,
             "direction": self.direction,
             "institute": self.institute,
         }

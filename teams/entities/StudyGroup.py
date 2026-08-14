@@ -33,6 +33,8 @@ class StudyGroupSerializer(serializers.ModelSerializer):
             "code",
             "course_number",
             "is_end",
+            "profile",
+            "form",
             "direction",
             "institute",
         ]

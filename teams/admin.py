@@ -18,6 +18,8 @@ class StudyGroupAdmin(admin.ModelAdmin):
         "code",
         "course_number",
         "enrollment_year",
+        "profile",
+        "form",
         "is_end",
         "direction",
         "institute",
