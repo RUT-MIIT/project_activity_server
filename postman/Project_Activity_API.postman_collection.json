@@ -1276,10 +1276,10 @@
                         ""
                       ]
                     },
-                    "description": "Создание. Поля: name*, department_id*, semester_id*, description?, max_teams?\nauthor_id из текущего пользователя.",
+                    "description": "Создание. Поля: name*, department_id*, semester_id*, description?\nauthor_id из текущего пользователя.",
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n  \"name\": \"Трек ИЭУ\",\n  \"description\": \"Описание трека\",\n  \"department_id\": {{departmentId}},\n  \"semester_id\": {{semesterId}},\n  \"max_teams\": 100\n}"
+                      "raw": "{\n  \"name\": \"Трек ИЭУ\",\n  \"description\": \"Описание трека\",\n  \"department_id\": {{departmentId}},\n  \"semester_id\": {{semesterId}}\n}"
                     }
                   }
                 },
@@ -1327,10 +1327,10 @@
                         ""
                       ]
                     },
-                    "description": "Опциональные поля: name, description, department_id, semester_id, max_teams.",
+                    "description": "Опциональные поля: name, description, department_id, semester_id.",
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n  \"name\": \"Обновлённый трек\",\n  \"description\": \"Новое описание\",\n  \"max_teams\": 50\n}"
+                      "raw": "{\n  \"name\": \"Обновлённый трек\",\n  \"description\": \"Новое описание\"\n}"
                     }
                   }
                 },

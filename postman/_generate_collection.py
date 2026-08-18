@@ -560,13 +560,12 @@ tracks_crud = folder(
             "POST",
             "/api/showcase/project-tracks/",
             description=(
-                "Создание. Поля: name*, department_id*, semester_id*, description?, max_teams?\n"
+                "Создание. Поля: name*, department_id*, semester_id*, description?\n"
                 "author_id из текущего пользователя."
             ),
             body=(
                 '{\n  "name": "Трек ИЭУ",\n  "description": "Описание трека",\n'
-                '  "department_id": {{departmentId}},\n  "semester_id": {{semesterId}},\n'
-                '  "max_teams": 100\n}'
+                '  "department_id": {{departmentId}},\n  "semester_id": {{semesterId}}\n}'
             ),
         ),
         req(
@@ -579,8 +578,8 @@ tracks_crud = folder(
             "Update track (PATCH)",
             "PATCH",
             "/api/showcase/project-tracks/{{trackId}}/",
-            description="Опциональные поля: name, description, department_id, semester_id, max_teams.",
-            body='{\n  "name": "Обновлённый трек",\n  "description": "Новое описание",\n  "max_teams": 50\n}',
+            description="Опциональные поля: name, description, department_id, semester_id.",
+            body='{\n  "name": "Обновлённый трек",\n  "description": "Новое описание"\n}',
         ),
         req(
             "Delete track",

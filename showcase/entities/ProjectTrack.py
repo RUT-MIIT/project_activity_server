@@ -45,7 +45,6 @@ class ProjectTrackCreateSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True, default="")
     department_id = serializers.IntegerField(min_value=1)
     semester_id = serializers.IntegerField(min_value=1)
-    max_teams = serializers.IntegerField(required=False, min_value=1, default=100)
 
 
 class ProjectTrackUpdateSerializer(serializers.Serializer):
@@ -55,7 +54,6 @@ class ProjectTrackUpdateSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True)
     department_id = serializers.IntegerField(min_value=1, required=False)
     semester_id = serializers.IntegerField(min_value=1, required=False)
-    max_teams = serializers.IntegerField(required=False, min_value=1)
 
 
 class ProjectTrackAddGroupsSerializer(serializers.Serializer):

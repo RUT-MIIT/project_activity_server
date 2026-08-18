@@ -225,7 +225,6 @@ class ProjectTrackAdmin(admin.ModelAdmin):
         "semester",
         "department",
         "author",
-        "max_teams",
         "groups_count",
         "applications_count",
     )
@@ -251,7 +250,6 @@ class ProjectTrackAdmin(admin.ModelAdmin):
                     "department",
                     "semester",
                     "author",
-                    "max_teams",
                 )
             },
         ),

@@ -502,11 +502,6 @@ class ProjectTrack(models.Model):
         related_name="authored_project_tracks",
         verbose_name="Автор",
     )
-    max_teams = models.PositiveIntegerField(
-        default=100,
-        validators=[MinValueValidator(1)],
-        verbose_name="Максимум групп",
-    )
 
     class Meta:
         verbose_name = "Проектный трек"

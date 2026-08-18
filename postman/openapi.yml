@@ -2933,9 +2933,6 @@ components:
         semester_id:
           type: integer
           minimum: 1
-        max_teams:
-          type: integer
-          minimum: 1
     PatchedRegistrationRequestRequest:
       type: object
       properties:
@@ -3444,10 +3441,6 @@ components:
         semester_id:
           type: integer
           minimum: 1
-        max_teams:
-          type: integer
-          minimum: 1
-          default: 100
       required:
       - department_id
       - name
@@ -3469,10 +3462,6 @@ components:
         semester_id:
           type: integer
           minimum: 1
-        max_teams:
-          type: integer
-          minimum: 1
-          default: 100
       required:
       - department_id
       - name

@@ -37,7 +37,6 @@ def _create_track(
     author,
     group=None,
     application=None,
-    max_teams: int = 100,
 ) -> ProjectTrack:
     track = ProjectTrack.objects.create(
         name=name,
@@ -45,7 +44,6 @@ def _create_track(
         department=department,
         semester=semester,
         author=author,
-        max_teams=max_teams,
     )
     if group is not None:
         ProjectTrackGroup.objects.create(project_track=track, study_group=group)
@@ -96,23 +94,6 @@ class TestProjectTrackDomain:
     def test_validate_department_access_denied(self):
         ok, error = ProjectTrackDomain.validate_department_access(999, [1, 2])
         assert ok is False
-
-    def test_validate_max_teams_limit_exceeded(
-        self, roles, make_user, semester, departments
-    ):
-        user = make_user(role_code="admin")
-        track = ProjectTrack.objects.create(
-            name="T",
-            department=departments["child"],
-            semester=semester,
-            author=user,
-            max_teams=2,
-        )
-        ok, error = ProjectTrackDomain.validate_max_teams_limit(
-            track, new_groups_count=1, current_groups_count=2
-        )
-        assert ok is False
-        assert "max_teams" in error
 
     def test_resolve_institute_code_explicit_validator(
         self, roles, make_user, institute

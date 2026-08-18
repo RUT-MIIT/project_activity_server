@@ -96,14 +96,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Трек ИЭУ\",\n  \"description\": \"Описание трека\",\n  \"department_id\": {{departmentId}},\n  \"semester_id\": {{semesterId}},\n  \"max_teams\": 100\n}"
+              "raw": "{\n  \"name\": \"Трек ИЭУ\",\n  \"description\": \"Описание трека\",\n  \"department_id\": {{departmentId}},\n  \"semester_id\": {{semesterId}}\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/project-tracks/",
               "host": ["{{baseUrl}}"],
               "path": ["project-tracks", ""]
             },
-            "description": "Создание трека.\n\nПоля:\n- name (required)\n- department_id (required)\n- semester_id (required)\n- description (optional, default \"\")\n- max_teams (optional, default 100)\n\nauthor_id берётся из текущего пользователя."
+            "description": "Создание трека.\n\nПоля:\n- name (required)\n- department_id (required)\n- semester_id (required)\n- description (optional, default \"\")\n\nauthor_id берётся из текущего пользователя."
           }
         },
         {
@@ -131,14 +131,14 @@
             ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"Обновлённый трек\",\n  \"description\": \"Новое описание\",\n  \"max_teams\": 50\n}"
+              "raw": "{\n  \"name\": \"Обновлённый трек\",\n  \"description\": \"Новое описание\"\n}"
             },
             "url": {
               "raw": "{{baseUrl}}/project-tracks/{{trackId}}/",
               "host": ["{{baseUrl}}"],
               "path": ["project-tracks", "{{trackId}}", ""]
             },
-            "description": "Частичное обновление. Все поля опциональны: name, description, department_id, semester_id, max_teams."
+            "description": "Частичное обновление. Все поля опциональны: name, description, department_id, semester_id."
           }
         },
         {
@@ -178,7 +178,7 @@
               "host": ["{{baseUrl}}"],
               "path": ["project-tracks", "{{trackId}}", "groups", ""]
             },
-            "description": "Добавить учебные группы в трек.\n\nВалидации:\n- группа существует и не is_end\n- доступна по институту пользователя\n- не превышен max_teams\n\nДубликаты пропускаются. Ответ — полный трек."
+            "description": "Добавить учебные группы в трек.\n\nВалидации:\n- группа существует и не is_end\n- доступна по институту пользователя\n\nДубликаты пропускаются. Ответ — полный трек."
           }
         },
         {

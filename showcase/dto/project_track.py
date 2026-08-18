@@ -16,13 +16,11 @@ class ProjectTrackCreateDTO:
         department_id: int,
         semester_id: int,
         description: str = "",
-        max_teams: int = 100,
     ):
         self.name = name
         self.description = description
         self.department_id = department_id
         self.semester_id = semester_id
-        self.max_teams = max_teams
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ProjectTrackCreateDTO:
@@ -32,7 +30,6 @@ class ProjectTrackCreateDTO:
             department_id=data["department_id"],
             semester_id=data["semester_id"],
             description=data.get("description", ""),
-            max_teams=data.get("max_teams", 100),
         )
 
 
@@ -45,13 +42,11 @@ class ProjectTrackUpdateDTO:
         description: str | None = None,
         department_id: int | None = None,
         semester_id: int | None = None,
-        max_teams: int | None = None,
     ):
         self.name = name
         self.description = description
         self.department_id = department_id
         self.semester_id = semester_id
-        self.max_teams = max_teams
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ProjectTrackUpdateDTO:
@@ -61,7 +56,6 @@ class ProjectTrackUpdateDTO:
             description=data.get("description"),
             department_id=data.get("department_id"),
             semester_id=data.get("semester_id"),
-            max_teams=data.get("max_teams"),
         )
 
     def to_update_dict(self) -> dict[str, Any]:
@@ -75,8 +69,6 @@ class ProjectTrackUpdateDTO:
             result["department_id"] = self.department_id
         if self.semester_id is not None:
             result["semester_id"] = self.semester_id
-        if self.max_teams is not None:
-            result["max_teams"] = self.max_teams
         return result
 
 
@@ -126,7 +118,6 @@ class ProjectTrackReadDTO:
         self.department_id = track.department_id
         self.semester_id = track.semester_id
         self.author_id = track.author_id
-        self.max_teams = track.max_teams
         self.groups: list[dict[str, Any]] = []
         self.applications: list[dict[str, Any]] = []
 
@@ -148,7 +139,6 @@ class ProjectTrackReadDTO:
             "department_id": self.department_id,
             "semester_id": self.semester_id,
             "author_id": self.author_id,
-            "max_teams": self.max_teams,
             "groups": self.groups,
             "applications": self.applications,
         }

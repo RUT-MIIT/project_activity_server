@@ -85,7 +85,6 @@ def _create_track_with_links(
     author,
     group,
     application,
-    max_teams: int = 100,
 ) -> ProjectTrack:
     track = ProjectTrack.objects.create(
         name=name,
@@ -93,7 +92,6 @@ def _create_track_with_links(
         department=department,
         semester=semester,
         author=author,
-        max_teams=max_teams,
     )
     ProjectTrackGroup.objects.create(project_track=track, study_group=group)
     ProjectTrackApplication.objects.create(
@@ -166,11 +164,9 @@ class TestProjectTrackService:
             name="Новый трек",
             department_id=departments["child"].id,
             semester_id=semester.id,
-            max_teams=50,
         )
         result = service.create_track(user, dto)
         assert result["name"] == "Новый трек"
-        assert result["max_teams"] == 50
         assert result["author_id"] == user.id
 
     def test_list_tracks_admin(self, roles, make_user, semester, track_data):
@@ -251,32 +247,6 @@ class TestProjectTrackService:
         dto = ProjectTrackAddGroupsDTO(group_ids=[group.id])
         result = service.add_groups_to_track(user, track_data["track"].id, dto)
         assert len(result["groups"]) == 2
-
-    def test_add_groups_exceeds_max_teams(
-        self, roles, make_user, institute, semester, direction, track_data, departments
-    ):
-        track = ProjectTrack.objects.create(
-            name="Малый",
-            department=departments["child"],
-            semester=semester,
-            author=track_data["admin"],
-            max_teams=1,
-        )
-        ProjectTrackGroup.objects.create(
-            project_track=track,
-            study_group=track_data["own_group"],
-        )
-        group = StudyGroup.objects.create(
-            name="Г3",
-            code="g3",
-            direction=direction,
-            institute=institute,
-        )
-        user = make_user(role_code="admin")
-        service = ProjectTrackService()
-        dto = ProjectTrackAddGroupsDTO(group_ids=[group.id])
-        with pytest.raises(ValueError, match="max_teams"):
-            service.add_groups_to_track(user, track.id, dto)
 
     def test_remove_group_from_track(self, roles, make_user, track_data):
         user = make_user(role_code="admin")

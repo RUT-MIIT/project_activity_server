@@ -176,7 +176,6 @@ class TestProjectTrackViewSet:
         )
         assert response.status_code == 201
         assert response.data["name"] == "Новый трек"
-        assert response.data["max_teams"] == 100
 
     def test_retrieve_track(self, roles, make_user, track_setup):
         user = make_user(role_code="admin")

@@ -104,7 +104,6 @@ class ProjectTrackRepository:
         department_id: int,
         semester_id: int,
         author_id: int,
-        max_teams: int,
     ) -> ProjectTrack:
         """Создаёт проектный трек."""
         return ProjectTrack.objects.create(
@@ -113,7 +112,6 @@ class ProjectTrackRepository:
             department_id=department_id,
             semester_id=semester_id,
             author_id=author_id,
-            max_teams=max_teams,
         )
 
     def update(self, track: ProjectTrack, **fields) -> ProjectTrack:

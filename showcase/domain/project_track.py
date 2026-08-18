@@ -187,25 +187,6 @@ class ProjectTrackDomain:
         return True, ""
 
     @classmethod
-    def validate_max_teams_limit(
-        cls,
-        track: ProjectTrack,
-        new_groups_count: int,
-        current_groups_count: int | None = None,
-    ) -> tuple[bool, str]:
-        """Проверяет, что добавление групп не превысит лимит max_teams."""
-        if current_groups_count is None:
-            current_groups_count = track.group_links.count()
-
-        if current_groups_count + new_groups_count > track.max_teams:
-            return (
-                False,
-                f"Превышен лимит групп в треке (max_teams={track.max_teams})",
-            )
-
-        return True, ""
-
-    @classmethod
     def can_access_track(
         cls,
         user: User,

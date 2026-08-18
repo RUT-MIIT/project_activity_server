@@ -185,7 +185,6 @@ class ProjectTrackService:
             department_id=dto.department_id,
             semester_id=dto.semester_id,
             author_id=user.pk,
-            max_teams=dto.max_teams,
         )
         track = self.repository.get_by_id(track.pk)
         return ProjectTrackReadDTO(track).to_dict()
@@ -258,13 +257,6 @@ class ProjectTrackService:
 
         existing_ids = self.repository.get_existing_group_ids(track.pk, dto.group_ids)
         new_group_ids = [gid for gid in dto.group_ids if gid not in existing_ids]
-
-        current_count = self.repository.count_groups(track.pk)
-        ok, error = self.domain.validate_max_teams_limit(
-            track, len(new_group_ids), current_groups_count=current_count
-        )
-        if not ok:
-            raise ValueError(error)
 
         self.repository.add_groups(track.pk, new_group_ids)
         track = self.repository.get_by_id(track_id)
