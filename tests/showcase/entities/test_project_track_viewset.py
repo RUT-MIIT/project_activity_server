@@ -254,11 +254,17 @@ class TestProjectTrackViewSet:
         client.force_authenticate(user=user)
         response = client.post(
             f"/api/showcase/project-tracks/{track_setup['track'].id}/applications/",
-            {"application_ids": [app.id]},
+            [{"id": app.id, "teamsCount": 4}],
             format="json",
         )
         assert response.status_code == 200
         assert len(response.data["applications"]) == 2
+        added = next(
+            item for item in response.data["applications"] if item["id"] == app.id
+        )
+        assert added["teamsCount"] == 4
+        app.refresh_from_db()
+        assert app.recommended_teams_count == 4
 
     def test_remove_application(self, roles, make_user, track_setup):
         user = make_user(role_code="admin")

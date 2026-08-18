@@ -152,6 +152,9 @@ REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
     "PAGE_SIZE": 20,
     "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+    "DEFAULT_THROTTLE_RATES": {
+        "preregistered_student": "60/hour",
+    },
 }
 
 # OpenAPI 3 (drf-spectacular) — схема для Swagger UI и импорта в Postman
@@ -237,6 +240,7 @@ if EMAIL_BACKEND.endswith("smtp.EmailBackend"):
 SERVER_EMAIL = os.getenv("EMAIL_HOST_USER", "no-reply@example.com")
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER", "no-reply@example.com")
 FRONT_END = os.environ.get("FRONT_END", "http://localhost:3000")
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "")
 # Путь к карточке заявки на фронте; {id} — подставляется id заявки
 FRONT_END_APPLICATION_PATH = os.environ.get(
     "FRONT_END_APPLICATION_PATH", "/my-applications/app/{id}"

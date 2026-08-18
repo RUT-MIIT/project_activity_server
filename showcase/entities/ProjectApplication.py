@@ -201,6 +201,11 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     main_department_id = serializers.IntegerField(required=False, allow_null=True)
     is_internal_customer = serializers.BooleanField(required=False)
     semester_id = serializers.IntegerField(required=False, allow_null=True)
+    is_continuing = serializers.BooleanField(required=False)
+    track_composer_comment = serializers.CharField(required=False, allow_blank=True)
+    recommended_teams_count = serializers.IntegerField(
+        required=False, default=3, min_value=1
+    )
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""
@@ -249,6 +254,9 @@ class ProjectApplicationUpdateSerializer(serializers.Serializer):
     main_department_id = serializers.IntegerField(required=False, allow_null=True)
     is_internal_customer = serializers.BooleanField(required=False)
     semester_id = serializers.IntegerField(required=False, allow_null=True)
+    is_continuing = serializers.BooleanField(required=False)
+    track_composer_comment = serializers.CharField(required=False, allow_blank=True)
+    recommended_teams_count = serializers.IntegerField(required=False, min_value=1)
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""

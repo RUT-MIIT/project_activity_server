@@ -103,6 +103,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
         "project_level",
         "needs_consultation",
         "is_internal_customer",
+        "is_continuing",
         "semester",
         "application_year",
     )
@@ -156,6 +157,9 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
                 "fields": (
                     "company",
                     "is_internal_customer",
+                    "is_continuing",
+                    "track_composer_comment",
+                    "recommended_teams_count",
                     "company_contacts",
                     "target_institutes",
                     "tags",

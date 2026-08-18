@@ -207,6 +207,20 @@ class ProjectApplication(models.Model):
         default=False,
         verbose_name="Есть изменения с последнего просмотра автором",
     )
+    is_continuing = models.BooleanField(
+        default=False,
+        verbose_name="Продолжающийся проект",
+    )
+    track_composer_comment = models.TextField(
+        blank=True,
+        default="",
+        verbose_name="Комментарий для составителя трека",
+    )
+    recommended_teams_count = models.PositiveIntegerField(
+        default=3,
+        validators=[MinValueValidator(1)],
+        verbose_name="Рекомендуемое количество команд",
+    )
 
     # Нумерация заявок
     application_year = models.PositiveIntegerField(

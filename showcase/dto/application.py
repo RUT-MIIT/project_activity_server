@@ -98,6 +98,9 @@ class ProjectApplicationCreateDTO:
         main_department_id: Optional[int] = None,
         is_internal_customer: Optional[bool] = None,
         semester_id: Optional[int] = None,
+        is_continuing: Optional[bool] = None,
+        track_composer_comment: Optional[str] = None,
+        recommended_teams_count: int = 3,
         **kwargs,
     ):
         self.title = title or ""
@@ -131,6 +134,9 @@ class ProjectApplicationCreateDTO:
             is_internal_customer if is_internal_customer is not None else False
         )
         self.semester_id = semester_id
+        self.is_continuing = is_continuing if is_continuing is not None else False
+        self.track_composer_comment = track_composer_comment or ""
+        self.recommended_teams_count = recommended_teams_count
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationCreateDTO":
@@ -167,6 +173,9 @@ class ProjectApplicationCreateDTO:
             "main_department_id": self.main_department_id,
             "is_internal_customer": self.is_internal_customer,
             "semester_id": self.semester_id,
+            "is_continuing": self.is_continuing,
+            "track_composer_comment": self.track_composer_comment,
+            "recommended_teams_count": self.recommended_teams_count,
         }
 
 
@@ -201,6 +210,9 @@ class ProjectApplicationUpdateDTO:
         main_department_id: Optional[int] = None,
         is_internal_customer: Optional[bool] = None,
         semester_id: Optional[int] = None,
+        is_continuing: Optional[bool] = None,
+        track_composer_comment: Optional[str] = None,
+        recommended_teams_count: Optional[int] = None,
         **kwargs,
     ):
         self.title = title
@@ -229,6 +241,9 @@ class ProjectApplicationUpdateDTO:
         self.main_department_id = main_department_id
         self.is_internal_customer = is_internal_customer
         self.semester_id = semester_id
+        self.is_continuing = is_continuing
+        self.track_composer_comment = track_composer_comment
+        self.recommended_teams_count = recommended_teams_count
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationUpdateDTO":
@@ -256,6 +271,9 @@ class ProjectApplicationReadDTO:
         self.is_external = application.is_external
         self.is_internal_customer = application.is_internal_customer
         self.has_unseen_changes = application.has_unseen_changes
+        self.is_continuing = application.is_continuing
+        self.track_composer_comment = application.track_composer_comment
+        self.recommended_teams_count = application.recommended_teams_count
 
         # Нумерация заявок
         self.application_year = application.application_year
@@ -427,6 +445,9 @@ class ProjectApplicationReadDTO:
             "is_external": self.is_external,
             "is_internal_customer": self.is_internal_customer,
             "has_unseen_changes": self.has_unseen_changes,
+            "is_continuing": self.is_continuing,
+            "track_composer_comment": self.track_composer_comment,
+            "recommended_teams_count": self.recommended_teams_count,
             "application_year": self.application_year,
             "year_sequence_number": self.year_sequence_number,
             "print_number": self.print_number,
@@ -475,6 +496,9 @@ class ProjectApplicationListDTO:
         self.is_external = application.is_external
         self.is_internal_customer = application.is_internal_customer
         self.has_unseen_changes = application.has_unseen_changes
+        self.is_continuing = application.is_continuing
+        self.track_composer_comment = application.track_composer_comment or ""
+        self.recommended_teams_count = application.recommended_teams_count
         self.semester = (
             {"id": application.semester.id, "name": application.semester.name}
             if application.semester
@@ -524,6 +548,9 @@ class ProjectApplicationListDTO:
             "is_external": self.is_external,
             "is_internal_customer": self.is_internal_customer,
             "has_unseen_changes": self.has_unseen_changes,
+            "is_continuing": self.is_continuing,
+            "track_composer_comment": self.track_composer_comment,
+            "recommended_teams_count": self.recommended_teams_count,
             "semester": self.semester,
             "semester_id": self.semester_id,
             "application_year": self.application_year,

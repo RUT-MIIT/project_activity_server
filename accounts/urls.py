@@ -1,6 +1,7 @@
 from django.urls import include, path
 from rest_framework.routers import DefaultRouter
 
+from accounts.entities.PreRegisteredStudent import PreRegisteredStudentViewSet
 from accounts.entities.UserManagement import UserManagementViewSet
 
 from .views import (
@@ -25,6 +26,11 @@ router.register(
 router.register(r"roles", RoleViewSet, basename="role")
 router.register(r"semesters", SemesterViewSet, basename="semester")
 router.register(r"users", UserManagementViewSet, basename="user-management")
+router.register(
+    r"pre-registered-students",
+    PreRegisteredStudentViewSet,
+    basename="pre-registered-student",
+)
 
 urlpatterns = [
     path("login/", LoginView.as_view(), name="login"),

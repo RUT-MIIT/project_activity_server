@@ -4,6 +4,7 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import (
     AcademicYear,
     Department,
+    PreRegisteredStudent,
     RegistrationRequest,
     Role,
     Semester,
@@ -40,6 +41,7 @@ class UserAdmin(BaseUserAdmin):
                     "middle_name",
                     "role",
                     "department",
+                    "study_group",
                 )
             },
         ),
@@ -69,6 +71,7 @@ class UserAdmin(BaseUserAdmin):
                     "middle_name",
                     "role",
                     "department",
+                    "study_group",
                     "phone",
                     "password1",
                     "password2",
@@ -76,6 +79,32 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     )
+
+
+@admin.register(PreRegisteredStudent)
+class PreRegisteredStudentAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "last_name",
+        "first_name",
+        "middle_name",
+        "student_card",
+        "personnel_number",
+        "snils",
+        "group",
+        "student",
+    )
+    list_filter = ("group__institute", "group")
+    search_fields = (
+        "last_name",
+        "first_name",
+        "middle_name",
+        "student_card",
+        "personnel_number",
+        "snils",
+    )
+    autocomplete_fields = ("group", "student")
+    readonly_fields = ("student",)
 
 
 @admin.register(Department)

@@ -3,6 +3,7 @@
 import pytest
 
 from showcase.dto.project_track import (
+    ProjectTrackAddApplicationItemDTO,
     ProjectTrackAddApplicationsDTO,
     ProjectTrackAddGroupsDTO,
     ProjectTrackCreateDTO,
@@ -296,9 +297,18 @@ class TestProjectTrackService:
         )
         user = make_user(role_code="admin")
         service = ProjectTrackService()
-        dto = ProjectTrackAddApplicationsDTO(application_ids=[app.id])
+        dto = ProjectTrackAddApplicationsDTO(
+            items=[
+                ProjectTrackAddApplicationItemDTO(
+                    application_id=app.id,
+                    teams_count=5,
+                )
+            ]
+        )
         result = service.add_applications_to_track(user, track_data["track"].id, dto)
         assert len(result["applications"]) == 2
+        app.refresh_from_db()
+        assert app.recommended_teams_count == 5
 
     def test_add_applications_rejects_non_approved(
         self, roles, make_user, semester, statuses, institute, track_data
@@ -318,7 +328,14 @@ class TestProjectTrackService:
         app.target_institutes.add(institute)
         user = make_user(role_code="admin")
         service = ProjectTrackService()
-        dto = ProjectTrackAddApplicationsDTO(application_ids=[app.id])
+        dto = ProjectTrackAddApplicationsDTO(
+            items=[
+                ProjectTrackAddApplicationItemDTO(
+                    application_id=app.id,
+                    teams_count=3,
+                )
+            ]
+        )
         with pytest.raises(ValueError, match="не одобрена"):
             service.add_applications_to_track(user, track_data["track"].id, dto)
 

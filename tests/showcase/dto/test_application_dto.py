@@ -723,6 +723,36 @@ class TestProjectApplicationListDTO:
         assert "is_internal_customer" in result
         assert result["is_internal_customer"] is True
 
+    def test_list_dto_includes_track_fields(self, statuses, make_user):
+        """Новые поля трека включаются в ProjectApplicationListDTO."""
+        from showcase.models import ProjectApplication
+
+        user = make_user(role_code="user")
+        status = statuses["await_department"]
+
+        app = ProjectApplication.objects.create(
+            title="Test",
+            company="Acme",
+            author=user,
+            status=status,
+            author_lastname="Иванов",
+            author_firstname="Иван",
+            author_email="test@example.com",
+            author_phone="+79990000000",
+            goal="Цель",
+            problem_holder="Носитель",
+            barrier="Барьер",
+            is_continuing=True,
+            track_composer_comment="Комментарий для трека",
+            recommended_teams_count=3,
+        )
+
+        result = ProjectApplicationListDTO(app).to_dict()
+
+        assert result["is_continuing"] is True
+        assert result["track_composer_comment"] == "Комментарий для трека"
+        assert result["recommended_teams_count"] == 3
+
     def test_read_dto_is_internal_customer(self, statuses, make_user):
         """is_internal_customer включается в ProjectApplicationReadDTO."""
         from showcase.models import ProjectApplication

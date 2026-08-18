@@ -289,14 +289,15 @@ class ProjectTrackService:
         track = self._get_track_with_access(user, track_id)
         accessible_codes = self.domain.get_accessible_institute_codes(user)
 
-        if not dto.application_ids:
-            raise ValueError("Список application_ids не может быть пустым")
+        if not dto.items:
+            raise ValueError("Список заявок не может быть пустым")
 
-        applications = list(
-            self.repository.get_applications_by_ids(dto.application_ids)
-        )
+        application_ids = dto.application_ids
+        teams_by_id = dto.teams_count_by_application_id()
+
+        applications = list(self.repository.get_applications_by_ids(application_ids))
         found_ids = {app.pk for app in applications}
-        missing = set(dto.application_ids) - found_ids
+        missing = set(application_ids) - found_ids
         if missing:
             raise ValueError(f"Проектные заявки не найдены: {sorted(missing)}")
 
@@ -307,11 +308,15 @@ class ProjectTrackService:
             if not ok:
                 raise ValueError(error)
 
+        for application in applications:
+            application.recommended_teams_count = teams_by_id[application.pk]
+        self.repository.update_recommended_teams_counts(applications)
+
         existing_ids = self.repository.get_existing_application_ids(
-            track.pk, dto.application_ids
+            track.pk, application_ids
         )
         new_application_ids = [
-            app_id for app_id in dto.application_ids if app_id not in existing_ids
+            app_id for app_id in application_ids if app_id not in existing_ids
         ]
         self.repository.add_applications(track.pk, new_application_ids)
 

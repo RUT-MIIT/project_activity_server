@@ -348,3 +348,51 @@ class ApproveRequestSerializer(serializers.Serializer):
 
 class RejectRequestSerializer(serializers.Serializer):
     reason = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+
+class PreRegisteredStudentLookupSerializer(serializers.Serializer):
+    """Поиск предрегистрации по одному идентификатору."""
+
+    student_card = serializers.CharField(required=False, allow_blank=True)
+    personnel_number = serializers.CharField(required=False, allow_blank=True)
+    snils = serializers.CharField(required=False, allow_blank=True)
+
+    def validate(self, attrs: dict[str, str]) -> dict[str, str]:
+        provided = {
+            key: (attrs.get(key) or "").strip()
+            for key in ("student_card", "personnel_number", "snils")
+        }
+        non_empty = [key for key, value in provided.items() if value]
+        if len(non_empty) != 1:
+            raise serializers.ValidationError(
+                "Укажите ровно одно поле: student_card, personnel_number или snils."
+            )
+        attrs.update(provided)
+        return attrs
+
+
+class PreRegisteredStudentLookupResponseSerializer(serializers.Serializer):
+    """Ответ поиска предрегистрации."""
+
+    id = serializers.IntegerField()
+    last_name = serializers.CharField()
+    first_name = serializers.CharField()
+    middle_name = serializers.CharField()
+    group_name = serializers.CharField()
+    student_card = serializers.CharField()
+    is_registered = serializers.BooleanField()
+
+
+class PreRegisteredStudentRegisterSerializer(serializers.Serializer):
+    """Регистрация пользователя по предрегистрации."""
+
+    id = serializers.IntegerField()
+    email = serializers.EmailField()
+    password = serializers.CharField(write_only=True, min_length=8)
+
+
+class PreRegisteredStudentMismatchSerializer(serializers.Serializer):
+    """Сообщение администратору о расхождении данных."""
+
+    id = serializers.IntegerField()
+    comment = serializers.CharField(min_length=1, trim_whitespace=True)

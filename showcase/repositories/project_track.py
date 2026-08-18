@@ -208,6 +208,17 @@ class ProjectTrackRepository:
             .prefetch_related("involved_departments", "target_institutes")
         )
 
+    def update_recommended_teams_counts(
+        self, applications: list[ProjectApplication]
+    ) -> None:
+        """Обновляет recommended_teams_count у переданных заявок."""
+        if not applications:
+            return
+        ProjectApplication.objects.bulk_update(
+            applications,
+            ["recommended_teams_count"],
+        )
+
     def list_groups_with_counts(
         self,
         institute_code: str,

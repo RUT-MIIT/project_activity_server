@@ -104,6 +104,7 @@ class ProjectTrackApplicationItemDTO:
         self.id = application.id
         self.title = application.title or ""
         self.print_number = application.print_number or ""
+        self.teams_count = application.recommended_teams_count
 
     def to_dict(self) -> dict[str, Any]:
         """Преобразует DTO в словарь для API."""
@@ -111,6 +112,7 @@ class ProjectTrackApplicationItemDTO:
             "id": self.id,
             "title": self.title,
             "print_number": self.print_number,
+            "teamsCount": self.teams_count,
         }
 
 
@@ -164,16 +166,40 @@ class ProjectTrackAddGroupsDTO:
         return cls(group_ids=data["group_ids"])
 
 
+class ProjectTrackAddApplicationItemDTO:
+    """Элемент добавления заявки в трек."""
+
+    def __init__(self, application_id: int, teams_count: int):
+        self.application_id = application_id
+        self.teams_count = teams_count
+
+
 class ProjectTrackAddApplicationsDTO:
     """DTO для добавления заявок в трек."""
 
-    def __init__(self, application_ids: list[int]):
-        self.application_ids = application_ids
+    def __init__(self, items: list[ProjectTrackAddApplicationItemDTO]):
+        self.items = items
 
     @classmethod
-    def from_dict(cls, data: dict[str, Any]) -> ProjectTrackAddApplicationsDTO:
-        """Создаёт DTO из словаря."""
-        return cls(application_ids=data["application_ids"])
+    def from_items(cls, items: list[dict[str, int]]) -> ProjectTrackAddApplicationsDTO:
+        """Создаёт DTO из списка элементов API."""
+        parsed = [
+            ProjectTrackAddApplicationItemDTO(
+                application_id=int(item["id"]),
+                teams_count=int(item["teamsCount"]),
+            )
+            for item in items
+        ]
+        return cls(parsed)
+
+    @property
+    def application_ids(self) -> list[int]:
+        """Список id заявок для валидации и привязки."""
+        return [item.application_id for item in self.items]
+
+    def teams_count_by_application_id(self) -> dict[int, int]:
+        """Карта id заявки → рекомендуемое число команд."""
+        return {item.application_id: item.teams_count for item in self.items}
 
 
 class ProjectTrackGroupListDTO:
@@ -259,6 +285,9 @@ class ProjectTrackProjectListDTO:
             f"{application.author_lastname} {application.author_firstname}".strip()
         )
         self.assigned_groups_count = application.assigned_groups_count
+        self.track_composer_comment = application.track_composer_comment or ""
+        self.has_track_composer_comment = bool(self.track_composer_comment.strip())
+        self.recommended_teams_count = application.recommended_teams_count
 
     def to_dict(self) -> dict[str, Any]:
         """Преобразует DTO в словарь для API."""
@@ -268,6 +297,9 @@ class ProjectTrackProjectListDTO:
             "print_number": self.print_number,
             "author_name": self.author_name,
             "assigned_groups_count": self.assigned_groups_count,
+            "track_composer_comment": self.track_composer_comment,
+            "has_track_composer_comment": self.has_track_composer_comment,
+            "recommended_teams_count": self.recommended_teams_count,
         }
 
 
@@ -304,6 +336,9 @@ class ProjectTrackProjectDetailDTO:
         self.author_name = (
             f"{application.author_lastname} {application.author_firstname}".strip()
         )
+        self.track_composer_comment = application.track_composer_comment or ""
+        self.has_track_composer_comment = bool(self.track_composer_comment.strip())
+        self.recommended_teams_count = application.recommended_teams_count
         self.groups = [ProjectTrackProjectGroupDTO(group).to_dict() for group in groups]
 
     def to_dict(self) -> dict[str, Any]:
@@ -313,6 +348,9 @@ class ProjectTrackProjectDetailDTO:
             "title": self.title,
             "print_number": self.print_number,
             "author_name": self.author_name,
+            "track_composer_comment": self.track_composer_comment,
+            "has_track_composer_comment": self.has_track_composer_comment,
+            "recommended_teams_count": self.recommended_teams_count,
             "groups": self.groups,
         }
 

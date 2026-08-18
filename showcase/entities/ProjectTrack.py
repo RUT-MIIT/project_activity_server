@@ -67,13 +67,28 @@ class ProjectTrackAddGroupsSerializer(serializers.Serializer):
     )
 
 
-class ProjectTrackAddApplicationsSerializer(serializers.Serializer):
-    """Сериализатор для добавления заявок в трек."""
+class ProjectTrackAddApplicationItemSerializer(serializers.Serializer):
+    """Элемент списка заявок для добавления в трек."""
 
-    application_ids = serializers.ListField(
-        child=serializers.IntegerField(min_value=1),
-        allow_empty=False,
-    )
+    id = serializers.IntegerField(min_value=1)
+    teamsCount = serializers.IntegerField(min_value=1)
+
+
+class ProjectTrackAddApplicationsSerializer(serializers.ListSerializer):
+    """Список заявок с рекомендуемым числом команд."""
+
+    child = ProjectTrackAddApplicationItemSerializer()
+
+    def validate(self, data: list[dict[str, int]]) -> list[dict[str, int]]:
+        """Проверяет отсутствие дубликатов id в одном запросе."""
+        if not data:
+            raise serializers.ValidationError("Список заявок не может быть пустым")
+        ids = [item["id"] for item in data]
+        if len(ids) != len(set(ids)):
+            raise serializers.ValidationError(
+                "id заявок в запросе не должны повторяться"
+            )
+        return data
 
 
 @extend_schema_view(
@@ -241,7 +256,7 @@ class ProjectTrackViewSet(viewsets.ViewSet):
 
         try:
             service = ProjectTrackService()
-            dto = ProjectTrackAddApplicationsDTO.from_dict(serializer.validated_data)
+            dto = ProjectTrackAddApplicationsDTO.from_items(serializer.validated_data)
             result = service.add_applications_to_track(request.user, pk, dto)
             return Response(result)
         except ValueError as exc:

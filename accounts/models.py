@@ -56,6 +56,14 @@ class User(AbstractBaseUser, PermissionsMixin):
     phone = models.CharField(
         max_length=20, blank=True, null=True, verbose_name="Телефон"
     )
+    study_group = models.ForeignKey(
+        "teams.StudyGroup",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="users",
+        verbose_name="Учебная группа",
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]
@@ -174,6 +182,72 @@ class RegistrationRequest(models.Model):
 
     def __str__(self):
         return f"{self.last_name} {self.first_name} <{self.email}> [{self.status}]"
+
+
+class PreRegisteredStudent(models.Model):
+    """Предрегистрация студента из отчёта контингента 1С."""
+
+    last_name = models.CharField(max_length=150, verbose_name="Фамилия")
+    first_name = models.CharField(max_length=150, verbose_name="Имя")
+    middle_name = models.CharField(
+        max_length=150, blank=True, default="", verbose_name="Отчество"
+    )
+    student_card = models.CharField(
+        max_length=32,
+        unique=True,
+        db_index=True,
+        verbose_name="Студенческий билет",
+    )
+    snils = models.CharField(
+        max_length=11,
+        blank=True,
+        default="",
+        db_index=True,
+        verbose_name="СНИЛС",
+    )
+    personnel_number = models.CharField(
+        max_length=32,
+        unique=True,
+        db_index=True,
+        verbose_name="Табельный номер (ID_E человека)",
+    )
+    group = models.ForeignKey(
+        "teams.StudyGroup",
+        on_delete=models.PROTECT,
+        related_name="pre_registered_students",
+        verbose_name="Учебная группа",
+    )
+    student = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="pre_registration",
+        verbose_name="Зарегистрированный пользователь",
+    )
+
+    class Meta:
+        verbose_name = "Предрегистрация студента"
+        verbose_name_plural = "Предрегистрации студентов"
+        ordering = ("last_name", "first_name")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["snils"],
+                condition=~models.Q(snils=""),
+                name="unique_preregistered_student_snils",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return (
+            f"{self.last_name} {self.first_name} "
+            f"(билет {self.student_card}, таб. {self.personnel_number})"
+        )
+
+    @property
+    def is_registered(self) -> bool:
+        """Возвращает True, если предрегистрация уже привязана к User."""
+        return self.student_id is not None
 
 
 class AcademicYear(models.Model):

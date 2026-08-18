@@ -19,6 +19,10 @@ class ProjectListDTO:
         )
         self.author_email = application.author_email
         self.tags = [{"id": tag.id, "name": tag.name} for tag in application.tags.all()]
+        self.is_continuing = application.is_continuing
+        self.track_composer_comment = application.track_composer_comment or ""
+        self.has_track_composer_comment = bool(self.track_composer_comment.strip())
+        self.recommended_teams_count = application.recommended_teams_count
         self.print_number = application.print_number or ""
         self.img = ""
         self.status = self._status_dict(application)
@@ -96,6 +100,10 @@ class ProjectListDTO:
             "author_name": self.author_name,
             "author_email": self.author_email,
             "tags": self.tags,
+            "is_continuing": self.is_continuing,
+            "track_composer_comment": self.track_composer_comment,
+            "has_track_composer_comment": self.has_track_composer_comment,
+            "recommended_teams_count": self.recommended_teams_count,
             "print_number": self.print_number,
             "img": self.img,
             "status": self.status,

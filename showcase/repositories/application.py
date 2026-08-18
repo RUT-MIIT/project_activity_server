@@ -101,6 +101,9 @@ class ProjectApplicationRepository:
             is_external=is_external,
             is_internal_customer=dto.is_internal_customer,
             semester=semester,
+            is_continuing=dto.is_continuing,
+            track_composer_comment=dto.track_composer_comment,
+            recommended_teams_count=dto.recommended_teams_count,
         )
 
         # Устанавливаем M2M поля
