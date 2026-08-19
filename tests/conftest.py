@@ -21,6 +21,7 @@ def roles(db):
     """
     codes = [
         "user",
+        "student",
         "admin",
         "moderator",
         "cpds",

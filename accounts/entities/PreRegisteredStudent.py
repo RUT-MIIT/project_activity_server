@@ -84,6 +84,11 @@ class PreRegisteredStudentViewSet(viewsets.GenericViewSet):
             )
         except ValueError as exc:
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except RuntimeError as exc:
+            return Response(
+                {"detail": str(exc)},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
 
         return Response(payload, status=status.HTTP_201_CREATED)
 

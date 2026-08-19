@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from django.contrib.auth import get_user_model
 from django.core import mail
 from django.test import override_settings
 import pytest
@@ -114,6 +115,7 @@ class TestPreRegisteredStudentLookup:
 
 @pytest.mark.django_db
 class TestPreRegisteredStudentRegister:
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
     def test_register_creates_user_and_returns_tokens(
         self,
         api_client: APIClient,
@@ -134,6 +136,9 @@ class TestPreRegisteredStudentRegister:
         assert "access" in response.data
         assert "refresh" in response.data
         assert response.data["user"]["email"] == "student@example.com"
+        assert len(mail.outbox) == 1
+        assert mail.outbox[0].to == ["student@example.com"]
+        assert "Вы успешно зарегистрированы" in mail.outbox[0].body
 
         pre_registered_student.refresh_from_db()
         assert pre_registered_student.student is not None
@@ -141,6 +146,39 @@ class TestPreRegisteredStudentRegister:
             pre_registered_student.student.study_group_id
             == pre_registered_student.group_id
         )
+        assert pre_registered_student.student.role.code == "student"
+
+    def test_register_rolls_back_when_email_send_failed(
+        self,
+        api_client: APIClient,
+        pre_registered_student: PreRegisteredStudent,
+        roles: dict[str, Any],
+        monkeypatch: pytest.MonkeyPatch,
+    ) -> None:
+        def _raise_send_mail(*args: Any, **kwargs: Any) -> None:
+            raise RuntimeError("SMTP unavailable")
+
+        monkeypatch.setattr(
+            "accounts.services.preregistered_student_service.mail.send_mail",
+            _raise_send_mail,
+        )
+
+        response = api_client.post(
+            REGISTER_URL,
+            {
+                "id": pre_registered_student.pk,
+                "email": "student@example.com",
+                "password": "StrongPass123!",
+            },
+            format="json",
+        )
+
+        assert response.status_code == 500
+        assert "Регистрация отменена" in response.data["detail"]
+
+        pre_registered_student.refresh_from_db()
+        assert pre_registered_student.student is None
+        assert not get_user_model().objects.filter(email="student@example.com").exists()
 
     def test_register_already_registered(
         self,

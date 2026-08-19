@@ -99,9 +99,9 @@ class PreRegisteredStudentService:
             raise ValueError("Пользователь с таким email уже существует")
 
         try:
-            role = Role.objects.get(code="user")
+            role = Role.objects.get(code="student")
         except Role.DoesNotExist as exc:
-            raise ValueError("Роль user не найдена") from exc
+            raise ValueError("Роль student не найдена") from exc
 
         validate_password(password)
 
@@ -113,6 +113,11 @@ class PreRegisteredStudentService:
             middle_name=pre_registered.middle_name,
             role=role,
             study_group=pre_registered.group,
+        )
+        self._send_registration_email(
+            pre_registered=pre_registered,
+            email=email,
+            password=password,
         )
         self._repository.link_student(pre_registered, user.pk)
 
@@ -165,6 +170,38 @@ class PreRegisteredStudentService:
             recipient_list=[admin_email],
             fail_silently=False,
         )
+
+    @staticmethod
+    def _send_registration_email(
+        *,
+        pre_registered: PreRegisteredStudent,
+        email: str,
+        password: str,
+    ) -> None:
+        """Отправляет студенту письмо после успешной регистрации."""
+        subject = render_to_string("registration/student_registered_subject.txt").strip()
+        message = render_to_string(
+            "registration/student_registered_body.txt",
+            {
+                "last_name": pre_registered.last_name,
+                "first_name": pre_registered.first_name,
+                "email": email,
+                "password": password,
+                "front_end": settings.FRONT_END.rstrip("/"),
+            },
+        )
+        try:
+            mail.send_mail(
+                subject=subject,
+                message=message,
+                from_email=getattr(settings, "DEFAULT_FROM_EMAIL", None),
+                recipient_list=[email],
+                fail_silently=False,
+            )
+        except Exception as exc:
+            raise RuntimeError(
+                "Не удалось отправить письмо студенту. Регистрация отменена."
+            ) from exc
 
     def _find_by_identifiers(
         self,
