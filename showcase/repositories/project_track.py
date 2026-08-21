@@ -45,6 +45,14 @@ class ProjectTrackRepository:
 
     def _track_detail_queryset(self) -> QuerySet[ProjectTrack]:
         """Queryset трека с prefetch связей."""
+        study_groups_qs = StudyGroup.objects.annotate(
+            students_count=Count("pre_registered_students", distinct=True),
+            registered_students_count=Count(
+                "pre_registered_students",
+                filter=Q(pre_registered_students__student_id__isnull=False),
+                distinct=True,
+            ),
+        )
         return ProjectTrack.objects.select_related(
             "semester",
             "department",
@@ -52,8 +60,8 @@ class ProjectTrackRepository:
         ).prefetch_related(
             Prefetch(
                 "group_links",
-                queryset=ProjectTrackGroup.objects.select_related(
-                    "study_group"
+                queryset=ProjectTrackGroup.objects.prefetch_related(
+                    Prefetch("study_group", queryset=study_groups_qs)
                 ).order_by("study_group__name"),
             ),
             Prefetch(
@@ -209,12 +217,15 @@ class ProjectTrackRepository:
     def update_recommended_teams_counts(
         self, applications: list[ProjectApplication]
     ) -> None:
-        """Обновляет recommended_teams_count у переданных заявок."""
+        """Обновляет лимиты команд у переданных заявок.
+
+        Обновляет recommended_teams_count, min_team_members и max_team_members.
+        """
         if not applications:
             return
         ProjectApplication.objects.bulk_update(
             applications,
-            ["recommended_teams_count"],
+            ["recommended_teams_count", "min_team_members", "max_team_members"],
         )
 
     def list_groups_with_counts(

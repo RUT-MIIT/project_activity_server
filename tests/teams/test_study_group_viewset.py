@@ -3,7 +3,7 @@
 import pytest
 from rest_framework.test import APIClient
 
-from accounts.models import Department
+from accounts.models import Department, PreRegisteredStudent
 from showcase.models import Institute
 from teams.models import Direction, StudyGroup
 
@@ -67,7 +67,41 @@ class TestStudyGroupViewSet:
             "name",
             "course_number",
             "direction_code",
+            "students_count",
         }
+        assert item["students_count"] == 0
+
+    def test_list_returns_students_count_from_preregistration(
+        self, roles, make_user, study_groups
+    ):
+        PreRegisteredStudent.objects.create(
+            last_name="Иванов",
+            first_name="Иван",
+            middle_name="Иванович",
+            student_card="25010001",
+            snils="11111111111",
+            personnel_number="100001",
+            group=study_groups["own"],
+        )
+        PreRegisteredStudent.objects.create(
+            last_name="Петров",
+            first_name="Пётр",
+            middle_name="Петрович",
+            student_card="25010002",
+            snils="22222222222",
+            personnel_number="100002",
+            group=study_groups["own"],
+        )
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.get("/api/teams/study-groups/")
+
+        assert response.status_code == 200
+        by_id = {item["id"]: item for item in response.data}
+        assert by_id[study_groups["own"].id]["students_count"] == 2
+        assert by_id[study_groups["other"].id]["students_count"] == 0
 
     def test_list_institute_validator_filtered(self, roles, make_user, study_groups):
         user = make_user(role_code="institute_validator", with_department=True)
@@ -183,6 +217,7 @@ class TestStudyGroupViewSet:
         assert response.data["id"] == study_groups["own"].id
         assert response.data["direction"]["code"] == "38.03.01"
         assert response.data["institute"]["code"] == study_groups["own"].institute_id
+        assert response.data["students_count"] == 0
 
     def test_retrieve_validator_forbidden(self, roles, make_user, study_groups):
         user = make_user(role_code="institute_validator", with_department=True)

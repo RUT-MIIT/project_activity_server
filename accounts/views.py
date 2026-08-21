@@ -39,12 +39,19 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
         data = super().validate(attrs)
         # Используем select_related и prefetch_related для оптимизации
         user = (
-            User.objects.select_related("department", "role")
+            User.objects.select_related(
+                "department",
+                "role",
+                "study_group",
+                "study_group__direction",
+                "study_group__institute",
+            )
             .prefetch_related(
                 Prefetch(
                     "department__institutes",
                     queryset=Institute.objects.filter(is_active=True),
-                )
+                ),
+                "pre_registration",
             )
             .get(pk=self.user.pk)
         )
@@ -67,12 +74,19 @@ class UserMeView(APIView):
     def get(self, request):
         # Используем select_related и prefetch_related для оптимизации запроса
         user = (
-            User.objects.select_related("department", "role")
+            User.objects.select_related(
+                "department",
+                "role",
+                "study_group",
+                "study_group__direction",
+                "study_group__institute",
+            )
             .prefetch_related(
                 Prefetch(
                     "department__institutes",
                     queryset=Institute.objects.filter(is_active=True),
-                )
+                ),
+                "pre_registration",
             )
             .get(pk=request.user.pk)
         )

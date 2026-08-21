@@ -221,6 +221,16 @@ class ProjectApplication(models.Model):
         validators=[MinValueValidator(1)],
         verbose_name="Рекомендуемое количество команд",
     )
+    min_team_members = models.PositiveIntegerField(
+        default=1,
+        validators=[MinValueValidator(1)],
+        verbose_name="Минимальное количество человек в команде",
+    )
+    max_team_members = models.PositiveIntegerField(
+        default=10,
+        validators=[MinValueValidator(1)],
+        verbose_name="Максимальное количество человек в команде",
+    )
 
     # Нумерация заявок
     application_year = models.PositiveIntegerField(

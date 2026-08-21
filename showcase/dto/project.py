@@ -23,6 +23,8 @@ class ProjectListDTO:
         self.track_composer_comment = application.track_composer_comment or ""
         self.has_track_composer_comment = bool(self.track_composer_comment.strip())
         self.recommended_teams_count = application.recommended_teams_count
+        self.min_team_members = application.min_team_members
+        self.max_team_members = application.max_team_members
         self.print_number = application.print_number or ""
         self.img = ""
         self.status = self._status_dict(application)
@@ -104,6 +106,8 @@ class ProjectListDTO:
             "track_composer_comment": self.track_composer_comment,
             "has_track_composer_comment": self.has_track_composer_comment,
             "recommended_teams_count": self.recommended_teams_count,
+            "min_team_members": self.min_team_members,
+            "max_team_members": self.max_team_members,
             "print_number": self.print_number,
             "img": self.img,
             "status": self.status,

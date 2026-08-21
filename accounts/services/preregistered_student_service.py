@@ -236,12 +236,19 @@ class PreRegisteredStudentService:
     def _serialize_user(user) -> dict[str, object]:
         user_with_relations = (
             get_user_model()
-            .objects.select_related("department", "role", "study_group")
+            .objects.select_related(
+                "department",
+                "role",
+                "study_group",
+                "study_group__direction",
+                "study_group__institute",
+            )
             .prefetch_related(
                 Prefetch(
                     "department__institutes",
                     queryset=Institute.objects.filter(is_active=True),
-                )
+                ),
+                "pre_registration",
             )
             .get(pk=user.pk)
         )

@@ -16,6 +16,9 @@ class StudyGroupReadDTO:
         self.is_end = group.is_end
         self.profile = group.profile
         self.form = group.form
+        self.students_count = getattr(group, "students_count", None)
+        if self.students_count is None:
+            self.students_count = group.pre_registered_students.count()
         self.direction = {
             "code": group.direction.code,
             "level": group.direction.level,
@@ -35,6 +38,7 @@ class StudyGroupReadDTO:
             "is_end": self.is_end,
             "profile": self.profile,
             "form": self.form,
+            "students_count": self.students_count,
             "direction": self.direction,
             "institute": self.institute,
         }

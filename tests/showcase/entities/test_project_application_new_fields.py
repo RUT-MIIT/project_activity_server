@@ -64,6 +64,8 @@ class TestProjectApplicationNewFieldsCreateUpdate:
                 is_continuing=True,
                 track_composer_comment="Нужна команда с ML",
                 recommended_teams_count=3,
+                min_team_members=2,
+                max_team_members=5,
             ),
             format="json",
         )
@@ -72,11 +74,15 @@ class TestProjectApplicationNewFieldsCreateUpdate:
         assert response.data["is_continuing"] is True
         assert response.data["track_composer_comment"] == "Нужна команда с ML"
         assert response.data["recommended_teams_count"] == 3
+        assert response.data["min_team_members"] == 2
+        assert response.data["max_team_members"] == 5
 
         app = ProjectApplication.objects.get(pk=response.data["id"])
         assert app.is_continuing is True
         assert app.track_composer_comment == "Нужна команда с ML"
         assert app.recommended_teams_count == 3
+        assert app.min_team_members == 2
+        assert app.max_team_members == 5
 
     def test_create_rejects_zero_recommended_teams_count(self, statuses, make_user):
         user = make_user(role_code="user", with_department=True)
@@ -93,6 +99,36 @@ class TestProjectApplicationNewFieldsCreateUpdate:
         errors = response.data.get("errors", response.data)
         assert "recommended_teams_count" in errors
 
+    def test_create_rejects_min_greater_than_max(self, statuses, make_user):
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.post(
+            "/api/showcase/project-applications/",
+            _base_create_payload(min_team_members=8, max_team_members=3),
+            format="json",
+        )
+
+        assert response.status_code == 400
+        errors = response.data.get("errors", response.data)
+        assert "min_team_members" in errors
+
+    def test_create_rejects_zero_min_team_members(self, statuses, make_user):
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.post(
+            "/api/showcase/project-applications/",
+            _base_create_payload(min_team_members=0),
+            format="json",
+        )
+
+        assert response.status_code == 400
+        errors = response.data.get("errors", response.data)
+        assert "min_team_members" in errors
+
     def test_create_defaults_recommended_teams_count_to_three(
         self, statuses, make_user
     ):
@@ -108,6 +144,8 @@ class TestProjectApplicationNewFieldsCreateUpdate:
 
         assert response.status_code == 201
         assert response.data["recommended_teams_count"] == 3
+        assert response.data["min_team_members"] == 1
+        assert response.data["max_team_members"] == 10
 
     def test_patch_track_composer_comment(self, statuses, make_user):
         author = make_user(role_code="user", with_department=True)
@@ -157,6 +195,8 @@ class TestMyApplicationsNewFields:
             is_continuing=True,
             track_composer_comment="Комментарий",
             recommended_teams_count=2,
+            min_team_members=3,
+            max_team_members=6,
         )
 
         client = APIClient()
@@ -171,6 +211,8 @@ class TestMyApplicationsNewFields:
         assert item["is_continuing"] is True
         assert item["track_composer_comment"] == "Комментарий"
         assert item["recommended_teams_count"] == 2
+        assert item["min_team_members"] == 3
+        assert item["max_team_members"] == 6
 
 
 @pytest.mark.django_db
@@ -212,6 +254,8 @@ class TestProjectApplicationNewFieldsLists:
         assert item["track_composer_comment"] == "Комментарий для трека"
         assert item["has_track_composer_comment"] is True
         assert item["recommended_teams_count"] == 3
+        assert item["min_team_members"] == 1
+        assert item["max_team_members"] == 10
 
     def test_track_projects_list_returns_comment_fields(
         self, roles, make_user, statuses, institute, direction, departments, semester
@@ -236,6 +280,8 @@ class TestProjectApplicationNewFieldsLists:
             barrier="Длинный барьер больше пятидесяти символов для валидации",
             track_composer_comment="Комментарий для трека",
             recommended_teams_count=2,
+            min_team_members=2,
+            max_team_members=7,
         )
         ApplicationInvolvedDepartment.objects.create(
             application=app,
@@ -266,6 +312,8 @@ class TestProjectApplicationNewFieldsLists:
         assert item["track_composer_comment"] == "Комментарий для трека"
         assert item["has_track_composer_comment"] is True
         assert item["recommended_teams_count"] == 2
+        assert item["min_team_members"] == 2
+        assert item["max_team_members"] == 7
 
     def test_project_service_list_includes_is_continuing(
         self, make_user, statuses, institute

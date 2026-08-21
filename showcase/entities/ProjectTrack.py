@@ -70,10 +70,25 @@ class ProjectTrackAddApplicationItemSerializer(serializers.Serializer):
 
     id = serializers.IntegerField(min_value=1)
     teamsCount = serializers.IntegerField(min_value=1)
+    minTeamMembers = serializers.IntegerField(min_value=1)
+    maxTeamMembers = serializers.IntegerField(min_value=1)
+
+    def validate(self, attrs: dict[str, int]) -> dict[str, int]:
+        """Проверяет, что minTeamMembers не больше maxTeamMembers."""
+        if attrs["minTeamMembers"] > attrs["maxTeamMembers"]:
+            raise serializers.ValidationError(
+                {
+                    "minTeamMembers": (
+                        "Минимальное количество человек не может быть "
+                        "больше максимального."
+                    )
+                }
+            )
+        return attrs
 
 
 class ProjectTrackAddApplicationsSerializer(serializers.ListSerializer):
-    """Список заявок с рекомендуемым числом команд."""
+    """Список заявок с рекомендуемым числом команд и лимитами размера."""
 
     child = ProjectTrackAddApplicationItemSerializer()
 

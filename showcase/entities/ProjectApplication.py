@@ -206,6 +206,27 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     recommended_teams_count = serializers.IntegerField(
         required=False, default=3, min_value=1
     )
+    min_team_members = serializers.IntegerField(
+        required=False, default=1, min_value=1
+    )
+    max_team_members = serializers.IntegerField(
+        required=False, default=10, min_value=1
+    )
+
+    def validate(self, attrs: dict) -> dict:
+        """Проверяет, что min_team_members не больше max_team_members."""
+        min_members = attrs.get("min_team_members", 1)
+        max_members = attrs.get("max_team_members", 10)
+        if min_members > max_members:
+            raise serializers.ValidationError(
+                {
+                    "min_team_members": (
+                        "Минимальное количество человек не может быть "
+                        "больше максимального."
+                    )
+                }
+            )
+        return attrs
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""
@@ -257,6 +278,24 @@ class ProjectApplicationUpdateSerializer(serializers.Serializer):
     is_continuing = serializers.BooleanField(required=False)
     track_composer_comment = serializers.CharField(required=False, allow_blank=True)
     recommended_teams_count = serializers.IntegerField(required=False, min_value=1)
+    min_team_members = serializers.IntegerField(required=False, min_value=1)
+    max_team_members = serializers.IntegerField(required=False, min_value=1)
+
+    def validate(self, attrs: dict) -> dict:
+        """Проверяет согласованность min/max, если оба переданы."""
+        min_members = attrs.get("min_team_members")
+        max_members = attrs.get("max_team_members")
+        both_provided = min_members is not None and max_members is not None
+        if both_provided and min_members > max_members:
+            raise serializers.ValidationError(
+                {
+                    "min_team_members": (
+                        "Минимальное количество человек не может быть "
+                        "больше максимального."
+                    )
+                }
+            )
+        return attrs
 
     def create(self, validated_data):
         """Преобразование в DTO - никакой бизнес-логики"""

@@ -79,6 +79,10 @@ class ProjectTrackGroupItemDTO:
         self.id = group.id
         self.name = group.name
         self.course_number = group.course_number
+        self.students_count = int(getattr(group, "students_count", 0) or 0)
+        self.registered_students_count = int(
+            getattr(group, "registered_students_count", 0) or 0
+        )
 
     def to_dict(self) -> dict[str, Any]:
         """Преобразует DTO в словарь для API."""
@@ -86,6 +90,8 @@ class ProjectTrackGroupItemDTO:
             "id": self.id,
             "name": self.name,
             "course_number": self.course_number,
+            "students_count": self.students_count,
+            "registered_students_count": self.registered_students_count,
         }
 
 
@@ -97,6 +103,8 @@ class ProjectTrackApplicationItemDTO:
         self.title = application.title or ""
         self.print_number = application.print_number or ""
         self.teams_count = application.recommended_teams_count
+        self.min_team_members = application.min_team_members
+        self.max_team_members = application.max_team_members
 
     def to_dict(self) -> dict[str, Any]:
         """Преобразует DTO в словарь для API."""
@@ -105,6 +113,8 @@ class ProjectTrackApplicationItemDTO:
             "title": self.title,
             "print_number": self.print_number,
             "teamsCount": self.teams_count,
+            "minTeamMembers": self.min_team_members,
+            "maxTeamMembers": self.max_team_members,
         }
 
 
@@ -159,9 +169,17 @@ class ProjectTrackAddGroupsDTO:
 class ProjectTrackAddApplicationItemDTO:
     """Элемент добавления заявки в трек."""
 
-    def __init__(self, application_id: int, teams_count: int):
+    def __init__(
+        self,
+        application_id: int,
+        teams_count: int,
+        min_team_members: int,
+        max_team_members: int,
+    ):
         self.application_id = application_id
         self.teams_count = teams_count
+        self.min_team_members = min_team_members
+        self.max_team_members = max_team_members
 
 
 class ProjectTrackAddApplicationsDTO:
@@ -177,6 +195,8 @@ class ProjectTrackAddApplicationsDTO:
             ProjectTrackAddApplicationItemDTO(
                 application_id=int(item["id"]),
                 teams_count=int(item["teamsCount"]),
+                min_team_members=int(item["minTeamMembers"]),
+                max_team_members=int(item["maxTeamMembers"]),
             )
             for item in items
         ]
@@ -190,6 +210,14 @@ class ProjectTrackAddApplicationsDTO:
     def teams_count_by_application_id(self) -> dict[int, int]:
         """Карта id заявки → рекомендуемое число команд."""
         return {item.application_id: item.teams_count for item in self.items}
+
+    def min_team_members_by_application_id(self) -> dict[int, int]:
+        """Карта id заявки → минимум участников команды."""
+        return {item.application_id: item.min_team_members for item in self.items}
+
+    def max_team_members_by_application_id(self) -> dict[int, int]:
+        """Карта id заявки → максимум участников команды."""
+        return {item.application_id: item.max_team_members for item in self.items}
 
 
 class ProjectTrackGroupListDTO:
@@ -278,6 +306,8 @@ class ProjectTrackProjectListDTO:
         self.track_composer_comment = application.track_composer_comment or ""
         self.has_track_composer_comment = bool(self.track_composer_comment.strip())
         self.recommended_teams_count = application.recommended_teams_count
+        self.min_team_members = application.min_team_members
+        self.max_team_members = application.max_team_members
 
     def to_dict(self) -> dict[str, Any]:
         """Преобразует DTO в словарь для API."""
@@ -290,6 +320,8 @@ class ProjectTrackProjectListDTO:
             "track_composer_comment": self.track_composer_comment,
             "has_track_composer_comment": self.has_track_composer_comment,
             "recommended_teams_count": self.recommended_teams_count,
+            "min_team_members": self.min_team_members,
+            "max_team_members": self.max_team_members,
         }
 
 
@@ -329,6 +361,8 @@ class ProjectTrackProjectDetailDTO:
         self.track_composer_comment = application.track_composer_comment or ""
         self.has_track_composer_comment = bool(self.track_composer_comment.strip())
         self.recommended_teams_count = application.recommended_teams_count
+        self.min_team_members = application.min_team_members
+        self.max_team_members = application.max_team_members
         self.groups = [ProjectTrackProjectGroupDTO(group).to_dict() for group in groups]
 
     def to_dict(self) -> dict[str, Any]:
@@ -341,6 +375,8 @@ class ProjectTrackProjectDetailDTO:
             "track_composer_comment": self.track_composer_comment,
             "has_track_composer_comment": self.has_track_composer_comment,
             "recommended_teams_count": self.recommended_teams_count,
+            "min_team_members": self.min_team_members,
+            "max_team_members": self.max_team_members,
             "groups": self.groups,
         }
 

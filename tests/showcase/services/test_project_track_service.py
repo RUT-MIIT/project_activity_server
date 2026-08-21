@@ -188,10 +188,55 @@ class TestProjectTrackService:
         assert len(items[0]["applications"]) == 1
         assert items[0]["groups"][0]["id"] == track_data["own_group"].id
         assert items[0]["applications"][0]["id"] == track_data["own_app"].id
+        assert items[0]["groups"][0]["students_count"] == 0
+        assert items[0]["groups"][0]["registered_students_count"] == 0
+
+    def test_list_tracks_group_student_counts(
+        self, roles, make_user, semester, track_data
+    ):
+        from accounts.models import PreRegisteredStudent
+
+        group = track_data["own_group"]
+        PreRegisteredStudent.objects.create(
+            last_name="Иванов",
+            first_name="Иван",
+            student_card="25010001",
+            snils="11111111111",
+            personnel_number="100001",
+            group=group,
+        )
+        registered_user = make_user(role_code="student", email="st1@example.com")
+        PreRegisteredStudent.objects.create(
+            last_name="Петров",
+            first_name="Пётр",
+            student_card="25010002",
+            snils="22222222222",
+            personnel_number="100002",
+            group=group,
+            student=registered_user,
+        )
+
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        items = service.serialize_list(service.list_tracks(user, str(semester.id)))
+
+        group_data = items[0]["groups"][0]
+        assert group_data["students_count"] == 2
+        assert group_data["registered_students_count"] == 1
 
     def test_list_tracks_no_n_plus_one(
         self, roles, make_user, semester, track_data, django_assert_num_queries
     ):
+        from accounts.models import PreRegisteredStudent
+
+        PreRegisteredStudent.objects.create(
+            last_name="Иванов",
+            first_name="Иван",
+            student_card="25010001",
+            snils="11111111111",
+            personnel_number="100001",
+            group=track_data["own_group"],
+        )
         user = make_user(role_code="admin")
         service = ProjectTrackService()
         tracks = list(service.list_tracks(user, str(semester.id)))
@@ -200,6 +245,8 @@ class TestProjectTrackService:
             items = service.serialize_list(tracks)
 
         assert len(items[0]["groups"]) == 1
+        assert items[0]["groups"][0]["students_count"] == 1
+        assert items[0]["groups"][0]["registered_students_count"] == 0
         assert len(items[0]["applications"]) == 1
 
     def test_list_tracks_filter_by_institute(
@@ -272,6 +319,8 @@ class TestProjectTrackService:
                 ProjectTrackAddApplicationItemDTO(
                     application_id=app.id,
                     teams_count=5,
+                    min_team_members=3,
+                    max_team_members=8,
                 )
             ]
         )
@@ -279,6 +328,8 @@ class TestProjectTrackService:
         assert len(result["applications"]) == 2
         app.refresh_from_db()
         assert app.recommended_teams_count == 5
+        assert app.min_team_members == 3
+        assert app.max_team_members == 8
 
     def test_add_applications_rejects_non_approved(
         self, roles, make_user, semester, statuses, institute, track_data
@@ -303,6 +354,8 @@ class TestProjectTrackService:
                 ProjectTrackAddApplicationItemDTO(
                     application_id=app.id,
                     teams_count=3,
+                    min_team_members=1,
+                    max_team_members=10,
                 )
             ]
         )

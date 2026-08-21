@@ -286,6 +286,8 @@ class ProjectTrackService:
 
         application_ids = dto.application_ids
         teams_by_id = dto.teams_count_by_application_id()
+        min_members_by_id = dto.min_team_members_by_application_id()
+        max_members_by_id = dto.max_team_members_by_application_id()
 
         applications = list(self.repository.get_applications_by_ids(application_ids))
         found_ids = {app.pk for app in applications}
@@ -302,6 +304,8 @@ class ProjectTrackService:
 
         for application in applications:
             application.recommended_teams_count = teams_by_id[application.pk]
+            application.min_team_members = min_members_by_id[application.pk]
+            application.max_team_members = max_members_by_id[application.pk]
         self.repository.update_recommended_teams_counts(applications)
 
         existing_ids = self.repository.get_existing_application_ids(

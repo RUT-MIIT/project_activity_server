@@ -104,6 +104,8 @@ class ProjectApplicationRepository:
             is_continuing=dto.is_continuing,
             track_composer_comment=dto.track_composer_comment,
             recommended_teams_count=dto.recommended_teams_count,
+            min_team_members=dto.min_team_members,
+            max_team_members=dto.max_team_members,
         )
 
         # Устанавливаем M2M поля

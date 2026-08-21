@@ -101,6 +101,8 @@ class ProjectApplicationCreateDTO:
         is_continuing: Optional[bool] = None,
         track_composer_comment: Optional[str] = None,
         recommended_teams_count: int = 3,
+        min_team_members: int = 1,
+        max_team_members: int = 10,
         **kwargs,
     ):
         self.title = title or ""
@@ -137,6 +139,8 @@ class ProjectApplicationCreateDTO:
         self.is_continuing = is_continuing if is_continuing is not None else False
         self.track_composer_comment = track_composer_comment or ""
         self.recommended_teams_count = recommended_teams_count
+        self.min_team_members = min_team_members
+        self.max_team_members = max_team_members
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationCreateDTO":
@@ -176,6 +180,8 @@ class ProjectApplicationCreateDTO:
             "is_continuing": self.is_continuing,
             "track_composer_comment": self.track_composer_comment,
             "recommended_teams_count": self.recommended_teams_count,
+            "min_team_members": self.min_team_members,
+            "max_team_members": self.max_team_members,
         }
 
 
@@ -213,6 +219,8 @@ class ProjectApplicationUpdateDTO:
         is_continuing: Optional[bool] = None,
         track_composer_comment: Optional[str] = None,
         recommended_teams_count: Optional[int] = None,
+        min_team_members: Optional[int] = None,
+        max_team_members: Optional[int] = None,
         **kwargs,
     ):
         self.title = title
@@ -244,6 +252,8 @@ class ProjectApplicationUpdateDTO:
         self.is_continuing = is_continuing
         self.track_composer_comment = track_composer_comment
         self.recommended_teams_count = recommended_teams_count
+        self.min_team_members = min_team_members
+        self.max_team_members = max_team_members
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> "ProjectApplicationUpdateDTO":
@@ -274,6 +284,8 @@ class ProjectApplicationReadDTO:
         self.is_continuing = application.is_continuing
         self.track_composer_comment = application.track_composer_comment
         self.recommended_teams_count = application.recommended_teams_count
+        self.min_team_members = application.min_team_members
+        self.max_team_members = application.max_team_members
 
         # Нумерация заявок
         self.application_year = application.application_year
@@ -448,6 +460,8 @@ class ProjectApplicationReadDTO:
             "is_continuing": self.is_continuing,
             "track_composer_comment": self.track_composer_comment,
             "recommended_teams_count": self.recommended_teams_count,
+            "min_team_members": self.min_team_members,
+            "max_team_members": self.max_team_members,
             "application_year": self.application_year,
             "year_sequence_number": self.year_sequence_number,
             "print_number": self.print_number,
@@ -499,6 +513,8 @@ class ProjectApplicationListDTO:
         self.is_continuing = application.is_continuing
         self.track_composer_comment = application.track_composer_comment or ""
         self.recommended_teams_count = application.recommended_teams_count
+        self.min_team_members = application.min_team_members
+        self.max_team_members = application.max_team_members
         self.semester = (
             {"id": application.semester.id, "name": application.semester.name}
             if application.semester
@@ -551,6 +567,8 @@ class ProjectApplicationListDTO:
             "is_continuing": self.is_continuing,
             "track_composer_comment": self.track_composer_comment,
             "recommended_teams_count": self.recommended_teams_count,
+            "min_team_members": self.min_team_members,
+            "max_team_members": self.max_team_members,
             "semester": self.semester,
             "semester_id": self.semester_id,
             "application_year": self.application_year,

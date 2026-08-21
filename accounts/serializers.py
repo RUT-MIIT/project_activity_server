@@ -11,7 +11,15 @@ from rest_framework import serializers
 
 from showcase.models import Institute
 
-from .models import AcademicYear, Department, RegistrationRequest, Role, Semester, User
+from .models import (
+    AcademicYear,
+    Department,
+    PreRegisteredStudent,
+    RegistrationRequest,
+    Role,
+    Semester,
+    User,
+)
 
 
 class DepartmentSerializer(serializers.ModelSerializer):
@@ -81,6 +89,10 @@ class SemesterSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     department = DepartmentSerializer(read_only=True)
     institute_code = serializers.SerializerMethodField()
+    study_group = serializers.SerializerMethodField()
+    student_card = serializers.SerializerMethodField()
+    personnel_number = serializers.SerializerMethodField()
+    snils = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -94,26 +106,106 @@ class UserSerializer(serializers.ModelSerializer):
             "phone",
             "department",
             "institute_code",
+            "study_group",
+            "student_card",
+            "personnel_number",
+            "snils",
         )
+
+    @staticmethod
+    def _is_student(obj: User) -> bool:
+        """Проверяет, что у пользователя роль student."""
+        role = getattr(obj, "role", None)
+        return bool(role and role.code == "student")
+
+    @staticmethod
+    def _get_pre_registration(obj: User) -> PreRegisteredStudent | None:
+        """Возвращает предрегистрацию пользователя, если она есть."""
+        cache = getattr(obj, "_prefetched_objects_cache", None)
+        if cache is not None and "pre_registration" in cache:
+            items = cache["pre_registration"]
+            return items[0] if items else None
+        return obj.pre_registration.first()
 
     def get_institute_code(self, obj: User) -> str | None:
-        """Возвращает код института, сопоставленного с подразделением пользователя.
+        """Возвращает код института пользователя.
 
-        Если у пользователя нет подразделения или нет подходящего института,
-        возвращает None.
+        Приоритет: институт подразделения, затем институт учебной группы.
         """
         department = getattr(obj, "department", None)
-        if not department:
+        if department:
+            institute = (
+                Institute.objects.filter(department=department, is_active=True)
+                .order_by("position")
+                .only("code")
+                .first()
+            )
+            if institute:
+                return institute.code
+
+        study_group = getattr(obj, "study_group", None)
+        if study_group is not None and study_group.institute_id:
+            return study_group.institute.code
+        return None
+
+    def get_study_group(self, obj: User) -> dict[str, Any] | None:
+        """Возвращает учебную группу пользователя или None."""
+        group = getattr(obj, "study_group", None)
+        if group is None:
             return None
 
-        # Ищем первый активный институт, связанный с этим подразделением.
-        institute = (
-            Institute.objects.filter(department=department, is_active=True)
-            .order_by("position")
-            .only("code")
-            .first()
-        )
-        return institute.code if institute else None
+        direction = getattr(group, "direction", None)
+        institute = getattr(group, "institute", None)
+        return {
+            "id": group.id,
+            "name": group.name,
+            "code": group.code,
+            "enrollment_year": group.enrollment_year,
+            "course_number": group.course_number,
+            "is_end": group.is_end,
+            "profile": group.profile,
+            "form": group.form,
+            "direction": (
+                {
+                    "code": direction.code,
+                    "level": direction.level,
+                    "name": direction.name,
+                }
+                if direction is not None
+                else None
+            ),
+            "institute": (
+                {
+                    "code": institute.code,
+                    "name": institute.name,
+                }
+                if institute is not None
+                else None
+            ),
+        }
+
+    def get_student_card(self, obj: User) -> str | None:
+        """Возвращает номер студенческого билета для роли student."""
+        if not self._is_student(obj):
+            return None
+        pre_registered = self._get_pre_registration(obj)
+        return pre_registered.student_card if pre_registered else None
+
+    def get_personnel_number(self, obj: User) -> str | None:
+        """Возвращает табельный номер для роли student."""
+        if not self._is_student(obj):
+            return None
+        pre_registered = self._get_pre_registration(obj)
+        return pre_registered.personnel_number if pre_registered else None
+
+    def get_snils(self, obj: User) -> str | None:
+        """Возвращает СНИЛС для роли student."""
+        if not self._is_student(obj):
+            return None
+        pre_registered = self._get_pre_registration(obj)
+        if pre_registered is None:
+            return None
+        return pre_registered.snils or None
 
 
 class UserUpdateSerializer(serializers.Serializer):

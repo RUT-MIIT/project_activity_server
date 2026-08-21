@@ -745,6 +745,8 @@ class TestProjectApplicationListDTO:
             is_continuing=True,
             track_composer_comment="Комментарий для трека",
             recommended_teams_count=3,
+            min_team_members=2,
+            max_team_members=5,
         )
 
         result = ProjectApplicationListDTO(app).to_dict()
@@ -752,6 +754,8 @@ class TestProjectApplicationListDTO:
         assert result["is_continuing"] is True
         assert result["track_composer_comment"] == "Комментарий для трека"
         assert result["recommended_teams_count"] == 3
+        assert result["min_team_members"] == 2
+        assert result["max_team_members"] == 5
 
     def test_read_dto_is_internal_customer(self, statuses, make_user):
         """is_internal_customer включается в ProjectApplicationReadDTO."""

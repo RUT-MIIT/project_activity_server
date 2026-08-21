@@ -160,6 +160,8 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
                     "is_continuing",
                     "track_composer_comment",
                     "recommended_teams_count",
+                    "min_team_members",
+                    "max_team_members",
                     "company_contacts",
                     "target_institutes",
                     "tags",

@@ -44,6 +44,7 @@ class StudyGroupListSerializer(serializers.ModelSerializer):
     """Компактная выдача для списка учебных групп."""
 
     direction_code = serializers.CharField(source="direction.code", read_only=True)
+    students_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = StudyGroup
@@ -52,6 +53,7 @@ class StudyGroupListSerializer(serializers.ModelSerializer):
             "name",
             "course_number",
             "direction_code",
+            "students_count",
         ]
 
 
