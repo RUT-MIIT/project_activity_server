@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
+from showcase.constants import DEFAULT_MAX_TEAM_MEMBERS, DEFAULT_MIN_TEAM_MEMBERS
 from showcase.models import ProjectTrack
 
 
@@ -16,11 +17,15 @@ class ProjectTrackCreateDTO:
         department_id: int,
         semester_id: int,
         description: str = "",
+        min_team_members: int = DEFAULT_MIN_TEAM_MEMBERS,
+        max_team_members: int = DEFAULT_MAX_TEAM_MEMBERS,
     ):
         self.name = name
         self.description = description
         self.department_id = department_id
         self.semester_id = semester_id
+        self.min_team_members = min_team_members
+        self.max_team_members = max_team_members
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ProjectTrackCreateDTO:
@@ -30,6 +35,8 @@ class ProjectTrackCreateDTO:
             department_id=data["department_id"],
             semester_id=data["semester_id"],
             description=data.get("description", ""),
+            min_team_members=data.get("minTeamMembers", DEFAULT_MIN_TEAM_MEMBERS),
+            max_team_members=data.get("maxTeamMembers", DEFAULT_MAX_TEAM_MEMBERS),
         )
 
 
@@ -42,11 +49,15 @@ class ProjectTrackUpdateDTO:
         description: str | None = None,
         department_id: int | None = None,
         semester_id: int | None = None,
+        min_team_members: int | None = None,
+        max_team_members: int | None = None,
     ):
         self.name = name
         self.description = description
         self.department_id = department_id
         self.semester_id = semester_id
+        self.min_team_members = min_team_members
+        self.max_team_members = max_team_members
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> ProjectTrackUpdateDTO:
@@ -56,10 +67,12 @@ class ProjectTrackUpdateDTO:
             description=data.get("description"),
             department_id=data.get("department_id"),
             semester_id=data.get("semester_id"),
+            min_team_members=data.get("minTeamMembers"),
+            max_team_members=data.get("maxTeamMembers"),
         )
 
     def to_update_dict(self) -> dict[str, Any]:
-        """Возвращает только переданные поля для обновления."""
+        """Возвращает только переданные поля трека для обновления."""
         result: dict[str, Any] = {}
         if self.name is not None:
             result["name"] = self.name
@@ -69,7 +82,15 @@ class ProjectTrackUpdateDTO:
             result["department_id"] = self.department_id
         if self.semester_id is not None:
             result["semester_id"] = self.semester_id
+        if self.min_team_members is not None:
+            result["min_team_members"] = self.min_team_members
+        if self.max_team_members is not None:
+            result["max_team_members"] = self.max_team_members
         return result
+
+    def has_team_member_updates(self) -> bool:
+        """True, если переданы лимиты размера команды для заявок трека."""
+        return self.min_team_members is not None or self.max_team_members is not None
 
 
 class ProjectTrackGroupItemDTO:
@@ -128,6 +149,9 @@ class ProjectTrackReadDTO:
         self.department_id = track.department_id
         self.semester_id = track.semester_id
         self.author_id = track.author_id
+        self.min_team_members = track.min_team_members
+        self.max_team_members = track.max_team_members
+        self.recommended_teams_count = track.recommended_teams_count
         self.groups: list[dict[str, Any]] = []
         self.applications: list[dict[str, Any]] = []
 
@@ -149,6 +173,9 @@ class ProjectTrackReadDTO:
             "department_id": self.department_id,
             "semester_id": self.semester_id,
             "author_id": self.author_id,
+            "minTeamMembers": self.min_team_members,
+            "maxTeamMembers": self.max_team_members,
+            "recommendedTeamsCount": self.recommended_teams_count,
             "groups": self.groups,
             "applications": self.applications,
         }

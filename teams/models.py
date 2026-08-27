@@ -77,6 +77,15 @@ class StudyGroup(models.Model):
         default="",
         verbose_name="Форма обучения",
     )
+    mentor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="mentored_study_groups",
+        verbose_name="Наставник",
+        limit_choices_to={"role__code": "mentor"},
+    )
 
     class Meta:
         verbose_name = "Учебная группа"
@@ -90,23 +99,17 @@ class StudyGroup(models.Model):
 
 
 class Team(models.Model):
-    """Команда участников проектной деятельности."""
+    """Постоянная команда участников проектной деятельности."""
 
     name = models.CharField(max_length=255, verbose_name="Название")
     description = models.TextField(blank=True, default="", verbose_name="Описание")
-    leader = models.ForeignKey(
-        settings.AUTH_USER_MODEL,
-        on_delete=models.PROTECT,
-        related_name="led_teams",
-        verbose_name="Руководитель",
-    )
-    project_application = models.ForeignKey(
-        "showcase.ProjectApplication",
+    home_study_group = models.ForeignKey(
+        StudyGroup,
         on_delete=models.SET_NULL,
         null=True,
         blank=True,
-        related_name="teams",
-        verbose_name="Проектная заявка",
+        related_name="home_teams",
+        verbose_name="Домашняя учебная группа",
     )
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
@@ -120,24 +123,115 @@ class Team(models.Model):
         return self.name
 
 
-class TeamMember(models.Model):
-    """Участник команды."""
+class TeamSemester(models.Model):
+    """Участие команды в конкретном семестре: проект, наставник, капитан."""
+
+    class Status(models.TextChoices):
+        FORMING = "forming", "Формирование"
+        ASSEMBLED = "assembled", "Состав подтверждён"
+
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="semester_enrollments",
+        verbose_name="Команда",
+    )
+    semester = models.ForeignKey(
+        "accounts.Semester",
+        on_delete=models.PROTECT,
+        related_name="team_semesters",
+        verbose_name="Семестр",
+    )
+    project_track = models.ForeignKey(
+        "showcase.ProjectTrack",
+        on_delete=models.PROTECT,
+        null=True,
+        blank=True,
+        related_name="team_semesters",
+        verbose_name="Проектный трек",
+    )
+    project_application = models.ForeignKey(
+        "showcase.ProjectApplication",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="team_semesters",
+        verbose_name="Проектная заявка",
+    )
+    mentor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="mentored_team_semesters",
+        verbose_name="Наставник",
+        limit_choices_to={"role__code": "mentor"},
+    )
+    captain = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="captained_team_semesters",
+        verbose_name="Капитан",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.FORMING,
+        db_index=True,
+        verbose_name="Статус состава",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
+
+    class Meta:
+        verbose_name = "Команда в семестре"
+        verbose_name_plural = "Команды в семестрах"
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["team", "semester"],
+                name="unique_team_semester",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["project_track", "status"],
+                name="team_sem_track_status_idx",
+            ),
+            models.Index(
+                fields=["semester", "project_track"],
+                name="team_sem_semester_track_idx",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.team} — {self.semester}"
+
+
+class TeamSemesterMember(models.Model):
+    """Участник команды в конкретном семестре."""
 
     class Role(models.TextChoices):
         LEADER = "leader", "Руководитель"
         MEMBER = "member", "Участник"
 
-    team = models.ForeignKey(
-        Team,
+    team_semester = models.ForeignKey(
+        TeamSemester,
         on_delete=models.CASCADE,
         related_name="members",
-        verbose_name="Команда",
+        verbose_name="Команда в семестре",
     )
     user = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         on_delete=models.CASCADE,
-        related_name="team_memberships",
+        related_name="team_semester_memberships",
         verbose_name="Пользователь",
+    )
+    semester = models.ForeignKey(
+        "accounts.Semester",
+        on_delete=models.PROTECT,
+        related_name="team_semester_memberships",
+        verbose_name="Семестр",
     )
     role = models.CharField(
         max_length=16,
@@ -148,15 +242,211 @@ class TeamMember(models.Model):
     joined_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата вступления")
 
     class Meta:
-        verbose_name = "Участник команды"
-        verbose_name_plural = "Участники команд"
+        verbose_name = "Участник команды в семестре"
+        verbose_name_plural = "Участники команд в семестрах"
         ordering = ("role", "joined_at")
         constraints = [
             models.UniqueConstraint(
-                fields=["team", "user"],
-                name="unique_team_member",
+                fields=["team_semester", "user"],
+                name="unique_team_semester_member",
+            ),
+            models.UniqueConstraint(
+                fields=["user", "semester"],
+                name="unique_user_semester_team",
+            ),
+        ]
+
+    def save(self, *args, **kwargs) -> None:
+        if self.team_semester_id:
+            self.semester_id = self.team_semester.semester_id
+        super().save(*args, **kwargs)
+
+    def __str__(self) -> str:
+        return f"{self.user} — {self.team_semester} ({self.role})"
+
+
+class TeamJoinRequest(models.Model):
+    """Заявка студента на вступление в команду в семестре."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Ожидает"
+        APPROVED = "approved", "Одобрена"
+        REJECTED = "rejected", "Отклонена"
+        OBSOLETE = "obsolete", "Не актуальна"
+
+    team_semester = models.ForeignKey(
+        TeamSemester,
+        on_delete=models.CASCADE,
+        related_name="join_requests",
+        verbose_name="Команда в семестре",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="team_join_requests",
+        verbose_name="Заявитель",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+        verbose_name="Статус",
+    )
+    reviewed_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="reviewed_team_join_requests",
+        verbose_name="Рассмотрел",
+    )
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Дата рассмотрения",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+
+    class Meta:
+        verbose_name = "Заявка на вступление в команду"
+        verbose_name_plural = "Заявки на вступление в команду"
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["team_semester", "user"],
+                condition=models.Q(status="pending"),
+                name="unique_pending_team_join_request",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["team_semester", "status"],
+                name="join_req_ts_status_idx",
+            ),
+            models.Index(
+                fields=["user", "status"],
+                name="join_req_user_status_idx",
             ),
         ]
 
     def __str__(self) -> str:
-        return f"{self.user} — {self.team} ({self.role})"
+        return f"{self.user} → {self.team_semester} ({self.status})"
+
+
+class TeamInvitation(models.Model):
+    """Приглашение капитана студенту вступить в команду."""
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Ожидает"
+        ACCEPTED = "accepted", "Принято"
+        REJECTED = "rejected", "Отклонено"
+        OBSOLETE = "obsolete", "Не актуально"
+
+    team_semester = models.ForeignKey(
+        TeamSemester,
+        on_delete=models.CASCADE,
+        related_name="invitations",
+        verbose_name="Команда в семестре",
+    )
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="team_invitations",
+        verbose_name="Приглашённый",
+    )
+    invited_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="sent_team_invitations",
+        verbose_name="Кто пригласил",
+    )
+    role = models.CharField(
+        max_length=16,
+        choices=TeamSemesterMember.Role.choices,
+        default=TeamSemesterMember.Role.MEMBER,
+        verbose_name="Роль при вступлении",
+    )
+    status = models.CharField(
+        max_length=16,
+        choices=Status.choices,
+        default=Status.PENDING,
+        db_index=True,
+        verbose_name="Статус",
+    )
+    reviewed_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Дата ответа",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+
+    class Meta:
+        verbose_name = "Приглашение в команду"
+        verbose_name_plural = "Приглашения в команду"
+        ordering = ("-created_at",)
+        constraints = [
+            models.UniqueConstraint(
+                fields=["team_semester", "user"],
+                condition=models.Q(status="pending"),
+                name="unique_pending_team_invitation",
+            ),
+        ]
+        indexes = [
+            models.Index(
+                fields=["team_semester", "status"],
+                name="invite_ts_status_idx",
+            ),
+            models.Index(
+                fields=["user", "status"],
+                name="invite_user_status_idx",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.invited_by} → {self.user} ({self.status})"
+
+
+class TeamEventLog(models.Model):
+    """Лог действий по команде."""
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="team_event_logs",
+        db_index=True,
+        verbose_name="Пользователь",
+    )
+    team = models.ForeignKey(
+        Team,
+        on_delete=models.CASCADE,
+        related_name="event_logs",
+        db_index=True,
+        verbose_name="Команда",
+    )
+    team_semester = models.ForeignKey(
+        TeamSemester,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="event_logs",
+        verbose_name="Команда в семестре",
+    )
+    text = models.TextField(verbose_name="Текст действия")
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата")
+
+    class Meta:
+        verbose_name = "Событие команды"
+        verbose_name_plural = "События команд"
+        ordering = ("-created_at",)
+        indexes = [
+            models.Index(
+                fields=["team_semester", "created_at"],
+                name="event_log_ts_created_idx",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.team}: {self.text[:50]}"

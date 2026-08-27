@@ -1,4 +1,5 @@
 from rest_framework import serializers, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.request import Request
 from rest_framework.response import Response
@@ -104,3 +105,20 @@ class StudyGroupViewSet(viewsets.ReadOnlyModelViewSet):
             return Response(dto.to_dict())
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+
+    @action(detail=False, methods=["get"], url_path="my")
+    def my_study_group(self, request: Request) -> Response:
+        """GET /api/teams/study-groups/my/ — группа текущего студента."""
+        service = StudyGroupService()
+        try:
+            data = service.get_my_study_group(
+                request.user,
+                semester_id_raw=request.query_params.get("semester_id"),
+            )
+        except PermissionError as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except LookupError as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(data)

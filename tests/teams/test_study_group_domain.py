@@ -89,3 +89,25 @@ class TestStudyGroupGetFilteredQueryset:
         queryset = StudyGroup.objects.all()
         filtered = StudyGroupDomain.get_filtered_queryset(None, queryset)
         assert filtered.count() == 0
+
+
+@pytest.mark.django_db
+class TestStudyGroupMyGroupAccess:
+    def test_student_with_group_can_access(self, roles, make_user, study_groups):
+        user = make_user(role_code="student")
+        user.study_group = study_groups["own"]
+        user.save(update_fields=["study_group"])
+        assert StudyGroupDomain.is_student(user) is True
+        assert StudyGroupDomain.can_access_my_group(user) is True
+
+    def test_student_without_group_cannot_access(self, roles, make_user):
+        user = make_user(role_code="student")
+        assert StudyGroupDomain.is_student(user) is True
+        assert StudyGroupDomain.can_access_my_group(user) is False
+
+    def test_admin_cannot_access_my_group(self, roles, make_user, study_groups):
+        user = make_user(role_code="admin")
+        user.study_group = study_groups["own"]
+        user.save(update_fields=["study_group"])
+        assert StudyGroupDomain.is_student(user) is False
+        assert StudyGroupDomain.can_access_my_group(user) is False

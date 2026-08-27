@@ -144,8 +144,8 @@ class TestProjectApplicationNewFieldsCreateUpdate:
 
         assert response.status_code == 201
         assert response.data["recommended_teams_count"] == 3
-        assert response.data["min_team_members"] == 1
-        assert response.data["max_team_members"] == 10
+        assert response.data["min_team_members"] == 4
+        assert response.data["max_team_members"] == 7
 
     def test_patch_track_composer_comment(self, statuses, make_user):
         author = make_user(role_code="user", with_department=True)
@@ -254,8 +254,8 @@ class TestProjectApplicationNewFieldsLists:
         assert item["track_composer_comment"] == "Комментарий для трека"
         assert item["has_track_composer_comment"] is True
         assert item["recommended_teams_count"] == 3
-        assert item["min_team_members"] == 1
-        assert item["max_team_members"] == 10
+        assert item["min_team_members"] == 4
+        assert item["max_team_members"] == 7
 
     def test_track_projects_list_returns_comment_fields(
         self, roles, make_user, statuses, institute, direction, departments, semester

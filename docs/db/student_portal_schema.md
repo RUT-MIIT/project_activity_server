@@ -1,10 +1,10 @@
 # Схема БД: студенческий портал
 
-Документ описывает **изменения и новые сущности базы данных** для студенческого функционала (5 разделов UI).  
+Документ описывает **изменения и новые сущности базы данных** для студенческого функционала (5 разделов UI).
 API-эндпоинты, сервисы и DTO в этот документ не входят — только данные и бизнес-правила, влияющие на схему.
 
-**Дата:** 2026-08-21  
-**Статус:** проект (до реализации миграций)
+**Дата:** 2026-08-25
+**Статус:** частично реализовано (`User` поля наставника, `StudyGroup.mentor`, `GET /api/teams/study-groups/my/`, лобби/`my-team` workflow `teams.0013`)
 
 ---
 
@@ -22,8 +22,8 @@ API-эндпоинты, сервисы и DTO в этот документ не 
 
 ### Решения, зафиксированные на этапе проектирования
 
-- **Наставник:** один на учебную группу — `StudyGroup.mentor` (FK → `User`).
-- **Лимиты размера команды:** берутся из проектов трека (`ProjectApplication.min_team_members` / `max_team_members`); на этапе формирования — вычисляемые `effective_min` / `effective_max` (см. §5).
+- **Наставник:** тот же `User` с ролью `mentor`, без отдельной сущности. Привязка к группе — `StudyGroup.mentor` (FK → `User`). Должность / степень / звание — поля на `User`.
+- **Лимиты размера команды:** хранятся на `ProjectTrack` и на `ProjectApplication` (`min_team_members` / `max_team_members`); на этапе формирования — также вычисляемые `effective_min` / `effective_max` из проектов трека (см. §5).
 
 ### Out of scope (эта итерация)
 
@@ -55,13 +55,13 @@ erDiagram
 
 | Модель | Файл | Назначение |
 |--------|------|------------|
-| `User` | `accounts/models.py` | Студент: `study_group`; роль `student` / `mentor` |
+| `User` | `accounts/models.py` | Студент: `study_group`; наставник = тот же `User` с ролью `mentor` |
 | `PreRegisteredStudent` | `accounts/models.py` | Контингент, FK `group` → `StudyGroup` |
 | `Direction` | `teams/models.py` | Направление подготовки |
-| `StudyGroup` | `teams/models.py` | Учебная группа (name, code, direction, institute, …) |
+| `StudyGroup` | `teams/models.py` | Учебная группа (name, code, direction, institute, mentor, …) |
 | `Team` | `teams/models.py` | Команда: name, leader, `project_application` (nullable) |
 | `TeamMember` | `teams/models.py` | Участник: role `leader`/`member`, unique `(team, user)` |
-| `ProjectTrack` | `showcase/models.py` | Трек: name, department, semester, author |
+| `ProjectTrack` | `showcase/models.py` | Трек: name, department, semester, author, `min_team_members`, `max_team_members` |
 | `ProjectTrackGroup` | `showcase/models.py` | Трек ↔ учебная группа |
 | `ProjectTrackApplication` | `showcase/models.py` | Трек ↔ заявка/проект |
 | `ProjectApplication` | `showcase/models.py` | Заявка/проект; `min_team_members`, `max_team_members`, `recommended_teams_count`, `company_contacts` |
@@ -72,12 +72,12 @@ erDiagram
 
 | Пробел | Влияние на UI |
 |--------|---------------|
-| Нет `StudyGroup.mentor` | Разделы 1–2: неоткуда взять наставника группы |
-| Нет профиля наставника (должность, степень) | Раздел 1: нет данных для карточки наставника |
-| `Team` не привязана к `ProjectTrack` | Раздел 3: нельзя считать «команды трека» и лимит |
-| Нет `Team.status` | Раздел 4: нет workflow формирования → утверждения |
-| Нет заявок на вступление | Раздел 3–4: нет «вступить» → approve/reject |
-| Нет лога событий команды | Раздел 4: нет истории |
+| ~~Нет `StudyGroup.mentor`~~ **сделано** (`0009_studygroup_mentor`) | Разделы 1–2: наставник группы |
+| ~~У `User` нет должности / степени / звания~~ **сделано** (`0020_user_mentor_fields`) | Раздел 1: карточка наставника |
+| `Team` не привязана к `ProjectTrack` | ~~Раздел 3~~ **частично:** `TeamSemester.project_track` (0013) |
+| Нет `Team.status` | ~~Раздел 4~~ **частично:** `TeamSemester.status` forming/assembled |
+| Нет заявок на вступление | ~~Раздел 3–4~~ **сделано:** `TeamJoinRequest` + `TeamInvitation` |
+| Нет лога событий команды | ~~Раздел 4~~ **сделано:** `TeamEventLog` |
 | `ProjectTrack.max_teams` удалён (миграция `0034`) | Раздел 3: нет максимального числа команд |
 | Нет дат регистрации на проекты | Раздел 5: нет таймера |
 | Нет периода формирования команд | Раздел 3: нет окон по времени |
@@ -91,7 +91,6 @@ erDiagram
 ```mermaid
 erDiagram
     StudyGroup ||--o| User : mentor
-    User ||--o| MentorProfile : mentor_profile
     User ||--o| StudyGroup : study_group
     ProjectTrack ||--o{ ProjectTrackGroup : group_links
     ProjectTrackGroup }o--|| StudyGroup : study_group
@@ -109,24 +108,26 @@ erDiagram
 
 ---
 
-### 3.2. `MentorProfile` (новая, `accounts`)
+### 3.2. Изменения `User` (`accounts`) — данные наставника
 
-Профиль наставника: должность, учёная степень и звание.  
-Связь OneToOne с `User` (роль `mentor` проверяется на уровне сервиса).
+**Реализовано:** миграция `accounts/migrations/0020_user_mentor_fields.py`.
+
+Отдельной сущности «наставник» **нет**: наставник — это `User` с `role.code == "mentor"`.
+Для карточки наставника на главной / в «Моей группе» добавляются опциональные поля на `User` (используются в основном для роли mentor; у студентов могут оставаться пустыми).
 
 | Поле | Тип | Null | Default | Описание |
 |------|-----|------|---------|----------|
-| `id` | BigAutoField | PK | — | |
-| `user` | OneToOneField → `User` | нет | — | `related_name="mentor_profile"`, `on_delete=CASCADE` |
 | `position` | CharField(255) | нет | `""` | Должность |
 | `academic_degree` | CharField(255) | нет | `""` | Учёная степень (к.т.н., д.э.н., …) |
 | `academic_title` | CharField(255) | нет | `""` | Учёное звание (доцент, профессор, …) |
 
-**Meta:** `verbose_name = "Профиль наставника"`.
+ФИО и email уже есть: `last_name`, `first_name`, `middle_name`, `email`.
 
 ---
 
 ### 3.3. Изменения `StudyGroup` (`teams`)
+
+**Реализовано:** миграция `teams/migrations/0009_studygroup_mentor.py`. Эндпоинт студента: `GET /api/teams/study-groups/my/`.
 
 | Поле | Тип | Null | Описание |
 |------|-----|------|----------|
@@ -151,8 +152,13 @@ erDiagram
 | `team_formation_end` | DateTimeField | да | `null` | Конец окна формирования команд |
 | `project_registration_start` | DateTimeField | да | `null` | Начало регистрации команд на проекты (таймер витрины) |
 | `project_registration_end` | DateTimeField | да | `null` | Конец регистрации на проекты |
+| `min_team_members` | PositiveIntegerField | нет | `1` | Мин. размер команды (миграция `0036`; API: `minTeamMembers`) |
+| `max_team_members` | PositiveIntegerField | нет | `10` | Макс. размер команды (миграция `0036`; API: `maxTeamMembers`) |
+| `recommended_teams_count` | PositiveIntegerField | нет | `0` | Сумма `recommended_teams_count` заявок трека (миграция `0037`; API: `recommendedTeamsCount`). Пересчёт при add/remove applications и PATCH заявки |
 
-**Validators:** `max_teams >= 1` (`MinValueValidator(1)`).
+**Validators:** `max_teams >= 1`, `min_team_members >= 1`, `max_team_members >= 1` (`MinValueValidator(1)`).
+
+**Лимиты размера команды:** хранятся на треке и при PATCH трека дублируются на все связанные заявки (`ProjectApplication.min_team_members` / `max_team_members`). В GET list/retrieve отдаются как `minTeamMembers` / `maxTeamMembers`.
 
 **Правила дат (сервисный слой):**
 
@@ -162,141 +168,108 @@ erDiagram
 
 ---
 
-### 3.5. Изменения `Team` (`teams`)
+### 3.5. Изменения `Team` и семестровый контекст (`teams`)
 
-| Поле | Тип | Null | Default | Описание |
-|------|-----|------|---------|----------|
-| `project_track` | FK → `ProjectTrack` | нет\* | — | Трек, в котором создана команда; `related_name="teams"`, `on_delete=PROTECT` |
-| `home_study_group` | FK → `StudyGroup` | нет\* | — | Группа капитана на момент создания; `related_name="home_teams"`, `on_delete=PROTECT` |
-| `status` | CharField(32) | нет | `"forming"` | Статус команды (см. §4) |
-| `approved_by` | FK → `User` | да | `null` | Наставник, утвердивший состав; `on_delete=SET_NULL` |
-| `approved_at` | DateTimeField | да | `null` | Момент утверждения состава |
-| `project_registered_at` | DateTimeField | да | `null` | Когда капитан записал команду на проект |
-| `project_registered_by` | FK → `User` | да | `null` | Кто записал на проект; `on_delete=SET_NULL` |
+**Реализовано:** миграции `0010_team_semester_models`, `0011_migrate_team_data`, `0012_remove_legacy_team_fields`.
 
-\* В миграции: сначала nullable + data migration, затем `AlterField` на NOT NULL (см. §7).
+`Team` — постоянная сущность (название, описание, домашняя группа). Семестровые данные вынесены:
 
-**Существующие поля без изменения смысла:**
+#### `Team`
 
-| Поле | Примечание |
-|------|------------|
-| `name`, `description` | Без изменений |
-| `leader` | Капитан / руководитель |
-| `project_application` | Nullable; заполняется один раз при регистрации на проект (раздел 5), далее immutable |
-| `created_at`, `updated_at` | Без изменений |
+| Поле | Тип | Null | Описание |
+|------|-----|------|----------|
+| `name`, `description` | — | нет | Без изменений |
+| `home_study_group` | FK → `StudyGroup` | да | Группа капитана; `related_name="home_teams"`, `SET_NULL` |
+| `created_at`, `updated_at` | DateTime | нет | Без изменений |
 
-**Статусы `Team.Status` (TextChoices):**
+Удалены: `leader`, `project_application`. Модель `TeamMember` удалена.
 
-| Код | Название | Кто переводит |
-|-----|----------|---------------|
-| `forming` | В стадии формирования | default при создании |
-| `assembled` | Состав собран | капитан |
-| `approved` | Состав утверждён | наставник группы |
+#### `TeamSemester`
 
-Отдельная модель `TeamCompositionApproval` **не создаётся** — достаточно `approved_by` / `approved_at` на `Team`.
+| Поле | Тип | Null | Описание |
+|------|-----|------|----------|
+| `team` | FK → `Team` | нет | `related_name="semester_enrollments"` |
+| `semester` | FK → `Semester` | нет | `related_name="team_semesters"` |
+| `project_track` | FK → `ProjectTrack` | да | Трек команды в семестре (`PROTECT`, миграция `0013`) |
+| `project_application` | FK → `ProjectApplication` | да | Проект в этом семестре |
+| `mentor` | FK → `User` | да | Наставник команды в семестре (`role=mentor`) |
+| `captain` | FK → `User` | нет | Капитан в этом семестре |
+| `status` | `forming` / `assembled` | нет | default `forming` (миграция `0013`) |
+
+Constraint: unique `(team, semester)`.
+
+#### `TeamSemesterMember`
+
+| Поле | Тип | Null | Описание |
+|------|-----|------|----------|
+| `team_semester` | FK → `TeamSemester` | нет | `related_name="members"` |
+| `user` | FK → `User` | нет | `related_name="team_semester_memberships"` |
+| `semester` | FK → `Semester` | нет | Денормализация; синхронизируется из `team_semester` |
+| `role` | `leader` / `member` | нет | Роль в команде в этом семестре |
+
+Constraints: unique `(team_semester, user)`, unique `(user, semester)` — один студент = одна команда в семестре.
+
+**Слоты команд в треке (лобби):** `SUM(application.recommended_teams_count)` по заявкам трека; `teams_count` — число `TeamSemester` домашней группы студента в треке/семестре.
 
 ---
 
-### 3.6. `TeamJoinRequest` (новая, `teams`)
+### 3.6. `TeamJoinRequest` (новая, `teams`, миграция `0013`)
 
-Заявка студента на вступление в команду.
+Заявка студента на вступление в команду в семестре.
 
 | Поле | Тип | Null | Default | Описание |
 |------|-----|------|---------|----------|
 | `id` | BigAutoField | PK | — | |
-| `team` | FK → `Team` | нет | — | `related_name="join_requests"`, `on_delete=CASCADE` |
-| `user` | FK → `User` | нет | — | Заявитель; `related_name="team_join_requests"`, `on_delete=CASCADE` |
-| `status` | CharField(16) | нет | `"pending"` | Статус заявки |
-| `message` | TextField | нет | `""` | Комментарий студента |
-| `reviewed_by` | FK → `User` | да | `null` | Капитан (approve/reject); `on_delete=SET_NULL` |
-| `reviewed_at` | DateTimeField | да | `null` | Момент рассмотрения |
+| `team_semester` | FK → `TeamSemester` | нет | — | `related_name="join_requests"`, `on_delete=CASCADE` |
+| `user` | FK → `User` | нет | — | Заявитель |
+| `status` | CharField(16) | нет | `"pending"` | `pending` / `approved` / `rejected` / `obsolete` |
+| `reviewed_by` | FK → `User` | да | `null` | Капитан (approve/reject) |
+| `reviewed_at` | DateTimeField | да | `null` | |
 | `created_at` | DateTimeField | нет | auto_now_add | |
 
-**Статусы `TeamJoinRequest.Status`:**
+Partial unique: одна `pending` пара `(team_semester, user)`.
 
-| Код | Описание |
-|-----|----------|
-| `pending` | Ожидает решения капитана |
-| `approved` | Одобрена → создаётся `TeamMember` |
-| `rejected` | Отклонена капитаном |
-| `cancelled` | Отменена заявителем |
+### 3.6a. `TeamInvitation` (новая, `teams`, миграция `0013`)
 
-**Constraints:**
-
-```python
-UniqueConstraint(
-    fields=["team", "user"],
-    condition=Q(status="pending"),
-    name="unique_pending_team_join_request",
-)
-```
-
-Одна активная (`pending`) заявка пары (команда, пользователь). После approve/reject/cancel можно подать новую (если бизнес-логика разрешит).
-
----
-
-### 3.7. `TeamEventLog` (новая, `teams`)
-
-История событий команды (аналог `ProjectApplicationStatusLog`).
+Приглашение капитана студенту.
 
 | Поле | Тип | Null | Default | Описание |
 |------|-----|------|---------|----------|
-| `id` | BigAutoField | PK | — | |
-| `team` | FK → `Team` | нет | — | `related_name="event_logs"`, `on_delete=CASCADE` |
-| `action_type` | CharField(64) | нет | — | Тип события |
-| `actor` | FK → `User` | да | `null` | Кто совершил действие; `on_delete=SET_NULL` |
-| `target_user` | FK → `User` | да | `null` | Над кем действие; `on_delete=SET_NULL` |
-| `from_status` | CharField(32) | да | `null` | Предыдущий статус команды (для `status_changed`) |
-| `to_status` | CharField(32) | да | `null` | Новый статус |
-| `join_request` | FK → `TeamJoinRequest` | да | `null` | Связанная заявка; `on_delete=SET_NULL` |
-| `details` | JSONField | нет | `{}` | Доп. данные (имя команды, id проекта, …) |
+| `team_semester` | FK → `TeamSemester` | нет | — | |
+| `user` | FK → `User` | нет | — | Кого приглашают |
+| `invited_by` | FK → `User` | нет | — | Капитан |
+| `role` | `member` (обычно) | нет | `member` | Роль при вступлении |
+| `status` | CharField | нет | `pending` | `pending` / `accepted` / `rejected` / `obsolete` |
+| `reviewed_at` | DateTimeField | да | `null` | |
 | `created_at` | DateTimeField | нет | auto_now_add | |
 
-**Типы `action_type`:**
+При accept/approve все остальные pending заявки и приглашения студента в семестре → `obsolete`.
 
-| Код | Когда пишется |
-|-----|---------------|
-| `team_created` | Создание команды |
-| `member_joined` | Вступление после approve заявки |
-| `member_left` | Добровольный выход |
-| `member_kicked` | Исключение капитаном |
-| `member_added_by_leader` | Прямое добавление капитаном (своя/чужая группа трека) |
-| `join_request_created` | Подана заявка |
-| `join_request_approved` | Капитан одобрил |
-| `join_request_rejected` | Капитан отклонил |
-| `join_request_cancelled` | Студент отменил заявку |
-| `status_changed` | Смена `Team.status` |
-| `composition_approved` | Наставник утвердил состав (`assembled` → `approved`) |
-| `project_registered` | Капитан записал команду на проект |
+---
+
+### 3.7. `TeamEventLog` (новая, `teams`, миграция `0013`)
+
+| Поле | Тип | Null | Описание |
+|------|-----|------|----------|
+| `user` | FK → `User` | да | db_index; кто совершил действие |
+| `team` | FK → `Team` | нет | db_index |
+| `team_semester` | FK → `TeamSemester` | да | SET_NULL |
+| `text` | TextField | нет | Текст действия |
+| `created_at` | DateTimeField | нет | auto_now_add |
 
 **Meta:** `ordering = ["-created_at"]`.
 
 ---
 
-### 3.8. `TeamMember` — дополнительные ограничения
+### 3.8. Один студент — одна команда в семестре
 
-Существующее:
-
-```python
-UniqueConstraint(fields=["team", "user"], name="unique_team_member")
-```
-
-**Новое бизнес-правило (один студент — одна команда в треке):**
-
-Рекомендуемая реализация на уровне БД (PostgreSQL) — уникальный индекс через денормализацию или через проверку в сервисе + опциональный partial unique на вспомогательной таблице.
-
-**Предпочтительный MVP-вариант (без отдельной таблицы):**
-
-1. **Сервисный слой:** при add/join проверять отсутствие `TeamMember` у пользователя в любой команде с тем же `project_track_id`.
-2. **Опционально позже:** generated/materialized unique `(project_track_id, user_id)` через raw SQL или отдельную модель `TeamTrackMembership(user, project_track)` с `UniqueConstraint`.
-
-В этом документе для первой итерации фиксируем **проверку в сервисе** + комментарий в модели; строгий DB unique — follow-up при необходимости.
+Обеспечивается constraint `unique_user_semester_team` на `TeamSemesterMember`.
 
 ---
 
 ### 3.9. Политика полей проекта для студента (не миграция)
 
-Поле `company_contacts` остаётся в `ProjectApplication`.  
+Поле `company_contacts` остаётся в `ProjectApplication`.
 Студенческий DTO витрины **не отдаёт**:
 
 | Поле | Причина |
@@ -304,7 +277,7 @@ UniqueConstraint(fields=["team", "user"], name="unique_team_member")
 | `company_contacts` | Контакты заказчика — только для сотрудников |
 | `author_email`, `author_phone` | Контакты автора заявки (рекомендуется скрыть) |
 
-Whitelist для студенческого detail (ориентир):  
+Whitelist для студенческого detail (ориентир):
 `id`, `title`, `company`, `goal`, `barrier`, `problem_holder`, `context`, `stakeholders`, `experts`, `recommended_tools`, `existing_solutions`, `additional_materials`, `project_level`, `tags`, `min_team_members`, `max_team_members`, `recommended_teams_count`, `is_continuing`, `img`, `print_number`.
 
 ---
@@ -373,7 +346,7 @@ stateDiagram-v2
 
 ## 5. Вычисляемые лимиты размера команды (effective_min / effective_max)
 
-На этапе формирования проект ещё не выбран. Лимиты размера команды **не хранятся** на `Team` / `ProjectTrack` отдельными полями — вычисляются из проектов трека.
+На этапе формирования проект ещё не выбран. Лимиты размера команды для проверки «команда подходит любому проекту» вычисляются из проектов трека. На самом `ProjectTrack` также хранятся `min_team_members` / `max_team_members` (дефолт трека; синхронизируются на заявки при PATCH).
 
 ### 5.1. Формулы
 
@@ -405,11 +378,13 @@ effective_max = MIN(a.max_team_members for a in A)
 
 ### 5.4. Связь с существующими полями
 
-Поля уже есть на `ProjectApplication` (миграция `showcase.0035`):
+Поля есть на `ProjectApplication` (миграция `showcase.0035`) и на `ProjectTrack` (миграция `showcase.0036`):
 
 - `min_team_members` (default 1)
 - `max_team_members` (default 10)
-- `recommended_teams_count` (default 3) — квота команд на проект, не размер команды
+- `recommended_teams_count` (default 3, только на заявке) — квота команд на проект, не размер команды
+
+При PATCH `/api/showcase/project-tracks/{id}/` с `minTeamMembers` / `maxTeamMembers` значения пишутся на трек и на все связанные заявки.
 
 ---
 
@@ -417,20 +392,20 @@ effective_max = MIN(a.max_team_members for a in A)
 
 | Раздел UI | Читаемые сущности | Пишущие операции | Вычисляемые поля (не в БД) |
 |-----------|-------------------|------------------|----------------------------|
-| **1. Главная** | `User`, `StudyGroup` (+ direction, institute), `StudyGroup.mentor`, `MentorProfile` | — | Заглушки: команда / задачи / прогресс — later |
-| **2. Моя группа** | `StudyGroup`, `mentor` + `MentorProfile`, `StudyGroup.users` (студенты), опционально `PreRegisteredStudent` | — | `team_name` / «без команды» через `TeamMember` + `Team.project_track` (активный семестр) |
+| **1. Главная** | `User`, `StudyGroup` (+ direction, institute), `StudyGroup.mentor` (`User`) | — | Заглушки: команда / задачи / прогресс — later |
+| **2. Моя группа** | `StudyGroup`, mentor, `PreRegisteredStudent`, при `semester_id` — `TeamSemesterMember` | — | `team` в members: `Team.name` + `role` через `TeamSemesterMember` |
 | **3. Формирование команд** | `ProjectTrack` (`max_teams`, даты), `Team` (фильтр по треку группы), `TeamMember` (count, captain), `TeamJoinRequest` | create `Team`, create `TeamJoinRequest` | `teams_count`, `can_create_team` (`teams_count < max_teams`), `effective_min`/`effective_max` |
 | **4. Моя команда** | `Team`, `TeamMember`, `TeamJoinRequest` (pending для капитана), `TeamEventLog` | approve/reject join, add/kick/leave, смена `status`, утверждение наставником | `is_leader`, `can_leave`, список кандидатов поиска по ФИО в группах трека |
 | **5. Витрина проектов** | `ProjectTrack` (даты регистрации), `ProjectTrackApplication` → `ProjectApplication`, `Tag` | капитан: set `Team.project_application` (+ registered_*) | `registration_opens_in`, `can_register` (approved + окно + нет проекта), фильтры по тегам |
 
 ### 6.1. Раздел 1 — детализация данных
 
-**Группа (уже есть):**  
+**Группа (уже есть):**
 `name`, `code`, `enrollment_year`, `course_number`, `is_end`, `profile`, `form`, `direction` (code, name, level), `institute` (code, name).
 
-**Наставник (новое):**  
-`User`: `last_name`, `first_name`, `middle_name`, `email`;  
-`MentorProfile`: `position`, `academic_degree`, `academic_title`.
+**Наставник (тот же `User`, без отдельной модели):**
+`last_name`, `first_name`, `middle_name`, `email`, `position`, `academic_degree`, `academic_title`.
+Роль: `role.code == "mentor"`. Привязка: `StudyGroup.mentor`.
 
 ### 6.2. Раздел 2 — строка таблицы группы
 
@@ -438,7 +413,7 @@ effective_max = MIN(a.max_team_members for a in A)
 |------------|----------|
 | ФИО | `User.last_name`, `first_name`, `middle_name` |
 | Почта | `User.email` |
-| Команда | `Team.name` через membership в треке семестра, иначе «без команды» |
+| Команда | `Team.name` через `TeamSemesterMember` в запрошенном семестре, иначе `null` |
 
 ### 6.3. Раздел 3 — карточка команды в списке
 
@@ -486,10 +461,11 @@ AND not already in a team of this track
 
 | # | App | Предлагаемое имя | Содержание | Зависимости |
 |---|-----|------------------|------------|-------------|
-| 1 | `accounts` | `00XX_mentor_profile` | Модель `MentorProfile` | последняя миграция accounts |
-| 2 | `teams` | `0009_studygroup_mentor` | `StudyGroup.mentor` FK | accounts (User), teams StudyGroup |
+| 1 | `accounts` | `0020_user_mentor_fields` (сделано) | Поля `User`: `position`, `academic_degree`, `academic_title` | `0019` |
+| 2 | `teams` | `0009_studygroup_mentor` (сделано) | `StudyGroup.mentor` FK | accounts `0020`, teams `0008` |
+| 2a | `teams` | `0010`–`0012` (сделано) | `TeamSemester`, `TeamSemesterMember`, `home_study_group`; удалены `TeamMember`, `Team.leader` | `0009` |
 | 3 | `showcase` | `0036_projecttrack_team_settings` | `max_teams`, `team_formation_*`, `project_registration_*` | showcase `0035` |
-| 4 | `teams` | `0010_team_workflow` | Поля `Team`: status, project_track (nullable→NOT NULL), home_study_group, approved_*, project_registered_* | showcase `0036`, teams |
+| 4 | `teams` | `0013_team_workflow` | Поля `TeamSemester`: status, approved_*, project_registered_* | `0012` |
 | 5 | `teams` | `0011_team_join_request` | `TeamJoinRequest` + partial unique | `0010` |
 | 6 | `teams` | `0012_team_event_log` | `TeamEventLog` | `0011` |
 
@@ -528,7 +504,8 @@ AND not already in a team of this track
 
 | Модель | App |
 |--------|-----|
-| `MentorProfile` | accounts |
+| `TeamSemester` | teams |
+| `TeamSemesterMember` | teams |
 | `TeamJoinRequest` | teams |
 | `TeamEventLog` | teams |
 
@@ -536,9 +513,12 @@ AND not already in a team of this track
 
 | Модель | App | Что добавлено |
 |--------|-----|---------------|
-| `StudyGroup` | teams | `mentor` |
-| `ProjectTrack` | showcase | `max_teams`, `team_formation_start/end`, `project_registration_start/end` |
-| `Team` | teams | `project_track`, `home_study_group`, `status`, `approved_by/at`, `project_registered_by/at` |
+| `User` | accounts | `position`, `academic_degree`, `academic_title` (для наставника; отдельной модели нет) |
+| `StudyGroup` | teams | `mentor` → `User` |
+| `Team` | teams | `home_study_group`; без `leader` / `project_application` |
+| `TeamSemester` | teams | семестр, капитан, наставник, проект |
+| `TeamSemesterMember` | teams | роль студента в команде в семестре |
+| `ProjectTrack` | showcase | `max_teams`, `team_formation_start/end`, `project_registration_start/end` (ещё не сделано) |
 
 ### Без изменений схемы (используются as-is)
 
@@ -556,7 +536,7 @@ AND not already in a team of this track
 3. **Несколько треков** у одной учебной группы в одном семестре — как выбирать «активный» трек для студента?
 4. **Строгий unique** «один студент — одна команда в треке» на уровне БД vs только сервис.
 5. **Откат `approved`** наставником / admin — нужен ли сценарий «вернуть на доработку»?
-6. **Профиль наставника:** заполняется вручную в admin / self-service наставника?
+6. **Поля наставника на `User`:** заполняются вручную в admin / self-service наставника?
 
 ---
 
@@ -564,10 +544,10 @@ AND not already in a team of this track
 
 | Файл | Изменения |
 |------|-----------|
-| `accounts/models.py` | `MentorProfile` |
+| `accounts/models.py` | поля `User`: `position`, `academic_degree`, `academic_title` |
 | `teams/models.py` | `StudyGroup.mentor`, расширение `Team`, `TeamJoinRequest`, `TeamEventLog` |
 | `showcase/models.py` | поля `ProjectTrack` |
-| `accounts/migrations/` | `MentorProfile` |
+| `accounts/migrations/` | поля наставника на `User` |
 | `teams/migrations/` | mentor, team workflow, join request, event log |
 | `showcase/migrations/` | project track settings |
 | `teams/admin.py`, `accounts/admin.py`, `showcase/admin.py` | регистрация новых полей/моделей |

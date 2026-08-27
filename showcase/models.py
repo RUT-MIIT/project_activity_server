@@ -2,6 +2,8 @@ from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models
 
+from showcase.constants import DEFAULT_MAX_TEAM_MEMBERS, DEFAULT_MIN_TEAM_MEMBERS
+
 
 class Institute(models.Model):
     """Справочник институтов/академий для выбора целевых институтов в заявках"""
@@ -222,12 +224,12 @@ class ProjectApplication(models.Model):
         verbose_name="Рекомендуемое количество команд",
     )
     min_team_members = models.PositiveIntegerField(
-        default=1,
+        default=DEFAULT_MIN_TEAM_MEMBERS,
         validators=[MinValueValidator(1)],
         verbose_name="Минимальное количество человек в команде",
     )
     max_team_members = models.PositiveIntegerField(
-        default=10,
+        default=DEFAULT_MAX_TEAM_MEMBERS,
         validators=[MinValueValidator(1)],
         verbose_name="Максимальное количество человек в команде",
     )
@@ -511,6 +513,24 @@ class ProjectTrack(models.Model):
         on_delete=models.PROTECT,
         related_name="authored_project_tracks",
         verbose_name="Автор",
+    )
+    min_team_members = models.PositiveIntegerField(
+        default=DEFAULT_MIN_TEAM_MEMBERS,
+        validators=[MinValueValidator(1)],
+        verbose_name="Минимальное количество человек в команде",
+    )
+    max_team_members = models.PositiveIntegerField(
+        default=DEFAULT_MAX_TEAM_MEMBERS,
+        validators=[MinValueValidator(1)],
+        verbose_name="Максимальное количество человек в команде",
+    )
+    recommended_teams_count = models.PositiveIntegerField(
+        default=0,
+        verbose_name="Сумма рекомендуемых команд по заявкам трека",
+        help_text=(
+            "Денормализованная сумма ProjectApplication.recommended_teams_count "
+            "по заявкам трека. Пересчитывается при изменении состава заявок."
+        ),
     )
 
     class Meta:

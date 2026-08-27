@@ -800,7 +800,7 @@ class TestDepartmentPlanViewSetList:
 
 @pytest.mark.django_db
 class TestDepartmentPlanViewSetMyDepartmentPlan:
-    """Тесты для GET /api/showcase/my-department-plan/ - план текущего пользователя."""
+    """Тесты для GET /api/showcase/department-plans/my-department-plan/ - план текущего пользователя."""
 
     def test_my_department_plan_success(self, make_user, statuses):
         """Успешное получение плана и статистики для подразделения пользователя."""
@@ -835,7 +835,7 @@ class TestDepartmentPlanViewSetMyDepartmentPlan:
         )
 
         response = client.get(
-            f"/api/showcase/my-department-plan/?semester_id={semester.id}"
+            f"/api/showcase/department-plans/my-department-plan/?semester_id={semester.id}"
         )
 
         assert response.status_code == 200
@@ -866,7 +866,7 @@ class TestDepartmentPlanViewSetMyDepartmentPlan:
         )
 
         response = client.get(
-            f"/api/showcase/my-department-plan/?semester_id={semester.id}"
+            f"/api/showcase/department-plans/my-department-plan/?semester_id={semester.id}"
         )
 
         assert response.status_code == 200
@@ -880,7 +880,7 @@ class TestDepartmentPlanViewSetMyDepartmentPlan:
         user = make_user(role_code="admin", with_department=True)
         client.force_authenticate(user=user)
 
-        response = client.get("/api/showcase/my-department-plan/")
+        response = client.get("/api/showcase/department-plans/my-department-plan/")
 
         assert response.status_code == 400
         assert "semester_id" in response.data["error"].lower()
@@ -891,7 +891,9 @@ class TestDepartmentPlanViewSetMyDepartmentPlan:
         user = make_user(role_code="admin", with_department=True)
         client.force_authenticate(user=user)
 
-        response = client.get("/api/showcase/my-department-plan/?semester_id=99999")
+        response = client.get(
+            "/api/showcase/department-plans/my-department-plan/?semester_id=99999"
+        )
 
         assert response.status_code == 404
         assert "семестр" in response.data["error"].lower()
@@ -907,7 +909,7 @@ class TestDepartmentPlanViewSetMyDepartmentPlan:
         )
 
         response = client.get(
-            f"/api/showcase/my-department-plan/?semester_id={semester.id}"
+            f"/api/showcase/department-plans/my-department-plan/?semester_id={semester.id}"
         )
 
         assert response.status_code == 400
@@ -921,7 +923,7 @@ class TestDepartmentPlanViewSetMyDepartmentPlan:
         )
 
         response = client.get(
-            f"/api/showcase/my-department-plan/?semester_id={semester.id}"
+            f"/api/showcase/department-plans/my-department-plan/?semester_id={semester.id}"
         )
 
         assert response.status_code == 401

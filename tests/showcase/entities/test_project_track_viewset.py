@@ -84,6 +84,7 @@ def _create_track_with_links(
         department=department,
         semester=semester,
         author=author,
+        recommended_teams_count=application.recommended_teams_count,
     )
     ProjectTrackGroup.objects.create(project_track=track, study_group=group)
     ProjectTrackApplication.objects.create(
@@ -176,6 +177,32 @@ class TestProjectTrackViewSet:
         )
         assert response.status_code == 201
         assert response.data["name"] == "Новый трек"
+        assert response.data["minTeamMembers"] == 4
+        assert response.data["maxTeamMembers"] == 7
+
+    def test_create_track_with_team_limits(
+        self, roles, make_user, semester, departments
+    ):
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.post(
+            "/api/showcase/project-tracks/",
+            {
+                "name": "Трек с лимитами",
+                "department_id": departments["child"].id,
+                "semester_id": semester.id,
+                "minTeamMembers": 3,
+                "maxTeamMembers": 7,
+            },
+            format="json",
+        )
+        assert response.status_code == 201
+        assert response.data["minTeamMembers"] == 3
+        assert response.data["maxTeamMembers"] == 7
+        track = ProjectTrack.objects.get(pk=response.data["id"])
+        assert track.min_team_members == 3
+        assert track.max_team_members == 7
 
     def test_retrieve_track(self, roles, make_user, track_setup):
         user = make_user(role_code="admin")
@@ -187,6 +214,8 @@ class TestProjectTrackViewSet:
         assert response.status_code == 200
         assert len(response.data["groups"]) == 1
         assert len(response.data["applications"]) == 1
+        assert "minTeamMembers" in response.data
+        assert "maxTeamMembers" in response.data
 
     def test_partial_update_track(self, roles, make_user, track_setup):
         user = make_user(role_code="admin")
@@ -199,6 +228,33 @@ class TestProjectTrackViewSet:
         )
         assert response.status_code == 200
         assert response.data["name"] == "Обновлённый"
+
+    def test_partial_update_track_application_team_limits(
+        self, roles, make_user, track_setup
+    ):
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.patch(
+            f"/api/showcase/project-tracks/{track_setup['track'].id}/",
+            {
+                "minTeamMembers": 2,
+                "maxTeamMembers": 6,
+            },
+            format="json",
+        )
+        assert response.status_code == 200
+        assert response.data["minTeamMembers"] == 2
+        assert response.data["maxTeamMembers"] == 6
+        app_item = response.data["applications"][0]
+        assert app_item["minTeamMembers"] == 2
+        assert app_item["maxTeamMembers"] == 6
+        track_setup["own_app"].refresh_from_db()
+        assert track_setup["own_app"].min_team_members == 2
+        assert track_setup["own_app"].max_team_members == 6
+        track_setup["track"].refresh_from_db()
+        assert track_setup["track"].min_team_members == 2
+        assert track_setup["track"].max_team_members == 6
 
     def test_destroy_track(self, roles, make_user, track_setup):
         user = make_user(role_code="admin")
@@ -275,6 +331,10 @@ class TestProjectTrackViewSet:
         assert app.recommended_teams_count == 4
         assert app.min_team_members == 2
         assert app.max_team_members == 6
+        track_setup["track"].refresh_from_db()
+        # own_app default 3 + new app 4
+        assert track_setup["track"].recommended_teams_count == 7
+        assert response.data["recommendedTeamsCount"] == 7
 
     def test_remove_application(self, roles, make_user, track_setup):
         user = make_user(role_code="admin")
@@ -286,6 +346,9 @@ class TestProjectTrackViewSet:
         )
         assert response.status_code == 200
         assert response.data["applications"] == []
+        track_setup["track"].refresh_from_db()
+        assert track_setup["track"].recommended_teams_count == 0
+        assert response.data["recommendedTeamsCount"] == 0
 
 
 @pytest.mark.django_db

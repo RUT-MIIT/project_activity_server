@@ -92,6 +92,7 @@ def _create_track_with_links(
         department=department,
         semester=semester,
         author=author,
+        recommended_teams_count=application.recommended_teams_count,
     )
     ProjectTrackGroup.objects.create(project_track=track, study_group=group)
     ProjectTrackApplication.objects.create(
@@ -168,6 +169,27 @@ class TestProjectTrackService:
         result = service.create_track(user, dto)
         assert result["name"] == "Новый трек"
         assert result["author_id"] == user.id
+        assert result["minTeamMembers"] == 1
+        assert result["maxTeamMembers"] == 10
+
+    def test_create_track_with_team_limits(
+        self, roles, make_user, semester, departments
+    ):
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        dto = ProjectTrackCreateDTO(
+            name="Трек с лимитами",
+            department_id=departments["child"].id,
+            semester_id=semester.id,
+            min_team_members=3,
+            max_team_members=7,
+        )
+        result = service.create_track(user, dto)
+        assert result["minTeamMembers"] == 3
+        assert result["maxTeamMembers"] == 7
+        track = ProjectTrack.objects.get(pk=result["id"])
+        assert track.min_team_members == 3
+        assert track.max_team_members == 7
 
     def test_list_tracks_admin(self, roles, make_user, semester, track_data):
         user = make_user(role_code="admin")
@@ -274,6 +296,68 @@ class TestProjectTrackService:
         result = service.update_track(user, track_data["track"].id, dto)
         assert result["name"] == "Обновлённый"
 
+    def test_update_track_application_team_limits(
+        self, roles, make_user, semester, statuses, departments, track_data
+    ):
+        second_app = _create_approved_app(
+            semester=semester,
+            statuses=statuses,
+            involved_department=departments["child"],
+            title="Второй в треке",
+        )
+        ProjectTrackApplication.objects.create(
+            project_track=track_data["track"],
+            project_application=second_app,
+        )
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        dto = ProjectTrackUpdateDTO.from_dict(
+            {
+                "minTeamMembers": 2,
+                "maxTeamMembers": 6,
+            }
+        )
+        result = service.update_track(user, track_data["track"].id, dto)
+        limits = {
+            item["id"]: (item["minTeamMembers"], item["maxTeamMembers"])
+            for item in result["applications"]
+        }
+        assert result["minTeamMembers"] == 2
+        assert result["maxTeamMembers"] == 6
+        assert limits[track_data["own_app"].id] == (2, 6)
+        assert limits[second_app.id] == (2, 6)
+        track_data["own_app"].refresh_from_db()
+        second_app.refresh_from_db()
+        track_data["other_app"].refresh_from_db()
+        assert track_data["own_app"].min_team_members == 2
+        assert track_data["own_app"].max_team_members == 6
+        assert second_app.min_team_members == 2
+        assert second_app.max_team_members == 6
+        assert track_data["other_app"].min_team_members == 1
+        assert track_data["other_app"].max_team_members == 10
+        track_data["track"].refresh_from_db()
+        assert track_data["track"].min_team_members == 2
+        assert track_data["track"].max_team_members == 6
+
+    def test_update_track_application_team_limits_partial_field(
+        self, roles, make_user, track_data
+    ):
+        track_data["own_app"].min_team_members = 2
+        track_data["own_app"].max_team_members = 8
+        track_data["own_app"].save(
+            update_fields=["min_team_members", "max_team_members"]
+        )
+
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        dto = ProjectTrackUpdateDTO.from_dict({"maxTeamMembers": 5})
+        service.update_track(user, track_data["track"].id, dto)
+        track_data["own_app"].refresh_from_db()
+        assert track_data["own_app"].min_team_members == 2
+        assert track_data["own_app"].max_team_members == 5
+        track_data["track"].refresh_from_db()
+        assert track_data["track"].max_team_members == 5
+
     def test_delete_track(self, roles, make_user, track_data):
         user = make_user(role_code="admin")
         service = ProjectTrackService()
@@ -330,6 +414,14 @@ class TestProjectTrackService:
         assert app.recommended_teams_count == 5
         assert app.min_team_members == 3
         assert app.max_team_members == 8
+        track_data["track"].refresh_from_db()
+        assert track_data["track"].recommended_teams_count == (
+            track_data["own_app"].recommended_teams_count + 5
+        )
+        assert (
+            result["recommendedTeamsCount"]
+            == track_data["track"].recommended_teams_count
+        )
 
     def test_add_applications_rejects_non_approved(
         self, roles, make_user, semester, statuses, institute, track_data

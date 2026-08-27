@@ -2,6 +2,8 @@
 
 from typing import Any, Optional
 
+from showcase.constants import DEFAULT_MAX_TEAM_MEMBERS, DEFAULT_MIN_TEAM_MEMBERS
+
 
 def build_author_short_name(
     lastname: Optional[str],
@@ -101,8 +103,8 @@ class ProjectApplicationCreateDTO:
         is_continuing: Optional[bool] = None,
         track_composer_comment: Optional[str] = None,
         recommended_teams_count: int = 3,
-        min_team_members: int = 1,
-        max_team_members: int = 10,
+        min_team_members: int = DEFAULT_MIN_TEAM_MEMBERS,
+        max_team_members: int = DEFAULT_MAX_TEAM_MEMBERS,
         **kwargs,
     ):
         self.title = title or ""

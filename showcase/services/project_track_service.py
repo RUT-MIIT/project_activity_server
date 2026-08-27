@@ -185,20 +185,54 @@ class ProjectTrackService:
             department_id=dto.department_id,
             semester_id=dto.semester_id,
             author_id=user.pk,
+            min_team_members=dto.min_team_members,
+            max_team_members=dto.max_team_members,
         )
         track = self.repository.get_by_id(track.pk)
         return ProjectTrackReadDTO(track).to_dict()
+
+    def _apply_team_member_limits_to_track(
+        self,
+        track_id: int,
+        min_team_members: int | None,
+        max_team_members: int | None,
+    ) -> None:
+        """Проставляет лимиты размера команды всем заявкам трека."""
+        if min_team_members is None and max_team_members is None:
+            return
+
+        applications = self.repository.get_linked_applications(track_id)
+        for application in applications:
+            new_min = (
+                min_team_members
+                if min_team_members is not None
+                else application.min_team_members
+            )
+            new_max = (
+                max_team_members
+                if max_team_members is not None
+                else application.max_team_members
+            )
+            if new_min > new_max:
+                raise ValueError(
+                    "Минимальное количество человек не может быть "
+                    f"больше максимального для заявки id={application.pk}"
+                )
+            application.min_team_members = new_min
+            application.max_team_members = new_max
+
+        self.repository.update_team_member_limits(applications)
 
     @transaction.atomic
     def update_track(
         self, user: User, track_id: int, dto: ProjectTrackUpdateDTO
     ) -> dict:
-        """Обновляет основные поля трека."""
+        """Обновляет основные поля трека и лимиты команд у заявок."""
         track = self._get_track_with_access(user, track_id)
         accessible_department_ids = self._get_accessible_department_ids(user)
         update_data = dto.to_update_dict()
 
-        if not update_data:
+        if not update_data and not dto.has_team_member_updates():
             raise ValueError("Не переданы поля для обновления")
 
         if "name" in update_data and not update_data["name"].strip():
@@ -221,7 +255,32 @@ class ProjectTrackService:
             if not Semester.objects.filter(pk=update_data["semester_id"]).exists():
                 raise ValueError(f"Семестр с id={update_data['semester_id']} не найден")
 
-        self.repository.update(track, **update_data)
+        if dto.has_team_member_updates():
+            new_min = (
+                dto.min_team_members
+                if dto.min_team_members is not None
+                else track.min_team_members
+            )
+            new_max = (
+                dto.max_team_members
+                if dto.max_team_members is not None
+                else track.max_team_members
+            )
+            if new_min > new_max:
+                raise ValueError(
+                    "Минимальное количество человек не может быть "
+                    "больше максимального."
+                )
+
+        if update_data:
+            self.repository.update(track, **update_data)
+
+        self._apply_team_member_limits_to_track(
+            track_id,
+            dto.min_team_members,
+            dto.max_team_members,
+        )
+
         track = self.repository.get_by_id(track_id)
         return ProjectTrackReadDTO(track).to_dict()
 
@@ -315,6 +374,7 @@ class ProjectTrackService:
             app_id for app_id in application_ids if app_id not in existing_ids
         ]
         self.repository.add_applications(track.pk, new_application_ids)
+        self.repository.recalculate_recommended_teams_count(track.pk)
 
         track = self.repository.get_by_id(track_id)
         return ProjectTrackReadDTO(track).to_dict()
@@ -330,6 +390,8 @@ class ProjectTrackService:
             raise ValueError(
                 f"Заявка id={application_id} не привязана к треку id={track_id}"
             )
+
+        self.repository.recalculate_recommended_teams_count(track.pk)
 
         track = self.repository.get_by_id(track_id)
         return ProjectTrackReadDTO(track).to_dict()

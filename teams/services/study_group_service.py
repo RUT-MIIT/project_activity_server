@@ -1,12 +1,13 @@
 """Сервис для операций с учебными группами."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 
-from accounts.models import Department
+from accounts.models import Department, Semester
 from teams.domain.study_group import StudyGroupDomain
+from teams.dto.my_study_group import MyStudyGroupDTO
 from teams.models import StudyGroup
 from teams.repositories.study_group import StudyGroupRepository
 
@@ -52,3 +53,21 @@ class StudyGroupService:
             raise ValueError("Нет доступа к этой учебной группе")
 
         return group
+
+    def get_my_study_group(
+        self, user: User, semester_id_raw: str | None = None
+    ) -> dict[str, Any]:
+        """Возвращает данные учебной группы текущего студента."""
+        if not self.domain.is_student(user):
+            raise PermissionError("Доступ только для студентов")
+        if not user.study_group_id:
+            raise LookupError("Учебная группа не назначена")
+
+        semester_id: int | None = None
+        if semester_id_raw is not None:
+            semester_id = Semester.resolve_list_semester_id(semester_id_raw)
+
+        group = self.repository.get_my_group_detail(
+            user.study_group_id, semester_id=semester_id
+        )
+        return MyStudyGroupDTO(group, include_team=semester_id is not None).to_dict()

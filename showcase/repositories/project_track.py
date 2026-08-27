@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
-from django.db.models import Count, Exists, OuterRef, Prefetch, Q, QuerySet
+from django.db.models import Count, Exists, OuterRef, Prefetch, Q, QuerySet, Sum
+from django.db.models.functions import Coalesce
 
+from showcase.constants import DEFAULT_MAX_TEAM_MEMBERS, DEFAULT_MIN_TEAM_MEMBERS
 from showcase.models import (
     Institute,
     ProjectApplication,
@@ -112,6 +114,8 @@ class ProjectTrackRepository:
         department_id: int,
         semester_id: int,
         author_id: int,
+        min_team_members: int = DEFAULT_MIN_TEAM_MEMBERS,
+        max_team_members: int = DEFAULT_MAX_TEAM_MEMBERS,
     ) -> ProjectTrack:
         """Создаёт проектный трек."""
         return ProjectTrack.objects.create(
@@ -120,6 +124,8 @@ class ProjectTrackRepository:
             department_id=department_id,
             semester_id=semester_id,
             author_id=author_id,
+            min_team_members=min_team_members,
+            max_team_members=max_team_members,
         )
 
     def update(self, track: ProjectTrack, **fields) -> ProjectTrack:
@@ -226,6 +232,47 @@ class ProjectTrackRepository:
         ProjectApplication.objects.bulk_update(
             applications,
             ["recommended_teams_count", "min_team_members", "max_team_members"],
+        )
+
+    def recalculate_recommended_teams_count(self, track_id: int) -> int:
+        """Пересчитывает и сохраняет сумму recommended_teams_count заявок трека."""
+        total = (
+            ProjectApplication.objects.filter(
+                track_application_links__project_track_id=track_id
+            ).aggregate(total=Coalesce(Sum("recommended_teams_count"), 0))["total"]
+            or 0
+        )
+        ProjectTrack.objects.filter(pk=track_id).update(recommended_teams_count=total)
+        return int(total)
+
+    def recalculate_recommended_teams_count_for_application(
+        self, application_id: int
+    ) -> list[int]:
+        """Пересчитывает сумму для всех треков, куда входит заявка."""
+        track_ids = list(
+            ProjectTrackApplication.objects.filter(
+                project_application_id=application_id
+            ).values_list("project_track_id", flat=True)
+        )
+        for track_id in track_ids:
+            self.recalculate_recommended_teams_count(track_id)
+        return track_ids
+
+    def get_linked_applications(self, track_id: int) -> list[ProjectApplication]:
+        """Возвращает все заявки, привязанные к треку."""
+        return list(
+            ProjectApplication.objects.filter(
+                track_application_links__project_track_id=track_id
+            )
+        )
+
+    def update_team_member_limits(self, applications: list[ProjectApplication]) -> None:
+        """Обновляет min_team_members и max_team_members у переданных заявок."""
+        if not applications:
+            return
+        ProjectApplication.objects.bulk_update(
+            applications,
+            ["min_team_members", "max_team_members"],
         )
 
     def list_groups_with_counts(

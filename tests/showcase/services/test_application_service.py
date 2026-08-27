@@ -1582,3 +1582,10 @@ class TestCoordinationAndDtosService:
 
         with pytest.raises(PermissionError, match="Требуется авторизация"):
             service.get_external_applications(anonymous_user)
+
+    def test_get_external_applications_denied_for_student(self, make_user):
+        student = make_user(role_code="student")
+        service = ProjectApplicationService()
+
+        with pytest.raises(PermissionError, match="Недостаточно прав"):
+            service.get_external_applications(student)

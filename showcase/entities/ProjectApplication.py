@@ -16,6 +16,8 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 
 from accounts.models import Semester
+from accounts.permissions import DenyStudentPermission
+from showcase.constants import DEFAULT_MAX_TEAM_MEMBERS, DEFAULT_MIN_TEAM_MEMBERS
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
@@ -207,16 +209,16 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
         required=False, default=3, min_value=1
     )
     min_team_members = serializers.IntegerField(
-        required=False, default=1, min_value=1
+        required=False, default=DEFAULT_MIN_TEAM_MEMBERS, min_value=1
     )
     max_team_members = serializers.IntegerField(
-        required=False, default=10, min_value=1
+        required=False, default=DEFAULT_MAX_TEAM_MEMBERS, min_value=1
     )
 
     def validate(self, attrs: dict) -> dict:
         """Проверяет, что min_team_members не больше max_team_members."""
-        min_members = attrs.get("min_team_members", 1)
-        max_members = attrs.get("max_team_members", 10)
+        min_members = attrs.get("min_team_members", DEFAULT_MIN_TEAM_MEMBERS)
+        max_members = attrs.get("max_team_members", DEFAULT_MAX_TEAM_MEMBERS)
         if min_members > max_members:
             raise serializers.ValidationError(
                 {
@@ -365,14 +367,21 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         self.comment_service = CommentService()
 
     def get_permissions(self):
-        """Переопределяем права доступа для определенных действий.
-        Для действий 'simple' и 'my_applications' разрешаем доступ без авторизации.
+        """Переопределяем права доступа в зависимости от действия.
+        `simple` — публичное создание внешней заявки. Остальное — без роли student.
         """
         if self.action in ["simple"]:
             permission_classes = [AllowAny]
         else:
-            permission_classes = [permissions.IsAuthenticated]
+            permission_classes = [permissions.IsAuthenticated, DenyStudentPermission]
         return [permission() for permission in permission_classes]
+
+    def destroy(self, request, pk=None):
+        """DELETE отключён: заявки не удаляются через API."""
+        return Response(
+            {"error": "Удаление заявок через API запрещено"},
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+        )
 
     def get_serializer_class(self):
         """Выбор сериализатора в зависимости от действия"""
@@ -1022,6 +1031,8 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
                     status=status.HTTP_400_BAD_REQUEST,
                 )
 
+            self.service.get_application(int(pk), request.user)
+
             comment = self.comment_service.add_comment(
                 application_id=int(pk), field=field, text=text, author=request.user
             )
@@ -1062,7 +1073,7 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
         Получение всех комментариев к заявке
         """
         try:
-            # Получаем комментарии через сервис
+            self.service.get_application(int(pk), request.user)
             comments = self.comment_service.get_application_comments(int(pk))
 
             return Response(

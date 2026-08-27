@@ -60,8 +60,16 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
 
 
 class LoginView(TokenObtainPairView):
+    """Получение JWT токена по email и паролю."""
+
     serializer_class = CustomTokenObtainPairSerializer
 
+    @extend_schema(
+        tags=["accounts"],
+        summary="Логин",
+        description="Получение JWT токена по email и паролю",
+        responses={200: CustomTokenObtainPairSerializer},
+    )
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
         return response

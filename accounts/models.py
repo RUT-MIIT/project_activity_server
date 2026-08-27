@@ -64,6 +64,24 @@ class User(AbstractBaseUser, PermissionsMixin):
         related_name="users",
         verbose_name="Учебная группа",
     )
+    position = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="Должность",
+    )
+    academic_degree = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="Учёная степень",
+    )
+    academic_title = models.CharField(
+        max_length=255,
+        blank=True,
+        default="",
+        verbose_name="Учёное звание",
+    )
 
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["first_name", "last_name"]

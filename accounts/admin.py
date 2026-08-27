@@ -42,6 +42,9 @@ class UserAdmin(BaseUserAdmin):
                     "role",
                     "department",
                     "study_group",
+                    "position",
+                    "academic_degree",
+                    "academic_title",
                 )
             },
         ),

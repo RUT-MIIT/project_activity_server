@@ -7,8 +7,8 @@
 Сначала учебные группы, затем предрегистрация студентов:
 
 ```bash
-python manage.py import_study_groups_from_contingent --file data/контингент_14_08.xls
-python manage.py import_preregistered_students --file data/контингент_14_08.xls
+python manage.py import_study_groups_from_contingent --file data/контингент_25_08.xls
+python manage.py import_preregistered_students --file data/контингент_25_08.xls
 ```
 
 Опции:

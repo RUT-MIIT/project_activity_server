@@ -430,51 +430,102 @@ teams_folder = folder(
                     "List teams",
                     "GET",
                     "/api/teams/teams/",
-                    description="Список команд. Auth: JWT.",
+                    description="Список постоянных команд. Auth: JWT.",
                 ),
                 req(
                     "My teams",
                     "GET",
                     "/api/teams/teams/my/",
-                    description="Команды текущего пользователя.",
+                    description="Команды текущего пользователя в семестре. Обязателен semester_id (id | actual | next).",
+                    query=[
+                        {
+                            "key": "semester_id",
+                            "value": "actual",
+                            "disabled": False,
+                        }
+                    ],
                 ),
                 req(
                     "Create team",
                     "POST",
                     "/api/teams/teams/",
-                    description="Body: {name, description?, leader_id?, project_application_id?}",
-                    body='{\n  "name": "Команда Alpha",\n  "description": "Описание",\n  "project_application_id": {{applicationId}}\n}',
+                    description="Body: {name, description?, home_study_group_id?}",
+                    body='{\n  "name": "Команда Alpha",\n  "description": "Описание",\n  "home_study_group_id": {{groupId}}\n}',
                 ),
                 req(
                     "Get team",
                     "GET",
                     "/api/teams/teams/{{teamId}}/",
-                    description="Детали команды с members[].",
+                    description="Постоянные поля команды.",
                 ),
                 req(
                     "Update team (PATCH)",
                     "PATCH",
                     "/api/teams/teams/{{teamId}}/",
-                    description="Write: leader команды / admin / cpds / staff.",
+                    description="Write: капитан любого семестра / admin / cpds / staff.",
                     body='{\n  "name": "Команда Beta",\n  "description": "Обновлено"\n}',
                 ),
                 req(
                     "Delete team",
                     "DELETE",
                     "/api/teams/teams/{{teamId}}/",
-                    description="Write: leader / admin / cpds / staff.",
+                    description="Write: капитан / admin / cpds / staff.",
+                ),
+            ],
+        ),
+        folder(
+            "Team semesters",
+            [
+                req(
+                    "List team semesters",
+                    "GET",
+                    "/api/teams/team-semesters/",
+                    description="Query: semester_id=id|actual|next (опционально).",
+                    query=[
+                        {
+                            "key": "semester_id",
+                            "value": "actual",
+                            "disabled": True,
+                        }
+                    ],
+                ),
+                req(
+                    "My team semesters",
+                    "GET",
+                    "/api/teams/team-semesters/my/",
+                    description="Обязателен semester_id.",
+                    query=[
+                        {
+                            "key": "semester_id",
+                            "value": "actual",
+                            "disabled": False,
+                        }
+                    ],
+                ),
+                req(
+                    "Create team semester",
+                    "POST",
+                    "/api/teams/team-semesters/",
+                    description="Body: {team_id, semester_id, captain_id?, mentor_id?, project_application_id?}",
+                    body='{\n  "team_id": {{teamId}},\n  "semester_id": {{semesterId}}\n}',
+                ),
+                req(
+                    "Get team semester",
+                    "GET",
+                    "/api/teams/team-semesters/{{teamSemesterId}}/",
+                    description="Детали с members[].",
                 ),
                 req(
                     "Add member",
                     "POST",
-                    "/api/teams/teams/{{teamId}}/members/",
-                    description='Body: {user_id, role?: "leader"|"member"}.',
+                    "/api/teams/team-semesters/{{teamSemesterId}}/members/",
+                    description='Body: {user_id, role?: "leader"|"member"}. Write: капитан / admin / cpds.',
                     body='{\n  "user_id": {{userId}},\n  "role": "member"\n}',
                 ),
                 req(
                     "Remove member",
                     "DELETE",
-                    "/api/teams/teams/{{teamId}}/members/{{memberId}}/",
+                    "/api/teams/team-semesters/{{teamSemesterId}}/members/{{memberId}}/",
                     description="Нельзя удалить leader.",
                 ),
             ],
@@ -493,6 +544,138 @@ teams_folder = folder(
                     "GET",
                     "/api/teams/directions/{{directionCode}}/",
                     description="lookup по code. {code, level, name}.",
+                ),
+            ],
+        ),
+        folder(
+            "Lobby (student)",
+            [
+                req(
+                    "Get lobby",
+                    "GET",
+                    "/api/teams/lobby/",
+                    description=(
+                        "Лобби формирования команд. Семестр: actual по умолчанию. "
+                        "teams — все команды учебной группы (без фильтра по треку); "
+                        "tracks — треки + команды с привязкой к треку; "
+                        "myTeam включает members (id, full_name, role); "
+                        "заявки/приглашения — если студент без команды."
+                    ),
+                    query=[
+                        {
+                            "key": "semester_id",
+                            "value": "actual",
+                            "disabled": False,
+                        }
+                    ],
+                ),
+                req(
+                    "Create team in lobby",
+                    "POST",
+                    "/api/teams/lobby/teams/",
+                    description=(
+                        "Body: {name, track_id?}. track_id можно не указывать; "
+                        "если группе доступен ровно один трек — он проставится сам."
+                    ),
+                    body='{\n  "name": "Команда Alpha",\n  "track_id": {{trackId}}\n}',
+                ),
+                req(
+                    "Create join request",
+                    "POST",
+                    "/api/teams/lobby/teams/{{teamSemesterId}}/join-requests/",
+                    description="Заявка на вступление в команду (team semester id).",
+                ),
+                req(
+                    "Accept invitation",
+                    "POST",
+                    "/api/teams/lobby/invitations/{{invitationId}}/accept/",
+                    description="Принять приглашение; остальные заявки/приглашения → obsolete.",
+                ),
+                req(
+                    "Reject invitation",
+                    "POST",
+                    "/api/teams/lobby/invitations/{{invitationId}}/reject/",
+                    description="Отклонить приглашение.",
+                ),
+            ],
+        ),
+        folder(
+            "My team (student)",
+            [
+                req(
+                    "Get my team",
+                    "GET",
+                    "/api/teams/my-team/",
+                    description="Моя команда: состав; у капитана — заявки и приглашения. Лог — отдельно.",
+                    query=[
+                        {
+                            "key": "semester_id",
+                            "value": "actual",
+                            "disabled": True,
+                        }
+                    ],
+                ),
+                req(
+                    "Get my team event log",
+                    "GET",
+                    "/api/teams/my-team/event-log/",
+                    description="Пагинированный лог событий (page_size=50). Query: semester_id, page.",
+                    query=[
+                        {
+                            "key": "semester_id",
+                            "value": "actual",
+                            "disabled": True,
+                        },
+                        {
+                            "key": "page",
+                            "value": "1",
+                            "disabled": True,
+                        },
+                    ],
+                ),
+                req(
+                    "Approve join request",
+                    "POST",
+                    "/api/teams/my-team/join-requests/{{joinRequestId}}/approve/",
+                    description='Капитан. Body: {role: "member"}.',
+                    body='{\n  "role": "member"\n}',
+                ),
+                req(
+                    "Reject join request",
+                    "POST",
+                    "/api/teams/my-team/join-requests/{{joinRequestId}}/reject/",
+                    description="Капитан отклоняет заявку.",
+                ),
+                req(
+                    "Invite classmate",
+                    "POST",
+                    "/api/teams/my-team/invitations/",
+                    description='Капитан. Body: {user_id, role: "member"}.',
+                    body='{\n  "user_id": {{userId}},\n  "role": "member"\n}',
+                ),
+                req(
+                    "Kick member",
+                    "DELETE",
+                    "/api/teams/my-team/members/{{userId}}/",
+                    description="Капитан исключает участника (не себя).",
+                ),
+                req(
+                    "Leave team",
+                    "POST",
+                    "/api/teams/my-team/leave/",
+                    description="Участник покидает команду (не капитан).",
+                ),
+                req(
+                    "Confirm composition",
+                    "POST",
+                    "/api/teams/my-team/confirm-composition/",
+                    description="Капитан: forming → assembled. Состав в min..max трека.",
+                ),
+                req(
+                    "Delete my team",
+                    "DELETE",
+                    "/api/teams/my-team/",
+                    description="Капитан удаляет команду (в составе только он).",
                 ),
             ],
         ),
@@ -516,7 +699,25 @@ teams_folder = folder(
                     "Get study group",
                     "GET",
                     "/api/teams/study-groups/{{groupId}}/",
-                    description="Детали с direction и institute.",
+                    description="Детали с direction, institute и mentor.",
+                ),
+                req(
+                    "My study group",
+                    "GET",
+                    "/api/teams/study-groups/my/",
+                    description=(
+                        "Группа текущего студента: данные группы, наставник, "
+                        "список контингента с is_registered. "
+                        "Опционально semester_id — команда одногруппника в members[].team. "
+                        "Роль: student."
+                    ),
+                    query=[
+                        {
+                            "key": "semester_id",
+                            "value": "actual",
+                            "disabled": True,
+                        }
+                    ],
                 ),
             ],
         ),
@@ -560,26 +761,34 @@ tracks_crud = folder(
             "POST",
             "/api/showcase/project-tracks/",
             description=(
-                "Создание. Поля: name*, department_id*, semester_id*, description?\n"
-                "author_id из текущего пользователя."
+                "Создание. Поля: name*, department_id*, semester_id*, description?, "
+                "minTeamMembers?, maxTeamMembers?\n"
+                "author_id из текущего пользователя. Лимиты по умолчанию: 4 / 7."
             ),
             body=(
                 '{\n  "name": "Трек ИЭУ",\n  "description": "Описание трека",\n'
-                '  "department_id": {{departmentId}},\n  "semester_id": {{semesterId}}\n}'
+                '  "department_id": {{departmentId}},\n  "semester_id": {{semesterId}},\n'
+                '  "minTeamMembers": 4,\n  "maxTeamMembers": 7\n}'
             ),
         ),
         req(
             "Get track",
             "GET",
             "/api/showcase/project-tracks/{{trackId}}/",
-            description="Детали с groups[] и applications[].",
+            description=(
+                "Детали с groups[], applications[], minTeamMembers, maxTeamMembers."
+            ),
         ),
         req(
             "Update track (PATCH)",
             "PATCH",
             "/api/showcase/project-tracks/{{trackId}}/",
-            description="Опциональные поля: name, description, department_id, semester_id.",
-            body='{\n  "name": "Обновлённый трек",\n  "description": "Новое описание"\n}',
+            description=(
+                "Опциональные поля: name, description, department_id, semester_id, "
+                "minTeamMembers, maxTeamMembers. Лимиты сохраняются на треке и "
+                "применяются ко всем заявкам трека."
+            ),
+            body='{\n  "name": "Обновлённый трек",\n  "description": "Новое описание",\n  "minTeamMembers": 2,\n  "maxTeamMembers": 5\n}',
         ),
         req(
             "Delete track",

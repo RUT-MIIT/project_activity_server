@@ -218,6 +218,30 @@ class TestStudyGroupViewSet:
         assert response.data["direction"]["code"] == "38.03.01"
         assert response.data["institute"]["code"] == study_groups["own"].institute_id
         assert response.data["students_count"] == 0
+        assert response.data["mentor"] is None
+
+    def test_retrieve_includes_mentor(self, roles, make_user, study_groups):
+        mentor = make_user(role_code="mentor", email="mentor@example.com")
+        mentor.last_name = "Сидоров"
+        mentor.first_name = "Сидор"
+        mentor.middle_name = "Петрович"
+        mentor.save(update_fields=["last_name", "first_name", "middle_name"])
+        study_groups["own"].mentor = mentor
+        study_groups["own"].save(update_fields=["mentor"])
+
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        response = client.get(f"/api/teams/study-groups/{study_groups['own'].id}/")
+
+        assert response.status_code == 200
+        assert response.data["mentor"] == {
+            "id": mentor.id,
+            "last_name": "Сидоров",
+            "first_name": "Сидор",
+            "middle_name": "Петрович",
+        }
 
     def test_retrieve_validator_forbidden(self, roles, make_user, study_groups):
         user = make_user(role_code="institute_validator", with_department=True)

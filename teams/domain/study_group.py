@@ -27,3 +27,15 @@ class StudyGroupDomain:
             return queryset.filter(institute_id__in=institute_codes)
 
         return queryset
+
+    @staticmethod
+    def is_student(user: User) -> bool:
+        """Возвращает True, если пользователь — аутентифицированный студент."""
+        if not user or not user.is_authenticated:
+            return False
+        return user.role_id == "student"
+
+    @staticmethod
+    def can_access_my_group(user: User) -> bool:
+        """Студент с привязанной учебной группой может открыть «Мою группу»."""
+        return StudyGroupDomain.is_student(user) and user.study_group_id is not None

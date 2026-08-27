@@ -28,6 +28,17 @@ class StudyGroupReadDTO:
             "code": group.institute.code,
             "name": group.institute.name,
         }
+        mentor = group.mentor if group.mentor_id else None
+        self.mentor = (
+            {
+                "id": mentor.id,
+                "last_name": mentor.last_name,
+                "first_name": mentor.first_name,
+                "middle_name": mentor.middle_name,
+            }
+            if mentor is not None
+            else None
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -41,4 +52,5 @@ class StudyGroupReadDTO:
             "students_count": self.students_count,
             "direction": self.direction,
             "institute": self.institute,
+            "mentor": self.mentor,
         }

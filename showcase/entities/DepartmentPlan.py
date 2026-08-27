@@ -10,6 +10,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from accounts.models import Department, Semester
+from accounts.permissions import DenyStudentPermission, ProjectTrackPermission
 from showcase.models import DepartmentPlan, Institute, ProjectApplication
 
 
@@ -24,8 +25,14 @@ class DepartmentPlanSerializer(serializers.Serializer):
 class DepartmentPlanViewSet(viewsets.ViewSet):
     """ViewSet для операций с планами подразделений."""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticated, ProjectTrackPermission]
     serializer_class = DepartmentPlanSerializer
+
+    def get_permissions(self):
+        """Список/создание — staff; свой план подразделения — не student."""
+        if getattr(self, "action", None) == "my_department_plan":
+            return [permissions.IsAuthenticated(), DenyStudentPermission()]
+        return [permissions.IsAuthenticated(), ProjectTrackPermission()]
 
     @extend_schema(tags=["showcase"], request=DepartmentPlanSerializer)
     def create(self, request: Request) -> Response:
@@ -236,7 +243,7 @@ class DepartmentPlanViewSet(viewsets.ViewSet):
     )
     @action(detail=False, methods=["get"], url_path="my-department-plan")
     def my_department_plan(self, request: Request) -> Response:
-        """GET /api/showcase/my-department-plan/?semester_id=ID
+        """GET /api/showcase/department-plans/my-department-plan/?semester_id=ID
 
         Возвращает план и статистику заявок для подразделения текущего пользователя.
         """

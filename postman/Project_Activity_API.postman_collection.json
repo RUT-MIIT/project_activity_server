@@ -924,7 +924,7 @@
                     ""
                   ]
                 },
-                "description": "Список команд. Auth: JWT."
+                "description": "Список постоянных команд. Auth: JWT."
               }
             },
             {
@@ -933,7 +933,7 @@
                 "method": "GET",
                 "header": [],
                 "url": {
-                  "raw": "{{baseUrl}}/api/teams/teams/my/",
+                  "raw": "{{baseUrl}}/api/teams/teams/my/?semester_id=actual",
                   "host": [
                     "{{baseUrl}}"
                   ],
@@ -943,9 +943,16 @@
                     "teams",
                     "my",
                     ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "actual",
+                      "disabled": false
+                    }
                   ]
                 },
-                "description": "Команды текущего пользователя."
+                "description": "Команды текущего пользователя в семестре. Обязателен semester_id (id | actual | next)."
               }
             },
             {
@@ -970,10 +977,10 @@
                     ""
                   ]
                 },
-                "description": "Body: {name, description?, leader_id?, project_application_id?}",
+                "description": "Body: {name, description?, home_study_group_id?}",
                 "body": {
                   "mode": "raw",
-                  "raw": "{\n  \"name\": \"Команда Alpha\",\n  \"description\": \"Описание\",\n  \"project_application_id\": {{applicationId}}\n}"
+                  "raw": "{\n  \"name\": \"Команда Alpha\",\n  \"description\": \"Описание\",\n  \"home_study_group_id\": {{groupId}}\n}"
                 }
               }
             },
@@ -995,7 +1002,7 @@
                     ""
                   ]
                 },
-                "description": "Детали команды с members[]."
+                "description": "Постоянные поля команды."
               }
             },
             {
@@ -1021,7 +1028,7 @@
                     ""
                   ]
                 },
-                "description": "Write: leader команды / admin / cpds / staff.",
+                "description": "Write: капитан любого семестра / admin / cpds / staff.",
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"name\": \"Команда Beta\",\n  \"description\": \"Обновлено\"\n}"
@@ -1046,7 +1053,117 @@
                     ""
                   ]
                 },
-                "description": "Write: leader / admin / cpds / staff."
+                "description": "Write: капитан / admin / cpds / staff."
+              }
+            }
+          ]
+        },
+        {
+          "name": "Team semesters",
+          "item": [
+            {
+              "name": "List team semesters",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/team-semesters/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "team-semesters",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "actual",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Query: semester_id=id|actual|next (опционально)."
+              }
+            },
+            {
+              "name": "My team semesters",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/team-semesters/my/?semester_id=actual",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "team-semesters",
+                    "my",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "actual",
+                      "disabled": false
+                    }
+                  ]
+                },
+                "description": "Обязателен semester_id."
+              }
+            },
+            {
+              "name": "Create team semester",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/team-semesters/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "team-semesters",
+                    ""
+                  ]
+                },
+                "description": "Body: {team_id, semester_id, captain_id?, mentor_id?, project_application_id?}",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"team_id\": {{teamId}},\n  \"semester_id\": {{semesterId}}\n}"
+                }
+              }
+            },
+            {
+              "name": "Get team semester",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/team-semesters/{{teamSemesterId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "team-semesters",
+                    "{{teamSemesterId}}",
+                    ""
+                  ]
+                },
+                "description": "Детали с members[]."
               }
             },
             {
@@ -1060,20 +1177,20 @@
                   }
                 ],
                 "url": {
-                  "raw": "{{baseUrl}}/api/teams/teams/{{teamId}}/members/",
+                  "raw": "{{baseUrl}}/api/teams/team-semesters/{{teamSemesterId}}/members/",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
                     "teams",
-                    "teams",
-                    "{{teamId}}",
+                    "team-semesters",
+                    "{{teamSemesterId}}",
                     "members",
                     ""
                   ]
                 },
-                "description": "Body: {user_id, role?: \"leader\"|\"member\"}.",
+                "description": "Body: {user_id, role?: \"leader\"|\"member\"}. Write: капитан / admin / cpds.",
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"user_id\": {{userId}},\n  \"role\": \"member\"\n}"
@@ -1086,15 +1203,15 @@
                 "method": "DELETE",
                 "header": [],
                 "url": {
-                  "raw": "{{baseUrl}}/api/teams/teams/{{teamId}}/members/{{memberId}}/",
+                  "raw": "{{baseUrl}}/api/teams/team-semesters/{{teamSemesterId}}/members/{{memberId}}/",
                   "host": [
                     "{{baseUrl}}"
                   ],
                   "path": [
                     "api",
                     "teams",
-                    "teams",
-                    "{{teamId}}",
+                    "team-semesters",
+                    "{{teamSemesterId}}",
                     "members",
                     "{{memberId}}",
                     ""
@@ -1152,6 +1269,371 @@
           ]
         },
         {
+          "name": "Lobby (student)",
+          "item": [
+            {
+              "name": "Get lobby",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/lobby/?semester_id=actual",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "lobby",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "actual",
+                      "disabled": false
+                    }
+                  ]
+                },
+                "description": "Лобби формирования команд. Семестр: actual по умолчанию. teams — все команды учебной группы (без фильтра по треку); tracks — треки + команды с привязкой к треку; myTeam включает members (id, full_name, role); заявки/приглашения — если студент без команды."
+              }
+            },
+            {
+              "name": "Create team in lobby",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/lobby/teams/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "lobby",
+                    "teams",
+                    ""
+                  ]
+                },
+                "description": "Body: {name, track_id?}. track_id можно не указывать; если группе доступен ровно один трек — он проставится сам.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"name\": \"Команда Alpha\",\n  \"track_id\": {{trackId}}\n}"
+                }
+              }
+            },
+            {
+              "name": "Create join request",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/lobby/teams/{{teamSemesterId}}/join-requests/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "lobby",
+                    "teams",
+                    "{{teamSemesterId}}",
+                    "join-requests",
+                    ""
+                  ]
+                },
+                "description": "Заявка на вступление в команду (team semester id)."
+              }
+            },
+            {
+              "name": "Accept invitation",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/lobby/invitations/{{invitationId}}/accept/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "lobby",
+                    "invitations",
+                    "{{invitationId}}",
+                    "accept",
+                    ""
+                  ]
+                },
+                "description": "Принять приглашение; остальные заявки/приглашения → obsolete."
+              }
+            },
+            {
+              "name": "Reject invitation",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/lobby/invitations/{{invitationId}}/reject/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "lobby",
+                    "invitations",
+                    "{{invitationId}}",
+                    "reject",
+                    ""
+                  ]
+                },
+                "description": "Отклонить приглашение."
+              }
+            }
+          ]
+        },
+        {
+          "name": "My team (student)",
+          "item": [
+            {
+              "name": "Get my team",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/my-team/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "my-team",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "actual",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Моя команда: состав; у капитана — заявки и приглашения. Лог — отдельно."
+              }
+            },
+            {
+              "name": "Get my team event log",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/my-team/event-log/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "my-team",
+                    "event-log",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "actual",
+                      "disabled": true
+                    },
+                    {
+                      "key": "page",
+                      "value": "1",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Пагинированный лог событий (page_size=50). Query: semester_id, page."
+              }
+            },
+            {
+              "name": "Approve join request",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/my-team/join-requests/{{joinRequestId}}/approve/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "my-team",
+                    "join-requests",
+                    "{{joinRequestId}}",
+                    "approve",
+                    ""
+                  ]
+                },
+                "description": "Капитан. Body: {role: \"member\"}.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"role\": \"member\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Reject join request",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/my-team/join-requests/{{joinRequestId}}/reject/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "my-team",
+                    "join-requests",
+                    "{{joinRequestId}}",
+                    "reject",
+                    ""
+                  ]
+                },
+                "description": "Капитан отклоняет заявку."
+              }
+            },
+            {
+              "name": "Invite classmate",
+              "request": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/my-team/invitations/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "my-team",
+                    "invitations",
+                    ""
+                  ]
+                },
+                "description": "Капитан. Body: {user_id, role: \"member\"}.",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"user_id\": {{userId}},\n  \"role\": \"member\"\n}"
+                }
+              }
+            },
+            {
+              "name": "Kick member",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/my-team/members/{{userId}}/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "my-team",
+                    "members",
+                    "{{userId}}",
+                    ""
+                  ]
+                },
+                "description": "Капитан исключает участника (не себя)."
+              }
+            },
+            {
+              "name": "Leave team",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/my-team/leave/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "my-team",
+                    "leave",
+                    ""
+                  ]
+                },
+                "description": "Участник покидает команду (не капитан)."
+              }
+            },
+            {
+              "name": "Confirm composition",
+              "request": {
+                "method": "POST",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/my-team/confirm-composition/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "my-team",
+                    "confirm-composition",
+                    ""
+                  ]
+                },
+                "description": "Капитан: forming → assembled. Состав в min..max трека."
+              }
+            },
+            {
+              "name": "Delete my team",
+              "request": {
+                "method": "DELETE",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/my-team/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "my-team",
+                    ""
+                  ]
+                },
+                "description": "Капитан удаляет команду (в составе только он)."
+              }
+            }
+          ]
+        },
+        {
           "name": "Study groups",
           "item": [
             {
@@ -1199,7 +1681,35 @@
                     ""
                   ]
                 },
-                "description": "Детали с direction и institute."
+                "description": "Детали с direction, institute и mentor."
+              }
+            },
+            {
+              "name": "My study group",
+              "request": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{baseUrl}}/api/teams/study-groups/my/",
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "path": [
+                    "api",
+                    "teams",
+                    "study-groups",
+                    "my",
+                    ""
+                  ],
+                  "query": [
+                    {
+                      "key": "semester_id",
+                      "value": "actual",
+                      "disabled": true
+                    }
+                  ]
+                },
+                "description": "Группа текущего студента: данные группы, наставник, список контингента с is_registered. Опционально semester_id — команда одногруппника в members[].team. Роль: student."
               }
             }
           ]
@@ -1276,10 +1786,10 @@
                         ""
                       ]
                     },
-                    "description": "Создание. Поля: name*, department_id*, semester_id*, description?\nauthor_id из текущего пользователя.",
+                    "description": "Создание. Поля: name*, department_id*, semester_id*, description?, minTeamMembers?, maxTeamMembers?\nauthor_id из текущего пользователя. Лимиты по умолчанию: 4 / 7.",
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n  \"name\": \"Трек ИЭУ\",\n  \"description\": \"Описание трека\",\n  \"department_id\": {{departmentId}},\n  \"semester_id\": {{semesterId}}\n}"
+                      "raw": "{\n  \"name\": \"Трек ИЭУ\",\n  \"description\": \"Описание трека\",\n  \"department_id\": {{departmentId}},\n  \"semester_id\": {{semesterId}},\n  \"minTeamMembers\": 4,\n  \"maxTeamMembers\": 7\n}"
                     }
                   }
                 },
@@ -1301,7 +1811,7 @@
                         ""
                       ]
                     },
-                    "description": "Детали с groups[] и applications[]."
+                    "description": "Детали с groups[], applications[], minTeamMembers, maxTeamMembers."
                   }
                 },
                 {
@@ -1327,10 +1837,10 @@
                         ""
                       ]
                     },
-                    "description": "Опциональные поля: name, description, department_id, semester_id.",
+                    "description": "Опциональные поля: name, description, department_id, semester_id, minTeamMembers, maxTeamMembers. Лимиты сохраняются на треке и применяются ко всем заявкам трека.",
                     "body": {
                       "mode": "raw",
-                      "raw": "{\n  \"name\": \"Обновлённый трек\",\n  \"description\": \"Новое описание\"\n}"
+                      "raw": "{\n  \"name\": \"Обновлённый трек\",\n  \"description\": \"Новое описание\",\n  \"minTeamMembers\": 2,\n  \"maxTeamMembers\": 5\n}"
                     }
                   }
                 },

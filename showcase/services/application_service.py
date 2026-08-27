@@ -19,6 +19,7 @@ from showcase.dto.application import (
 from showcase.dto.available_actions import AvailableActionsDTO
 from showcase.models import ApplicationStatus, Institute, ProjectApplication
 from showcase.repositories.application import ProjectApplicationRepository
+from showcase.repositories.project_track import ProjectTrackRepository
 from showcase.services.application_notification_service import (
     ApplicationNotificationService,
 )
@@ -37,6 +38,7 @@ class ProjectApplicationService:
 
     def __init__(self):
         self.repository = ProjectApplicationRepository()
+        self.project_track_repository = ProjectTrackRepository()
         self.logging_service = ApplicationLoggingService()
         self.involved_service = InvolvedManagementService()
         self.notification_service = ApplicationNotificationService()
@@ -598,7 +600,17 @@ class ProjectApplicationService:
             raise ValueError(validation.errors)
 
         # 4. Обновляем заявку (Repository)
+        old_recommended = application.recommended_teams_count
         application = self.repository.update(application, dto)
+
+        # 4.5. Пересчёт суммы слотов на треках, если изменился recommended_teams_count
+        if (
+            dto.recommended_teams_count is not None
+            and dto.recommended_teams_count != old_recommended
+        ):
+            self.project_track_repository.recalculate_recommended_teams_count_for_application(
+                application.pk
+            )
 
         # 5. Логируем обновление заявки
         self.logging_service.log_application_update(
@@ -793,6 +805,8 @@ class ProjectApplicationService:
             or not getattr(user, "pk", None)
         ):
             raise PermissionError("Требуется авторизация для просмотра внешних заявок")
+        if user.role and user.role.code == "student":
+            raise PermissionError("Недостаточно прав для просмотра внешних заявок")
 
         # 2. Если передан код статуса, проверяем, что такой статус существует
         if status_code:
@@ -827,6 +841,8 @@ class ProjectApplicationService:
             or not getattr(user, "pk", None)
         ):
             raise PermissionError("Требуется авторизация для просмотра внешних заявок")
+        if user.role and user.role.code == "student":
+            raise PermissionError("Недостаточно прав для просмотра внешних заявок")
 
         # 2. Если передан код статуса, проверяем, что такой статус существует
         if status_code:

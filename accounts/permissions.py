@@ -89,6 +89,19 @@ class IsAdminOrCpds(BasePermission):
         return bool(user.role and user.role.code in {"admin", "cpds"})
 
 
+class DenyStudentPermission(BasePermission):
+    """Запрещает доступ пользователям с ролью student."""
+
+    message = "Недостаточно прав: роль student не имеет доступа"
+
+    def has_permission(self, request: Request, view: APIView) -> bool:
+        """Возвращает False для роли student."""
+        user: User | None = request.user if request.user.is_authenticated else None
+        if not user:
+            return False
+        return not bool(user.role and user.role.code == "student")
+
+
 class ProjectTrackPermission(BasePermission):
     """Разрешает доступ к проектным трекам для admin, cpds и institute_validator."""
 

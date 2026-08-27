@@ -9,6 +9,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from accounts.permissions import ProjectTrackPermission
+from showcase.constants import DEFAULT_MAX_TEAM_MEMBERS, DEFAULT_MIN_TEAM_MEMBERS
 from showcase.dto.project_track import (
     ProjectTrackAddApplicationsDTO,
     ProjectTrackAddGroupsDTO,
@@ -45,6 +46,27 @@ class ProjectTrackCreateSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True, default="")
     department_id = serializers.IntegerField(min_value=1)
     semester_id = serializers.IntegerField(min_value=1)
+    minTeamMembers = serializers.IntegerField(
+        min_value=1, required=False, default=DEFAULT_MIN_TEAM_MEMBERS
+    )
+    maxTeamMembers = serializers.IntegerField(
+        min_value=1, required=False, default=DEFAULT_MAX_TEAM_MEMBERS
+    )
+
+    def validate(self, attrs: dict[str, int]) -> dict[str, int]:
+        """Проверяет согласованность лимитов размера команды."""
+        min_members = attrs.get("minTeamMembers", DEFAULT_MIN_TEAM_MEMBERS)
+        max_members = attrs.get("maxTeamMembers", DEFAULT_MAX_TEAM_MEMBERS)
+        if min_members > max_members:
+            raise serializers.ValidationError(
+                {
+                    "minTeamMembers": (
+                        "Минимальное количество человек не может быть "
+                        "больше максимального."
+                    )
+                }
+            )
+        return attrs
 
 
 class ProjectTrackUpdateSerializer(serializers.Serializer):
@@ -54,6 +76,27 @@ class ProjectTrackUpdateSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True)
     department_id = serializers.IntegerField(min_value=1, required=False)
     semester_id = serializers.IntegerField(min_value=1, required=False)
+    minTeamMembers = serializers.IntegerField(min_value=1, required=False)
+    maxTeamMembers = serializers.IntegerField(min_value=1, required=False)
+
+    def validate(self, attrs: dict[str, int]) -> dict[str, int]:
+        """Проверяет согласованность лимитов размера команды."""
+        min_members = attrs.get("minTeamMembers")
+        max_members = attrs.get("maxTeamMembers")
+        if (
+            min_members is not None
+            and max_members is not None
+            and min_members > max_members
+        ):
+            raise serializers.ValidationError(
+                {
+                    "minTeamMembers": (
+                        "Минимальное количество человек не может быть "
+                        "больше максимального."
+                    )
+                }
+            )
+        return attrs
 
 
 class ProjectTrackAddGroupsSerializer(serializers.Serializer):

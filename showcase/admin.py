@@ -227,6 +227,7 @@ class ProjectTrackAdmin(admin.ModelAdmin):
         "semester",
         "department",
         "author",
+        "recommended_teams_count",
         "groups_count",
         "applications_count",
     )
@@ -240,6 +241,7 @@ class ProjectTrackAdmin(admin.ModelAdmin):
     )
     autocomplete_fields = ("semester", "department", "author")
     ordering = ("semester", "name")
+    readonly_fields = ("recommended_teams_count",)
     inlines = [ProjectTrackGroupInline, ProjectTrackApplicationInline]
 
     fieldsets = (
@@ -252,6 +254,9 @@ class ProjectTrackAdmin(admin.ModelAdmin):
                     "department",
                     "semester",
                     "author",
+                    "min_team_members",
+                    "max_team_members",
+                    "recommended_teams_count",
                 )
             },
         ),
