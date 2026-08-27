@@ -49,17 +49,17 @@ class TeamLobbyService:
         *,
         group_id: int,
         semester_id: int,
-        sole_group_track: ProjectTrack | None = None,
+        group_tracks: list[ProjectTrack] | None = None,
     ) -> tuple[int, int]:
-        """Лимиты команды: свой трек → единственный трек группы → дефолты."""
-        sole = sole_group_track
-        if team_semester.project_track_id is None and sole is None:
-            sole = self.repository.get_sole_group_track(
+        """Лимиты команды: свой трек → effective по трекам группы → дефолты."""
+        tracks = group_tracks
+        if team_semester.project_track_id is None and tracks is None:
+            tracks = self.repository.list_group_tracks(
                 group_id=group_id, semester_id=semester_id
             )
         return self.domain.resolve_member_limits(
             team_semester.project_track,
-            sole_group_track=sole,
+            group_tracks=tracks,
         )
 
     def _my_team_dict(
@@ -69,14 +69,14 @@ class TeamLobbyService:
         viewer_id: int,
         group_id: int,
         semester_id: int,
-        sole_group_track: ProjectTrack | None = None,
+        group_tracks: list[ProjectTrack] | None = None,
     ) -> dict:
         """Сериализация «Моей команды» с резолвом лимитов без N+1."""
         min_members, max_members = self._member_limits_for_team(
             team_semester,
             group_id=group_id,
             semester_id=semester_id,
-            sole_group_track=sole_group_track,
+            group_tracks=group_tracks,
         )
         return MyTeamReadDTO(
             team_semester,
@@ -93,7 +93,6 @@ class TeamLobbyService:
         tracks = self.repository.list_group_tracks(
             group_id=group_id, semester_id=semester_id
         )
-        sole_group_track = tracks[0] if len(tracks) == 1 else None
         team_semesters = self.repository.list_group_team_semesters(
             group_id=group_id,
             semester_id=semester_id,
@@ -112,7 +111,7 @@ class TeamLobbyService:
         if my_team_semester is not None:
             min_m, max_m = self.domain.resolve_member_limits(
                 my_team_semester.project_track,
-                sole_group_track=sole_group_track,
+                group_tracks=tracks,
             )
             my_team_payload = {
                 "id": my_team_semester.id,
@@ -130,7 +129,7 @@ class TeamLobbyService:
         def _lobby_team_item(ts: TeamSemester) -> dict:
             min_m, max_m = self.domain.resolve_member_limits(
                 ts.project_track,
-                sole_group_track=sole_group_track,
+                group_tracks=tracks,
             )
             return LobbyTeamItemDTO(
                 ts,

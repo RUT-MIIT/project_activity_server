@@ -1068,9 +1068,9 @@
     "semantic_hash": "1a88f4d57df08ff65d6f18d4988eb508"
   },
   "teams/domain/team_lobby.py": {
-    "mtime": 1787834010.1809385,
-    "seen": 1787834504.9603958,
-    "ast_hash": "425765154124e48fd27b1b0b7c24f8c6",
+    "mtime": 1787835508.0939367,
+    "seen": 1787835699.133803,
+    "ast_hash": "f44e369f2a44f3f371ad161c1ec07be4",
     "semantic_hash": ""
   },
   "teams/dto/__init__.py": {
@@ -1272,9 +1272,9 @@
     "semantic_hash": ""
   },
   "teams/repositories/team_lobby.py": {
-    "mtime": 1787834010.1809385,
-    "seen": 1787834504.9673982,
-    "ast_hash": "37f90857d362a67081d527af7b53bdd6",
+    "mtime": 1787835548.8679538,
+    "seen": 1787835699.1418054,
+    "ast_hash": "468d2b6407bc01b1a600032d9421b2e9",
     "semantic_hash": ""
   },
   "teams/serializers.py": {
@@ -1302,9 +1302,9 @@
     "semantic_hash": ""
   },
   "teams/services/team_lobby_service.py": {
-    "mtime": 1787835172.015689,
-    "seen": 1787835232.008729,
-    "ast_hash": "94b0665374c08b069bb219c902e0b294",
+    "mtime": 1787835519.2875545,
+    "seen": 1787835699.1418054,
+    "ast_hash": "9b6e182059606c4e92270b1e47e91433",
     "semantic_hash": ""
   },
   "teams/urls.py": {
@@ -1620,9 +1620,9 @@
     "semantic_hash": ""
   },
   "tests/teams/test_my_team_viewset.py": {
-    "mtime": 1787834138.2182055,
-    "seen": 1787834504.9844084,
-    "ast_hash": "6bd4a0c3168549fd23ef7214d742c8e2",
+    "mtime": 1787835538.7245479,
+    "seen": 1787835699.1538048,
+    "ast_hash": "02c871b66a9af6f48f32b597c990bbe9",
     "semantic_hash": ""
   },
   "tests/teams/test_study_group_domain.py": {
@@ -1644,9 +1644,9 @@
     "semantic_hash": ""
   },
   "tests/teams/test_team_lobby_viewset.py": {
-    "mtime": 1787835191.105695,
-    "seen": 1787835232.0277805,
-    "ast_hash": "ffe4c69410e8babfcc314e9aa3eddaac",
+    "mtime": 1787835539.6902416,
+    "seen": 1787835699.1548054,
+    "ast_hash": "82db40d05738ca909ae67286a2a97640",
     "semantic_hash": ""
   },
   "tests/teams/test_team_semester_models.py": {
@@ -1890,9 +1890,9 @@
     "semantic_hash": ""
   },
   "docs/frontend/student_showcase.md": {
-    "mtime": 1787834988.1749144,
-    "seen": 1787835232.0327914,
-    "ast_hash": "9d53519aa01dfefa8753e4ab55a0fbb4",
+    "mtime": 1787835299.863714,
+    "seen": 1787835699.1578226,
+    "ast_hash": "900768bf1b51eb973438457eb39b1769",
     "semantic_hash": ""
   }
 }

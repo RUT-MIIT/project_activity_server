@@ -423,16 +423,20 @@ class TestMyTeamViewSet:
     def test_limits_default_when_group_has_multiple_tracks(
         self, api_client, my_team_setup, departments
     ):
-        """Без трека у команды и >1 трека у группы → дефолты 4/7."""
+        """Без трека у команды и >1 трека у группы → effective max(min)/min(max)."""
         ts = my_team_setup["team_semester"]
-        admin = my_team_setup["track"].author
+        track = my_team_setup["track"]
+        track.min_team_members = 5
+        track.max_team_members = 7
+        track.save(update_fields=["min_team_members", "max_team_members"])
+        admin = track.author
         second = ProjectTrack.objects.create(
             name="Второй трек",
             department=departments["child"],
             semester=my_team_setup["semester"],
             author=admin,
-            min_team_members=2,
-            max_team_members=5,
+            min_team_members=4,
+            max_team_members=7,
             recommended_teams_count=3,
         )
         ProjectTrackGroup.objects.create(
@@ -444,7 +448,7 @@ class TestMyTeamViewSet:
         api_client.force_authenticate(user=my_team_setup["captain"])
         response = api_client.get("/api/teams/my-team/")
         assert response.status_code == 200
-        assert response.data["minTeamMembers"] == 4
+        assert response.data["minTeamMembers"] == 5
         assert response.data["maxTeamMembers"] == 7
 
     def test_my_team_no_n_plus_one(self, api_client, my_team_setup):

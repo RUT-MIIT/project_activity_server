@@ -24,13 +24,23 @@ class TeamLobbyDomain:
     def resolve_member_limits(
         team_track: ProjectTrack | None,
         *,
-        sole_group_track: ProjectTrack | None = None,
+        group_tracks: list[ProjectTrack] | None = None,
     ) -> tuple[int, int]:
-        """Лимиты: трек команды, иначе единственный трек группы, иначе дефолты."""
-        track = team_track if team_track is not None else sole_group_track
-        if track is None:
-            return DEFAULT_MIN_TEAM_MEMBERS, DEFAULT_MAX_TEAM_MEMBERS
-        return track.min_team_members, track.max_team_members
+        """Лимиты размера команды.
+
+        Приоритет:
+        1) трек команды;
+        2) effective по трекам группы: max(min), min(max);
+        3) дефолты, если треков нет или пересечение пустое.
+        """
+        if team_track is not None:
+            return team_track.min_team_members, team_track.max_team_members
+        if group_tracks:
+            min_members = max(track.min_team_members for track in group_tracks)
+            max_members = min(track.max_team_members for track in group_tracks)
+            if min_members <= max_members:
+                return min_members, max_members
+        return DEFAULT_MIN_TEAM_MEMBERS, DEFAULT_MAX_TEAM_MEMBERS
 
     @staticmethod
     def ensure_student_with_group(user: User) -> int:

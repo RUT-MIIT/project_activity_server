@@ -281,7 +281,7 @@ class TestTeamLobbyViewSet:
         assert lobby.data["myTeam"]["id"] == own.data["id"]
 
     def test_create_team_without_track(self, api_client, lobby_setup):
-        """При нескольких треках команды track_id не проставляется сам."""
+        """При нескольких треках track_id не проставляется; лимиты — effective по трекам."""
         captain = lobby_setup["student"]
         api_client.force_authenticate(user=captain)
         create = api_client.post(
@@ -310,8 +310,14 @@ class TestTeamLobbyViewSet:
             t["id"] == create.data["id"] and t["track_id"] is None
             for t in lobby.data["teams"]
         )
-        assert create.data["minTeamMembers"] == 4
-        assert create.data["maxTeamMembers"] == 7
+        # оба трека в fixture: min=2, max=5 → effective 2/5
+        assert create.data["minTeamMembers"] == 2
+        assert create.data["maxTeamMembers"] == 5
+        assert my_team["minTeamMembers"] == 2
+        assert my_team["maxTeamMembers"] == 5
+        team_card = next(t for t in lobby.data["teams"] if t["id"] == create.data["id"])
+        assert team_card["minTeamMembers"] == 2
+        assert team_card["maxTeamMembers"] == 5
         # без трека команда не дублируется внутри tracks[].teams
         assert all(
             t["id"] != create.data["id"]
