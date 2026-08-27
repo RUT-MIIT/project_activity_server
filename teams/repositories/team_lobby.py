@@ -37,6 +37,20 @@ class TeamLobbyRepository:
             .order_by("name")
         )
 
+    def get_sole_group_track(
+        self, *, group_id: int, semester_id: int
+    ) -> ProjectTrack | None:
+        """Единственный трек группы в семестре или None (если 0 или >1)."""
+        tracks = list(
+            ProjectTrack.objects.filter(
+                semester_id=semester_id,
+                group_links__study_group_id=group_id,
+            )
+            .distinct()
+            .order_by("name")[:2]
+        )
+        return tracks[0] if len(tracks) == 1 else None
+
     def list_group_team_semesters(
         self,
         *,

@@ -1,6 +1,8 @@
 """Тесты API «Моя команда»."""
 
 from django.contrib.auth import get_user_model
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 import pytest
 from rest_framework.test import APIClient
 
@@ -398,3 +400,94 @@ class TestMyTeamViewSet:
         assert response.data["isCaptain"] is False
         assert response.data["canLeave"] is True
         assert "joinRequests" not in response.data
+
+    def test_limits_from_sole_group_track_when_team_has_no_track(
+        self, api_client, my_team_setup
+    ):
+        """Без трека у команды, но один трек у группы → лимиты с трека группы."""
+        ts = my_team_setup["team_semester"]
+        track = my_team_setup["track"]
+        track.min_team_members = 3
+        track.max_team_members = 6
+        track.save(update_fields=["min_team_members", "max_team_members"])
+        ts.project_track = None
+        ts.save(update_fields=["project_track"])
+
+        api_client.force_authenticate(user=my_team_setup["captain"])
+        response = api_client.get("/api/teams/my-team/")
+        assert response.status_code == 200
+        assert ts.project_track_id is None
+        assert response.data["minTeamMembers"] == 3
+        assert response.data["maxTeamMembers"] == 6
+
+    def test_limits_default_when_group_has_multiple_tracks(
+        self, api_client, my_team_setup, departments
+    ):
+        """Без трека у команды и >1 трека у группы → дефолты 4/7."""
+        ts = my_team_setup["team_semester"]
+        admin = my_team_setup["track"].author
+        second = ProjectTrack.objects.create(
+            name="Второй трек",
+            department=departments["child"],
+            semester=my_team_setup["semester"],
+            author=admin,
+            min_team_members=2,
+            max_team_members=5,
+            recommended_teams_count=3,
+        )
+        ProjectTrackGroup.objects.create(
+            project_track=second, study_group=my_team_setup["group"]
+        )
+        ts.project_track = None
+        ts.save(update_fields=["project_track"])
+
+        api_client.force_authenticate(user=my_team_setup["captain"])
+        response = api_client.get("/api/teams/my-team/")
+        assert response.status_code == 200
+        assert response.data["minTeamMembers"] == 4
+        assert response.data["maxTeamMembers"] == 7
+
+    def test_my_team_no_n_plus_one(self, api_client, my_team_setup):
+        """Число запросов GET /my-team/ не растёт с числом заявок/приглашений."""
+        ts = my_team_setup["team_semester"]
+        captain = my_team_setup["captain"]
+        role = captain.role
+        group = my_team_setup["group"]
+
+        def _outsider(email: str):
+            return User.objects.create_user(
+                email=email,
+                password="pass",
+                first_name="O",
+                last_name="U",
+                role=role,
+                study_group=group,
+            )
+
+        for i in range(3):
+            TeamJoinRequest.objects.create(
+                team_semester=ts,
+                user=_outsider(f"jr{i}@example.com"),
+                status=TeamJoinRequest.Status.PENDING,
+            )
+
+        api_client.force_authenticate(user=captain)
+        with CaptureQueriesContext(connection) as ctx_small:
+            small = api_client.get("/api/teams/my-team/")
+        assert small.status_code == 200
+        assert len(small.data["joinRequests"]) == 3
+        small_q = len(ctx_small.captured_queries)
+
+        for i in range(5):
+            TeamJoinRequest.objects.create(
+                team_semester=ts,
+                user=_outsider(f"jr_more{i}@example.com"),
+                status=TeamJoinRequest.Status.PENDING,
+            )
+
+        with CaptureQueriesContext(connection) as ctx_large:
+            large = api_client.get("/api/teams/my-team/")
+        assert large.status_code == 200
+        assert len(large.data["joinRequests"]) == 8
+        assert len(ctx_large.captured_queries) <= small_q + 1
+        assert len(ctx_large.captured_queries) <= 15

@@ -8,7 +8,7 @@ from django.db import transaction
 from django.db.models import QuerySet
 
 from accounts.models import Semester
-from showcase.constants import DEFAULT_MAX_TEAM_MEMBERS, DEFAULT_MIN_TEAM_MEMBERS
+from showcase.models import ProjectTrack
 from teams.domain.team_lobby import TeamLobbyDomain
 from teams.dto.team_lobby import (
     LobbyInvitationDTO,
@@ -43,6 +43,48 @@ class TeamLobbyService:
         """Резолвит semester_id; по умолчанию actual."""
         return Semester.resolve_list_semester_id(semester_id_raw or "actual")
 
+    def _member_limits_for_team(
+        self,
+        team_semester: TeamSemester,
+        *,
+        group_id: int,
+        semester_id: int,
+        sole_group_track: ProjectTrack | None = None,
+    ) -> tuple[int, int]:
+        """Лимиты команды: свой трек → единственный трек группы → дефолты."""
+        sole = sole_group_track
+        if team_semester.project_track_id is None and sole is None:
+            sole = self.repository.get_sole_group_track(
+                group_id=group_id, semester_id=semester_id
+            )
+        return self.domain.resolve_member_limits(
+            team_semester.project_track,
+            sole_group_track=sole,
+        )
+
+    def _my_team_dict(
+        self,
+        team_semester: TeamSemester,
+        *,
+        viewer_id: int,
+        group_id: int,
+        semester_id: int,
+        sole_group_track: ProjectTrack | None = None,
+    ) -> dict:
+        """Сериализация «Моей команды» с резолвом лимитов без N+1."""
+        min_members, max_members = self._member_limits_for_team(
+            team_semester,
+            group_id=group_id,
+            semester_id=semester_id,
+            sole_group_track=sole_group_track,
+        )
+        return MyTeamReadDTO(
+            team_semester,
+            viewer_id=viewer_id,
+            min_team_members=min_members,
+            max_team_members=max_members,
+        ).to_dict()
+
     def get_lobby(self, user: UserType, semester_id_raw: str | None = None) -> dict:
         """GET лобби: треки группы, команды, заявки/приглашения если без команды."""
         group_id = self.domain.ensure_student_with_group(user)
@@ -51,6 +93,7 @@ class TeamLobbyService:
         tracks = self.repository.list_group_tracks(
             group_id=group_id, semester_id=semester_id
         )
+        sole_group_track = tracks[0] if len(tracks) == 1 else None
         team_semesters = self.repository.list_group_team_semesters(
             group_id=group_id,
             semester_id=semester_id,
@@ -78,13 +121,18 @@ class TeamLobbyService:
                 ],
             }
 
-        teams_payload = [
-            LobbyTeamItemDTO(
+        def _lobby_team_item(ts: TeamSemester) -> dict:
+            _, max_m = self.domain.resolve_member_limits(
+                ts.project_track,
+                sole_group_track=sole_group_track,
+            )
+            return LobbyTeamItemDTO(
                 ts,
                 my_pending_join_request_id=pending_map.get(ts.id),
+                max_team_members=max_m,
             ).to_dict()
-            for ts in team_semesters
-        ]
+
+        teams_payload = [_lobby_team_item(ts) for ts in team_semesters]
 
         track_dtos: list[dict] = []
         any_can_create = False
@@ -99,13 +147,7 @@ class TeamLobbyService:
             )
             if can_create:
                 any_can_create = True
-            track_teams_payload = [
-                LobbyTeamItemDTO(
-                    ts,
-                    my_pending_join_request_id=pending_map.get(ts.id),
-                ).to_dict()
-                for ts in teams_for_track
-            ]
+            track_teams_payload = [_lobby_team_item(ts) for ts in teams_for_track]
             track_dtos.append(
                 LobbyTrackDTO(
                     track,
@@ -207,7 +249,12 @@ class TeamLobbyService:
             user_id=user.id,
             text="Команда создана",
         )
-        return MyTeamReadDTO(team_semester, viewer_id=user.id).to_dict()
+        return self._my_team_dict(
+            team_semester,
+            viewer_id=user.id,
+            group_id=group_id,
+            semester_id=semester_id,
+        )
 
     @transaction.atomic
     def create_join_request(
@@ -256,7 +303,7 @@ class TeamLobbyService:
     @transaction.atomic
     def accept_invitation(self, user: UserType, invitation_id: int) -> dict:
         """Студент принимает приглашение."""
-        self.domain.ensure_student_with_group(user)
+        group_id = self.domain.ensure_student_with_group(user)
         invitation = self.repository.get_invitation(invitation_id)
         if invitation is None:
             raise ValueError("Приглашение не найдено")
@@ -295,7 +342,12 @@ class TeamLobbyService:
         detail = self.repository.get_my_team_detail(
             user_id=user.id, semester_id=team_semester.semester_id
         )
-        return MyTeamReadDTO(detail, viewer_id=user.id).to_dict()
+        return self._my_team_dict(
+            detail,
+            viewer_id=user.id,
+            group_id=group_id,
+            semester_id=team_semester.semester_id,
+        )
 
     @transaction.atomic
     def reject_invitation(self, user: UserType, invitation_id: int) -> dict:
@@ -324,14 +376,19 @@ class TeamLobbyService:
 
     def get_my_team(self, user: UserType, semester_id_raw: str | None = None) -> dict:
         """GET «Моя команда»."""
-        self.domain.ensure_student_with_group(user)
+        group_id = self.domain.ensure_student_with_group(user)
         semester_id = self._resolve_semester_id(semester_id_raw)
         detail = self.repository.get_my_team_detail(
             user_id=user.id, semester_id=semester_id
         )
         if detail is None:
             raise ValueError("Вы не состоите в команде в этом семестре")
-        return MyTeamReadDTO(detail, viewer_id=user.id).to_dict()
+        return self._my_team_dict(
+            detail,
+            viewer_id=user.id,
+            group_id=group_id,
+            semester_id=semester_id,
+        )
 
     def get_my_team_event_logs(
         self, user: UserType, semester_id_raw: str | None = None
@@ -567,10 +624,12 @@ class TeamLobbyService:
         team_semester = self._get_captain_team(user, semester_id_raw)
         self.domain.ensure_team_forming(team_semester)
 
-        track = team_semester.project_track
         members_count = len(list(team_semester.members.all()))
-        min_members = track.min_team_members if track else DEFAULT_MIN_TEAM_MEMBERS
-        max_members = track.max_team_members if track else DEFAULT_MAX_TEAM_MEMBERS
+        min_members, max_members = self._member_limits_for_team(
+            team_semester,
+            group_id=user.study_group_id,
+            semester_id=team_semester.semester_id,
+        )
         if not self.domain.can_confirm_composition(
             is_captain=True,
             status=team_semester.status,

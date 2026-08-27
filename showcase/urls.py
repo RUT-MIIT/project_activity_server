@@ -11,6 +11,7 @@ from showcase.entities.ProjectApplication import (
     SemesterViewSet,
 )
 from showcase.entities.ProjectTrack import ProjectTrackViewSet
+from showcase.entities.StudentShowcase import StudentShowcaseViewSet
 from showcase.entities.Tag import TagViewSet
 
 # Создаем основной роутер
@@ -37,6 +38,9 @@ router.register(r"projects", ProjectViewSet, basename="project")
 
 router.register(r"project-tracks", ProjectTrackViewSet, basename="project-track")
 
+router.register(
+    r"student-showcase", StudentShowcaseViewSet, basename="student-showcase"
+)
 application_dashboard = ApplicationDashboardViewSet.as_view(
     {
         "get": "retrieve",

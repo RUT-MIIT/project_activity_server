@@ -1,99 +1,99 @@
 # Graph Report - project_activity_server  (2026-08-27)
 
 ## Corpus Check
-- 291 files · ~133,160 words
+- 298 files · ~136,619 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 4246 nodes · 8271 edges · 342 communities (226 shown, 116 thin omitted)
-- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 826 edges (avg confidence: 0.89)
+- 4394 nodes · 8564 edges · 355 communities (216 shown, 139 thin omitted)
+- Extraction: 90% EXTRACTED · 10% INFERRED · 0% AMBIGUOUS · INFERRED: 839 edges (avg confidence: 0.89)
 - Token cost: 0 input · 0 output
 
 ## Graph Freshness
-- Built from commit: `b9ad2288`
+- Built from commit: `b5752e24`
 - Run `git rev-parse HEAD` and compare to check if the graph is stale.
 - Run `graphify update .` after code changes (no API cost).
 
 ## Community Hubs (Navigation)
-- TestRepositoryCreate
+- .create_tag
 - make_user
 - ProjectApplication
 - ProjectApplicationRepository
-- ProjectApplicationCreateDTO
+- ProjectApplicationService
 - accounts/views.py
 - ProjectApplicationViewSet
 - Any
-- Direction
-- Tag
+- DirectionSerializer
+- TestTagRepositoryCreate
 - ApplicationDashboardService
 - ApplicationDashboardRepository
-- Department
-- test_project_track_service.py
-- User
-- test_study_group_domain.py
+- test_project_application_new_fields.py
+- project_track_service.py
+- UserListDTO
+- .get_filtered_queryset
 - prepare_study_groups_xlsx.py
-- StudyGroup
+- TestMyStudyGroupViewSet
 - ProjectTrack
 - TagService
 - TestDepartmentPlanViewSetCreate
 - TestProjectApplicationCreateDTO
-- Any
-- .validate_create
-- ValidationResult
-- test_sync_departments_institutes.py
-- test_import_study_groups_from_contingent.py
-- TeamLobby.py
-- test_team_lobby_viewset.py
-- ApplicationDashboardDomain
-- TestProjectApplicationReadDTO
+- ProjectTrackService
+- ProjectApplicationCreateDTO
+- student_showcase_service.py
+- _create_assembled_team
+- study_group_import.py
+- MyTeamViewSet
+- TestTeamLobbyViewSet
+- django_db
+- ProjectApplicationReadDTO
 - AvailableActionDTO
 - TeamLobbyService
 - ._resolve_institute_semester
 - ProjectTrackViewSet
 - TestTagViewSet
 - ProjectService
-- ProjectApplicationService
+- ProjectApplicationUpdateDTO
 - ._create_app
 - normalize_cell
-- APIClient
-- TestCoordinationAndDtosService
-- ProjectTrackReadDTO
 - PreRegisteredStudent
+- serialize_comment_author
+- StudentShowcaseRepository
+- TestGetLogs
 - CommentService
-- TestTagViewSetCreate
+- Command
 - Semester
 - .approve_application
-- teams/views.py
+- StudentWithStudyGroupPermission
 - TestCanUpdateTag
 - TagViewSet
-- ProjectTrackService
+- ProjectTrackReadDTO
 - Any
 - TestDepartmentPlanViewSetList
 - UserManagementService
-- application_dashboard_service.py
-- TestValidationResult
+- StudentShowcaseDomain
+- ValidationResult
 - StudyGroupService
-- APIView
-- PreRegisteredStudentViewSet
-- test_study_group_viewset.py
+- accounts/permissions.py
+- PreRegisteredStudentService
+- action
 - ProjectTrackDomain
-- TestLogStatusChange
+- ._application_institute_access_q
 - .can_change_status
 - Примеры использования поля is_internal_customer
-- PasswordResetSerializer
-- ApplicationNotificationService
+- TestTagServiceUpdate
+- InvolvedManagementService
 - TestProjectApplicationListSemesterFilter
 - UserManagementDomain
-- PreRegisteredStudentService
-- .update_application
+- accounts/admin.py
+- StudentShowcaseViewSet
 - .can_user_access_application
 - .get_filtered_queryset
 - DepartmentPlanViewSet
 - ProjectTrackRepository
 - DirectionService
-- TestTagServiceUpdate
+- TagRepository
 - TestApplicationDashboardViewSet
-- TestTagViewSetDelete
+- TestTagViewSetCreate
 - TestCanCreateTag
 - TestProjectApplicationListDTO
 - TeamLobbyDomain
@@ -105,43 +105,43 @@
 - Command
 - TeamLobbyRepository
 - ApplicationCapabilities
-- test_import_preregistered_students.py
+- accounts/models.py
 - TestProjectViewSet
-- .calculate_initial_status
-- .validate_update
+- ProjectApplicationDomain
+- QuerySet
 - .get_filtered_queryset
-- accounts/admin.py
+- Command
 - Any
 - TestProjectApplicationViewSetIsInternalCustomer
 - TestProjectApplicationNewFieldsCreateUpdate
 - TestProjectApplicationViewSetTransferToInstitute
-- .can_edit_application
+- StudyGroupViewSet
 - extract_group_abbrev.py
-- TestApproveRejectRequest
+- ProjectApplicationListDTO
 - StudyGroup.py
 - Role
-- .should_require_consultation
-- direction_service.py
+- .get_group_detail
+- ProjectTrackProjectDetailDTO
 - .auth
-- StudyGroupViewSet
-- ProjectTrackGroupListDTO
-- ProjectApplicationUpdateDTO
+- TestApplicationNotificationService
+- ._track_detail_queryset
+- .should_require_consultation
 - _generate_collection.py
 - .view_application
-- TestGetLogs
-- InvolvedManager
-- django_db
+- TestLogStatusChange
+- Department
+- UserRepository
 - .post
 - institute_access.py
-- UserSerializer
+- User
 - TestMyTeamViewSet
-- StudyGroupMemberDTO
+- MyStudyGroupDTO
 - TestSemesterAssignViewSet
-- TestTagServiceDelete
+- .enroll
 - API Документация - Проектные заявки
 - test_import_institutes.py
 - build_fgos_napravleniya_csv.py
-- ProjectTrackCreateSerializer
+- StudyGroupDomain
 - Command
 - Command
 - TestInstituteViewSet
@@ -153,39 +153,39 @@
 - 1. Создание заявки (авторизованные пользователи)
 - Руководство по ручному развертыванию Project Activity Server
 - 4. Список проектов
-- TestStudentBlockedFromStaffApi
+- TestRepositoryUpdate
 - deploy.sh
 - action_types.py
 - export_client_sources_to_docx.py
 - make_source_docx.py
-- test_direction_domain.py
+- TestRepositoryApplicationNumbering
 - parse_miit_ief_groups.py
 - Command
-- ._format_external_share_chart
+- Any
 - schema.py
 - ShowcaseConfig
-- ProjectTrackAddApplicationsSerializer
+- .recalculate_recommended_teams_count
 - Command
 - 0013_refactor_comments.py
 - 0031_refactor_projecttrack.py
 - 0033_alter_recommended_teams_count_default.py
 - 0036_projecttrack_team_member_limits.py
 - 0037_projecttrack_recommended_teams_count.py
-- ProjectTrackGroupDetailDTO
+- StudyGroupRepository
 - teams/admin.py
 - 0011_migrate_team_data.py
-- TestRepositoryUpdate
+- TestRepositoryFilter
 - AccountsConfig
 - 0016_semester_code.py
 - enable_db_access_for_all_tests
 - main
-- .get_daily_dynamics
-- tests/conftest.py
+- TagSerializer
+- fixture
 - showcase/urls.py
 - TeamsConfig
 - 0005_studygroup_institute_fk.py
 - 0006_direction_code_primary_key.py
-- ProjectTrackProjectDetailDTO
+- .handle
 - accounts/migrations/0001_initial.py
 - 0002_department_user_department.py
 - 0003_department_short_name.py
@@ -212,16 +212,16 @@
 - .test_registration_request_approve_creates_user_and_sends_email
 - .test_registration_request_approve_forbidden_for_regular_user
 - .test_registration_request_approve_mail_failure_returns_400_and_no_user_created
-- student_user
+- TestTagRepositoryGetById
 - .test_registration_request_list_requires_privileged_user
 - .test_registration_request_race_condition_integrity_error
-- TestRepositoryApplicationNumbering
+- format_validation_errors
 - .test_semester_create_allowed_for_admin_and_cpds
-- ProjectTrackUpdateDTO
+- TestProjectApplicationSemesterAutoAssign
 - .test_semester_list_requires_auth
-- TestTagServiceGetTag
+- Tag
 - .test_user_me_institute_code_none_if_no_institute
-- .list_applications
+- TestRepositoryGetById
 - asgi.py
 - wsgi.py
 - showcase/migrations/0001_initial.py
@@ -255,12 +255,12 @@
 - 0032_projectapplication_track_fields.py
 - 0034_remove_projecttrack_max_teams.py
 - 0035_projectapplication_team_member_limits.py
-- TestProjectApplicationViewSetIsExternalInResponses
-- test_my_team_viewset.py
-- PasswordChangeSerializer
+- TestTagRepositoryExists
+- PasswordResetSerializer
+- Текущий статус реализации
 - TestProjectApplicationViewSetSimple
-- TestRepositoryFilter
-- teams/models.py
+- .ensure_is_captain
+- TeamSemester
 - status/__init__.py
 - 3. To-be: изменения и новые сущности
 - teams/migrations/0001_initial.py
@@ -275,73 +275,86 @@
 - 0013_team_lobby_workflow.py
 - 0014_lobby_query_indexes.py
 - tests/accounts/management/__init__.py
-- ApplicationDashboard.py
-- TestRepositoryDeleteAndExists
-- TestLogInvolvedDepartment
-- TestTagServiceListTags
+- ProjectTrackAddApplicationItemSerializer
+- ProjectTrackAddApplicationsSerializer
+- .get_existing_group_ids
+- ProjectTrackCreateSerializer
 - Схема БД: студенческий портал
 - Справочные эндпоинты
-- DirectionViewSet
-- test_team_semester_viewset.py
-- ApplicationStatusReadSerializer
-- .register
-- test_preregistered_student_viewset.py
-- ProjectViewSet
-- ProjectRepository
-- TestRepositoryGetById
-- Текущий статус реализации
+- ProjectApplicationListSerializer
+- .list_event_logs
 - .test_departments_list_allow_any_detail_requires_auth
 - .test_registration_request_create_anonymous_allowed
 - .test_registration_request_reject_forbidden_for_regular_user
+- ProjectViewSet
+- ProjectRepository
+- .update_team_member_limits
+- .test_semester_list_is_active_from_settings
+- .test_user_me_institute_code_from_department_institute
+- .test_user_roles_list_requires_auth_and_returns
+- .destroy
 - Endpoints
 - 6. Маппинг разделов UI → сущности БД
 - 1. Список пользователей
 - 3. Изменение пользователя
 - Поддержка multipart/form-data
 - Вариант 1: импорт схемы с автообновлением
-- .test_semester_list_is_active_from_settings
-- .test_user_me_institute_code_from_department_institute
+- .get_permissions
+- .partial_update
 - 4. State machine статусов команды и блокировки
 - 5. Вычисляемые лимиты размера команды (effective_min / effective_max)
 - Обработка ошибок
-- .test_user_roles_list_requires_auth_and_returns
+- .retrieve
 - 1. Введение и scope
 - 2. As-is: текущее состояние
 - 3.5. Изменения `Team` и семестровый контекст (`teams`)
 - 8. Сводка: новые vs изменённые сущности
 - РАСПОРЯЖЕНИЕ
-- .list_unregistered
-- CustomResetPasswordForm
-- ProjectTrackAddApplicationItemSerializer
-- ProjectTrackUpdateSerializer
+- .update
+- .add_applications
+- .update
+- .partial_update
 - Command
 - project_application.md
 - project_activity_server
-- .get_all
+- 0015_team_sem_enroll_lookup_idx.py
 - 0038_alter_team_member_limits_default_4_7.py
-- .filter_all_except_status
-- .filter_by_status_queryset
-- .filter_by_user_queryset
-- .filter_coordination_by_user_queryset
-- .filter_external_applications
-- .get_all_applications_queryset
-- .test_validation_result_str_invalid
-- .test_validation_result_multiple_errors_same_field
-- .test_validation_result_add_error_overwrites_existing
-- .test_validation_result_add_errors
-- .test_validation_result_add_errors_merges_with_existing
-- .test_validation_result_get_errors_list
+- .list_pending_join_requests_for_user
+- .list_pending_invitations_for_user
+- .map_pending_join_request_ids
+- .get_track_for_group
+- .count_group_teams_in_track
+- .user_has_team_in_semester
+- .get_team_semester
+- .create_team_with_semester
+- .create_join_request
+- .get_join_request
+- .get_invitation
+- .create_invitation
+- .list_group_tracks
+- .add_member
+- .mark_user_requests_obsolete
+- .update_join_request_status
+- .update_invitation_status
+- .remove_member
+- .remove_member_force
+- .set_status
+- .delete_team_semester
+- .add_event_log
+- .group_team_semesters_by_track
+- .get_user
+- .get_my_team_detail
 
 ## God Nodes (most connected - your core abstractions)
-1. `make_user()` - 481 edges
-2. `User` - 206 edges
-3. `Department` - 138 edges
-4. `ProjectApplication` - 137 edges
+1. `make_user()` - 486 edges
+2. `User` - 212 edges
+3. `ProjectApplication` - 146 edges
+4. `Department` - 138 edges
 5. `ProjectApplicationService` - 136 edges
 6. `ProjectApplicationCreateDTO` - 109 edges
-7. `Semester` - 100 edges
+7. `Semester` - 104 edges
 8. `ProjectTrackService` - 70 edges
-9. `StudyGroup` - 68 edges
+9. `StudyGroup` - 69 edges
 10. `Institute` - 66 edges
 
 ## Surprising Connections (you probably didn't know these)
@@ -351,95 +364,95 @@
   create_test_user.py → accounts/models.py
 - `ApplicationDashboardDomain` --uses--> `User`  [INFERRED]
   showcase/domain/application_dashboard.py → accounts/models.py
+- `ProjectDomain` --uses--> `User`  [INFERRED]
+  showcase/domain/project.py → accounts/models.py
 - `ProjectTrackDomain` --uses--> `User`  [INFERRED]
   showcase/domain/project_track.py → accounts/models.py
-- `TagDomain` --uses--> `User`  [INFERRED]
-  showcase/domain/tag.py → accounts/models.py
 
 ## Import Cycles
 - None detected.
 
-## Communities (342 total, 116 thin omitted)
+## Communities (355 total, 139 thin omitted)
 
-### Community 0 - "TestRepositoryCreate"
-Cohesion: 0.12
-Nodes (9): Создание заявки без тегов: проверяем, что пустой список не вызывает ошибок., Создание заявки с is_external=True: проверяем установку флага., Создание заявки с is_external=False: проверяем установку флага по умолчанию., Создание заявки без указания is_external: проверяем значение по умолчанию…, Тесты для метода create репозитория., Создание заявки с целевыми институтами: проверяем установку M2M связи.…, Создание заявки без целевых институтов: проверяем, что пустой список не…, Создание заявки с тегами: проверяем установку M2M связи. Проверяем, что tags… (+1 more)
+### Community 0 - ".create_tag"
+Cohesion: 0.18
+Nodes (6): atomic, Бизнес-операция: удаление тега. Args: tag_id: ID тега для удаления user:…, Бизнес-операция: присоединение подразделения к тегу. Args: tag_id: ID тега…, Бизнес-операция: отцепление подразделения от тега. Если тег не базовый…, Бизнес-операция: создание тега. Args: dto: DTO с данными для создания тега…, Бизнес-операция: обновление тега. Args: tag_id: ID тега для обновления dto: DTO…
 
 ### Community 1 - "make_user"
 Cohesion: 0.04
-Nodes (17): django_db, TestUserManagementViewSet, make_user(), Фабрика пользователей: создаёт пользователя с заданной ролью и департаментом.…, django_db, TestProjectTrackGroupsViewSet, TestProjectTrackProjectsViewSet, TestProjectTrackStatisticsViewSet (+9 more)
+Nodes (21): django_db, TestUserManagementViewSet, make_user(), Фабрика пользователей: создаёт пользователя с заданной ролью и департаментом.…, django_db, TestProjectTrackGroupsViewSet, TestProjectTrackProjectsViewSet, TestProjectTrackStatisticsViewSet (+13 more)
 
 ### Community 2 - "ProjectApplication"
 Cohesion: 0.04
-Nodes (60): Репозиторий для управления пользователями., ViewSet для работы с планами подразделений по проектным заявкам., Генерация тестовых одобренных проектов и учебных групп для института IEF., ApplicationInvolvedDepartment, ApplicationInvolvedUser, ApplicationStatus, DepartmentPlan, Institute (+52 more)
+Nodes (61): Репозиторий для управления пользователями., Общие константы приложения showcase., DTO для работы с проектными заявками., ViewSet для работы с планами подразделений по проектным заявкам., Упрощенный ViewSet для проектных заявок с использованием новой архитектуры.…, ApplicationInvolvedDepartment, ApplicationInvolvedUser, ApplicationStatus (+53 more)
 
 ### Community 3 - "ProjectApplicationRepository"
-Cohesion: 0.06
-Nodes (17): ProjectApplicationRepository, Получение заявки по ID с оптимизацией запросов. Включает все связанные объекты…, Получение заявки по ID без дополнительных связанных объектов. Для простых…, Получение заявок пользователя, где он является автором. Оптимизированный запрос…, Получение заявок для координации пользователя. Заявки, где пользователь…, Репозиторий - вся работа с БД здесь, Получение заявок для координации по причастному подразделению. Заявки, где…, Получение заявок по статусу. Для административных операций. (+9 more)
+Cohesion: 0.04
+Nodes (33): ProjectApplicationRepository, Получение заявки по ID с оптимизацией запросов. Включает все связанные объекты…, Получение заявки по ID без дополнительных связанных объектов. Для простых…, Получение заявок пользователя, где он является автором. Оптимизированный запрос…, Получение QuerySet заявок пользователя для пагинации. Возвращает QuerySet…, Получение заявок для координации пользователя. Заявки, где пользователь…, Получение QuerySet заявок для координации пользователя для пагинации., Репозиторий - вся работа с БД здесь (+25 more)
 
-### Community 4 - "ProjectApplicationCreateDTO"
-Cohesion: 0.06
-Nodes (25): create_test_applications(), Создаем тестовые заявки, Бизнес-операция: подача заявки. Чистая функция - проверяет возможность подачи…, ProjectApplicationCreateDTO, DTO для создания заявки - только данные, никакой логики, Проверяем, что валидный DTO проходит валидацию без ошибок., Невалидные поля аккумулируют ошибки в ValidationResult., TestSubmitApplication (+17 more)
+### Community 4 - "ProjectApplicationService"
+Cohesion: 0.05
+Nodes (31): ViewSet для операций над семестрами, связанных с проектными заявками., SemesterViewSet, ProjectApplicationService, Сервис - оркестрация всех операций. Координирует Domain, Repository и…, Бизнес-операция: получение заявок по статусу., Бизнес-операция: получение последних заявок., Бизнес-операция: получение QuerySet всех заявок для пагинации., Бизнес-операция: получение списка внешних заявок (is_external=True). Args:… (+23 more)
 
 ### Community 5 - "accounts/views.py"
 Cohesion: 0.06
-Nodes (44): AcademicYear, Meta, RegistrationRequest, Status, IsAdminOrCpds, Разрешает доступ только администраторам или пользователям с ролью `cpds`., AcademicYearSerializer, ApproveRequestSerializer (+36 more)
+Nodes (41): AcademicYear, Meta, RegistrationRequest, Status, IsCpdsUser, Разрешает доступ только сотрудникам, администраторам или роли ЦПДС., Разрешает доступ только пользователям с ролью ЦПДС (код роли `cpds`)., RegistrationRequestManagePermission (+33 more)
 
 ### Community 6 - "ProjectApplicationViewSet"
-Cohesion: 0.05
-Nodes (33): format_validation_errors(), get_error_message(), ProjectApplicationViewSet, action, extend_schema, POST /api/project-applications/{id}/add_comment/ Добавление комментария к…, GET /api/project-applications/{id}/comments/ Получение всех комментариев к…, GET /api/project-applications/external/ Получение списка всех внешних заявок… (+25 more)
+Cohesion: 0.14
+Nodes (13): get_error_message(), ProjectApplicationViewSet, GET /api/project-applications/external/ Получение списка всех внешних заявок…, Возвращает сообщение об ошибке в зависимости от режима DEBUG. Args: exception:…, Упрощенный ViewSet - только обработка HTTP запросов. Вся бизнес-логика вынесена…, Выбор сериализатора в зависимости от действия, Возвращает QuerySet для списка заявок. DRF автоматически применит пагинацию., PK семестра из ?semester_id= (id | next | actual) или None, если параметра нет. (+5 more)
 
 ### Community 7 - "Any"
-Cohesion: 0.08
-Nodes (17): ProjectTrackApplicationItemDTO, ProjectTrackGroupItemDTO, ProjectTrackInstituteStatisticsDTO, ProjectTrackStatisticsDTO, Any, Преобразует DTO в словарь для API., DTO заявки в проектном треке., Преобразует DTO в словарь для API. (+9 more)
+Cohesion: 0.07
+Nodes (19): ProjectTrackApplicationItemDTO, ProjectTrackGroupItemDTO, ProjectTrackInstituteStatisticsDTO, ProjectTrackStatisticsDTO, Any, Преобразует DTO в словарь для API., DTO заявки в проектном треке., Преобразует DTO в словарь для API. (+11 more)
 
-### Community 8 - "Direction"
-Cohesion: 0.16
-Nodes (10): DirectionReadDTO, Any, DTO для направлений подготовки., DTO для чтения направления., DirectionSerializer, Meta, Сериализатор направления подготовки., Direction (+2 more)
+### Community 8 - "DirectionSerializer"
+Cohesion: 0.67
+Nodes (3): DirectionSerializer, Meta, Сериализатор направления подготовки.
 
-### Community 9 - "Tag"
-Cohesion: 0.03
-Nodes (66): Доменная логика для тегов - чистые функции без эффектов., DTO для работы с тегами., DTO для обновления тега., DTO для создания тега., TagCreateDTO, TagUpdateDTO, DepartmentNestedSerializer, Meta (+58 more)
+### Community 9 - "TestTagRepositoryCreate"
+Cohesion: 0.10
+Nodes (14): django_db, Тесты для метода create репозитория., Создание общего тега (без departments)., Тесты для метода delete репозитория., delete удаляет тег и возвращает True., Тесты для метода get_all репозитория., get_all возвращает queryset с prefetch_related для departments., Создание тега с подразделением. (+6 more)
 
 ### Community 10 - "ApplicationDashboardService"
-Cohesion: 0.06
-Nodes (28): ApplicationDashboardService, Оркестрация получения данных дашборда заявок., django_db, Заявка дочернего подразделения видна при фильтре по родителю., Фильтр application_type=external., Фильтр по группам статусов., Карточка in_work = total - approved - rejected., Среднее и медиана времени до решения. (+20 more)
+Cohesion: 0.03
+Nodes (60): ApplicationDashboardDomain, DashboardFilters, Разворачивает группы статусов в набор кодов., Парсит query-параметр status в кортеж групп., Парсит query-параметр application_type., Парсит query-параметр days., Возвращает id подразделения и всех его потомков., Параметры фильтрации дашборда. (+52 more)
 
 ### Community 11 - "ApplicationDashboardRepository"
+Cohesion: 0.06
+Nodes (32): ApplicationDashboardRepository, Q, QuerySet, Базовый queryset заявок с учётом всех фильтров., Сводные KPI: total, approved, rejected, resolution times., Агрегирует заявки по измерению (institute/department) и группе статуса., Считает долю внешних заявок (is_internal_customer=False) по каждому измерению., Цвет столбца по порогам доли внешних заявок. (+24 more)
+
+### Community 12 - "test_project_application_new_fields.py"
+Cohesion: 0.08
+Nodes (23): get_root_department(), is_cpds_department(), Проверяет, что подразделение — ЦПДС (координирующее, не основное)., Находит корневое подразделение в иерархии. Поднимается по цепочке parent до тех…, ProjectListDTO, Any, DTO для списка проектов., DTO для списка проектов. (+15 more)
+
+### Community 13 - "project_track_service.py"
 Cohesion: 0.07
-Nodes (30): DashboardFilters, Параметры фильтрации дашборда., ApplicationDashboardRepository, Q, QuerySet, Базовый queryset заявок с учётом всех фильтров., Сводные KPI: total, approved, rejected, resolution times., Агрегирует заявки по измерению (institute/department) и группе статуса. (+22 more)
+Nodes (23): ProjectTrackAddApplicationItemDTO, ProjectTrackAddApplicationsDTO, ProjectTrackAddGroupsDTO, ProjectTrackAggregatedStatisticsDTO, ProjectTrackCreateDTO, ProjectTrackUpdateDTO, DTO для проектных треков., DTO для создания проектного трека. (+15 more)
 
-### Community 12 - "Department"
-Cohesion: 0.05
-Nodes (43): Command, BaseCommand, Department, get_root_department(), is_cpds_department(), Утилиты для работы с подразделениями., Проверяет, что подразделение — ЦПДС (координирующее, не основное)., Находит корневое подразделение в иерархии. Поднимается по цепочке parent до тех… (+35 more)
-
-### Community 13 - "test_project_track_service.py"
-Cohesion: 0.07
-Nodes (27): ProjectTrackAddApplicationItemDTO, ProjectTrackAddApplicationsDTO, ProjectTrackAddGroupsDTO, ProjectTrackAggregatedStatisticsDTO, ProjectTrackCreateDTO, DTO для проектных треков., DTO для создания проектного трека., DTO для добавления групп в трек. (+19 more)
-
-### Community 14 - "User"
-Cohesion: 0.05
-Nodes (48): AbstractBaseUser, Any, DTO для списка пользователей., DTO для элемента списка пользователей., UserListDTO, extend_schema_view, Request, Response (+40 more)
-
-### Community 15 - "test_study_group_domain.py"
+### Community 14 - "UserListDTO"
 Cohesion: 0.12
-Nodes (15): QuerySet, Фильтрация учебных групп по роли пользователя., institute_validator — только группы своих институтов., Возвращает True, если пользователь — аутентифицированный студент., Студент с привязанной учебной группой может открыть «Мою группу»., StudyGroupDomain, direction(), other_institute() (+7 more)
+Nodes (17): Any, DTO для списка пользователей., DTO для элемента списка пользователей., UserListDTO, extend_schema_view, Request, Response, ViewSet для управления пользователями. (+9 more)
+
+### Community 15 - ".get_filtered_queryset"
+Cohesion: 0.25
+Nodes (5): QuerySet, institute_validator — только группы своих институтов., django_db, parametrize, TestStudyGroupGetFilteredQueryset
 
 ### Community 16 - "prepare_study_groups_xlsx.py"
 Cohesion: 0.08
 Nodes (46): build_parser(), _cell_str(), _extract_group_abbrev_from_text(), _find_header_row(), _fio_from_row(), _looks_like_student_id(), main(), _normalize_header() (+38 more)
 
-### Community 17 - "StudyGroup"
-Cohesion: 0.10
-Nodes (20): Доменная логика для учебных групп., MyStudyGroupDTO, DTO для эндпоинта «Моя группа»., Полные данные учебной группы для текущего студента., StudyGroup, QuerySet, Репозиторий для учебных групп., Доступ к данным StudyGroup. (+12 more)
+### Community 17 - "TestMyStudyGroupViewSet"
+Cohesion: 0.18
+Nodes (9): api_client(), direction(), _make_preregistered(), Any, APIClient, django_db, fixture, study_group() (+1 more)
 
 ### Community 18 - "ProjectTrack"
-Cohesion: 0.07
-Nodes (32): ApplicationInvolvedDepartmentInline, ApplicationInvolvedUserInline, ApplicationStatusAdmin, DepartmentPlanAdmin, InstituteAdmin, ProjectApplicationAdmin, ProjectApplicationCommentAdmin, ProjectApplicationStatusLogAdmin (+24 more)
+Cohesion: 0.06
+Nodes (46): ApplicationInvolvedDepartmentInline, ApplicationInvolvedUserInline, ApplicationStatusAdmin, DepartmentPlanAdmin, InstituteAdmin, ProjectApplicationAdmin, ProjectApplicationCommentAdmin, ProjectApplicationStatusLogAdmin (+38 more)
 
 ### Community 19 - "TagService"
-Cohesion: 0.08
-Nodes (19): Чистая бизнес-логика для тегов - только функции, никаких эффектов., Проверяет права пользователя на присоединение подразделения к тегу. Args: user:…, Проверяет права пользователя на отцепление подразделения от тега. Args: user:…, TagDomain, Бизнес-операция: удаление тега. Args: tag_id: ID тега для удаления user:…, Бизнес-операция: получение списка тегов с фильтрацией по ролям. Для…, Бизнес-операция: получение тега по ID с проверкой доступа. Args: tag_id: ID…, Сервис - оркестрация всех операций с тегами. Координирует Domain, Repository и… (+11 more)
+Cohesion: 0.05
+Nodes (34): Чистая бизнес-логика для тегов - только функции, никаких эффектов., Проверяет права пользователя на присоединение подразделения к тегу. Args: user:…, Проверяет права пользователя на отцепление подразделения от тега. Args: user:…, TagDomain, Бизнес-операция: получение списка тегов с фильтрацией по ролям. Для…, Бизнес-операция: получение тега по ID с проверкой доступа. Args: tag_id: ID…, Сервис - оркестрация всех операций с тегами. Координирует Domain, Repository и…, TagService (+26 more)
 
 ### Community 20 - "TestDepartmentPlanViewSetCreate"
 Cohesion: 0.06
@@ -449,41 +462,41 @@ Nodes (17): Создание плана с большим значением., �
 Cohesion: 0.08
 Nodes (14): ProjectApplicationCreateSerializer, Сериализатор для технической валидации HTTP данных. ОТВЕТСТВЕННОСТЬ: - Типы…, Проверяет, что min_team_members не больше max_team_members., Преобразование в DTO - никакой бизнес-логики, Тесты для ProjectApplicationCreateDTO., Создание DTO из словаря через from_dict., Преобразование DTO в словарь через to_dict., Проверяем значения по умолчанию: пустые строки для title, company_contacts,… (+6 more)
 
-### Community 22 - "Any"
-Cohesion: 0.08
-Nodes (14): Any, Преобразование в словарь, Преобразование в словарь, исключая None значения, Преобразование в словарь для JSON, Преобразование в словарь для JSON, ProjectApplicationUpdateSerializer, Сериализатор только для валидации HTTP данных при обновлении., Проверяет согласованность min/max, если оба переданы. (+6 more)
+### Community 22 - "ProjectTrackService"
+Cohesion: 0.14
+Nodes (5): ProjectTrackService, Оркестрация Domain + Repository для проектных треков., _create_approved_app(), django_db, TestProjectTrackService
 
-### Community 23 - ".validate_create"
-Cohesion: 0.12
-Nodes (13): Валидация бизнес-правил для создания заявки. Чистая функция - принимает данные,…, Носитель проблемы короче 5 символов вызывает ошибку., Барьер короче 10 символов вызывает ошибку., Имя и фамилия автора короче 2 символов вызывают ошибки., Тесты для валидации при создании заявки., Телефон короче 10 символов вызывает ошибку., Валидный DTO проходит проверку без ошибок., Все ошибки валидации собираются в одном результате. (+5 more)
-
-### Community 24 - "ValidationResult"
-Cohesion: 0.13
-Nodes (8): Проверка, что валидация прошла успешно, Добавление ошибки валидации, Добавление нескольких ошибок, Получение списка ошибок для отображения, Результат валидации данных, ValidationResult, Unit-тесты для ValidationResult showcase.dto.validation. Проверяем добавление…, Инициализация ValidationResult создаёт пустой словарь ошибок.
-
-### Community 25 - "test_sync_departments_institutes.py"
-Cohesion: 0.29
-Nodes (10): Any, django_db, Экспорт и последующий импорт институтов восстанавливают данные., Экспорт и последующий импорт подразделений восстанавливают данные., Импорт институтов удаляет те, которых нет в файле., Импорт подразделений удаляет те, которых нет в файле., test_export_import_departments_roundtrip(), test_export_import_institutes_roundtrip() (+2 more)
-
-### Community 26 - "test_import_study_groups_from_contingent.py"
-Cohesion: 0.11
-Nodes (22): build_group_import_row(), build_group_name(), calculate_course_number(), GroupImportRow, parse_direction_level(), parse_permanent_group_code(), ParsedPermanentGroup, Чистая логика импорта учебных групп из отчёта контингента 1С. (+14 more)
-
-### Community 27 - "TeamLobby.py"
-Cohesion: 0.07
-Nodes (34): PageNumberPagination, MyTeamEventLogDTO, ApproveJoinRequestSerializer, CreateInvitationSerializer, CreateTeamSerializer, MyTeamViewSet, action, extend_schema (+26 more)
-
-### Community 28 - "test_team_lobby_viewset.py"
-Cohesion: 0.13
-Nodes (14): api_client(), _approved_app(), _create_captained_team(), direction(), lobby_setup(), django_db, fixture, Тесты API лобби формирования команд. (+6 more)
-
-### Community 29 - "ApplicationDashboardDomain"
-Cohesion: 0.10
-Nodes (11): ApplicationDashboardDomain, Разворачивает группы статусов в набор кодов., Парсит query-параметр status в кортеж групп., Парсит query-параметр application_type., Парсит query-параметр days., Возвращает id подразделения и всех его потомков., Проверяет право пользователя на просмотр дашборда., Коды институтов пользователя; None — без ограничения. (+3 more)
-
-### Community 30 - "TestProjectApplicationReadDTO"
+### Community 23 - "ProjectApplicationCreateDTO"
 Cohesion: 0.09
-Nodes (13): Exception, Тесты для ProjectApplicationReadDTO., Базовые поля DTO заполняются из модели заявки., Если статус заявки None, DTO.status тоже None., Если автор заявки None, DTO.author тоже None., target_institutes сериализуется как список словарей с code и name., tags сериализуется как список словарей с id, name и category., involved_users сериализуется с данными пользователя, added_at и added_by. (+5 more)
+Nodes (21): create_test_applications(), Создаем тестовые заявки, Валидация бизнес-правил для создания заявки. Чистая функция - принимает данные,…, Бизнес-операция: подача заявки. Чистая функция - проверяет возможность подачи…, ProjectApplicationCreateDTO, DTO для создания заявки - только данные, никакой логики, Носитель проблемы короче 5 символов вызывает ошибку., Барьер короче 10 символов вызывает ошибку. (+13 more)
+
+### Community 24 - "student_showcase_service.py"
+Cohesion: 0.11
+Nodes (16): Any, DTO студенческой витрины проектов., Результат записи команды на проект., Преобразует DTO в словарь для API., Карточка проекта в списке трека витрины., Преобразует DTO в словарь для API., Трек с вложенными проектами для витрины., Преобразует DTO в словарь для API. (+8 more)
+
+### Community 25 - "_create_assembled_team"
+Cohesion: 0.11
+Nodes (9): _approved_app(), _create_assembled_team(), django_db, Число SQL не растёт пропорционально числу проектов., После заполнения последнего слота вторая команда получает 400., TestStudentShowcaseAccess, TestStudentShowcaseDetail, TestStudentShowcaseEnroll (+1 more)
+
+### Community 26 - "study_group_import.py"
+Cohesion: 0.13
+Nodes (16): build_group_import_row(), build_group_name(), calculate_course_number(), parse_direction_level(), parse_permanent_group_code(), ParsedPermanentGroup, Чистая логика импорта учебных групп из отчёта контингента 1С., Рассчитывает номер курса на текущий учебный год и семестр. (+8 more)
+
+### Community 27 - "MyTeamViewSet"
+Cohesion: 0.08
+Nodes (32): PageNumberPagination, ApproveJoinRequestSerializer, CreateInvitationSerializer, CreateTeamSerializer, MyTeamViewSet, action, extend_schema, extend_schema_view (+24 more)
+
+### Community 28 - "TestTeamLobbyViewSet"
+Cohesion: 0.15
+Nodes (6): _create_captained_team(), django_db, После создания своей команды pending-заявка в чужую → obsolete., При нескольких треках команды track_id не проставляется сам., Если группе доступен один трек — он проставляется без track_id в body., TestTeamLobbyViewSet
+
+### Community 29 - "django_db"
+Cohesion: 0.10
+Nodes (14): django_db, Тесты для методов удаления и проверки существования., delete удаляет заявку и возвращает True., exists возвращает True для существующей заявки., exists возвращает False для несуществующей заявки., Тесты для методов подсчёта заявок., count_by_user возвращает количество заявок автора., count_by_status возвращает количество заявок с указанным статусом. (+6 more)
+
+### Community 30 - "ProjectApplicationReadDTO"
+Cohesion: 0.10
+Nodes (16): Exception, ProjectApplicationReadDTO, DTO для чтения заявки - оптимизированный набор полей, Преобразование модели в DTO для чтения., Тесты для ProjectApplicationReadDTO., Базовые поля DTO заполняются из модели заявки., Если статус заявки None, DTO.status тоже None., Если автор заявки None, DTO.author тоже None. (+8 more)
 
 ### Community 31 - "AvailableActionDTO"
 Cohesion: 0.08
@@ -491,15 +504,15 @@ Nodes (24): AvailableActionDTO, AvailableActionsDTO, Any, DTO для предс�
 
 ### Community 32 - "TeamLobbyService"
 Cohesion: 0.12
-Nodes (21): MyTeamReadDTO, atomic, QuerySet, UserType, Создаёт команду студента. Если track_id не передан и группе доступен ровно один…, Студент подаёт заявку на вступление., Студент принимает приглашение., Студент отклоняет приглашение. (+13 more)
+Nodes (21): atomic, QuerySet, UserType, Создаёт команду студента. Если track_id не передан и группе доступен ровно один…, Студент подаёт заявку на вступление., Студент принимает приглашение., Студент отклоняет приглашение., Оркестрация Domain + Repository для студенческого лобби. (+13 more)
 
 ### Community 33 - "._resolve_institute_semester"
-Cohesion: 0.10
-Nodes (12): ProjectTrackProjectListDTO, DTO проекта со счётчиком назначенных групп., Преобразует DTO в словарь для API., QuerySet, UserType, Список треков по фильтрам., Список проектов семестра со счётчиком назначенных групп., Подгружает подразделение пользователя для проверки институтов. (+4 more)
+Cohesion: 0.11
+Nodes (11): ProjectTrackGroupListDTO, ProjectTrackProjectListDTO, DTO группы со счётчиком назначенных проектов., Преобразует DTO в словарь для API., DTO проекта со счётчиком назначенных групп., Преобразует DTO в словарь для API., UserType, Список групп института со счётчиком назначенных проектов. (+3 more)
 
 ### Community 34 - "ProjectTrackViewSet"
 Cohesion: 0.13
-Nodes (23): ProjectTrackViewSet, action, extend_schema, extend_schema_view, Request, Response, API для проектных треков: CRUD и управление составом., Извлекает institute_code и semester_id из query-параметров. (+15 more)
+Nodes (22): ProjectTrackViewSet, action, extend_schema, extend_schema_view, Request, Response, API для проектных треков: CRUD и управление составом., Извлекает institute_code и semester_id из query-параметров. (+14 more)
 
 ### Community 35 - "TestTagViewSet"
 Cohesion: 0.10
@@ -509,109 +522,109 @@ Nodes (11): Список тегов фильтруется для роли cpds 
 Cohesion: 0.21
 Nodes (5): ProjectService, Оркестрация Domain + Repository для списка проектов., TestProjectApplicationNewFieldsLists, django_db, TestProjectService
 
-### Community 37 - "ProjectApplicationService"
-Cohesion: 0.05
-Nodes (28): ViewSet для операций над семестрами, связанных с проектными заявками., SemesterViewSet, ProjectApplicationService, Сервис - оркестрация всех операций. Координирует Domain, Repository и…, Преобразование модели в DTO для чтения., Преобразование модели в DTO для списка., Бизнес-операция: получение заявок по статусу., Бизнес-операция: получение последних заявок. (+20 more)
+### Community 37 - "ProjectApplicationUpdateDTO"
+Cohesion: 0.03
+Nodes (41): Валидация бизнес-правил для обновления заявки. Чистая функция - проверяет…, ProjectApplicationUpdateDTO, DTO для обновления заявки - только изменяемые поля, ProjectApplicationUpdateSerializer, Сериализатор только для валидации HTTP данных при обновлении., Проверяет согласованность min/max, если оба переданы., Преобразование в DTO - никакой бизнес-логики, Тесты для валидации при обновлении заявки. (+33 more)
 
 ### Community 38 - "._create_app"
-Cohesion: 0.07
-Nodes (22): patch, Нет причастности подразделения — матрица запрещает действие, ожидаем…, department_validator: await_department -> approved_department ->…, institute_validator: await_institute -> approved_institute -> await_cpds…, institute_validator может согласовать await_department, подменяя шаг кафедры., cpds: может одобрять заявки в статусе await_cpds (переход в approved разрешен)., Запрос изменений: await_department -> returned_department, один лог., После отзыва автором: department_validator одобряет -> await_institute. (+14 more)
+Cohesion: 0.05
+Nodes (27): patch, Ошибки валидации института: несуществующий код или отсутствие связанного…, Нет причастности подразделения — матрица запрещает действие, ожидаем…, Доступ к просмотру: чужому user запрещено, автору разрешено., department_validator: await_department -> approved_department ->…, institute_validator: await_institute -> approved_institute -> await_cpds…, institute_validator может согласовать await_department, подменяя шаг кафедры., cpds: может одобрять заявки в статусе await_cpds (переход в approved разрешен). (+19 more)
 
 ### Community 39 - "normalize_cell"
-Cohesion: 0.07
-Nodes (28): build_preregistered_student_import_row(), normalize_snils(), parse_full_name(), PreRegisteredStudentImportRow, Чистая логика импорта предрегистрации студентов из отчёта контингента 1С., Строка отчёта, подготовленная к импорту одной предрегистрации., Нормализует СНИЛС до 11 цифр или пустой строки., Разбирает ФИО из отчёта контингента. Returns: Кортеж (фамилия, имя, отчество). (+20 more)
+Cohesion: 0.17
+Nodes (13): build_preregistered_student_import_row(), normalize_snils(), parse_full_name(), PreRegisteredStudentImportRow, Чистая логика импорта предрегистрации студентов из отчёта контингента 1С., Строка отчёта, подготовленная к импорту одной предрегистрации., Нормализует СНИЛС до 11 цифр или пустой строки., Разбирает ФИО из отчёта контингента. Returns: Кортеж (фамилия, имя, отчество). (+5 more)
 
-### Community 40 - "APIClient"
-Cohesion: 0.19
-Nodes (8): MonkeyPatch, Any, APIClient, django_db, override_settings, TestPreRegisteredStudentLookup, TestPreRegisteredStudentMismatch, TestPreRegisteredStudentRegister
+### Community 40 - "PreRegisteredStudent"
+Cohesion: 0.06
+Nodes (36): PreRegisteredStudent, Предрегистрация студента из отчёта контингента 1С., Возвращает True, если предрегистрация уже привязана к User., PreRegisteredStudentRepository, QuerySet, Репозиторий предрегистрации студентов., Доступ к данным предрегистрации студентов., Возвращает предрегистрацию по номеру студенческого билета. (+28 more)
 
-### Community 41 - "TestCoordinationAndDtosService"
+### Community 41 - "serialize_comment_author"
+Cohesion: 0.14
+Nodes (11): Сериализует автора комментария с role и department. Args: author: User объект…, serialize_comment_author(), POST /api/project-applications/{id}/add_comment/ Добавление комментария к…, GET /api/project-applications/{id}/comments/ Получение всех комментариев к…, Тесты для функции serialize_comment_author., Если author равен None, возвращаются None значения., Сериализация автора с полными данными: имя, фамилия, отчество, роль,…, Сериализация автора без отчества. (+3 more)
+
+### Community 42 - "StudentShowcaseRepository"
 Cohesion: 0.11
-Nodes (9): Валидатор получает объединённый список: его причастность пользователя +…, cpds видит все заявки в статусе await_cpds даже без причастности., Преобразователи к DTO возвращают ожидаемые экземпляры., get_external_applications возвращает только заявки с is_external=True., get_external_applications позволяет фильтровать внешние заявки по коду статуса., get_external_applications с несуществующим статусом выбрасывает ValueError., get_external_applications_queryset возвращает QuerySet внешних заявок., get_external_applications требует авторизации. (+1 more)
+Nodes (10): Число команд, записанных на проект в треке/семестре., Команда пользователя в семестре с блокировкой строки., Команда пользователя в семестре (без блокировки)., Связь проект↔трек с проверкой семестра и статуса approved., Запросы и запись для студенческой витрины проектов., Счётчик записанных команд с блокировкой строк TeamSemester проекта., Треки группы в семестре с одобренными проектами и тегами., Карта (track_id, application_id) → число записанных команд. (+2 more)
 
-### Community 42 - "ProjectTrackReadDTO"
+### Community 43 - "TestGetLogs"
 Cohesion: 0.11
-Nodes (15): ProjectTrackReadDTO, DTO для чтения проектного трека., atomic, Возвращает трек с проверкой доступа., Возвращает детали трека., Создаёт проектный трек., Проставляет лимиты размера команды всем заявкам трека., Обновляет основные поля трека и лимиты команд у заявок. (+7 more)
-
-### Community 43 - "PreRegisteredStudent"
-Cohesion: 0.12
-Nodes (9): PreRegisteredStudent, Предрегистрация студента из отчёта контингента 1С., Возвращает True, если предрегистрация уже привязана к User., Репозиторий предрегистрации студентов., Возвращает предрегистрацию по номеру студенческого билета., Возвращает предрегистрацию по нормализованному СНИЛС., Возвращает предрегистрацию по первичному ключу., Создаёт или обновляет предрегистрацию по табельному номеру. (+1 more)
+Nodes (10): Тесты для получения логов., Получение всех логов по заявке., Если application равен None, выбрасывается ValueError., Получение последнего лога заявки., Если логов нет, возвращается None., Получение логов по типу действия., Пустой тип действия вызывает ValueError., Получение логов по актору. (+2 more)
 
 ### Community 44 - "CommentService"
 Cohesion: 0.10
 Nodes (17): CommentService, atomic, Сервис для управления комментариями к заявкам. Обеспечивает добавление и…, Добавляет комментарий к заявке. Args: application_id: ID заявки field: Поле, к…, Получает все комментарии к заявке. Args: application_id: ID заявки Returns:…, django_db, Пустой текст вызывает ValueError., Тесты для CommentService. (+9 more)
 
-### Community 45 - "TestTagViewSetCreate"
-Cohesion: 0.12
-Nodes (9): Тесты для создания тегов через API., cpds может создавать общие теги., cpds не может создавать теги с подразделением., institute_validator автоматически устанавливает свое подразделение., admin может создавать любые теги., Остальные роли не могут создавать теги., Нельзя создать тег для подразделения, если уже есть общий тег с таким именем., Нельзя создать общий тег, если имя уже используется (общим или departmental… (+1 more)
+### Community 45 - "Command"
+Cohesion: 0.19
+Nodes (10): GroupImportRow, Строка отчёта, подготовленная к импорту одной учебной группы., Command, BaseCommand, DataFrame, Path, Читает отчёт контингента; заголовок колонок — вторая строка., Дедуплицирует строки по коду постоянной группы. (+2 more)
 
 ### Community 46 - "Semester"
 Cohesion: 0.06
-Nodes (31): Идемпотентный импорт строк модели Settings из CSV., Ключ–значение настроек приложения (редактируемые из админки / импортом)., Semester, Settings, Сервис управления пользователями., Command, BaseCommand, Добавляет причастные подразделения института к заявке. (+23 more)
+Nodes (32): Идемпотентный импорт строк модели Settings из CSV., Ключ–значение настроек приложения (редактируемые из админки / импортом)., Semester, Settings, Command, BaseCommand, Добавляет причастные подразделения института к заявке., Institute (+24 more)
 
 ### Community 47 - ".approve_application"
 Cohesion: 0.08
 Nodes (18): atomic, Определяет статус для доработки в зависимости от роли пользователя. Args:…, Определяет статус для отклонения в зависимости от роли пользователя. Args:…, Определяет промежуточный статус для одобрения в зависимости от роли…, Определяет следующий статус после промежуточного одобрения. Args:…, Бизнес-операция: отправка заявки на доработку., Бизнес-операция: отзыв заявки автором., Бизнес-операция: одобрение заявки. (+10 more)
 
-### Community 48 - "teams/views.py"
-Cohesion: 0.14
-Nodes (15): Постоянная команда участников проектной деятельности., Team, _is_staff_or_admin(), APIView, BasePermission, Request, Разрешения для приложения teams., Доступ только студенту с привязанной учебной группой. (+7 more)
+### Community 48 - "StudentWithStudyGroupPermission"
+Cohesion: 0.22
+Nodes (10): _is_staff_or_admin(), APIView, BasePermission, Request, Доступ только студенту с привязанной учебной группой., Чтение — любой аутентифицированный пользователь. Изменение постоянной команды —…, Изменение семестрового контекста — капитан, admin или cpds., StudentWithStudyGroupPermission (+2 more)
 
 ### Community 49 - "TestCanUpdateTag"
-Cohesion: 0.15
-Nodes (10): Проверяет права пользователя на обновление тега. Args: user: Пользователь tag:…, Тесты для проверки прав на обновление тегов., cpds может обновлять общие теги., cpds не может обновлять теги с подразделением., institute_validator может обновлять общие теги., institute_validator может обновлять теги своего подразделения., institute_validator не может обновлять теги чужого подразделения., admin может обновлять любые теги. (+2 more)
+Cohesion: 0.14
+Nodes (11): Проверяет права пользователя на обновление тега. Args: user: Пользователь tag:…, django_db, Тесты для проверки прав на обновление тегов., cpds может обновлять общие теги., cpds не может обновлять теги с подразделением., institute_validator может обновлять общие теги., institute_validator может обновлять теги своего подразделения., institute_validator не может обновлять теги чужого подразделения. (+3 more)
 
 ### Community 50 - "TagViewSet"
 Cohesion: 0.11
 Nodes (20): Инициализация из модели Tag., TagReadDTO, DepartmentAttachDetachSerializer, action, Request, Response, GET /api/showcase/tags/{id}/ - получение тега с проверкой доступа., POST /api/showcase/tags/ - создание тега. (+12 more)
 
-### Community 51 - "ProjectTrackService"
-Cohesion: 0.14
-Nodes (5): ProjectTrackService, Оркестрация Domain + Repository для проектных треков., _create_approved_app(), django_db, TestProjectTrackService
+### Community 51 - "ProjectTrackReadDTO"
+Cohesion: 0.09
+Nodes (18): ProjectTrackReadDTO, DTO для чтения проектного трека., atomic, QuerySet, Возвращает трек с проверкой доступа., Список треков по фильтрам., Возвращает детали трека., Создаёт проектный трек. (+10 more)
 
 ### Community 52 - "Any"
-Cohesion: 0.10
-Nodes (13): LobbyInvitationDTO, LobbyReadDTO, LobbyTeamItemDTO, LobbyTrackDTO, MyTeamInvitationDTO, MyTeamJoinRequestDTO, Any, Pending-приглашение студента в лобби. (+5 more)
+Cohesion: 0.08
+Nodes (16): LobbyInvitationDTO, LobbyJoinRequestDTO, LobbyReadDTO, LobbyTeamItemDTO, LobbyTrackDTO, MyTeamInvitationDTO, MyTeamJoinRequestDTO, Any (+8 more)
 
 ### Community 53 - "TestDepartmentPlanViewSetList"
 Cohesion: 0.06
 Nodes (18): Тесты для GET /api/showcase/department-plans/ - получение планов., Успешное получение планов дочерних подразделений по коду института., Успешное получение планов верхнеуровневых подразделений., Пустой список дочерних подразделений., Если план отсутствует, возвращается 0., Проверка статистики заявок по статусам., Подразделение без заявок - пустая статистика., Ошибка: неавторизованный пользователь. (+10 more)
 
 ### Community 54 - "UserManagementService"
-Cohesion: 0.09
-Nodes (16): QuerySet, Доступ к данным пользователей для управления., Базовый queryset без администраторов., Список пользователей с оптимизацией запросов., Возвращает пользователя по ID., Сохраняет изменения пользователя., UserRepository, QuerySet (+8 more)
-
-### Community 55 - "application_dashboard_service.py"
 Cohesion: 0.16
-Nodes (10): ApplicationDashboardDTO, Any, DTO для дашборда проектных заявок., Преобразует DTO в словарь для API., DTO блока KPI-карточек., DTO полного ответа дашборда., Преобразует DTO в словарь для API., SummaryCardsDTO (+2 more)
+Nodes (9): QuerySet, Оркестрация Domain + Repository для управления пользователями., Подгружает parent подразделения для корректного resolve институтов., Список пользователей с учётом роли запрашивающего., Возвращает пользователя, если он доступен запрашивающему., Частичное обновление пользователя., UserManagementService, django_db (+1 more)
 
-### Community 56 - "TestValidationResult"
+### Community 55 - "StudentShowcaseDomain"
 Cohesion: 0.12
-Nodes (9): Тесты для ValidationResult., get_errors_list возвращает пустой список когда нет ошибок., __str__ возвращает 'Validation successful' когда валидация прошла., __str__ корректно форматирует сообщение при одной ошибке., is_valid возвращает True когда нет ошибок., is_valid возвращает False когда есть ошибки., add_error добавляет ошибку в словарь., add_error позволяет добавлять несколько ошибок для разных полей. (+1 more)
+Nodes (10): Правила доступа и записи команды на проект витрины., Запись на проект доступна только при подтверждённом составе., Запрещает повторную запись / смену проекта., Проект должен принадлежать треку команды., Число участников должно укладываться в лимиты проекта., Жёсткий лимит числа команд на проект., True, если капитан может записать команду на проект (для UI)., StudentShowcaseDomain (+2 more)
+
+### Community 56 - "ValidationResult"
+Cohesion: 0.06
+Nodes (23): Проверка, что валидация прошла успешно, Добавление ошибки валидации, Добавление нескольких ошибок, Получение списка ошибок для отображения, Результат валидации данных, ValidationResult, Unit-тесты для ValidationResult showcase.dto.validation. Проверяем добавление…, Тесты для ValidationResult. (+15 more)
 
 ### Community 57 - "StudyGroupService"
+Cohesion: 0.21
+Nodes (5): Оркестрация Domain + Repository для StudyGroup., StudyGroupService, TestMyStudyGroupService, django_db, TestStudyGroupService
+
+### Community 58 - "accounts/permissions.py"
+Cohesion: 0.06
+Nodes (32): DenyStudentPermission, IsAdminOrCpds, IsInstituteValidator, ProjectManagementPermission, ProjectTrackPermission, APIView, BasePermission, Request (+24 more)
+
+### Community 59 - "PreRegisteredStudentService"
+Cohesion: 0.07
+Nodes (29): PreRegisteredStudentViewSet, action, extend_schema_view, Request, Response, API предрегистрации студентов из контингента., Публичные операции предрегистрации студентов., Ищет предрегистрацию по студбилету, табельному номеру или СНИЛС. (+21 more)
+
+### Community 60 - "action"
 Cohesion: 0.12
-Nodes (12): Any, Оркестрация Domain + Repository для StudyGroup., Возвращает данные учебной группы текущего студента., StudyGroupService, django_db, TestMyStudyGroupService, direction(), django_db (+4 more)
-
-### Community 58 - "APIView"
-Cohesion: 0.17
-Nodes (9): APIView, Request, Проверяет наличие прав у пользователя., Проверяет наличие прав у пользователя., Проверяет права на чтение или запись пользователей., Проверяет наличие прав у пользователя. Args: request: текущий запрос view:…, Проверяет, что у текущего пользователя установлена роль с кодом `cpds`. Args:…, Проверяет, что у пользователя роль institute_validator. (+1 more)
-
-### Community 59 - "PreRegisteredStudentViewSet"
-Cohesion: 0.13
-Nodes (18): PreRegisteredStudentViewSet, action, extend_schema_view, Request, Response, API предрегистрации студентов из контингента., Публичные операции предрегистрации студентов., Ищет предрегистрацию по студбилету, табельному номеру или СНИЛС. (+10 more)
-
-### Community 60 - "test_study_group_viewset.py"
-Cohesion: 0.47
-Nodes (5): direction(), other_institute(), fixture, Тесты StudyGroupViewSet., study_groups()
+Nodes (9): action, extend_schema, POST /api/semesters/{id}/assign-empty-applications Присваивает переданный…, POST /api/project-applications/{id}/approve/ Одобрение заявки, POST /api/project-applications/{id}/reject/ Отклонение заявки, POST /api/project-applications/{id}/request_changes/ Запрос изменений (отправка…, POST /api/project-applications/{id}/transfer_to_institute/ Передача заявки в…, POST /api/project-applications/{id}/return_by_author/ Отзыв заявки автором… (+1 more)
 
 ### Community 61 - "ProjectTrackDomain"
 Cohesion: 0.08
-Nodes (15): ProjectTrackDomain, Проверяет, что все группы доступны пользователю., Проверяет, что группу можно добавить в трек., Проверяет доступ к конкретному треку., Правила доступа и валидации для проектных треков., Код роли пользователя., Проверяет, может ли пользователь управлять проектными треками., Коды институтов пользователя; None — без ограничения (admin/cpds). (+7 more)
+Nodes (14): ProjectTrackDomain, Проверяет, что все группы доступны пользователю., Проверяет, что группу можно добавить в трек., Проверяет доступ к конкретному треку., Правила доступа и валидации для проектных треков., Код роли пользователя., Проверяет, может ли пользователь управлять проектными треками., Коды институтов пользователя; None — без ограничения (admin/cpds). (+6 more)
 
-### Community 62 - "TestLogStatusChange"
-Cohesion: 0.12
-Nodes (9): Первый переход (from_status=None) помечает заявку, если актор не автор., Логирование с указанием предыдущего лога для создания цепочки., Тесты для log_status_change., Если application равен None, выбрасывается ValueError., Успешное логирование изменения статуса (не автор — флаг выставляется)., Если to_status равен None, выбрасывается ValueError., Смена статуса автором не помечает заявку для самого автора., Одинаковый from/to статус не помечает заявку как изменённую. (+1 more)
+### Community 62 - "._application_institute_access_q"
+Cohesion: 0.19
+Nodes (7): Q, Q-фильтр: заявка относится к институту по причастным подразделениям., Список одобренных проектов семестра со счётчиком назначенных групп., Возвращает проектную заявку по id или None., Q-фильтр: заявка доступна институту по involved/target institutes., Агрегированная статистика распределения проектов по группам., Статистика по каждому активному институту.
 
 ### Community 63 - ".can_change_status"
 Cohesion: 0.13
@@ -621,25 +634,25 @@ Nodes (12): Проверка возможности изменения стат�
 Cohesion: 0.11
 Nodes (18): 1. Создание заявки с внутренним заказчиком, 2. Создание заявки с внешним заказчиком, 3. Создание заявки без указания типа заказчика (по умолчанию false), Endpoint, Возможные ошибки, Использование в Python коде, Обновление только поля is_internal_customer, Обновление через DTO (+10 more)
 
-### Community 66 - "ApplicationNotificationService"
-Cohesion: 0.07
-Nodes (20): ApplicationNotificationService, Отправка писем автору при отклонении и отправке на доработку., Email получателя: author_email заявки или email связанного пользователя-автора., Письмо автору: заявка отправлена на доработку., Письмо автору: заявка отклонена., InvolvedManagementService, atomic, Добавляет причастное подразделение по его краткому названию. Args: application:… (+12 more)
+### Community 65 - "TestTagServiceUpdate"
+Cohesion: 0.12
+Nodes (9): Тесты для метода update_tag сервиса., cpds может обновлять общие теги., cpds не может обновлять теги с подразделением., institute_validator может обновлять теги своего подразделения., institute_validator не может обновлять теги чужого подразделения., admin может обновлять любые теги., Нельзя обновить тег, если имя и набор departments уже заняты другим тегом., Обновление несуществующего тега вызывает ошибку. (+1 more)
 
-### Community 67 - "TestProjectApplicationListSemesterFilter"
-Cohesion: 0.14
-Nodes (9): django_db, Тесты для получения списка внешних заявок (external endpoint)., GET /api/showcase/project-applications/external/ требует авторизации., GET /api/showcase/project-applications/external/ возвращает только внешние…, Фильтр ?semester_id= в GET-списке заявок., Автоподстановка семестра при создании заявки., TestProjectApplicationListSemesterFilter, TestProjectApplicationSemesterAutoAssign (+1 more)
+### Community 66 - "InvolvedManagementService"
+Cohesion: 0.12
+Nodes (12): InvolvedManagementService, atomic, Добавляет причастное подразделение по его краткому названию. Args: application:…, Добавляет причастное подразделение по его ID. Args: application: Заявка, к…, Добавляет пользователя как причастного к заявке. Args: application: Заявка…, Добавляет подразделение как причастное к заявке. Args: application: Заявка…, Получает всех причастных пользователей заявки. Args: application: Заявка…, Сервис для управления причастными пользователями и подразделениями.… (+4 more)
 
 ### Community 68 - "UserManagementDomain"
-Cohesion: 0.12
+Cohesion: 0.11
 Nodes (11): QuerySet, Проверяет, что пользователь доступен в отфильтрованном queryset., Правила доступа и валидации для управления пользователями., Проверяет, может ли пользователь просматривать список пользователей., Проверяет, может ли пользователь изменять пользователей., Проверяет, что пользователь защищён от изменений (админ/staff)., Валидирует частичное обновление пользователя., UserManagementDomain (+3 more)
 
-### Community 69 - "PreRegisteredStudentService"
-Cohesion: 0.13
-Nodes (11): PreRegisteredStudentRepository, Доступ к данным предрегистрации студентов., Возвращает предрегистрацию по табельному номеру., Удаляет предрегистрации без привязанного пользователя., PreRegisteredStudentLookupResult, PreRegisteredStudentService, Отправляет администратору письмо о расхождении данных. Raises: ValueError: если…, Результат поиска предрегистрации. (+3 more)
+### Community 69 - "accounts/admin.py"
+Cohesion: 0.24
+Nodes (11): AcademicYearAdmin, DepartmentAdmin, PreRegisteredStudentAdmin, display, register, RegistrationRequestAdmin, RoleAdmin, SemesterAdmin (+3 more)
 
-### Community 70 - ".update_application"
-Cohesion: 0.13
-Nodes (10): Бизнес-операция: обновление заявки. Чистая функция - проверяет возможность…, Бизнес-операция: обновление заявки., Автор с ролью user в статусе await_department не может редактировать заявку., Сотрудник ЦПДС может редактировать любую заявку (кроме rejected)., Не-автор и не-ЦПДС не может редактировать заявку., Нет доступа и запрещённые статусы добавляют ошибки в ValidationResult., CPDS может редактировать одобренные заявки., institute_validator-автор: save совпадает с available_actions (подразделение… (+2 more)
+### Community 70 - "StudentShowcaseViewSet"
+Cohesion: 0.23
+Nodes (10): action, extend_schema, extend_schema_view, Request, Response, Студенческая витрина: треки, детали проекта, запись команды., GET /api/showcase/student-showcase/., GET /api/showcase/student-showcase/projects/{id}/. (+2 more)
 
 ### Community 71 - ".can_user_access_application"
 Cohesion: 0.14
@@ -650,40 +663,40 @@ Cohesion: 0.14
 Nodes (11): QuerySet, Фильтрует queryset тегов в зависимости от роли пользователя. Чистая функция -…, Остальные роли без подразделения видят только общие теги., Неавторизованный пользователь видит только общие теги., Тесты для фильтрации queryset тегов по ролям., cpds видит только общие теги (без departments)., institute_validator видит общие теги + теги своего подразделения., institute_validator без подразделения видит только общие теги. (+3 more)
 
 ### Community 73 - "DepartmentPlanViewSet"
-Cohesion: 0.14
-Nodes (17): DenyStudentPermission, Запрещает доступ пользователям с ролью student., DepartmentPlanSerializer, DepartmentPlanViewSet, action, extend_schema, Request, Response (+9 more)
+Cohesion: 0.17
+Nodes (14): DepartmentPlanSerializer, DepartmentPlanViewSet, action, extend_schema, Request, Response, Получить словарь планов по подразделениям для указанного семестра., Получить статистику заявок по статусам для каждого подразделения. (+6 more)
 
 ### Community 74 - "ProjectTrackRepository"
-Cohesion: 0.04
-Nodes (34): ProjectTrackRepository, Q, QuerySet, Возвращает трек по id или None., Создаёт проектный трек., Обновляет поля трека., Возвращает id групп, уже привязанных к треку., Добавляет группы в трек; возвращает число созданных связей. (+26 more)
+Cohesion: 0.09
+Nodes (12): ProjectTrackRepository, Создаёт проектный трек., Добавляет группы в трек; возвращает число созданных связей., Удаляет группу из трека; True если связь была., Возвращает id заявок, уже привязанных к треку., Удаляет заявку из трека; True если связь была., Количество групп в треке., Доступ к данным проектных треков. (+4 more)
 
 ### Community 75 - "DirectionService"
-Cohesion: 0.17
-Nodes (9): DirectionService, Оркестрация Domain + Repository для Direction., Список направлений с фильтрацией по роли., Направление по коду с проверкой доступа., directions(), django_db, fixture, Тесты DirectionService. (+1 more)
+Cohesion: 0.09
+Nodes (18): DirectionViewSet, Request, Response, GET /api/teams/directions/ — список и просмотр направлений., DirectionRepository, QuerySet, Все направления (поля модели без связей — prefetch не требуется)., Направление по коду (PK). (+10 more)
 
-### Community 76 - "TestTagServiceUpdate"
-Cohesion: 0.12
-Nodes (9): Тесты для метода update_tag сервиса., cpds может обновлять общие теги., cpds не может обновлять теги с подразделением., institute_validator может обновлять теги своего подразделения., institute_validator не может обновлять теги чужого подразделения., admin может обновлять любые теги., Нельзя обновить тег, если имя и набор departments уже заняты другим тегом., Обновление несуществующего тега вызывает ошибку. (+1 more)
+### Community 76 - "TagRepository"
+Cohesion: 0.09
+Nodes (19): DTO для обновления тега., TagUpdateDTO, Удаление тега. Args: tag: Тег для удаления Returns: True если тег был удален, Получение всех тегов с оптимизацией запросов. Returns: QuerySet всех тегов с…, Проверка существования тега. Быстрая проверка без загрузки объекта. Args:…, Репозиторий - вся работа с БД здесь., Получение тега по ID с оптимизацией запросов. Args: tag_id: ID тега Returns:…, Обновление тега. Обновляет только переданные поля. Args: tag: Тег для… (+11 more)
 
 ### Community 77 - "TestApplicationDashboardViewSet"
 Cohesion: 0.13
 Nodes (9): django_db, Неизвестная группа статусов — 400., HTTP-тесты дашборда заявок., Без авторизации — 401., Без semester_id — 400., Обычный пользователь — 403., Админ получает полную структуру дашборда., API: фильтр department_id включает дочернее подразделение. (+1 more)
 
-### Community 78 - "TestTagViewSetDelete"
-Cohesion: 0.08
-Nodes (16): django_db, Тесты для обновления тегов через API., cpds может обновлять общие теги., cpds не может обновлять теги с подразделением., admin может обновлять любые теги., Тесты для удаления тегов через API., cpds может удалять общие теги., cpds не может удалять теги с подразделением. (+8 more)
+### Community 78 - "TestTagViewSetCreate"
+Cohesion: 0.05
+Nodes (25): django_db, Тесты для создания тегов через API., cpds может создавать общие теги., cpds не может создавать теги с подразделением., institute_validator автоматически устанавливает свое подразделение., admin может создавать любые теги., Остальные роли не могут создавать теги., Нельзя создать тег для подразделения, если уже есть общий тег с таким именем. (+17 more)
 
 ### Community 79 - "TestCanCreateTag"
 Cohesion: 0.14
 Nodes (11): Проверяет права пользователя на создание тега. Args: user: Пользователь…, Тесты для проверки прав на создание тегов., cpds может создавать только общие теги., cpds не может создавать теги с подразделением., institute_validator может создавать общие теги., institute_validator может создавать теги для своего подразделения., institute_validator не может создавать теги для чужого подразделения., admin может создавать любые теги. (+3 more)
 
 ### Community 80 - "TestProjectApplicationListDTO"
-Cohesion: 0.13
-Nodes (9): django_db, Тесты для ProjectApplicationListDTO., Базовые поля DTO для списка заполняются из модели., Если статус None, DTO.status тоже None., to_dict преобразует DTO в словарь с ISO форматированием даты., is_internal_customer включается в ProjectApplicationListDTO., Новые поля трека включаются в ProjectApplicationListDTO., is_internal_customer включается в ProjectApplicationReadDTO. (+1 more)
+Cohesion: 0.15
+Nodes (8): django_db, Тесты для ProjectApplicationListDTO., Если статус None, DTO.status тоже None., to_dict преобразует DTO в словарь с ISO форматированием даты., is_internal_customer включается в ProjectApplicationListDTO., Новые поля трека включаются в ProjectApplicationListDTO., is_internal_customer включается в ProjectApplicationReadDTO., TestProjectApplicationListDTO
 
 ### Community 81 - "TeamLobbyDomain"
-Cohesion: 0.08
-Nodes (14): Заявка должна быть в статусе pending., Приглашение должно быть в статусе pending., Чистая бизнес-логика лобби и «Моей команды»., True, если студент без команды и есть свободный слот., Запрещает изменения состава при подтверждённом составе., Проверяет, что пользователь — капитан команды., Приглашение не может назначать роль leader., При одобрении заявки нельзя назначить второго leader. (+6 more)
+Cohesion: 0.07
+Nodes (16): Подтверждение состава: капитан, forming, размер в лимитах трека., Проверяет, что пользователь из нужной учебной группы., Заявка должна быть в статусе pending., Приглашение должно быть в статусе pending., Чистая бизнес-логика лобби и «Моей команды»., Лимиты: трек команды, иначе единственный трек группы, иначе дефолты., True, если студент без команды и есть свободный слот., Запрещает изменения состава при подтверждённом составе. (+8 more)
 
 ### Community 82 - "API для работы с проектными заявками"
 Cohesion: 0.11
@@ -694,8 +707,8 @@ Cohesion: 0.11
 Nodes (10): AccountsApiTests, override_settings, Подтверждение сброса пароля меняет пароль и позволяет войти новым паролем., Создание заявки без подразделения возвращает ошибку валидации., Создание заявки с несуществующим подразделением возвращает ошибку валидации., После отклонения заявки можно подать новую с тем же email., Повторная подача при активной заявке возвращает ошибку валидации., Нельзя подать заявку, если пользователь с таким email уже зарегистрирован. (+2 more)
 
 ### Community 84 - "TestCanDeleteTag"
-Cohesion: 0.14
-Nodes (11): Проверяет права пользователя на удаление тега. Args: user: Пользователь tag:…, django_db, Тесты для проверки прав на удаление тегов., cpds может удалять общие теги., cpds не может удалять теги с подразделением., institute_validator может удалять общие теги., institute_validator может удалять теги своего подразделения., institute_validator не может удалять теги чужого подразделения. (+3 more)
+Cohesion: 0.15
+Nodes (10): Проверяет права пользователя на удаление тега. Args: user: Пользователь tag:…, Тесты для проверки прав на удаление тегов., cpds может удалять общие теги., cpds не может удалять теги с подразделением., institute_validator может удалять общие теги., institute_validator может удалять теги своего подразделения., institute_validator не может удалять теги чужого подразделения., admin может удалять любые теги. (+2 more)
 
 ### Community 85 - "Path"
 Cohesion: 0.17
@@ -710,36 +723,36 @@ Cohesion: 0.16
 Nodes (10): Command, Any, BaseCommand, Экспортирует все институты в Excel., Команда для импорта/экспорта подразделений и институтов в Excel., Импортирует подразделения из Excel с обновлением и удалением лишних., Импортирует институты из Excel с обновлением и удалением лишних., Добавляет аргументы командной строки. (+2 more)
 
 ### Community 88 - "TeamLobbyRepository"
-Cohesion: 0.04
-Nodes (30): QuerySet, Лог событий команды в семестре (новые сверху)., Pending-заявки студента в семестре., Pending-приглашения студента в семестре., Карта team_semester_id → id pending-заявки текущего пользователя., Трек, доступный группе в семестре., Число команд группы в треке в семестре., True, если студент уже в команде в семестре. (+22 more)
+Cohesion: 0.25
+Nodes (5): Запросы и записи для студенческого лобби команд., Единственный трек группы в семестре или None (если 0 или >1)., Команды учебной группы в семестре (без фильтра по треку)., Команда пользователя в семестре или None (с составом без N+1)., TeamLobbyRepository
 
 ### Community 89 - "ApplicationCapabilities"
-Cohesion: 0.13
-Nodes (12): ApplicationCapabilities, Any, Бизнес-операция: запрос изменений. Чистая функция - проверяет возможность…, Явное выражение бизнес-намерений. Вместо технических операций типа "create",…, Бизнес-операция: одобрение заявки. Чистая функция - проверяет возможность…, Возвращает список ключей матрицы, подходящих под статус. Сначала точное…, Проверка права на конкретное действие на основе статической матрицы., Возвращает список доступных действий согласно матрице. (+4 more)
+Cohesion: 0.05
+Nodes (31): ApplicationCapabilities, Any, Бизнес-операция: запрос изменений. Чистая функция - проверяет возможность…, Бизнес-операция: обновление заявки. Чистая функция - проверяет возможность…, Явное выражение бизнес-намерений. Вместо технических операций типа "create",…, Бизнес-операция: одобрение заявки. Чистая функция - проверяет возможность…, Возвращает список ключей матрицы, подходящих под статус. Сначала точное…, Проверка права на конкретное действие на основе статической матрицы. (+23 more)
 
-### Community 90 - "test_import_preregistered_students.py"
-Cohesion: 0.20
-Nodes (11): aga_institute(), Any, django_db, fixture, Path, Тесты команды import_preregistered_students., Создаёт минимальный отчёт контингента для тестов., sample_contingent_file() (+3 more)
+### Community 90 - "accounts/models.py"
+Cohesion: 0.04
+Nodes (59): Идемпотентный импорт предрегистрации студентов из отчёта контингента 1С., Генерация тестовых одобренных проектов и учебных групп для института IEF., DirectionDomain, Доменная логика для направлений подготовки., Фильтрация направлений по роли пользователя., Доменная логика для учебных групп., DirectionReadDTO, Any (+51 more)
 
 ### Community 91 - "TestProjectViewSet"
 Cohesion: 0.18
 Nodes (4): _create_approved_app(), django_db, ЦПДС в причастных не должно подменять основное подразделение проекта., TestProjectViewSet
 
-### Community 92 - ".calculate_initial_status"
-Cohesion: 0.17
-Nodes (9): Определение начального статуса на основе роли пользователя. Чистая функция -…, Тесты для определения начального статуса по роли., Админ создаёт заявки со статусом approved., CPDS создаёт заявки со статусом approved., Валидатор подразделения создаёт заявки в статусе await_institute., Валидатор института создаёт заявки в статусе await_cpds., Обычный пользователь создаёт заявки в статусе await_department., Неизвестная роль возвращает статус await_department по умолчанию. (+1 more)
+### Community 92 - "ProjectApplicationDomain"
+Cohesion: 0.10
+Nodes (16): ProjectApplicationDomain, Доменная логика для проектных заявок - чистые функции без эффектов., Чистая бизнес-логика - только функции, никаких эффектов, Определение начального статуса на основе роли пользователя. Чистая функция -…, Явное выражение бизнес-намерений (не технических операций). Этот модуль…, Domain слой - чистая бизнес-логика без побочных эффектов. Этот слой содержит…, Результаты валидации для DTO., Unit-тесты для доменной логики ProjectApplicationDomain. Проверяем все чистые… (+8 more)
 
-### Community 93 - ".validate_update"
-Cohesion: 0.19
-Nodes (8): Валидация бизнес-правил для обновления заявки. Чистая функция - проверяет…, Тесты для валидации при обновлении заявки., Валидные поля при обновлении проходят проверку., Название короче 5 символов вызывает ошибку., Email без символа @ вызывает ошибку., Валидация проверяет только переданные поля (None игнорируются)., Пустые строки вызывают ошибки валидации., TestValidateUpdate
+### Community 93 - "QuerySet"
+Cohesion: 0.18
+Nodes (6): QuerySet, Возвращает группы по списку id., Возвращает заявки по списку id., Список активных групп института со счётчиком назначенных проектов., Одобренные заявки, назначенные группе через общие треки в семестре., Активные группы института, назначенные на проект через общие треки.
 
 ### Community 94 - ".get_filtered_queryset"
-Cohesion: 0.24
-Nodes (5): QuerySet, Фильтрует направления: institute_validator — только из групп своего института., parametrize, Фильтрация queryset направлений по ролям., TestGetFilteredQueryset
+Cohesion: 0.17
+Nodes (8): QuerySet, Фильтрует направления: institute_validator — только из групп своего института., django_db, parametrize, Разрешение институтов по подразделению пользователя., Фильтрация queryset направлений по ролям., TestGetFilteredQueryset, TestGetUserInstituteCodes
 
-### Community 95 - "accounts/admin.py"
-Cohesion: 0.24
-Nodes (11): AcademicYearAdmin, DepartmentAdmin, PreRegisteredStudentAdmin, display, register, RegistrationRequestAdmin, RoleAdmin, SemesterAdmin (+3 more)
+### Community 95 - "Command"
+Cohesion: 0.29
+Nodes (6): Command, BaseCommand, DataFrame, Path, Читает отчёт контингента; заголовок колонок — вторая строка., Строит карту кодов постоянных групп из файла к объектам StudyGroup.
 
 ### Community 96 - "Any"
 Cohesion: 0.12
@@ -757,93 +770,97 @@ Nodes (4): _base_create_payload(), django_db, TestMyApplicationsNewFields, TestP
 Cohesion: 0.17
 Nodes (8): Тесты для действия передачи заявки в институт по коду института., POST /api/showcase/project-applications/{id}/transfer_to_institute/ с…, Отсутствующий параметр code возвращает 400., Несуществующий код института возвращает 400 от сервиса., Институт без связанного подразделения возвращает 400., GET /api/showcase/project-applications/external/?status=... фильтрует внешние…, GET /api/showcase/project-applications/external/?status=... с несуществующим…, TestProjectApplicationViewSetTransferToInstitute
 
-### Community 100 - ".can_edit_application"
-Cohesion: 0.16
-Nodes (9): Проверка права на редактирование заявки. Бизнес-правило: редактировать может…, Автор с ролью user в статусе await_department не может редактировать заявку., Сотрудник ЦПДС может редактировать любую заявку., Не-автор и не-ЦПДС не может редактировать чужую заявку., Нельзя редактировать заявки со статусом rejected (даже автору и cpds)., Нельзя редактировать одобренные заявки (кроме админов и cpds)., Автор может редактировать заявку в статусе returned_*., CPDS может редактировать заявки в статусе rejected_department. (+1 more)
+### Community 100 - "StudyGroupViewSet"
+Cohesion: 0.22
+Nodes (7): action, Request, Response, GET /api/teams/study-groups/my/ — группа текущего студента., GET /api/teams/study-groups/ — список и просмотр учебных групп., Парсит query-параметр is_end; None — фильтр не применяется., StudyGroupViewSet
 
 ### Community 101 - "extract_group_abbrev.py"
 Cohesion: 0.23
 Nodes (13): add_abbrev_column_to_students(), build_parser(), extract_abbrev_column(), _extract_group_abbrev_from_text(), _looks_like_student_id(), main(), _normalize_header(), Any (+5 more)
 
-### Community 102 - "TestApproveRejectRequest"
-Cohesion: 0.27
-Nodes (6): parametrize, Матрица прав определяет доступность reject., Для returned_* действует агрегирующее правило returned_(all)., Отзыв доступен только автору и не для финальных approved/rejected., Матрица прав определяет доступность approve для ролей и статусов., TestApproveRejectRequest
+### Community 102 - "ProjectApplicationListDTO"
+Cohesion: 0.17
+Nodes (7): build_author_short_name(), ProjectApplicationListDTO, Формирует короткое имя вида 'Фамилия И.О.' или возвращает None., DTO для списка заявок - минимальный набор полей, DTO (Data Transfer Object) слой для передачи данных между слоями. Этот слой…, Преобразование модели в DTO для списка., Базовые поля DTO для списка заполняются из модели.
 
 ### Community 103 - "StudyGroup.py"
-Cohesion: 0.19
-Nodes (10): Any, DTO для учебных групп., DTO для чтения учебной группы., StudyGroupReadDTO, DirectionNestedSerializer, InstituteNestedSerializer, Meta, Компактная выдача для списка учебных групп. (+2 more)
+Cohesion: 0.21
+Nodes (9): Any, DTO для чтения учебной группы., StudyGroupReadDTO, DirectionNestedSerializer, InstituteNestedSerializer, Meta, Компактная выдача для списка учебных групп., StudyGroupListSerializer (+1 more)
 
 ### Community 104 - "Role"
 Cohesion: 0.14
-Nodes (8): Command, BaseCommand, Role, UserManager, Сервис предрегистрации и регистрации студентов из контингента., BaseUserManager, Command, BaseCommand
+Nodes (9): Command, BaseCommand, Role, UserManager, BaseUserManager, create_test_user(), Создаем тестового пользователя, Command (+1 more)
 
-### Community 105 - ".should_require_consultation"
+### Community 105 - ".get_group_detail"
 Cohesion: 0.17
-Nodes (9): Определение необходимости консультации на основе данных заявки. Чистая функция…, Тесты для определения необходимости консультации., Если уровень проекта не указан, нужна консультация., Если целевые институты не указаны, нужна консультация., Если цель проекта короче 50 символов, нужна консультация., Если все условия выполнены, консультация не требуется., Если project_level равен None, нужна консультация., Если target_institutes равен None, нужна консультация. (+1 more)
+Nodes (7): ProjectTrackGroupDetailDTO, ProjectTrackGroupProjectDTO, DTO проекта в деталях группы., Преобразует DTO в словарь для API., DTO деталей группы с назначенными проектами., Преобразует DTO в словарь для API., Детали группы с назначенными проектами.
 
-### Community 106 - "direction_service.py"
-Cohesion: 0.19
-Nodes (8): DirectionDomain, Доменная логика для направлений подготовки., Фильтрация направлений по роли пользователя., DirectionRepository, Репозиторий для направлений подготовки., Направление по коду (PK)., Доступ к данным Direction., Сервис для операций с направлениями подготовки.
+### Community 106 - "ProjectTrackProjectDetailDTO"
+Cohesion: 0.17
+Nodes (7): ProjectTrackProjectDetailDTO, ProjectTrackProjectGroupDTO, DTO группы в деталях проекта., Преобразует DTO в словарь для API., DTO деталей проекта с назначенными группами., Преобразует DTO в словарь для API., Детали проекта с назначенными группами.
 
 ### Community 107 - ".auth"
 Cohesion: 0.17
 Nodes (6): Без токена возвращается 401, с токеном — профиль текущего пользователя., Админ отклоняет заявку: статус становится REJECTED и уходит письмо., Пользователь ЦПДС может отклонять заявки (IsCpdsUser)., Если отправка письма при reject падает, возвращаем 200 и оставляем статус…, Детальный просмотр роли по коду (lookup_field=code) требует авторизации., Логинится и проставляет Bearer-токен в заголовках клиента.
 
-### Community 108 - "StudyGroupViewSet"
-Cohesion: 0.22
-Nodes (7): action, Request, Response, GET /api/teams/study-groups/my/ — группа текущего студента., GET /api/teams/study-groups/ — список и просмотр учебных групп., Парсит query-параметр is_end; None — фильтр не применяется., StudyGroupViewSet
+### Community 108 - "TestApplicationNotificationService"
+Cohesion: 0.32
+Nodes (4): Email получателя: author_email заявки или email связанного пользователя-автора., django_db, patch, TestApplicationNotificationService
 
-### Community 109 - "ProjectTrackGroupListDTO"
-Cohesion: 0.29
-Nodes (4): ProjectTrackGroupListDTO, DTO группы со счётчиком назначенных проектов., Преобразует DTO в словарь для API., Список групп института со счётчиком назначенных проектов.
+### Community 109 - "._track_detail_queryset"
+Cohesion: 0.33
+Nodes (3): Возвращает трек по id или None., Queryset трека с prefetch связей., Список треков по фильтрам.
 
-### Community 110 - "ProjectApplicationUpdateDTO"
-Cohesion: 0.06
-Nodes (35): Общие константы приложения showcase., ProjectApplicationDomain, Доменная логика для проектных заявок - чистые функции без эффектов., Чистая бизнес-логика - только функции, никаких эффектов, Явное выражение бизнес-намерений (не технических операций). Этот модуль…, Domain слой - чистая бизнес-логика без побочных эффектов. Этот слой содержит…, build_author_short_name(), ProjectApplicationListDTO (+27 more)
+### Community 110 - ".should_require_consultation"
+Cohesion: 0.17
+Nodes (9): Определение необходимости консультации на основе данных заявки. Чистая функция…, Тесты для определения необходимости консультации., Если уровень проекта не указан, нужна консультация., Если целевые институты не указаны, нужна консультация., Если цель проекта короче 50 символов, нужна консультация., Если все условия выполнены, консультация не требуется., Если project_level равен None, нужна консультация., Если target_institutes равен None, нужна консультация. (+1 more)
 
 ### Community 111 - "_generate_collection.py"
 Cohesion: 0.24
 Nodes (7): env_file(), main(), make_env_values(), Генератор Postman collection + environments для Project Activity API., Собрать объект url Postman из raw URL с {{baseUrl}}., req(), url()
 
 ### Community 112 - ".view_application"
-Cohesion: 0.15
-Nodes (8): Бизнес-операция: просмотр заявки. Чистая функция - проверяет возможность…, Бизнес-операция: получение заявки., Получение логов заявки; для автора сбрасывает has_unseen_changes., Сбрасывает флаг непросмотренных изменений, если заявку открыл автор., Автор всегда имеет доступ к просмотру своей заявки., Обычному пользователю чужая заявка недоступна., Список заявок разрешён всем (возвращает True)., TestViewAndList
+Cohesion: 0.09
+Nodes (12): Бизнес-операция: просмотр заявки. Чистая функция - проверяет возможность…, Бизнес-операция: получение списка заявок. Чистая функция - проверяет…, Бизнес-операция: получение заявки., Получение логов заявки; для автора сбрасывает has_unseen_changes., Сбрасывает флаг непросмотренных изменений, если заявку открыл автор., Бизнес-операция: получение заявок пользователя., Бизнес-операция: получение QuerySet заявок пользователя для пагинации., Бизнес-операция: получение заявок для координации пользователя. Для обычных… (+4 more)
 
-### Community 113 - "TestGetLogs"
+### Community 113 - "TestLogStatusChange"
 Cohesion: 0.06
-Nodes (20): django_db, Тесты для логирования причастных пользователей., Логирование добавления причастного пользователя., Проверка валидации при добавлении причастного пользователя., Логирование удаления причастного пользователя., Тесты для получения логов., Получение всех логов по заявке., Если application равен None, выбрасывается ValueError. (+12 more)
+Nodes (19): django_db, Первый переход (from_status=None) помечает заявку, если актор не автор., Логирование с указанием предыдущего лога для создания цепочки., Тесты для log_status_change., Если application равен None, выбрасывается ValueError., Успешное логирование изменения статуса (не автор — флаг выставляется)., Если to_status равен None, выбрасывается ValueError., Тесты для логирования причастных пользователей. (+11 more)
 
-### Community 114 - "InvolvedManager"
-Cohesion: 0.43
-Nodes (3): InvolvedManager, atomic, Менеджер для управления причастными пользователями и подразделениями.
+### Community 114 - "Department"
+Cohesion: 0.07
+Nodes (34): Command, BaseCommand, Department, Сервис управления пользователями., Command, BaseCommand, Any, django_db (+26 more)
 
-### Community 115 - "django_db"
-Cohesion: 0.15
-Nodes (9): django_db, Тесты для методов подсчёта заявок., count_by_user возвращает количество заявок автора., count_by_status возвращает количество заявок с указанным статусом., Тесты для методов фильтрации внешних заявок., filter_external_applications возвращает только заявки с is_external=True., filter_external_applications_queryset возвращает QuerySet внешних заявок., TestRepositoryCount (+1 more)
+### Community 115 - "UserRepository"
+Cohesion: 0.22
+Nodes (7): QuerySet, Доступ к данным пользователей для управления., Базовый queryset без администраторов., Список пользователей с оптимизацией запросов., Возвращает пользователя по ID., Сохраняет изменения пользователя., UserRepository
 
 ### Community 116 - ".post"
-Cohesion: 0.31
-Nodes (4): extend_schema, Request, Response, Сменяет пароль текущего пользователя после проверки текущего пароля.
+Cohesion: 0.24
+Nodes (7): LoginView, extend_schema, Request, Response, Сменяет пароль текущего пользователя после проверки текущего пароля., Получение JWT токена по email и паролю., TokenObtainPairView
 
 ### Community 117 - "institute_access.py"
-Cohesion: 0.08
-Nodes (31): Доменная логика управления пользователями., ID подразделений для фильтрации; None — без ограничения., get_department_subtree_ids(), Возвращает id корневого подразделения и всех его потомков., Доменная логика дашборда проектных заявок., Доменная логика для списка проектов., Доменная логика для проектных треков., Репозиторий агрегаций для дашборда проектных заявок. (+23 more)
+Cohesion: 0.07
+Nodes (34): Доменная логика управления пользователями., ID подразделений для фильтрации; None — без ограничения., get_department_subtree_ids(), Утилиты для работы с подразделениями., Возвращает id корневого подразделения и всех его потомков., Доменная логика дашборда проектных заявок., Доменная логика для списка проектов., Доменная логика для проектных треков. (+26 more)
 
-### Community 118 - "UserSerializer"
-Cohesion: 0.18
-Nodes (9): Проверяет, что у пользователя роль student., Возвращает предрегистрацию пользователя, если она есть., Возвращает код института пользователя. Приоритет: институт подразделения, затем…, Возвращает номер студенческого билета для роли student., Возвращает табельный номер для роли student., Возвращает СНИЛС для роли student., UserSerializer, CustomTokenObtainPairSerializer (+1 more)
+### Community 118 - "User"
+Cohesion: 0.05
+Nodes (31): AbstractBaseUser, User, PasswordChangeSerializer, PasswordResetConfirmSerializer, Any, Проверяет, что у пользователя роль student., Возвращает предрегистрацию пользователя, если она есть., Возвращает код института пользователя. Приоритет: институт подразделения, затем… (+23 more)
 
-### Community 120 - "StudyGroupMemberDTO"
-Cohesion: 0.22
-Nodes (5): Any, Карточка наставника учебной группы., Строка списка группы из контингента., StudyGroupMemberDTO, StudyGroupMentorDTO
+### Community 119 - "TestMyTeamViewSet"
+Cohesion: 0.12
+Nodes (5): django_db, Без трека у команды, но один трек у группы → лимиты с трека группы., Без трека у команды и >1 трека у группы → дефолты 4/7., Число запросов GET /my-team/ не растёт с числом заявок/приглашений., TestMyTeamViewSet
+
+### Community 120 - "MyStudyGroupDTO"
+Cohesion: 0.14
+Nodes (9): MyStudyGroupDTO, Any, Карточка наставника учебной группы., Строка списка группы из контингента., Полные данные учебной группы для текущего студента., StudyGroupMemberDTO, StudyGroupMentorDTO, Any (+1 more)
 
 ### Community 121 - "TestSemesterAssignViewSet"
-Cohesion: 0.29
-Nodes (3): Тесты для ручки массового назначения семестра., GET /api/showcase/project-applications/external/ включает поле is_external в…, TestSemesterAssignViewSet
+Cohesion: 0.09
+Nodes (13): django_db, Тесты для получения списка внешних заявок (external endpoint)., GET /api/showcase/project-applications/external/ требует авторизации., GET /api/showcase/project-applications/external/ возвращает только внешние…, Тесты для ручки массового назначения семестра., GET /api/showcase/project-applications/external/ включает поле is_external в…, Тесты для проверки наличия поля is_external в ответах API., POST /api/showcase/project-applications/ возвращает is_external в ответе. (+5 more)
 
-### Community 122 - "TestTagServiceDelete"
-Cohesion: 0.17
-Nodes (7): Тесты для метода delete_tag сервиса., cpds может удалять общие теги., cpds не может удалять теги с подразделением., institute_validator может удалять теги своего подразделения., admin может удалять любые теги., Удаление несуществующего тега вызывает ошибку., TestTagServiceDelete
+### Community 122 - ".enroll"
+Cohesion: 0.24
+Nodes (6): atomic, UserType, Записывает команду капитана на проект., Резолвит semester_id; по умолчанию actual., Список треков группы студента с проектами и счётчиками записи., Детали проекта, доступного группе студента.
 
 ### Community 123 - "API Документация - Проектные заявки"
 Cohesion: 0.18
@@ -857,16 +874,16 @@ Nodes (7): django_db, Path, Тесты команды import_institutes., test_i
 Cohesion: 0.43
 Nodes (6): collect_codes(), fetch(), main(), parse_table_rows(), Собрать fgos_specialitet_napravleniya.csv: level, code, name (без групп…, middle: '03' — бакалавриат, '05' — специалитет.
 
-### Community 126 - "ProjectTrackCreateSerializer"
-Cohesion: 0.50
-Nodes (3): ProjectTrackCreateSerializer, Сериализатор для создания проектного трека., Проверяет согласованность лимитов размера команды.
+### Community 126 - "StudyGroupDomain"
+Cohesion: 0.36
+Nodes (5): Фильтрация учебных групп по роли пользователя., Возвращает True, если пользователь — аутентифицированный студент., Студент с привязанной учебной группой может открыть «Мою группу»., StudyGroupDomain, TestStudyGroupMyGroupAccess
 
 ### Community 127 - "Command"
 Cohesion: 0.33
 Nodes (5): Command, BaseCommand, Экспорт возможных статусов заявок в Excel., Считывает статусы из базы и сохраняет в Excel., Возвращает статусы, отсортированные по позиции и коду.
 
 ### Community 128 - "Command"
-Cohesion: 0.32
+Cohesion: 0.38
 Nodes (3): Command, BaseCommand, Path
 
 ### Community 129 - "TestInstituteViewSet"
@@ -905,9 +922,9 @@ Nodes (12): 10. Проверка и сопровождение, 11. Настро
 Cohesion: 0.29
 Nodes (7): 4. Список проектов, Query-параметры, Заголовки, Ошибки, Поведение по ролям, Примеры запросов, Успешный ответ (200)
 
-### Community 138 - "TestStudentBlockedFromStaffApi"
-Cohesion: 0.13
-Nodes (4): django_db, TestApplicationCommentAccess, TestApplicationDestroyDisabled, TestStudentBlockedFromStaffApi
+### Community 138 - "TestRepositoryUpdate"
+Cohesion: 0.20
+Nodes (6): Тесты для методов обновления заявок., Обновление заявки с изменением целевых институтов: проверяем установку M2M…, Обновление заявки с изменением тегов: проверяем установку M2M связи., Обновление заявки без полей: проверяем вызов save() без update_fields., update_status изменяет статус заявки., TestRepositoryUpdate
 
 ### Community 139 - "deploy.sh"
 Cohesion: 0.70
@@ -925,21 +942,21 @@ Nodes (4): add_code_paragraph(), is_source_file(), main(), walk_client_files()
 Cohesion: 0.70
 Nodes (4): add_code_paragraph(), is_source_file(), main(), walk_py_files()
 
-### Community 143 - "test_direction_domain.py"
+### Community 143 - "TestRepositoryApplicationNumbering"
 Cohesion: 0.20
-Nodes (9): directions(), other_institute(), django_db, fixture, Тесты доменной логики DirectionDomain., Разрешение институтов по подразделению пользователя., Три направления для сценариев фильтрации., Второй институт на другом подразделении. (+1 more)
+Nodes (6): Тесты для генерации номеров заявок., Первая заявка в году получает номер 1., Номера последовательно увеличиваются в пределах одного года., Нумерация учитывает пропуски - использует максимальный номер, а не count()., Нумерация сбрасывается при смене года., TestRepositoryApplicationNumbering
 
 ### Community 144 - "parse_miit_ief_groups.py"
 Cohesion: 0.60
 Nodes (4): extract_block(), main(), parse_groups(), Парсинг групп ИЭФ со страницы miit.ru/timetable.
 
+### Community 146 - "Any"
+Cohesion: 0.22
+Nodes (5): Any, Преобразование в словарь, Преобразование в словарь, исключая None значения, Преобразование в словарь для JSON, Преобразование в словарь для JSON
+
 ### Community 147 - "schema.py"
 Cohesion: 0.50
 Nodes (3): exclude_auth_api_duplicate(), Хуки и расширения для drf-spectacular., Исключает дублирующие маршруты /api/auth/* (зеркалят /api/accounts/*). В…
-
-### Community 149 - "ProjectTrackAddApplicationsSerializer"
-Cohesion: 0.50
-Nodes (3): ProjectTrackAddApplicationsSerializer, Список заявок с рекомендуемым числом команд и лимитами размера., Проверяет отсутствие дубликатов id в одном запросе.
 
 ### Community 151 - "0013_refactor_comments.py"
 Cohesion: 0.50
@@ -961,97 +978,81 @@ Nodes (3): backfill_track_limits_from_applications(), Migration, Простав�
 Cohesion: 0.50
 Nodes (3): backfill_track_recommended_teams_count(), Migration, Проставляет сумму recommended_teams_count из связанных заявок.
 
-### Community 156 - "ProjectTrackGroupDetailDTO"
-Cohesion: 0.20
-Nodes (6): ProjectTrackGroupDetailDTO, ProjectTrackGroupProjectDTO, DTO проекта в деталях группы., Преобразует DTO в словарь для API., DTO деталей группы с назначенными проектами., Преобразует DTO в словарь для API.
+### Community 156 - "StudyGroupRepository"
+Cohesion: 0.25
+Nodes (4): QuerySet, Доступ к данным StudyGroup., Группа с наставником и контингентом без N+1., StudyGroupRepository
 
 ### Community 157 - "teams/admin.py"
 Cohesion: 0.27
 Nodes (11): DirectionAdmin, register, StudyGroupAdmin, TeamAdmin, TeamEventLogAdmin, TeamInvitationAdmin, TeamJoinRequestAdmin, TeamSemesterAdmin (+3 more)
 
-### Community 159 - "TestRepositoryUpdate"
-Cohesion: 0.20
-Nodes (6): Тесты для методов обновления заявок., Обновление заявки с изменением целевых институтов: проверяем установку M2M…, Обновление заявки с изменением тегов: проверяем установку M2M связи., Обновление заявки без полей: проверяем вызов save() без update_fields., update_status изменяет статус заявки., TestRepositoryUpdate
+### Community 159 - "TestRepositoryFilter"
+Cohesion: 0.25
+Nodes (5): Тесты для методов фильтрации заявок., filter_coordination_by_user_queryset возвращает QuerySet заявок для координации…, filter_by_status_queryset возвращает QuerySet заявок по статусу., filter_by_company ищет заявки по названию компании (case-insensitive)., TestRepositoryFilter
 
-### Community 165 - "tests/conftest.py"
-Cohesion: 0.23
-Nodes (11): departments(), institute(), fixture, Возвращает класс модели пользователя для удобства., Создаёт набор ролей, используемых в тестах. Возвращает dict: code -> Role, Создаёт иерархию подразделений: parent -> child., Создаёт все необходимые статусы для сценариев сервисов., Создаёт институт, связанный с родительским подразделением. (+3 more)
+### Community 164 - "TagSerializer"
+Cohesion: 0.67
+Nodes (3): Meta, Сериализатор для тегов., TagSerializer
+
+### Community 165 - "fixture"
+Cohesion: 0.22
+Nodes (9): institute(), fixture, Возвращает класс модели пользователя для удобства., Создаёт набор ролей, используемых в тестах. Возвращает dict: code -> Role, Создаёт все необходимые статусы для сценариев сервисов., Создаёт институт, связанный с родительским подразделением., roles(), statuses() (+1 more)
 
 ### Community 166 - "showcase/urls.py"
-Cohesion: 0.20
-Nodes (8): ApplicationStatusViewSet, ViewSet только для чтения статусов заявок на проекты. Доступен только для…, InstituteSerializer, InstituteViewSet, Meta, ViewSet только для чтения институтов/академий. Доступен для всех пользователей.…, Переопределяем list для возврата всех институтов без пагинации., Сериализатор для институтов/академий.
-
-### Community 170 - "ProjectTrackProjectDetailDTO"
-Cohesion: 0.17
-Nodes (7): ProjectTrackProjectDetailDTO, ProjectTrackProjectGroupDTO, DTO группы в деталях проекта., Преобразует DTO в словарь для API., DTO деталей проекта с назначенными группами., Преобразует DTO в словарь для API., Детали проекта с назначенными группами.
+Cohesion: 0.12
+Nodes (14): ApplicationStatusReadSerializer, ApplicationStatusSerializer, ApplicationStatusViewSet, Meta, Сериализатор для статусов заявок, ViewSet только для чтения статусов заявок на проекты. Доступен только для…, Сериализатор для отображения (чтения) статусов заявок на проекты. Используется…, InstituteSerializer (+6 more)
 
 ### Community 189 - "Command"
 Cohesion: 0.24
 Nodes (4): Command, BaseCommand, Path, Проверка ссылок для active_* ключей (только предупреждение в stdout).
 
-### Community 197 - "student_user"
-Cohesion: 0.27
-Nodes (8): api_client(), Any, APIClient, django_db, fixture, student_user(), study_group(), TestUserMeStudent
-
-### Community 200 - "TestRepositoryApplicationNumbering"
-Cohesion: 0.20
-Nodes (6): Тесты для генерации номеров заявок., Первая заявка в году получает номер 1., Номера последовательно увеличиваются в пределах одного года., Нумерация учитывает пропуски - использует максимальный номер, а не count()., Нумерация сбрасывается при смене года., TestRepositoryApplicationNumbering
-
-### Community 202 - "ProjectTrackUpdateDTO"
-Cohesion: 0.22
-Nodes (5): ProjectTrackUpdateDTO, DTO для обновления проектного трека., Создаёт DTO из словаря., Возвращает только переданные поля трека для обновления., True, если переданы лимиты размера команды для заявок трека.
-
-### Community 204 - "TestTagServiceGetTag"
-Cohesion: 0.22
-Nodes (6): django_db, Тесты для метода get_tag сервиса., get_tag возвращает тег, если есть доступ., get_tag вызывает ошибку, если нет доступа., get_tag для несуществующего тега вызывает ошибку., TestTagServiceGetTag
-
-### Community 206 - ".list_applications"
+### Community 197 - "TestTagRepositoryGetById"
 Cohesion: 0.25
-Nodes (4): Бизнес-операция: получение списка заявок. Чистая функция - проверяет…, Бизнес-операция: получение заявок пользователя., Бизнес-операция: получение QuerySet заявок пользователя для пагинации., Бизнес-операция: получение заявок для координации пользователя. Для обычных…
+Nodes (5): get_by_id возвращает общий тег., get_by_id для несуществующего тега вызывает ошибку., Тесты для метода get_by_id репозитория., get_by_id возвращает тег с подразделением (prefetch_related)., TestTagRepositoryGetById
 
-### Community 240 - "TestProjectApplicationViewSetIsExternalInResponses"
-Cohesion: 0.25
-Nodes (5): Тесты для проверки наличия поля is_external в ответах API., POST /api/showcase/project-applications/ возвращает is_external в ответе., GET /api/showcase/project-applications/{id}/ возвращает is_external в ответе., GET /api/showcase/project-applications/ возвращает is_external в списке., TestProjectApplicationViewSetIsExternalInResponses
+### Community 200 - "format_validation_errors"
+Cohesion: 0.33
+Nodes (4): format_validation_errors(), POST /api/project-applications/ Создание заявки - только обработка HTTP, Форматирует ошибки валидации используя стандартные DRF механизмы. Args: errors:…, POST /api/project-applications/simple/ Создание заявки без авторизации
 
-### Community 241 - "test_my_team_viewset.py"
-Cohesion: 0.39
-Nodes (7): api_client(), direction(), my_team_setup(), fixture, Тесты API «Моя команда»., semester(), study_group()
+### Community 204 - "Tag"
+Cohesion: 0.10
+Nodes (18): Доменная логика для тегов - чистые функции без эффектов., DTO для работы с тегами., DTO для создания тега., TagCreateDTO, DepartmentNestedSerializer, Вложенный сериализатор для подразделения., Теги для проектных заявок, Tag (+10 more)
 
-### Community 242 - "PasswordChangeSerializer"
-Cohesion: 0.29
-Nodes (4): PasswordChangeSerializer, Any, Возвращает учебную группу пользователя или None., Сериализатор для смены пароля аутентифицированного пользователя.
+### Community 206 - "TestRepositoryGetById"
+Cohesion: 0.33
+Nodes (4): Тесты для методов получения заявок по ID., get_by_id возвращает заявку с оптимизированными запросами (prefetch_related)., get_by_id_simple возвращает заявку без дополнительных prefetch., TestRepositoryGetById
+
+### Community 240 - "TestTagRepositoryExists"
+Cohesion: 0.33
+Nodes (4): Тесты для метода exists репозитория., exists возвращает True для существующего тега., exists возвращает False для несуществующего тега., TestTagRepositoryExists
+
+### Community 242 - "Текущий статус реализации"
+Cohesion: 0.40
+Nodes (5): ⚠️ Проблемные функции, ✅ Работающие функции, 📊 Статистика тестирования, Текущий статус реализации, 🔧 Требует доработки
 
 ### Community 243 - "TestProjectApplicationViewSetSimple"
 Cohesion: 0.25
 Nodes (5): Тесты для упрощенного создания заявок (simple endpoint)., POST /api/showcase/project-applications/simple/ устанавливает is_external=True…, POST /api/showcase/project-applications/simple/ возвращает is_external в ответе., POST /api/showcase/project-applications/simple/ добавляет причастное…, TestProjectApplicationViewSetSimple
 
-### Community 244 - "TestRepositoryFilter"
-Cohesion: 0.25
-Nodes (5): Тесты для методов фильтрации заявок., filter_coordination_by_user_queryset возвращает QuerySet заявок для координации…, filter_by_status_queryset возвращает QuerySet заявок по статусу., filter_by_company ищет заявки по названию компании (case-insensitive)., TestRepositoryFilter
-
-### Community 245 - "teams/models.py"
-Cohesion: 0.10
-Nodes (24): Доменные правила лобби формирования команд., LobbyJoinRequestDTO, DTO лобби формирования команд и «Моей команды»., Pending-заявка студента в лобби., Meta, Участие команды в конкретном семестре: проект, наставник, капитан., Участник команды в конкретном семестре., Заявка студента на вступление в команду в семестре. (+16 more)
+### Community 245 - "TeamSemester"
+Cohesion: 0.05
+Nodes (52): Доменная логика студенческой витрины проектов., Репозиторий студенческой витрины проектов (без N+1)., Привязывает проект к команде и пишет лог., Доменные правила лобби формирования команд., MyTeamEventLogDTO, DTO лобби формирования команд и «Моей команды»., API лобби формирования команд и «Моей команды»., Meta (+44 more)
 
 ### Community 247 - "3. To-be: изменения и новые сущности"
 Cohesion: 0.20
 Nodes (10): 3.1. ER-диаграмма (целевая), 3.2. Изменения `User` (`accounts`) — данные наставника, 3.3. Изменения `StudyGroup` (`teams`), 3.4. Изменения `ProjectTrack` (`showcase`), 3.6. `TeamJoinRequest` (новая, `teams`, миграция `0013`), 3.6a. `TeamInvitation` (новая, `teams`, миграция `0013`), 3.7. `TeamEventLog` (новая, `teams`, миграция `0013`), 3.8. Один студент — одна команда в семестре (+2 more)
 
-### Community 277 - "ApplicationDashboard.py"
-Cohesion: 0.20
-Nodes (7): ApplicationDashboardViewSet, extend_schema, Request, Response, ViewSet дашборда проектных заявок., API дашборда проектных заявок., GET /api/showcase/project-applications/dashboard/
+### Community 277 - "ProjectTrackAddApplicationItemSerializer"
+Cohesion: 0.50
+Nodes (3): ProjectTrackAddApplicationItemSerializer, Элемент списка заявок для добавления в трек., Проверяет, что minTeamMembers не больше maxTeamMembers.
 
-### Community 278 - "TestRepositoryDeleteAndExists"
-Cohesion: 0.25
-Nodes (5): Тесты для методов удаления и проверки существования., delete удаляет заявку и возвращает True., exists возвращает True для существующей заявки., exists возвращает False для несуществующей заявки., TestRepositoryDeleteAndExists
+### Community 278 - "ProjectTrackAddApplicationsSerializer"
+Cohesion: 0.50
+Nodes (3): ProjectTrackAddApplicationsSerializer, Список заявок с рекомендуемым числом команд и лимитами размера., Проверяет отсутствие дубликатов id в одном запросе.
 
-### Community 279 - "TestLogInvolvedDepartment"
-Cohesion: 0.25
-Nodes (5): Тесты для логирования причастных подразделений., Логирование добавления причастного подразделения., Проверка валидации при добавлении подразделения., Логирование удаления причастного подразделения., TestLogInvolvedDepartment
-
-### Community 280 - "TestTagServiceListTags"
-Cohesion: 0.25
-Nodes (5): Тесты для метода list_tags сервиса., list_tags фильтрует теги для роли cpds., list_tags фильтрует теги для роли institute_validator., list_tags для admin возвращает все теги., TestTagServiceListTags
+### Community 280 - "ProjectTrackCreateSerializer"
+Cohesion: 0.50
+Nodes (3): ProjectTrackCreateSerializer, Сериализатор для создания проектного трека., Проверяет согласованность лимитов размера команды.
 
 ### Community 281 - "Схема БД: студенческий портал"
 Cohesion: 0.22
@@ -1061,25 +1062,9 @@ Nodes (8): 10. Файлы для будущей реализации (не се�
 Cohesion: 0.22
 Nodes (9): 1. Статусы заявок, 2. Институты/Академии, 3. Роли пользователей, 4. Подразделения/Кафедры, Справочные эндпоинты, Успешный ответ (200), Успешный ответ (200), Успешный ответ (200) (+1 more)
 
-### Community 289 - "DirectionViewSet"
-Cohesion: 0.43
-Nodes (4): DirectionViewSet, Request, Response, GET /api/teams/directions/ — список и просмотр направлений.
-
-### Community 292 - "test_team_semester_viewset.py"
-Cohesion: 0.43
-Nodes (6): api_client(), direction(), fixture, Тесты API TeamSemester., semester(), study_group()
-
-### Community 293 - "ApplicationStatusReadSerializer"
-Cohesion: 0.40
-Nodes (5): ApplicationStatusReadSerializer, ApplicationStatusSerializer, Meta, Сериализатор для статусов заявок, Сериализатор для отображения (чтения) статусов заявок на проекты. Используется…
-
-### Community 294 - ".register"
-Cohesion: 0.33
-Nodes (3): atomic, Отправляет студенту письмо после успешной регистрации., Создаёт пользователя по предрегистрации и возвращает JWT + профиль. Raises:…
-
-### Community 295 - "test_preregistered_student_viewset.py"
-Cohesion: 0.47
-Nodes (5): api_client(), pre_registered_student(), fixture, Тесты API предрегистрации студентов., study_group()
+### Community 289 - "ProjectApplicationListSerializer"
+Cohesion: 0.67
+Nodes (3): Meta, ProjectApplicationListSerializer, Простой сериализатор для списка заявок
 
 ### Community 296 - "ProjectViewSet"
 Cohesion: 0.25
@@ -1088,14 +1073,6 @@ Nodes (5): ProjectViewSet, extend_schema_view, Request, Response, GET /api/showc
 ### Community 297 - "ProjectRepository"
 Cohesion: 0.29
 Nodes (5): ProjectRepository, QuerySet, Доступ к данным для списка проектов., Список заявок с фильтрацией по институту и семестру., Одобренные проекты семестра для указанных институтов (legacy).
-
-### Community 298 - "TestRepositoryGetById"
-Cohesion: 0.33
-Nodes (4): Тесты для методов получения заявок по ID., get_by_id возвращает заявку с оптимизированными запросами (prefetch_related)., get_by_id_simple возвращает заявку без дополнительных prefetch., TestRepositoryGetById
-
-### Community 299 - "Текущий статус реализации"
-Cohesion: 0.40
-Nodes (5): ⚠️ Проблемные функции, ✅ Работающие функции, 📊 Статистика тестирования, Текущий статус реализации, 🔧 Требует доработки
 
 ### Community 303 - "Endpoints"
 Cohesion: 0.33
@@ -1153,32 +1130,28 @@ Nodes (4): 8. Сводка: новые vs изменённые сущности,
 Cohesion: 0.50
 Nodes (3): Кому, О проведении сбора и верификации заявок по проектной деятельности на 2026–2027 учебный год, РАСПОРЯЖЕНИЕ
 
-### Community 322 - "ProjectTrackAddApplicationItemSerializer"
-Cohesion: 0.50
-Nodes (3): ProjectTrackAddApplicationItemSerializer, Элемент списка заявок для добавления в трек., Проверяет, что minTeamMembers не больше maxTeamMembers.
-
-### Community 323 - "ProjectTrackUpdateSerializer"
-Cohesion: 0.50
-Nodes (3): ProjectTrackUpdateSerializer, Сериализатор для обновления проектного трека., Проверяет согласованность лимитов размера команды.
+### Community 323 - ".partial_update"
+Cohesion: 0.25
+Nodes (5): Создаёт DTO из словаря., ProjectTrackUpdateSerializer, PATCH /api/showcase/project-tracks/{id}/., Сериализатор для обновления проектного трека., Проверяет согласованность лимитов размера команды.
 
 ## Knowledge Gaps
-- **215 isolated node(s):** `Migration`, `Migration`, `Migration`, `Migration`, `Migration` (+210 more)
+- **216 isolated node(s):** `Migration`, `Migration`, `Migration`, `Migration`, `Migration` (+211 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **116 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
+- **139 thin communities (<3 nodes) omitted from report** — run `graphify query` to explore isolated nodes.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `make_user()` connect `make_user` to `TestRepositoryCreate`, `ProjectApplicationCreateDTO`, `TestDepartmentPlanViewSetMyDepartmentPlan`, `TestStudentBlockedFromStaffApi`, `ApplicationDashboardService`, `test_project_track_service.py`, `test_direction_domain.py`, `test_study_group_domain.py`, `StudyGroup`, `ProjectTrack`, `TagService`, `TestDepartmentPlanViewSetCreate`, `TestRepositoryDeleteAndExists`, `TestLogInvolvedDepartment`, `TestTagServiceListTags`, `test_team_lobby_viewset.py`, `TestProjectApplicationReadDTO`, `TestRepositoryUpdate`, `TestTagViewSet`, `ProjectService`, `tests/conftest.py`, `._create_app`, `ProjectApplicationService`, `APIClient`, `TestCoordinationAndDtosService`, `TestRepositoryGetById`, `CommentService`, `TestTagViewSetCreate`, `TestCanUpdateTag`, `ProjectTrackService`, `TestDepartmentPlanViewSetList`, `UserManagementService`, `StudyGroupService`, `ProjectTrackDomain`, `TestLogStatusChange`, `ApplicationNotificationService`, `TestProjectApplicationListSemesterFilter`, `UserManagementDomain`, `student_user`, `.get_filtered_queryset`, `TestRepositoryApplicationNumbering`, `DirectionService`, `TestTagServiceGetTag`, `TestApplicationDashboardViewSet`, `TestTagViewSetDelete`, `TestCanCreateTag`, `TestProjectApplicationListDTO`, `TestTagServiceUpdate`, `TestCanDeleteTag`, `test_import_preregistered_students.py`, `TestProjectViewSet`, `.get_filtered_queryset`, `TestProjectApplicationViewSetIsInternalCustomer`, `TestProjectApplicationNewFieldsCreateUpdate`, `TestProjectApplicationViewSetTransferToInstitute`, `TestProjectApplicationViewSetIsExternalInResponses`, `TestGetLogs`, `test_my_team_viewset.py`, `django_db`, `TestRepositoryFilter`, `TestSemesterAssignViewSet`, `TestTagServiceDelete`?**
-  _High betweenness centrality (0.165) - this node is a cross-community bridge._
-- **Why does `User` connect `User` to `ProjectApplication`, `ProjectApplicationRepository`, `ProjectApplicationCreateDTO`, `accounts/views.py`, `Tag`, `ApplicationDashboardService`, `Department`, `test_project_track_service.py`, `test_study_group_domain.py`, `StudyGroup`, `TagService`, `ApplicationDashboardDomain`, `TeamLobbyService`, `._resolve_institute_semester`, `ProjectApplicationService`, `ProjectTrackReadDTO`, `ProjectTrackProjectDetailDTO`, `CommentService`, `Semester`, `.approve_application`, `teams/views.py`, `TestCanUpdateTag`, `ProjectTrackService`, `UserManagementService`, `application_dashboard_service.py`, `StudyGroupService`, `ProjectTrackDomain`, `PasswordResetSerializer`, `ApplicationNotificationService`, `UserManagementDomain`, `.update_application`, `.get_filtered_queryset`, `DepartmentPlanViewSet`, `.filter_by_user_queryset`, `.filter_coordination_by_user_queryset`, `DirectionService`, `.list_applications`, `TestCanCreateTag`, `TeamLobbyDomain`, `TestCanDeleteTag`, `.resolve_list_semester_id`, `.get_filtered_queryset`, `accounts/admin.py`, `direction_service.py`, `ProjectTrackGroupListDTO`, `ProjectApplicationUpdateDTO`, `.view_application`, `PasswordChangeSerializer`, `InvolvedManager`, `institute_access.py`, `UserSerializer`, `teams/models.py`, `StudyGroupMemberDTO`?**
-  _High betweenness centrality (0.154) - this node is a cross-community bridge._
-- **Why does `Semester` connect `Semester` to `make_user`, `ProjectApplication`, `ProjectApplicationRepository`, `accounts/views.py`, `ProjectApplicationViewSet`, `TestDepartmentPlanViewSetMyDepartmentPlan`, `ApplicationDashboardService`, `TestStudentBlockedFromStaffApi`, `test_project_track_service.py`, `StudyGroup`, `ProjectTrack`, `TestDepartmentPlanViewSetCreate`, `test_import_study_groups_from_contingent.py`, `test_team_lobby_viewset.py`, `TeamLobbyService`, `ProjectService`, `ProjectApplicationService`, `test_team_semester_viewset.py`, `teams/views.py`, `ProjectTrackService`, `TestDepartmentPlanViewSetList`, `UserManagementService`, `application_dashboard_service.py`, `StudyGroupService`, `Command`, `TestProjectApplicationListSemesterFilter`, `DepartmentPlanViewSet`, `AccountsApiTests`, `.resolve_list_semester_id`, `TestProjectViewSet`, `accounts/admin.py`, `TestProjectApplicationNewFieldsCreateUpdate`, `ProjectApplicationUpdateDTO`, `test_my_team_viewset.py`, `teams/models.py`, `institute_access.py`, `TestSemesterAssignViewSet`?**
-  _High betweenness centrality (0.094) - this node is a cross-community bridge._
-- **Are the 478 inferred relationships involving `make_user()` (e.g. with `.test_can_list_users_admin()` and `.test_can_list_users_denied_for_regular_user()`) actually correct?**
-  _`make_user()` has 478 INFERRED edges - model-reasoned connections that need verification._
-- **Are the 42 inferred relationships involving `User` (e.g. with `UserManagementDomain` and `UserListDTO`) actually correct?**
-  _`User` has 42 INFERRED edges - model-reasoned connections that need verification._
+- **Why does `User` connect `User` to `.create_tag`, `ProjectApplication`, `ProjectApplicationRepository`, `ProjectApplicationService`, `accounts/views.py`, `Any`, `ApplicationDashboardService`, `project_track_service.py`, `UserListDTO`, `.get_filtered_queryset`, `TagService`, `ProjectTrackService`, `ProjectApplicationCreateDTO`, `student_showcase_service.py`, `TeamLobbyService`, `._resolve_institute_semester`, `CommentService`, `.approve_application`, `StudentWithStudyGroupPermission`, `TestCanUpdateTag`, `ProjectTrackReadDTO`, `UserManagementService`, `StudentShowcaseDomain`, `StudyGroupService`, `accounts/permissions.py`, `ProjectTrackDomain`, `InvolvedManagementService`, `UserManagementDomain`, `accounts/admin.py`, `.get_filtered_queryset`, `DirectionService`, `Tag`, `TestCanCreateTag`, `TeamLobbyDomain`, `TestCanDeleteTag`, `.resolve_list_semester_id`, `ApplicationCapabilities`, `accounts/models.py`, `.get_filtered_queryset`, `.get_user`, `Role`, `.get_group_detail`, `ProjectTrackProjectDetailDTO`, `.view_application`, `PasswordResetSerializer`, `UserRepository`, `.ensure_is_captain`, `institute_access.py`, `TeamSemester`, `MyStudyGroupDTO`, `StudyGroupDomain`?**
+  _High betweenness centrality (0.168) - this node is a cross-community bridge._
+- **Why does `make_user()` connect `make_user` to `ProjectApplication`, `ProjectApplicationRepository`, `ProjectApplicationService`, `TestDepartmentPlanViewSetMyDepartmentPlan`, `TestRepositoryUpdate`, `ApplicationDashboardService`, `project_track_service.py`, `TestRepositoryApplicationNumbering`, `.get_filtered_queryset`, `TestMyStudyGroupViewSet`, `ProjectTrack`, `TagService`, `TestDepartmentPlanViewSetCreate`, `ProjectTrackService`, `_create_assembled_team`, `django_db`, `ProjectApplicationReadDTO`, `TestRepositoryFilter`, `TestTagViewSet`, `ProjectService`, `fixture`, `._create_app`, `ProjectApplicationUpdateDTO`, `PreRegisteredStudent`, `TestGetLogs`, `CommentService`, `Semester`, `TestCanUpdateTag`, `TestDepartmentPlanViewSetList`, `UserManagementService`, `StudyGroupService`, `ProjectTrackDomain`, `TestTagServiceUpdate`, `TestProjectApplicationListSemesterFilter`, `UserManagementDomain`, `.get_filtered_queryset`, `TestProjectApplicationSemesterAutoAssign`, `DirectionService`, `TestApplicationDashboardViewSet`, `TestTagViewSetCreate`, `TestCanCreateTag`, `TestProjectApplicationListDTO`, `TestRepositoryGetById`, `TestCanDeleteTag`, `accounts/models.py`, `TestProjectViewSet`, `.get_filtered_queryset`, `TestProjectApplicationViewSetIsInternalCustomer`, `TestProjectApplicationNewFieldsCreateUpdate`, `TestProjectApplicationViewSetTransferToInstitute`, `ProjectApplicationListDTO`, `TestApplicationNotificationService`, `TestLogStatusChange`, `Department`, `TeamSemester`, `MyStudyGroupDTO`, `TestSemesterAssignViewSet`, `StudyGroupDomain`?**
+  _High betweenness centrality (0.140) - this node is a cross-community bridge._
+- **Why does `Semester` connect `Semester` to `make_user`, `ProjectApplication`, `ProjectApplicationRepository`, `ProjectApplicationService`, `accounts/views.py`, `ProjectApplicationViewSet`, `TestDepartmentPlanViewSetMyDepartmentPlan`, `ApplicationDashboardService`, `test_project_application_new_fields.py`, `project_track_service.py`, `TestMyStudyGroupViewSet`, `ProjectTrack`, `TestDepartmentPlanViewSetCreate`, `ProjectTrackService`, `student_showcase_service.py`, `study_group_import.py`, `TeamLobbyService`, `ProjectService`, `TestDepartmentPlanViewSetList`, `UserManagementService`, `StudentShowcaseDomain`, `StudyGroupService`, `Command`, `TestProjectApplicationListSemesterFilter`, `accounts/admin.py`, `DepartmentPlanViewSet`, `TestProjectApplicationSemesterAutoAssign`, `AccountsApiTests`, `.resolve_list_semester_id`, `accounts/models.py`, `TestProjectViewSet`, `TestProjectApplicationNewFieldsCreateUpdate`, `Department`, `TeamSemester`, `institute_access.py`, `TestSemesterAssignViewSet`?**
+  _High betweenness centrality (0.108) - this node is a cross-community bridge._
+- **Are the 483 inferred relationships involving `make_user()` (e.g. with `.test_can_list_users_admin()` and `.test_can_list_users_denied_for_regular_user()`) actually correct?**
+  _`make_user()` has 483 INFERRED edges - model-reasoned connections that need verification._
+- **Are the 44 inferred relationships involving `User` (e.g. with `UserManagementDomain` and `UserListDTO`) actually correct?**
+  _`User` has 44 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 72 inferred relationships involving `Department` (e.g. with `UserManagementDomain` and `Command`) actually correct?**
   _`Department` has 72 INFERRED edges - model-reasoned connections that need verification._
 - **Are the 20 inferred relationships involving `ProjectApplicationService` (e.g. with `ProjectApplicationViewSet` and `SemesterViewSet`) actually correct?**

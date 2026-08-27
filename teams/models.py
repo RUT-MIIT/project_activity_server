@@ -202,6 +202,10 @@ class TeamSemester(models.Model):
                 fields=["semester", "project_track"],
                 name="team_sem_semester_track_idx",
             ),
+            models.Index(
+                fields=["semester", "project_track", "project_application"],
+                name="team_sem_enroll_lookup_idx",
+            ),
         ]
 
     def __str__(self) -> str:

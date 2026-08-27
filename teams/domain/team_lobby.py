@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from showcase.constants import DEFAULT_MAX_TEAM_MEMBERS, DEFAULT_MIN_TEAM_MEMBERS
 from teams.models import (
     TeamInvitation,
     TeamJoinRequest,
@@ -13,10 +14,23 @@ from teams.models import (
 
 if TYPE_CHECKING:
     from accounts.models import User
+    from showcase.models import ProjectTrack
 
 
 class TeamLobbyDomain:
     """Чистая бизнес-логика лобби и «Моей команды»."""
+
+    @staticmethod
+    def resolve_member_limits(
+        team_track: ProjectTrack | None,
+        *,
+        sole_group_track: ProjectTrack | None = None,
+    ) -> tuple[int, int]:
+        """Лимиты: трек команды, иначе единственный трек группы, иначе дефолты."""
+        track = team_track if team_track is not None else sole_group_track
+        if track is None:
+            return DEFAULT_MIN_TEAM_MEMBERS, DEFAULT_MAX_TEAM_MEMBERS
+        return track.min_team_members, track.max_team_members
 
     @staticmethod
     def ensure_student_with_group(user: User) -> int:

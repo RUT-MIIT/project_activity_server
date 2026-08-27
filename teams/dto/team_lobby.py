@@ -31,16 +31,20 @@ class LobbyTeamItemDTO:
         team_semester: TeamSemester,
         *,
         my_pending_join_request_id: int | None,
+        max_team_members: int | None = None,
     ) -> None:
         self.id = team_semester.id
         self.name = team_semester.team.name
         self.status = team_semester.status
         self.track_id = team_semester.project_track_id
         self.members_count = int(getattr(team_semester, "members_count", 0) or 0)
-        track = team_semester.project_track
-        self.max_team_members = (
-            track.max_team_members if track else DEFAULT_MAX_TEAM_MEMBERS
-        )
+        if max_team_members is not None:
+            self.max_team_members = max_team_members
+        else:
+            track = team_semester.project_track
+            self.max_team_members = (
+                track.max_team_members if track else DEFAULT_MAX_TEAM_MEMBERS
+            )
         self.captain = _user_brief(team_semester.captain)
         self.my_pending_join_request_id = my_pending_join_request_id
 
@@ -236,13 +240,24 @@ class MyTeamInvitationDTO:
 class MyTeamReadDTO:
     """Ответ GET /my-team/."""
 
-    def __init__(self, team_semester: TeamSemester, *, viewer_id: int) -> None:
+    def __init__(
+        self,
+        team_semester: TeamSemester,
+        *,
+        viewer_id: int,
+        min_team_members: int | None = None,
+        max_team_members: int | None = None,
+    ) -> None:
         track = team_semester.project_track
         members = list(team_semester.members.all())
         is_captain = team_semester.captain_id == viewer_id
         members_count = len(members)
-        min_members = track.min_team_members if track else DEFAULT_MIN_TEAM_MEMBERS
-        max_members = track.max_team_members if track else DEFAULT_MAX_TEAM_MEMBERS
+        if min_team_members is not None and max_team_members is not None:
+            min_members = min_team_members
+            max_members = max_team_members
+        else:
+            min_members = track.min_team_members if track else DEFAULT_MIN_TEAM_MEMBERS
+            max_members = track.max_team_members if track else DEFAULT_MAX_TEAM_MEMBERS
         status = team_semester.status
         forming = status == TeamSemester.Status.FORMING
 
