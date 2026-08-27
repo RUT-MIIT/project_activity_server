@@ -31,6 +31,7 @@ class LobbyTeamItemDTO:
         team_semester: TeamSemester,
         *,
         my_pending_join_request_id: int | None,
+        min_team_members: int | None = None,
         max_team_members: int | None = None,
     ) -> None:
         self.id = team_semester.id
@@ -38,10 +39,14 @@ class LobbyTeamItemDTO:
         self.status = team_semester.status
         self.track_id = team_semester.project_track_id
         self.members_count = int(getattr(team_semester, "members_count", 0) or 0)
-        if max_team_members is not None:
+        track = team_semester.project_track
+        if min_team_members is not None and max_team_members is not None:
+            self.min_team_members = min_team_members
             self.max_team_members = max_team_members
         else:
-            track = team_semester.project_track
+            self.min_team_members = (
+                track.min_team_members if track else DEFAULT_MIN_TEAM_MEMBERS
+            )
             self.max_team_members = (
                 track.max_team_members if track else DEFAULT_MAX_TEAM_MEMBERS
             )
@@ -55,6 +60,7 @@ class LobbyTeamItemDTO:
             "status": self.status,
             "track_id": self.track_id,
             "membersCount": self.members_count,
+            "minTeamMembers": self.min_team_members,
             "maxTeamMembers": self.max_team_members,
             "captain": self.captain,
             "myPendingJoinRequestId": self.my_pending_join_request_id,

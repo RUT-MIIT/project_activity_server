@@ -185,7 +185,38 @@ class TestTeamLobbyViewSet:
         assert tracks[lobby_setup["track1"].id]["recommendedTeamsCount"] == 3
         assert tracks[lobby_setup["track2"].id]["recommendedTeamsCount"] == 4
         assert tracks[lobby_setup["track1"].id]["canCreateTeam"] is True
+        assert tracks[lobby_setup["track1"].id]["minTeamMembers"] == 2
+        assert tracks[lobby_setup["track1"].id]["maxTeamMembers"] == 5
         assert response.data["canCreateTeam"] is True
+
+    def test_lobby_team_limits_from_sole_group_track(self, api_client, lobby_setup):
+        """Команда без трека при одном треке у группы → min/max с трека группы."""
+        ProjectTrackGroup.objects.filter(project_track=lobby_setup["track2"]).delete()
+        track = lobby_setup["track1"]
+        track.min_team_members = 5
+        track.max_team_members = 8
+        track.save(update_fields=["min_team_members", "max_team_members"])
+
+        captain = lobby_setup["student"]
+        ts = _create_captained_team(
+            group=lobby_setup["group"],
+            semester=lobby_setup["semester"],
+            track=None,
+            captain=captain,
+            name="NoTrack",
+        )
+        assert ts.project_track_id is None
+
+        api_client.force_authenticate(user=captain)
+        response = api_client.get("/api/teams/lobby/")
+        assert response.status_code == 200
+        team = next(t for t in response.data["teams"] if t["id"] == ts.id)
+        assert team["minTeamMembers"] == 5
+        assert team["maxTeamMembers"] == 8
+        assert response.data["myTeam"]["minTeamMembers"] == 5
+        assert response.data["myTeam"]["maxTeamMembers"] == 8
+        assert response.data["tracks"][0]["minTeamMembers"] == 5
+        assert response.data["tracks"][0]["maxTeamMembers"] == 8
 
     def test_create_team_and_join_request_flow(self, api_client, lobby_setup):
         captain = lobby_setup["student"]

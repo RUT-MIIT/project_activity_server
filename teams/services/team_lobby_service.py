@@ -110,11 +110,17 @@ class TeamLobbyService:
         has_team = my_team_semester is not None
         my_team_payload = None
         if my_team_semester is not None:
+            min_m, max_m = self.domain.resolve_member_limits(
+                my_team_semester.project_track,
+                sole_group_track=sole_group_track,
+            )
             my_team_payload = {
                 "id": my_team_semester.id,
                 "name": my_team_semester.team.name,
                 "status": my_team_semester.status,
                 "track_id": my_team_semester.project_track_id,
+                "minTeamMembers": min_m,
+                "maxTeamMembers": max_m,
                 "members": [
                     MyTeamMemberDTO(member).to_dict()
                     for member in my_team_semester.members.all()
@@ -122,13 +128,14 @@ class TeamLobbyService:
             }
 
         def _lobby_team_item(ts: TeamSemester) -> dict:
-            _, max_m = self.domain.resolve_member_limits(
+            min_m, max_m = self.domain.resolve_member_limits(
                 ts.project_track,
                 sole_group_track=sole_group_track,
             )
             return LobbyTeamItemDTO(
                 ts,
                 my_pending_join_request_id=pending_map.get(ts.id),
+                min_team_members=min_m,
                 max_team_members=max_m,
             ).to_dict()
 
