@@ -51,11 +51,15 @@ class PreRegisteredStudentViewSet(viewsets.GenericViewSet):
         data = serializer.validated_data
 
         service = PreRegisteredStudentService()
-        result = service.lookup(
-            student_card=data.get("student_card") or None,
-            personnel_number=data.get("personnel_number") or None,
-            snils=data.get("snils") or None,
-        )
+        try:
+            result = service.lookup(
+                last_name=data["last_name"],
+                student_card=data.get("student_card") or None,
+                personnel_number=data.get("personnel_number") or None,
+                snils=data.get("snils") or None,
+            )
+        except ValueError as exc:
+            return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         if result is None:
             return Response(
                 {"detail": "Студент не найден"},

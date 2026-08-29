@@ -70,4 +70,6 @@ class StudyGroupService:
         group = self.repository.get_my_group_detail(
             user.study_group_id, semester_id=semester_id
         )
-        return MyStudyGroupDTO(group, include_team=semester_id is not None).to_dict()
+        return MyStudyGroupDTO(
+            group, include_team=semester_id is not None, semester_id=semester_id
+        ).to_dict()

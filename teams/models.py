@@ -98,6 +98,43 @@ class StudyGroup(models.Model):
         return self.name
 
 
+class StudyGroupSemester(models.Model):
+    """Наставники учебной группы в конкретном семестре."""
+
+    study_group = models.ForeignKey(
+        StudyGroup,
+        on_delete=models.CASCADE,
+        related_name="semester_enrollments",
+        verbose_name="Учебная группа",
+    )
+    semester = models.ForeignKey(
+        "accounts.Semester",
+        on_delete=models.PROTECT,
+        related_name="study_group_semesters",
+        verbose_name="Семестр",
+    )
+    mentors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="mentored_group_semesters",
+        blank=True,
+        verbose_name="Наставники",
+    )
+
+    class Meta:
+        verbose_name = "Группа в семестре"
+        verbose_name_plural = "Группы в семестрах"
+        ordering = ("study_group", "semester")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["study_group", "semester"],
+                name="unique_study_group_semester",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.study_group} — {self.semester}"
+
+
 class Team(models.Model):
     """Постоянная команда участников проектной деятельности."""
 

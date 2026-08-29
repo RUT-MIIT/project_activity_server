@@ -301,3 +301,47 @@ class TestImportStudyGroupsFromContingentCommand:
                 file=str(path),
                 year=2026,
             )
+
+    def test_import_marks_missing_groups_as_ended(
+        self, sample_contingent_file: Path, aga_institute: Institute, direction: Any
+    ) -> None:
+        old_group = StudyGroup.objects.create(
+            name="Старая группа",
+            code="OLD-2020-01",
+            direction=direction,
+            institute=aga_institute,
+            is_end=False,
+        )
+
+        call_command(
+            "import_study_groups_from_contingent",
+            file=str(sample_contingent_file),
+            year=2026,
+            semester="autumn",
+        )
+
+        old_group.refresh_from_db()
+        imported = StudyGroup.objects.get(code="АМБ-2025-11")
+        assert old_group.is_end is True
+        assert imported.is_end is False
+
+    def test_import_reactivates_previously_ended_group(
+        self, sample_contingent_file: Path, aga_institute: Institute, direction: Any
+    ) -> None:
+        ended_group = StudyGroup.objects.create(
+            name="АМБ-211",
+            code="АМБ-2025-11",
+            direction=direction,
+            institute=aga_institute,
+            is_end=True,
+        )
+
+        call_command(
+            "import_study_groups_from_contingent",
+            file=str(sample_contingent_file),
+            year=2026,
+            semester="autumn",
+        )
+
+        ended_group.refresh_from_db()
+        assert ended_group.is_end is False

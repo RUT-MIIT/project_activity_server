@@ -96,7 +96,7 @@ class TestMyStudyGroupViewSet:
 
         assert response.status_code == 404
 
-    def test_student_without_mentor_returns_null_mentor(
+    def test_student_without_mentor_returns_empty_mentors(
         self,
         api_client: APIClient,
         roles,
@@ -113,7 +113,7 @@ class TestMyStudyGroupViewSet:
         assert response.status_code == 200
         assert response.data["id"] == study_group.id
         assert response.data["name"] == "АМБ-211"
-        assert response.data["mentor"] is None
+        assert response.data["mentors"] == []
         assert response.data["members"] == []
         assert response.data["students_count"] == 0
         assert response.data["registered_students_count"] == 0
@@ -168,16 +168,18 @@ class TestMyStudyGroupViewSet:
         assert response.status_code == 200
         assert response.data["direction"]["code"] == "25.03.03"
         assert response.data["institute"]["code"] == study_group.institute_id
-        assert response.data["mentor"] == {
-            "id": mentor.id,
-            "last_name": "Сидоров",
-            "first_name": "Сидор",
-            "middle_name": "Сидорович",
-            "email": "mentor@example.com",
-            "position": "Старший преподаватель",
-            "academic_degree": "к.т.н.",
-            "academic_title": "доцент",
-        }
+        assert response.data["mentors"] == [
+            {
+                "id": mentor.id,
+                "last_name": "Сидоров",
+                "first_name": "Сидор",
+                "middle_name": "Сидорович",
+                "email": "mentor@example.com",
+                "position": "Старший преподаватель",
+                "academic_degree": "к.т.н.",
+                "academic_title": "доцент",
+            }
+        ]
         assert response.data["students_count"] == 2
         assert response.data["registered_students_count"] == 1
         members = response.data["members"]
@@ -278,7 +280,7 @@ class TestMyStudyGroupService:
         data = service.get_my_study_group(user)
 
         assert data["id"] == study_group.id
-        assert data["mentor"] is None
+        assert data["mentors"] == []
 
     def test_get_my_study_group_forbidden_for_admin(self, roles, make_user) -> None:
         user = make_user(role_code="admin")
@@ -323,7 +325,7 @@ class TestMyStudyGroupService:
         with django_assert_num_queries(0):
             data = MyStudyGroupDTO(group).to_dict()
 
-        assert data["mentor"]["id"] == mentor.id
+        assert data["mentors"][0]["id"] == mentor.id
         assert data["students_count"] == 5
         assert data["registered_students_count"] == 1
         assert len(data["members"]) == 5

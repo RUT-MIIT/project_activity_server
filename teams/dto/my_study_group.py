@@ -85,7 +85,12 @@ class StudyGroupMemberDTO:
 class MyStudyGroupDTO:
     """Полные данные учебной группы для текущего студента."""
 
-    def __init__(self, group: StudyGroup, include_team: bool = False):
+    def __init__(
+        self,
+        group: StudyGroup,
+        include_team: bool = False,
+        semester_id: int | None = None,
+    ):
         members = [
             StudyGroupMemberDTO(item, include_team=include_team)
             for item in group.pre_registered_students.all()
@@ -107,14 +112,27 @@ class MyStudyGroupDTO:
             "code": group.institute.code,
             "name": group.institute.name,
         }
-        self.mentor = (
-            StudyGroupMentorDTO(group.mentor).to_dict() if group.mentor_id else None
-        )
+        mentor_users = self._resolve_mentors(group, semester_id)
+        self.mentors = [
+            StudyGroupMentorDTO(mentor).to_dict() for mentor in mentor_users
+        ]
         self.members = [member.to_dict() for member in members]
         self.students_count = len(members)
         self.registered_students_count = sum(
             1 for member in members if member.is_registered
         )
+
+    @staticmethod
+    def _resolve_mentors(group: StudyGroup, semester_id: int | None) -> list[User]:
+        """Возвращает наставников: из семестра или fallback на StudyGroup.mentor."""
+        if semester_id is not None:
+            enrollments = getattr(group, "_semester_enrollments_for_semester", None)
+            if enrollments:
+                return list(enrollments[0].mentors.all())
+            return []
+        if group.mentor_id:
+            return [group.mentor]
+        return []
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -128,7 +146,7 @@ class MyStudyGroupDTO:
             "enrollment_year": self.enrollment_year,
             "direction": self.direction,
             "institute": self.institute,
-            "mentor": self.mentor,
+            "mentors": self.mentors,
             "students_count": self.students_count,
             "registered_students_count": self.registered_students_count,
             "members": self.members,

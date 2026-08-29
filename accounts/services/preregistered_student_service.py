@@ -13,7 +13,10 @@ from django.db.models import Prefetch
 from django.template.loader import render_to_string
 from rest_framework_simplejwt.tokens import RefreshToken
 
-from accounts.domain.preregistered_student_import import normalize_snils
+from accounts.domain.preregistered_student_import import (
+    last_names_match,
+    normalize_snils,
+)
 from accounts.models import PreRegisteredStudent, Role
 from accounts.repositories.preregistered_student import PreRegisteredStudentRepository
 from accounts.serializers import UserSerializer
@@ -54,6 +57,7 @@ class PreRegisteredStudentService:
     def lookup(
         self,
         *,
+        last_name: str,
         student_card: str | None = None,
         personnel_number: str | None = None,
         snils: str | None = None,
@@ -63,6 +67,9 @@ class PreRegisteredStudentService:
 
         Returns:
             DTO результата или None, если запись не найдена.
+
+        Raises:
+            ValueError: если запись найдена, но фамилия не совпадает.
         """
         pre_registered = self._find_by_identifiers(
             student_card=student_card,
@@ -70,6 +77,10 @@ class PreRegisteredStudentService:
             snils=snils,
         )
         if pre_registered is None:
+            return None
+        if not last_names_match(pre_registered.last_name, last_name):
+            raise ValueError("Фамилия не совпадает с данными в системе")
+        if pre_registered.group.is_end:
             return None
         return self._to_lookup_result(pre_registered)
 
@@ -93,33 +104,57 @@ class PreRegisteredStudentService:
             raise ValueError("Предрегистрация не найдена")
         if pre_registered.is_registered:
             raise ValueError("Студент уже зарегистрирован")
+        if pre_registered.group.is_end:
+            raise ValueError("Учебная группа завершила обучение")
 
         user_model = get_user_model()
         if user_model.objects.filter(email=email).exists():
             raise ValueError("Пользователь с таким email уже существует")
 
-        try:
-            role = Role.objects.get(code="student")
-        except Role.DoesNotExist as exc:
-            raise ValueError("Роль student не найдена") from exc
-
         validate_password(password)
 
-        user = user_model.objects.create_user(
-            email=email,
-            password=password,
-            first_name=pre_registered.first_name,
-            last_name=pre_registered.last_name,
-            middle_name=pre_registered.middle_name,
-            role=role,
-            study_group=pre_registered.group,
-        )
+        if (
+            pre_registered.has_placeholder_user
+            and pre_registered.student is not None
+            and pre_registered.student.is_placeholder
+        ):
+            user = pre_registered.student
+            user.email = email
+            user.set_password(password)
+            user.is_active = True
+            user.is_placeholder = False
+            user.save(
+                update_fields=[
+                    "email",
+                    "password",
+                    "is_active",
+                    "is_placeholder",
+                ]
+            )
+            pre_registered.has_placeholder_user = False
+            pre_registered.save(update_fields=["has_placeholder_user"])
+        else:
+            try:
+                role = Role.objects.get(code="student")
+            except Role.DoesNotExist as exc:
+                raise ValueError("Роль student не найдена") from exc
+
+            user = user_model.objects.create_user(
+                email=email,
+                password=password,
+                first_name=pre_registered.first_name,
+                last_name=pre_registered.last_name,
+                middle_name=pre_registered.middle_name,
+                role=role,
+                study_group=pre_registered.group,
+            )
+            self._repository.link_student(pre_registered, user.pk)
+
         self._send_registration_email(
             pre_registered=pre_registered,
             email=email,
             password=password,
         )
-        self._repository.link_student(pre_registered, user.pk)
 
         refresh = RefreshToken.for_user(user)
         user_data = self._serialize_user(user)
@@ -179,7 +214,9 @@ class PreRegisteredStudentService:
         password: str,
     ) -> None:
         """Отправляет студенту письмо после успешной регистрации."""
-        subject = render_to_string("registration/student_registered_subject.txt").strip()
+        subject = render_to_string(
+            "registration/student_registered_subject.txt"
+        ).strip()
         message = render_to_string(
             "registration/student_registered_body.txt",
             {

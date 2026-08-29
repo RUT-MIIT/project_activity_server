@@ -17,7 +17,7 @@ from teams.domain.study_group_import import (
 )
 from teams.models import Direction, StudyGroup
 
-DEFAULT_FILE = "data/контингент_14_08.xls"
+DEFAULT_FILE = "data/контингент_29_08.xls"
 HEADER_ROW = 1
 
 
@@ -89,6 +89,7 @@ class Command(BaseCommand):
                     "institute": institute,
                     "profile": row.profile,
                     "form": row.form,
+                    "is_end": False,
                 },
             )
             if was_created:
@@ -96,13 +97,26 @@ class Command(BaseCommand):
             else:
                 updated += 1
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Готово: создано {created}, обновлено {updated}, "
-                f"уникальных групп {len(rows)} "
-                f"(year={current_year}, semester={semester})"
+        ended_count = 0
+        reactivated_count = 0
+        if not options["clear"]:
+            imported_codes = set(rows.keys())
+            reactivated_count = StudyGroup.objects.filter(
+                code__in=imported_codes,
+                is_end=True,
+            ).update(is_end=False)
+            ended_count = StudyGroup.objects.exclude(code__in=imported_codes).update(
+                is_end=True
             )
+
+        summary = (
+            f"Готово: создано {created}, обновлено {updated}, "
+            f"уникальных групп {len(rows)} "
+            f"(year={current_year}, semester={semester})"
         )
+        if not options["clear"]:
+            summary += f", завершено {ended_count}, реактивировано {reactivated_count}"
+        self.stdout.write(self.style.SUCCESS(summary))
 
     def _read_contingent(self, path: Path) -> pd.DataFrame:
         """Читает отчёт контингента; заголовок колонок — вторая строка."""

@@ -28,7 +28,10 @@ class DirectionDomain:
                 return queryset.none()
 
             direction_codes = (
-                StudyGroup.objects.filter(institute_id__in=institute_codes)
+                StudyGroup.objects.filter(
+                    institute_id__in=institute_codes,
+                    is_end=False,
+                )
                 .values_list("direction_id", flat=True)
                 .distinct()
             )

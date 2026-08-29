@@ -2,6 +2,8 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 
 from teams.entities.Direction import DirectionViewSet
+from teams.entities.InstituteResponsible import InstituteResponsibleViewSet
+from teams.entities.MentorTeam import MentorTeamViewSet
 from teams.entities.StudyGroup import StudyGroupViewSet
 from teams.entities.TeamLobby import MyTeamViewSet, TeamLobbyViewSet
 from teams.views import TeamSemesterViewSet, TeamViewSet
@@ -11,6 +13,11 @@ router.register(r"teams", TeamViewSet, basename="team")
 router.register(r"team-semesters", TeamSemesterViewSet, basename="team-semester")
 router.register(r"directions", DirectionViewSet, basename="direction")
 router.register(r"study-groups", StudyGroupViewSet, basename="study-group")
+router.register(
+    r"institute-responsible",
+    InstituteResponsibleViewSet,
+    basename="institute-responsible",
+)
 router.register(r"lobby", TeamLobbyViewSet, basename="team-lobby")
 
 my_team = MyTeamViewSet.as_view(
@@ -56,5 +63,40 @@ urlpatterns = [
         "my-team/members/<int:user_id>/",
         MyTeamViewSet.as_view({"delete": "kick_member"}),
         name="my-team-kick",
+    ),
+    path(
+        "study-groups/<int:group_id>/teams/<int:team_semester_id>/",
+        MentorTeamViewSet.as_view(
+            {
+                "patch": "partial_update",
+                "delete": "destroy",
+            }
+        ),
+        name="mentor-team-detail",
+    ),
+    path(
+        "study-groups/<int:group_id>/teams/<int:team_semester_id>/captain/",
+        MentorTeamViewSet.as_view({"patch": "set_captain"}),
+        name="mentor-team-captain",
+    ),
+    path(
+        "study-groups/<int:group_id>/teams/<int:team_semester_id>/confirm-composition/",
+        MentorTeamViewSet.as_view({"post": "confirm_composition"}),
+        name="mentor-team-confirm",
+    ),
+    path(
+        "study-groups/<int:group_id>/teams/<int:team_semester_id>/unconfirm-composition/",
+        MentorTeamViewSet.as_view({"post": "unconfirm_composition"}),
+        name="mentor-team-unconfirm",
+    ),
+    path(
+        "study-groups/<int:group_id>/teams/<int:team_semester_id>/members/",
+        MentorTeamViewSet.as_view({"post": "add_member"}),
+        name="mentor-team-add-member",
+    ),
+    path(
+        "study-groups/<int:group_id>/teams/<int:team_semester_id>/members/<int:user_id>/",
+        MentorTeamViewSet.as_view({"delete": "remove_member"}),
+        name="mentor-team-remove-member",
     ),
 ] + router.urls

@@ -44,6 +44,11 @@ def normalize_snils(value: object) -> str:
     return digits
 
 
+def last_names_match(stored: str, provided: str) -> bool:
+    """Сравнивает фамилии без учёта регистра и лишних пробелов."""
+    return normalize_cell(stored).casefold() == normalize_cell(provided).casefold()
+
+
 def parse_full_name(full_name: str) -> tuple[str, str, str]:
     """
     Разбирает ФИО из отчёта контингента.

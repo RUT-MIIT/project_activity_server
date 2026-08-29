@@ -16,7 +16,7 @@ from accounts.models import PreRegisteredStudent
 from teams.domain.study_group_import import normalize_cell
 from teams.models import StudyGroup
 
-DEFAULT_FILE = "data/контингент_14_08.xls"
+DEFAULT_FILE = "data/контингент_29_08.xls"
 HEADER_ROW = 1
 
 
@@ -56,6 +56,7 @@ class Command(BaseCommand):
         created = 0
         updated = 0
         skipped = 0
+        imported_personnel_numbers: set[str] = set()
 
         with transaction.atomic():
             for line_no, (_, row) in enumerate(df.iterrows(), start=HEADER_ROW + 2):
@@ -83,6 +84,8 @@ class Command(BaseCommand):
                         "(сначала import_study_groups_from_contingent)"
                     )
 
+                imported_personnel_numbers.add(parsed.personnel_number)
+
                 existing = PreRegisteredStudent.objects.filter(
                     personnel_number=parsed.personnel_number
                 ).first()
@@ -106,9 +109,16 @@ class Command(BaseCommand):
                     )
                     created += 1
 
+            deleted, _ = (
+                PreRegisteredStudent.objects.filter(student__isnull=True)
+                .exclude(personnel_number__in=imported_personnel_numbers)
+                .delete()
+            )
+
         self.stdout.write(
             self.style.SUCCESS(
-                f"Готово: создано {created}, обновлено {updated}, пропущено {skipped}"
+                f"Готово: создано {created}, обновлено {updated}, "
+                f"удалено {deleted}, пропущено {skipped}"
             )
         )
 

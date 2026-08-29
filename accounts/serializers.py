@@ -448,6 +448,7 @@ class PreRegisteredStudentLookupSerializer(serializers.Serializer):
     student_card = serializers.CharField(required=False, allow_blank=True)
     personnel_number = serializers.CharField(required=False, allow_blank=True)
     snils = serializers.CharField(required=False, allow_blank=True)
+    last_name = serializers.CharField(required=True, trim_whitespace=True, min_length=1)
 
     def validate(self, attrs: dict[str, str]) -> dict[str, str]:
         provided = {
@@ -460,6 +461,7 @@ class PreRegisteredStudentLookupSerializer(serializers.Serializer):
                 "Укажите ровно одно поле: student_card, personnel_number или snils."
             )
         attrs.update(provided)
+        attrs["last_name"] = (attrs.get("last_name") or "").strip()
         return attrs
 
 

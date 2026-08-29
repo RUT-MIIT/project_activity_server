@@ -37,7 +37,10 @@ class StudentShowcaseService:
         """Список треков группы студента с проектами и счётчиками записи."""
         group_id = self.domain.ensure_student_with_group(user)
         semester_id = self._resolve_semester_id(semester_id_raw)
+        return self.list_tracks_for_group(group_id, semester_id)
 
+    def list_tracks_for_group(self, group_id: int, semester_id: int) -> list[dict]:
+        """Треки группы с проектами и enrolledTeamsCount (без проверки роли)."""
         tracks = self.repository.list_group_tracks_with_projects(
             group_id=group_id, semester_id=semester_id
         )

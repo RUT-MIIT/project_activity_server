@@ -6,6 +6,7 @@ import pytest
 
 from accounts.domain.preregistered_student_import import (
     build_preregistered_student_import_row,
+    last_names_match,
     normalize_snils,
     parse_full_name,
 )
@@ -48,3 +49,12 @@ class TestPreRegisteredStudentImportDomain:
         assert row.snils == "18457362806"
         assert row.personnel_number == "1335090"
         assert row.group_code == "АМБ-2025-11"
+
+    def test_last_names_match_case_insensitive(self) -> None:
+        assert last_names_match("Иванов", "иванов") is True
+
+    def test_last_names_match_trims_whitespace(self) -> None:
+        assert last_names_match("  Иванов  ", "Иванов") is True
+
+    def test_last_names_match_different_names(self) -> None:
+        assert last_names_match("Иванов", "Петров") is False

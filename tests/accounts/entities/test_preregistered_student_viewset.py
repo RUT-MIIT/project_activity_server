@@ -66,7 +66,9 @@ class TestPreRegisteredStudentLookup:
         self, api_client: APIClient, pre_registered_student: PreRegisteredStudent
     ) -> None:
         response = api_client.post(
-            LOOKUP_URL, {"student_card": "25011884"}, format="json"
+            LOOKUP_URL,
+            {"student_card": "25011884", "last_name": "Иванов"},
+            format="json",
         )
 
         assert response.status_code == 200
@@ -79,7 +81,9 @@ class TestPreRegisteredStudentLookup:
         self, api_client: APIClient, pre_registered_student: PreRegisteredStudent
     ) -> None:
         response = api_client.post(
-            LOOKUP_URL, {"personnel_number": "1335090"}, format="json"
+            LOOKUP_URL,
+            {"personnel_number": "1335090", "last_name": "Иванов"},
+            format="json",
         )
 
         assert response.status_code == 200
@@ -89,7 +93,9 @@ class TestPreRegisteredStudentLookup:
         self, api_client: APIClient, pre_registered_student: PreRegisteredStudent
     ) -> None:
         response = api_client.post(
-            LOOKUP_URL, {"snils": "184-573-628 06"}, format="json"
+            LOOKUP_URL,
+            {"snils": "184-573-628 06", "last_name": "Иванов"},
+            format="json",
         )
 
         assert response.status_code == 200
@@ -97,7 +103,9 @@ class TestPreRegisteredStudentLookup:
 
     def test_lookup_not_found(self, api_client: APIClient) -> None:
         response = api_client.post(
-            LOOKUP_URL, {"student_card": "00000000"}, format="json"
+            LOOKUP_URL,
+            {"student_card": "00000000", "last_name": "Иванов"},
+            format="json",
         )
 
         assert response.status_code == 404
@@ -106,11 +114,66 @@ class TestPreRegisteredStudentLookup:
     def test_lookup_requires_single_identifier(self, api_client: APIClient) -> None:
         response = api_client.post(
             LOOKUP_URL,
-            {"student_card": "25011884", "snils": "18457362806"},
+            {
+                "student_card": "25011884",
+                "snils": "18457362806",
+                "last_name": "Иванов",
+            },
             format="json",
         )
 
         assert response.status_code == 400
+
+    def test_lookup_requires_last_name(
+        self, api_client: APIClient, pre_registered_student: PreRegisteredStudent
+    ) -> None:
+        response = api_client.post(
+            LOOKUP_URL, {"student_card": "25011884"}, format="json"
+        )
+
+        assert response.status_code == 400
+        assert "last_name" in response.data
+
+    def test_lookup_last_name_mismatch(
+        self, api_client: APIClient, pre_registered_student: PreRegisteredStudent
+    ) -> None:
+        response = api_client.post(
+            LOOKUP_URL,
+            {"student_card": "25011884", "last_name": "Петров"},
+            format="json",
+        )
+
+        assert response.status_code == 400
+        assert "Фамилия не совпадает" in response.data["detail"]
+
+    def test_lookup_last_name_case_insensitive(
+        self, api_client: APIClient, pre_registered_student: PreRegisteredStudent
+    ) -> None:
+        response = api_client.post(
+            LOOKUP_URL,
+            {"student_card": "25011884", "last_name": "иванов"},
+            format="json",
+        )
+
+        assert response.status_code == 200
+        assert response.data["last_name"] == "Иванов"
+
+    def test_lookup_ended_group_returns_404(
+        self,
+        api_client: APIClient,
+        pre_registered_student: PreRegisteredStudent,
+        study_group: StudyGroup,
+    ) -> None:
+        study_group.is_end = True
+        study_group.save(update_fields=["is_end"])
+
+        response = api_client.post(
+            LOOKUP_URL,
+            {"student_card": "25011884", "last_name": "Иванов"},
+            format="json",
+        )
+
+        assert response.status_code == 404
 
 
 @pytest.mark.django_db
@@ -147,6 +210,29 @@ class TestPreRegisteredStudentRegister:
             == pre_registered_student.group_id
         )
         assert pre_registered_student.student.role.code == "student"
+
+    def test_register_ended_group_returns_400(
+        self,
+        api_client: APIClient,
+        pre_registered_student: PreRegisteredStudent,
+        study_group: StudyGroup,
+        roles: dict[str, Any],
+    ) -> None:
+        study_group.is_end = True
+        study_group.save(update_fields=["is_end"])
+
+        response = api_client.post(
+            REGISTER_URL,
+            {
+                "id": pre_registered_student.pk,
+                "email": "student@example.com",
+                "password": "StrongPass123!",
+            },
+            format="json",
+        )
+
+        assert response.status_code == 400
+        assert "завершила обучение" in response.data["detail"]
 
     def test_register_rolls_back_when_email_send_failed(
         self,

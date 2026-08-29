@@ -217,3 +217,49 @@ class TestImportPreRegisteredStudentsCommand:
             call_command(
                 "import_preregistered_students", file=str(sample_contingent_file)
             )
+
+    def test_import_deletes_unregistered_missing_from_file(
+        self, sample_contingent_file: Path, study_group: StudyGroup
+    ) -> None:
+        PreRegisteredStudent.objects.create(
+            personnel_number="9999999",
+            last_name="Сидоров",
+            first_name="Сидор",
+            middle_name="",
+            student_card="25009999",
+            snils="",
+            group=study_group,
+        )
+
+        call_command("import_preregistered_students", file=str(sample_contingent_file))
+
+        assert (
+            PreRegisteredStudent.objects.filter(personnel_number="9999999").count() == 0
+        )
+        assert PreRegisteredStudent.objects.count() == 2
+
+    def test_import_keeps_registered_missing_from_file(
+        self,
+        sample_contingent_file: Path,
+        study_group: StudyGroup,
+        roles: dict[str, Any],
+        make_user,
+    ) -> None:
+        user = make_user(role_code="user", email="old@example.com")
+        registered = PreRegisteredStudent.objects.create(
+            personnel_number="9999999",
+            last_name="Сидоров",
+            first_name="Сидор",
+            middle_name="",
+            student_card="25009999",
+            snils="",
+            group=study_group,
+            student=user,
+        )
+
+        call_command("import_preregistered_students", file=str(sample_contingent_file))
+
+        registered.refresh_from_db()
+        assert registered.pk is not None
+        assert registered.student_id == user.pk
+        assert PreRegisteredStudent.objects.count() == 3

@@ -7,6 +7,8 @@ from rest_framework.response import Response
 from showcase.models import Institute
 from teams.dto.study_group import StudyGroupReadDTO
 from teams.models import Direction, StudyGroup
+from teams.services.mentor_groups_service import MentorGroupsService
+from teams.services.mentor_showcase_service import MentorShowcaseService
 from teams.services.study_group_service import StudyGroupService
 
 
@@ -122,3 +124,54 @@ class StudyGroupViewSet(viewsets.ReadOnlyModelViewSet):
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
+
+    @action(detail=False, methods=["get"], url_path="my-groups")
+    def my_groups(self, request: Request) -> Response:
+        """GET /api/teams/study-groups/my-groups/ — группы наставника в семестре."""
+        service = MentorGroupsService()
+        try:
+            data = service.list_my_groups(
+                request.user,
+                semester_id_raw=request.query_params.get("semester_id"),
+            )
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(data)
+
+    @action(detail=True, methods=["get"], url_path="mentor-detail")
+    def mentor_detail(self, request: Request, pk: int | None = None) -> Response:
+        """GET /api/teams/study-groups/{id}/mentor-detail/ — детали группы наставника."""
+        service = MentorGroupsService()
+        try:
+            data = service.get_group_detail(
+                request.user,
+                group_id=int(pk),
+                semester_id_raw=request.query_params.get("semester_id"),
+            )
+        except PermissionError as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except LookupError as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(data)
+
+    @action(detail=True, methods=["get"], url_path="project-showcase")
+    def project_showcase(self, request: Request, pk: int | None = None) -> Response:
+        """GET /api/teams/study-groups/{id}/project-showcase/ — витрина проектов группы."""
+        service = MentorShowcaseService()
+        try:
+            data = service.list_project_showcase(
+                request.user,
+                group_id=int(pk),
+                semester_id_raw=request.query_params.get("semester_id"),
+            )
+        except PermissionError as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except LookupError as e:
+            return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        response = Response(data)
+        response["Cache-Control"] = "private, max-age=30"
+        return response

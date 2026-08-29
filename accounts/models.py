@@ -43,6 +43,10 @@ class User(AbstractBaseUser, PermissionsMixin):
         related_name="users",
     )
     is_active = models.BooleanField(default=True)
+    is_placeholder = models.BooleanField(
+        default=False,
+        verbose_name="Псевдо-аккаунт контингента",
+    )
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(auto_now_add=True)
     department = models.ForeignKey(
@@ -243,6 +247,10 @@ class PreRegisteredStudent(models.Model):
         related_name="pre_registration",
         verbose_name="Зарегистрированный пользователь",
     )
+    has_placeholder_user = models.BooleanField(
+        default=False,
+        verbose_name="Создан псевдо-аккаунт",
+    )
 
     class Meta:
         verbose_name = "Предрегистрация студента"
@@ -264,8 +272,8 @@ class PreRegisteredStudent(models.Model):
 
     @property
     def is_registered(self) -> bool:
-        """Возвращает True, если предрегистрация уже привязана к User."""
-        return self.student_id is not None
+        """Возвращает True, если студент прошёл полную регистрацию (не псевдо-user)."""
+        return self.student_id is not None and not self.has_placeholder_user
 
 
 class AcademicYear(models.Model):

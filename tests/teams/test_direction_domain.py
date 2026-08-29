@@ -107,6 +107,32 @@ class TestGetFilteredQueryset:
         assert directions["d1"].code in codes
         assert directions["d3"].code not in codes
 
+    def test_ended_group_direction_not_visible_to_validator(
+        self, roles, make_user, institute, directions
+    ):
+        user = make_user(role_code="institute_validator", with_department=True)
+        StudyGroup.objects.create(
+            name="Активная",
+            code="active",
+            direction=directions["d1"],
+            institute=institute,
+            is_end=False,
+        )
+        StudyGroup.objects.create(
+            name="Завершённая",
+            code="ended",
+            direction=directions["d2"],
+            institute=institute,
+            is_end=True,
+        )
+
+        queryset = Direction.objects.all()
+        filtered = DirectionDomain.get_filtered_queryset(user, queryset)
+        codes = set(filtered.values_list("code", flat=True))
+
+        assert directions["d1"].code in codes
+        assert directions["d2"].code not in codes
+
     def test_institute_validator_without_department_sees_none(
         self, roles, make_user, directions
     ):

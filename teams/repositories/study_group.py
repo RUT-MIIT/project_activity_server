@@ -1,9 +1,12 @@
 """Репозиторий для учебных групп."""
 
+from django.contrib.auth import get_user_model
 from django.db.models import Count, Prefetch, QuerySet
 
 from accounts.models import PreRegisteredStudent
-from teams.models import StudyGroup, TeamSemesterMember
+from teams.models import StudyGroup, StudyGroupSemester, TeamSemesterMember
+
+User = get_user_model()
 
 
 class StudyGroupRepository:
@@ -40,13 +43,27 @@ class StudyGroupRepository:
                     to_attr="_team_membership_for_semester",
                 )
             )
-        return (
-            StudyGroup.objects.select_related(
-                "direction",
-                "institute",
-                "mentor",
-                "mentor__role",
-            )
-            .prefetch_related(Prefetch("pre_registered_students", queryset=students_qs))
-            .get(pk=group_id)
+        group_qs = StudyGroup.objects.select_related(
+            "direction",
+            "institute",
+            "mentor",
+            "mentor__role",
         )
+        if semester_id is not None:
+            group_qs = group_qs.prefetch_related(
+                Prefetch(
+                    "semester_enrollments",
+                    queryset=StudyGroupSemester.objects.filter(
+                        semester_id=semester_id
+                    ).prefetch_related(
+                        Prefetch(
+                            "mentors",
+                            queryset=User.objects.select_related("role"),
+                        )
+                    ),
+                    to_attr="_semester_enrollments_for_semester",
+                )
+            )
+        return group_qs.prefetch_related(
+            Prefetch("pre_registered_students", queryset=students_qs)
+        ).get(pk=group_id)
