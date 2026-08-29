@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date, datetime
 import re
 from typing import Literal
 
@@ -36,6 +37,7 @@ REQUIRED_COLUMNS = (
     "Вид уровня образования",
     "Профиль/специализация/программа",
     "Форма обучения",
+    "Дата планового окончания",
 )
 
 VALID_LEVELS = {"бакалавриат", "специалитет"}
@@ -65,6 +67,7 @@ class GroupImportRow:
     direction_level: str
     profile: str
     form: str
+    is_end: bool = False
 
 
 def normalize_cell(value: object) -> str:
@@ -75,6 +78,45 @@ def normalize_cell(value: object) -> str:
     if text.lower() == "nan":
         return ""
     return text
+
+
+def parse_planned_end_date(value: object) -> date | None:
+    """Парсит дату планового окончания из ячейки отчёта 1С."""
+    if value is None:
+        return None
+    if isinstance(value, datetime):
+        return value.date()
+    if isinstance(value, date):
+        return value
+
+    text = normalize_cell(value)
+    if not text:
+        return None
+
+    for fmt in ("%d.%m.%Y", "%Y-%m-%d"):
+        try:
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+
+    raise ValueError(f"Некорректная дата планового окончания: «{text}»")
+
+
+def group_ended_by_planned_dates(
+    planned_dates: list[date | None],
+    *,
+    today: date,
+) -> bool:
+    """
+    Возвращает True, если у группы есть хотя бы одна дата окончания
+    и все они раньше указанной даты.
+    """
+    parsed_dates = [
+        planned_date for planned_date in planned_dates if planned_date is not None
+    ]
+    if not parsed_dates:
+        return False
+    return all(planned_date < today for planned_date in parsed_dates)
 
 
 def parse_permanent_group_code(code: str) -> ParsedPermanentGroup:

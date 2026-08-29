@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -15,7 +16,9 @@ from teams.domain.study_group_import import (
     build_group_import_row,
     build_group_name,
     calculate_course_number,
+    group_ended_by_planned_dates,
     parse_permanent_group_code,
+    parse_planned_end_date,
 )
 from teams.models import Direction, StudyGroup
 
@@ -190,6 +193,32 @@ class TestStudyGroupImportDomain:
         assert row.profile == "Организация бизнес-процессов"
         assert row.form == "очная"
 
+    def test_parse_planned_end_date_from_string(self) -> None:
+        assert parse_planned_end_date("31.08.2029") == date(2029, 8, 31)
+
+    def test_parse_planned_end_date_from_datetime(self) -> None:
+        from datetime import datetime
+
+        assert parse_planned_end_date(datetime(2029, 8, 31, 12, 0)) == date(2029, 8, 31)
+
+    def test_group_ended_by_planned_dates_all_past(self) -> None:
+        today = date(2026, 8, 29)
+        assert group_ended_by_planned_dates(
+            [date(2025, 6, 30), date(2025, 6, 30)],
+            today=today,
+        )
+
+    def test_group_ended_by_planned_dates_with_future(self) -> None:
+        today = date(2026, 8, 29)
+        assert not group_ended_by_planned_dates(
+            [date(2025, 6, 30), date(2029, 8, 31)],
+            today=today,
+        )
+
+    def test_group_ended_by_planned_dates_empty_values(self) -> None:
+        today = date(2026, 8, 29)
+        assert not group_ended_by_planned_dates([None, None], today=today)
+
 
 @pytest.mark.django_db
 class TestImportStudyGroupsFromContingentCommand:
@@ -345,3 +374,133 @@ class TestImportStudyGroupsFromContingentCommand:
 
         ended_group.refresh_from_db()
         assert ended_group.is_end is False
+
+    def test_import_marks_group_ended_when_all_planned_dates_past(
+        self, tmp_path: Path, aga_institute: Institute
+    ) -> None:
+        path = tmp_path / "past_dates.xlsx"
+        title_row = ["Заголовок"] + [""] * (len(COLUMNS) - 1)
+        data_rows = [
+            [
+                "очная",
+                "25.03.03",
+                "Студент 1",
+                "Академия гражданской авиации",
+                "Аэронавигация",
+                "Организация бизнес-процессов",
+                "25011884",
+                "01.09.2020",
+                "бакалавриат",
+                1,
+                "м",
+                "79161384053",
+                "test@mail.ru",
+                "31.08.2023",
+                "18457362806",
+                "1335090",
+                "6054707",
+                "197175",
+                "АМБ-2020-11",
+                "309371",
+            ],
+            [
+                "очная",
+                "25.03.03",
+                "Студент 2",
+                "Академия гражданской авиации",
+                "Аэронавигация",
+                "Организация бизнес-процессов",
+                "25005843",
+                "01.09.2020",
+                "бакалавриат",
+                1,
+                "м",
+                "79920040184",
+                "test2@mail.ru",
+                "30.06.2023",
+                "20064882942",
+                "1330766",
+                "6048844",
+                "205393",
+                "АМБ-2020-11",
+                "309835",
+            ],
+        ]
+        pd.DataFrame([title_row, COLUMNS, *data_rows]).to_excel(
+            path, index=False, header=False
+        )
+
+        call_command(
+            "import_study_groups_from_contingent",
+            file=str(path),
+            year=2026,
+            semester="autumn",
+        )
+
+        group = StudyGroup.objects.get(code="АМБ-2020-11")
+        assert group.is_end is True
+
+    def test_import_keeps_group_active_when_one_planned_date_future(
+        self, tmp_path: Path, aga_institute: Institute
+    ) -> None:
+        path = tmp_path / "mixed_dates.xlsx"
+        title_row = ["Заголовок"] + [""] * (len(COLUMNS) - 1)
+        data_rows = [
+            [
+                "очная",
+                "25.03.03",
+                "Студент 1",
+                "Академия гражданской авиации",
+                "Аэронавигация",
+                "Организация бизнес-процессов",
+                "25011884",
+                "01.09.2025",
+                "бакалавриат",
+                1,
+                "м",
+                "79161384053",
+                "test@mail.ru",
+                "31.08.2023",
+                "18457362806",
+                "1335090",
+                "6054707",
+                "197175",
+                "АМБ-2025-12",
+                "309371",
+            ],
+            [
+                "очная",
+                "25.03.03",
+                "Студент 2",
+                "Академия гражданской авиации",
+                "Аэронавигация",
+                "Организация бизнес-процессов",
+                "25005843",
+                "01.09.2025",
+                "бакалавриат",
+                1,
+                "м",
+                "79920040184",
+                "test2@mail.ru",
+                "31.08.2029",
+                "20064882942",
+                "1330766",
+                "6048844",
+                "205393",
+                "АМБ-2025-12",
+                "309835",
+            ],
+        ]
+        pd.DataFrame([title_row, COLUMNS, *data_rows]).to_excel(
+            path, index=False, header=False
+        )
+
+        call_command(
+            "import_study_groups_from_contingent",
+            file=str(path),
+            year=2026,
+            semester="autumn",
+        )
+
+        group = StudyGroup.objects.get(code="АМБ-2025-12")
+        assert group.is_end is False

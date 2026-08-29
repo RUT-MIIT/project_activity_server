@@ -30,8 +30,8 @@
     "semantic_hash": "3548334a49ab5fd7290f086547973b6f"
   },
   "accounts/domain/preregistered_student_import.py": {
-    "mtime": 1787915801.2589927,
-    "seen": 1787915881.9342666,
+    "mtime": 1787999494.605774,
+    "seen": 1788000577.4534194,
     "ast_hash": "57f669d3c74a913dd4cac0141a38c31c",
     "semantic_hash": ""
   },
@@ -48,8 +48,8 @@
     "semantic_hash": "4b6eebe6271a817f3c52699adba0f1bb"
   },
   "accounts/entities/PreRegisteredStudent.py": {
-    "mtime": 1787915810.879815,
-    "seen": 1787915881.935266,
+    "mtime": 1787999494.6067827,
+    "seen": 1788000577.4534194,
     "ast_hash": "26a4804bbed2d8cdaaf52c97f77ebf9d",
     "semantic_hash": ""
   },
@@ -84,8 +84,8 @@
     "semantic_hash": "a8374736f2b33f8d3475d1030d170dc4"
   },
   "accounts/management/commands/import_preregistered_students.py": {
-    "mtime": 1787998678.5177488,
-    "seen": 1787998923.362789,
+    "mtime": 1787999494.6067827,
+    "seen": 1788000577.4544194,
     "ast_hash": "40e9ab4631ae5d481c9b590e2ecd194f",
     "semantic_hash": ""
   },
@@ -228,8 +228,8 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "accounts/models.py": {
-    "mtime": 1787998729.1894655,
-    "seen": 1787998923.3687887,
+    "mtime": 1787999494.6077735,
+    "seen": 1788000577.460952,
     "ast_hash": "e7e9245d9685137af6f8f76b9a6e495e",
     "semantic_hash": ""
   },
@@ -252,15 +252,15 @@
     "semantic_hash": "a8b91f4c280970881746f1b9b1d209ba"
   },
   "accounts/serializers.py": {
-    "mtime": 1787915805.2465048,
-    "seen": 1787915881.9427888,
+    "mtime": 1787999494.6077735,
+    "seen": 1788000577.4619503,
     "ast_hash": "7c9d753dac99f80befa1020309bedb3d",
     "semantic_hash": ""
   },
   "accounts/services/preregistered_student_service.py": {
-    "mtime": 1787998740.766464,
-    "seen": 1787998923.3697932,
-    "ast_hash": "5d754b8f079f7b6bc20c28534657dba4",
+    "mtime": 1787999550.5729864,
+    "seen": 1788000577.4619503,
+    "ast_hash": "417d5ceae9b3c915bff7556bdc363e49",
     "semantic_hash": ""
   },
   "accounts/services/user_management_service.py": {
@@ -1044,8 +1044,8 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "teams/domain/direction.py": {
-    "mtime": 1787998703.5171301,
-    "seen": 1787998923.403987,
+    "mtime": 1787999494.6642299,
+    "seen": 1788000577.499583,
     "ast_hash": "861f559682e37db2d198f61e3001e7af",
     "semantic_hash": ""
   },
@@ -1062,9 +1062,9 @@
     "semantic_hash": "9ecb11dea178a35524ab92e35004b248"
   },
   "teams/domain/study_group_import.py": {
-    "mtime": 1787998859.701282,
-    "seen": 1787998923.403987,
-    "ast_hash": "cdf16a508f7d8883d55bec2a2a589be5",
+    "mtime": 1788000507.833551,
+    "seen": 1788000577.5005858,
+    "ast_hash": "7151ea0e8557bed0cac44c81668eb745",
     "semantic_hash": ""
   },
   "teams/domain/team_lobby.py": {
@@ -1086,8 +1086,8 @@
     "semantic_hash": "2d6dce66f5eb741f2c95c2ee0b968b57"
   },
   "teams/dto/my_study_group.py": {
-    "mtime": 1787996127.3529847,
-    "seen": 1787996183.4920967,
+    "mtime": 1787999494.6652286,
+    "seen": 1788000577.501583,
     "ast_hash": "9439602bdaf1223a788e01fd0777f950",
     "semantic_hash": ""
   },
@@ -1110,8 +1110,8 @@
     "semantic_hash": "8c8a704890b512ff9dd6c7c2c2840348"
   },
   "teams/entities/StudyGroup.py": {
-    "mtime": 1787995408.3584073,
-    "seen": 1787995576.7504537,
+    "mtime": 1787999494.6652286,
+    "seen": 1788000577.5025854,
     "ast_hash": "6f6c8c6db338682d1608428948ce142a",
     "semantic_hash": ""
   },
@@ -1146,9 +1146,9 @@
     "semantic_hash": "6d051dddf3003530e0043b26534f24a8"
   },
   "teams/management/commands/import_study_groups_from_contingent.py": {
-    "mtime": 1787998667.8200848,
-    "seen": 1787998923.4079661,
-    "ast_hash": "954a53c03217e4ff41c9e936dace09b5",
+    "mtime": 1788000538.1622052,
+    "seen": 1788000577.503583,
+    "ast_hash": "c6abc2e280342b00ae0fb9c6e613d40c",
     "semantic_hash": ""
   },
   "teams/migrations/0001_initial.py": {
@@ -1242,8 +1242,8 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "teams/models.py": {
-    "mtime": 1787992311.6715086,
-    "seen": 1787992383.9784997,
+    "mtime": 1787999494.6662297,
+    "seen": 1788000577.510114,
     "ast_hash": "bb5a4fbdcfaa839dceee1ddce80a2d54",
     "semantic_hash": ""
   },
@@ -1266,9 +1266,9 @@
     "semantic_hash": "ceae39c71f438d65349e64bc97d6e216"
   },
   "teams/repositories/study_group.py": {
-    "mtime": 1787917458.135561,
-    "seen": 1787917619.805113,
-    "ast_hash": "0d3c22410f3ab6764058d20633be3f4d",
+    "mtime": 1787999549.949574,
+    "seen": 1788000577.5111136,
+    "ast_hash": "956c908cc9aebd9d22cd6acba3b66560",
     "semantic_hash": ""
   },
   "teams/repositories/team_lobby.py": {
@@ -1296,8 +1296,8 @@
     "semantic_hash": "e45c6992588df525d6deb70400c3a7fd"
   },
   "teams/services/study_group_service.py": {
-    "mtime": 1787906870.950953,
-    "seen": 1787907072.5346973,
+    "mtime": 1787999494.6672287,
+    "seen": 1788000577.5121117,
     "ast_hash": "2b2abeea6dffaf9e4ab5cf2176cb2d9a",
     "semantic_hash": ""
   },
@@ -1308,8 +1308,8 @@
     "semantic_hash": ""
   },
   "teams/urls.py": {
-    "mtime": 1787998793.775464,
-    "seen": 1787998923.414478,
+    "mtime": 1787999494.6672287,
+    "seen": 1788000577.5131116,
     "ast_hash": "0d0ddc2ff99bf8e6d9ddea7b1037690e",
     "semantic_hash": ""
   },
@@ -1320,8 +1320,8 @@
     "semantic_hash": "8ab955816acc0c41d33664bd173cc8be"
   },
   "tests/accounts/domain/test_preregistered_student_import.py": {
-    "mtime": 1787915819.4694471,
-    "seen": 1787915881.987314,
+    "mtime": 1787999494.6682315,
+    "seen": 1788000577.5131116,
     "ast_hash": "ffa7eee9b9170ca23d09dee5bdfc8fd1",
     "semantic_hash": ""
   },
@@ -1332,8 +1332,8 @@
     "semantic_hash": "3bc4338a1f5fa791966800cf2969efd6"
   },
   "tests/accounts/entities/test_preregistered_student_viewset.py": {
-    "mtime": 1787998723.33792,
-    "seen": 1787998923.414478,
+    "mtime": 1787999494.6682315,
+    "seen": 1788000577.5131116,
     "ast_hash": "ad0a5a240f436481856177acc4df2206",
     "semantic_hash": ""
   },
@@ -1356,9 +1356,9 @@
     "semantic_hash": "897fef56f4ae7e0fb280c55e13ba9805"
   },
   "tests/accounts/management/commands/test_import_preregistered_students.py": {
-    "mtime": 1787998681.0687997,
-    "seen": 1787998923.415478,
-    "ast_hash": "3b4b9891faed4439f904d19ffac844a9",
+    "mtime": 1787999553.337008,
+    "seen": 1788000577.5141115,
+    "ast_hash": "edcba133f9caf8cbda69cc512f36fd7e",
     "semantic_hash": ""
   },
   "tests/accounts/management/commands/test_sync_departments_institutes.py": {
@@ -1584,14 +1584,14 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "tests/teams/management/commands/test_import_study_groups_from_contingent.py": {
-    "mtime": 1787998669.6618118,
-    "seen": 1787998923.4235141,
-    "ast_hash": "6d2104fb3c81bdc38ccb83f000ec2aad",
+    "mtime": 1788000533.7917342,
+    "seen": 1788000577.5221372,
+    "ast_hash": "910838438e60675d065ce4919aa0050c",
     "semantic_hash": ""
   },
   "tests/teams/test_direction_domain.py": {
-    "mtime": 1787998716.2697313,
-    "seen": 1787998923.4235141,
+    "mtime": 1787999494.669231,
+    "seen": 1788000577.5221372,
     "ast_hash": "65457b74616e93c511c0a860ee9dd741",
     "semantic_hash": ""
   },
@@ -1614,8 +1614,8 @@
     "semantic_hash": "98f52191572da5dda6cdee88b0a9e725"
   },
   "tests/teams/test_my_study_group_viewset.py": {
-    "mtime": 1787996130.335506,
-    "seen": 1787996183.5131114,
+    "mtime": 1787999494.669231,
+    "seen": 1788000577.5231342,
     "ast_hash": "ff70a60188258383bfb4aacbbb8b8f43",
     "semantic_hash": ""
   },
@@ -1866,8 +1866,8 @@
     "semantic_hash": ""
   },
   "showcase/services/student_showcase_service.py": {
-    "mtime": 1787995398.2946622,
-    "seen": 1787995576.74543,
+    "mtime": 1787999494.6642299,
+    "seen": 1788000577.4985855,
     "ast_hash": "151002f611a6dcd045cd986e354a2642",
     "semantic_hash": ""
   },
@@ -1914,9 +1914,9 @@
     "semantic_hash": ""
   },
   "teams/migrations/0016_studygroupsemester.py": {
-    "mtime": 1787906840.7455468,
-    "seen": 1787907072.531692,
-    "ast_hash": "b28d1833a0edadd0409298c4236b6c6a",
+    "mtime": 1787999552.5659585,
+    "seen": 1788000577.5075865,
+    "ast_hash": "242bc265018b3f6b3d06d512c08907d5",
     "semantic_hash": ""
   },
   "teams/migrations/0017_copy_studygroup_mentors_to_semester.py": {
@@ -1926,27 +1926,27 @@
     "semantic_hash": ""
   },
   "teams/repositories/study_group_semester.py": {
-    "mtime": 1787917431.5917168,
-    "seen": 1787917619.805113,
-    "ast_hash": "bf0fd5f939773f75f3ee78b28c022937",
+    "mtime": 1787999550.5749857,
+    "seen": 1788000577.5111136,
+    "ast_hash": "7be20933697f956327c3196b4685d324",
     "semantic_hash": ""
   },
   "teams/services/institute_responsible_service.py": {
-    "mtime": 1787992311.6715086,
-    "seen": 1787992383.9805002,
-    "ast_hash": "faebfa95218e5c7532ff5266786b07c3",
+    "mtime": 1787999550.5664546,
+    "seen": 1788000577.5121117,
+    "ast_hash": "c67e30635505c45f51206e9ca0e316e7",
     "semantic_hash": ""
   },
   "tests/teams/test_institute_responsible_viewset.py": {
-    "mtime": 1787996130.3385031,
-    "seen": 1787996183.5131114,
-    "ast_hash": "f9fc4d85b233b5dabe43d7a101ebe58c",
+    "mtime": 1787999554.647851,
+    "seen": 1788000577.5231342,
+    "ast_hash": "d353eeb31563aac9ca5f58cc46a45caa",
     "semantic_hash": ""
   },
   "data/mark_teachers_in_system.py": {
-    "mtime": 1787914801.1270695,
-    "seen": 1787915881.9473662,
-    "ast_hash": "d8ffac706c35a8415f1a751ad8ae35eb",
+    "mtime": 1787999550.5749857,
+    "seen": 1788000577.4674537,
+    "ast_hash": "53972e510168eeac25633c969cf2573a",
     "semantic_hash": ""
   },
   "data/prod_users.json": {
@@ -1974,9 +1974,9 @@
     "semantic_hash": ""
   },
   "teams/repositories/mentor_groups.py": {
-    "mtime": 1787998701.7645652,
-    "seen": 1787998923.4124806,
-    "ast_hash": "cd82de676fc162706efa00b073fe2f42",
+    "mtime": 1787999550.5729864,
+    "seen": 1788000577.5111136,
+    "ast_hash": "da72e3277ca6e778db805b45282429cb",
     "semantic_hash": ""
   },
   "teams/services/mentor_groups_service.py": {
@@ -1986,15 +1986,15 @@
     "semantic_hash": ""
   },
   "tests/teams/test_mentor_groups_viewset.py": {
-    "mtime": 1787998714.1325226,
-    "seen": 1787998923.4245312,
-    "ast_hash": "6b8bde29447f7b0f123ea3bf04d049f7",
+    "mtime": 1787999553.7919183,
+    "seen": 1788000577.5231342,
+    "ast_hash": "d31316c4b6f1e3d4edfd3977c16e41e4",
     "semantic_hash": ""
   },
   "docs/frontend/mentor_groups.md": {
-    "mtime": 1787999111.9632065,
-    "seen": 1787999134.3527796,
-    "ast_hash": "27d07b8a6325007233a775cf2371cb7e",
+    "mtime": 1787999548.597363,
+    "seen": 1788000577.52967,
+    "ast_hash": "6240eea9de36de8b5f190672f331a289",
     "semantic_hash": ""
   },
   "teams/domain/mentor_groups.py": {
@@ -2004,9 +2004,9 @@
     "semantic_hash": ""
   },
   "tests/teams/test_mentor_group_detail_viewset.py": {
-    "mtime": 1787998715.1074884,
-    "seen": 1787998923.4245312,
-    "ast_hash": "1d5ee2d402f65589af8aff4cc97d1456",
+    "mtime": 1787999554.0117116,
+    "seen": 1788000577.5231342,
+    "ast_hash": "6b32cb5155a63ffaca07515c1784d58b",
     "semantic_hash": ""
   },
   "teams/services/mentor_showcase_service.py": {
@@ -2016,27 +2016,27 @@
     "semantic_hash": ""
   },
   "tests/teams/test_mentor_showcase_viewset.py": {
-    "mtime": 1787995426.0081775,
-    "seen": 1787995576.771018,
-    "ast_hash": "840ef0e77f90398ab6bec9478c41f129",
+    "mtime": 1787999554.1862576,
+    "seen": 1788000577.5231342,
+    "ast_hash": "384a10ed64b2972987b08ce2a0acd3f3",
     "semantic_hash": ""
   },
   "accounts/migrations/0021_user_placeholder_preregistered_flag.py": {
-    "mtime": 1787998743.054237,
-    "seen": 1787998923.3687887,
-    "ast_hash": "7cd56d71d66b7b3ae90181f18de6c3c3",
+    "mtime": 1787999551.99061,
+    "seen": 1788000577.460952,
+    "ast_hash": "5a95e8dbc7a17c8f93a7ff55f4de1032",
     "semantic_hash": ""
   },
   "accounts/services/placeholder_user_service.py": {
-    "mtime": 1787998731.5544229,
-    "seen": 1787998923.3697932,
-    "ast_hash": "8e065f1de2b407413eb08bf6993067f9",
+    "mtime": 1787999550.5674572,
+    "seen": 1788000577.4619503,
+    "ast_hash": "19b49c0ab9fee146b04ee8398f985409",
     "semantic_hash": ""
   },
   "teams/domain/mentor_team.py": {
-    "mtime": 1787998749.9944205,
-    "seen": 1787998923.403987,
-    "ast_hash": "67ccc37e91026844d1cffeea7cd9e0f6",
+    "mtime": 1787999550.571976,
+    "seen": 1788000577.5005858,
+    "ast_hash": "51b25531bc621ad74c713bf779c51ba9",
     "semantic_hash": ""
   },
   "teams/dto/mentor_team.py": {
@@ -2046,9 +2046,9 @@
     "semantic_hash": ""
   },
   "teams/entities/MentorTeam.py": {
-    "mtime": 1787998790.9185028,
-    "seen": 1787998923.4069695,
-    "ast_hash": "b917020c1c8605b9787e6eef446d6889",
+    "mtime": 1787999148.541777,
+    "seen": 1788000577.5025854,
+    "ast_hash": "16135d937ff3191901173f07e29e95e2",
     "semantic_hash": ""
   },
   "teams/repositories/mentor_team.py": {
@@ -2058,15 +2058,15 @@
     "semantic_hash": ""
   },
   "teams/services/mentor_team_service.py": {
-    "mtime": 1787998783.5525856,
-    "seen": 1787998923.4134786,
-    "ast_hash": "6322cba10fca6166282e3ba4e1ce8946",
+    "mtime": 1787999550.5749857,
+    "seen": 1788000577.5121117,
+    "ast_hash": "fbefaf7a36264f9671b839f7a83150fc",
     "semantic_hash": ""
   },
   "tests/teams/test_mentor_team_viewset.py": {
-    "mtime": 1787999027.210672,
-    "seen": 1787999134.3477812,
-    "ast_hash": "01d03f068c1856b2f4ea6b27f7869c69",
+    "mtime": 1787999550.0526261,
+    "seen": 1788000577.5231342,
+    "ast_hash": "44b9130f38d3a31d1bedd32cb23053cb",
     "semantic_hash": ""
   }
 }

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from datetime import date
 from pathlib import Path
 
@@ -13,7 +14,9 @@ from teams.domain.study_group_import import (
     REQUIRED_COLUMNS,
     GroupImportRow,
     build_group_import_row,
+    group_ended_by_planned_dates,
     normalize_cell,
+    parse_planned_end_date,
 )
 from teams.models import Direction, StudyGroup
 
@@ -62,6 +65,7 @@ class Command(BaseCommand):
             options["year"] if options["year"] is not None else date.today().year
         )
         semester = options["semester"]
+        today = date.today()
 
         if options["clear"]:
             deleted, _ = StudyGroup.objects.all().delete()
@@ -72,10 +76,12 @@ class Command(BaseCommand):
             df=df,
             current_year=current_year,
             semester=semester,
+            today=today,
         )
 
         created = 0
         updated = 0
+        ended_by_date_count = 0
         for row in rows.values():
             direction = self._get_or_create_direction(row)
             institute = self._get_institute(row.institute_code)
@@ -89,25 +95,22 @@ class Command(BaseCommand):
                     "institute": institute,
                     "profile": row.profile,
                     "form": row.form,
-                    "is_end": False,
+                    "is_end": row.is_end,
                 },
             )
+            if row.is_end:
+                ended_by_date_count += 1
             if was_created:
                 created += 1
             else:
                 updated += 1
 
-        ended_count = 0
-        reactivated_count = 0
+        ended_missing_count = 0
         if not options["clear"]:
             imported_codes = set(rows.keys())
-            reactivated_count = StudyGroup.objects.filter(
-                code__in=imported_codes,
-                is_end=True,
-            ).update(is_end=False)
-            ended_count = StudyGroup.objects.exclude(code__in=imported_codes).update(
-                is_end=True
-            )
+            ended_missing_count = StudyGroup.objects.exclude(
+                code__in=imported_codes
+            ).update(is_end=True)
 
         summary = (
             f"Готово: создано {created}, обновлено {updated}, "
@@ -115,7 +118,10 @@ class Command(BaseCommand):
             f"(year={current_year}, semester={semester})"
         )
         if not options["clear"]:
-            summary += f", завершено {ended_count}, реактивировано {reactivated_count}"
+            summary += (
+                f", завершено отсутствующих {ended_missing_count}, "
+                f"завершено по дате {ended_by_date_count}"
+            )
         self.stdout.write(self.style.SUCCESS(summary))
 
     def _read_contingent(self, path: Path) -> pd.DataFrame:
@@ -142,9 +148,11 @@ class Command(BaseCommand):
         df: pd.DataFrame,
         current_year: int,
         semester: str,
+        today: date,
     ) -> dict[str, GroupImportRow]:
         """Дедуплицирует строки по коду постоянной группы."""
         groups: dict[str, GroupImportRow] = {}
+        planned_dates_by_group: dict[str, list[date | None]] = {}
         unknown_institutes: set[str] = set()
         skipped = 0
 
@@ -164,6 +172,17 @@ class Command(BaseCommand):
                 )
                 skipped += 1
                 continue
+
+            try:
+                planned_end_date = parse_planned_end_date(
+                    row.get("Дата планового окончания")
+                )
+            except ValueError as exc:
+                raise CommandError(f"Строка {line_no}: {exc}") from exc
+
+            planned_dates_by_group.setdefault(permanent_group, []).append(
+                planned_end_date
+            )
 
             if permanent_group in groups:
                 continue
@@ -200,6 +219,13 @@ class Command(BaseCommand):
 
         if not groups:
             raise CommandError("Не найдено ни одной валидной учебной группы")
+
+        for code, group_row in groups.items():
+            is_end = group_ended_by_planned_dates(
+                planned_dates_by_group.get(code, []),
+                today=today,
+            )
+            groups[code] = replace(group_row, is_end=is_end)
 
         return groups
 
