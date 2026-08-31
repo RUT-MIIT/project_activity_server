@@ -21,6 +21,7 @@ from accounts.models import PreRegisteredStudent
 from accounts.repositories.preregistered_student import PreRegisteredStudentRepository
 from accounts.serializers import UserSerializer
 from showcase.models import Institute
+from teams.services.mentor_registration_service import MentorRegistrationService
 
 
 @dataclass(frozen=True)
@@ -167,6 +168,12 @@ class PreRegisteredStudentService:
                 **create_kwargs,
             )
             self._repository.link_user(pre_registered, user.pk)
+
+        if pre_registered.role_id == "mentor":
+            MentorRegistrationService().assign_groups_from_project_teachers(
+                user=user,
+                pre_registered=pre_registered,
+            )
 
         self._send_registration_email(
             pre_registered=pre_registered,

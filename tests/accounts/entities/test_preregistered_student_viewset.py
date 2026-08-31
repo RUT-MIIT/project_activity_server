@@ -10,9 +10,14 @@ from django.test import override_settings
 import pytest
 from rest_framework.test import APIClient
 
-from accounts.models import PreRegisteredStudent
+from accounts.models import PreRegisteredStudent, Semester, Settings
 from showcase.models import Institute
-from teams.models import Direction, StudyGroup
+from teams.models import (
+    Direction,
+    StudyGroup,
+    StudyGroupProjectTeacher,
+    StudyGroupSemester,
+)
 
 LOOKUP_URL = "/api/accounts/pre-registered-students/lookup/"
 REGISTER_URL = "/api/accounts/pre-registered-students/register/"
@@ -371,6 +376,57 @@ class TestPreRegisteredStudentRegister:
             == pre_registered_mentor.department_id
         )
         assert pre_registered_mentor.user.study_group_id is None
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_register_mentor_assigns_groups_from_project_teachers(
+        self,
+        api_client: APIClient,
+        pre_registered_mentor: PreRegisteredStudent,
+        study_group: StudyGroup,
+        roles: dict[str, Any],
+    ) -> None:
+        semester = Semester.objects.create(
+            code="26-27-1",
+            name="Осень 26/27",
+            position=1,
+        )
+        Settings.objects.update_or_create(
+            code="active_semester_code",
+            defaults={"description": "Active", "value": semester.code},
+        )
+        StudyGroupProjectTeacher.objects.create(
+            semester=semester,
+            study_group=study_group,
+            mentor_full_name="Ишханян Маргарита Владимировна",
+            external_teacher_id=pre_registered_mentor.personnel_number,
+        )
+
+        response = api_client.post(
+            REGISTER_URL,
+            {
+                "id": pre_registered_mentor.pk,
+                "email": "mentor-groups@example.com",
+                "password": "StrongPass123!",
+            },
+            format="json",
+        )
+
+        assert response.status_code == 201
+        pre_registered_mentor.refresh_from_db()
+        mentor = pre_registered_mentor.user
+        assert mentor is not None
+
+        assignment = StudyGroupProjectTeacher.objects.get(
+            study_group=study_group,
+            semester=semester,
+        )
+        assert assignment.tutor_id == mentor.pk
+
+        enrollment = StudyGroupSemester.objects.get(
+            study_group=study_group,
+            semester=semester,
+        )
+        assert list(enrollment.mentors.values_list("id", flat=True)) == [mentor.pk]
 
     def test_register_duplicate_email(
         self,
