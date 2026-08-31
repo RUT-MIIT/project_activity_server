@@ -30,13 +30,13 @@ class StudyGroupRepository:
         self, group_id: int, semester_id: int | None = None
     ) -> StudyGroup:
         """Группа с наставником и контингентом без N+1."""
-        students_qs = PreRegisteredStudent.objects.select_related("student").order_by(
+        students_qs = PreRegisteredStudent.objects.select_related("user").order_by(
             "last_name", "first_name"
         )
         if semester_id is not None:
             students_qs = students_qs.prefetch_related(
                 Prefetch(
-                    "student__team_semester_memberships",
+                    "user__team_semester_memberships",
                     queryset=TeamSemesterMember.objects.filter(
                         semester_id=semester_id
                     ).select_related("team_semester__team"),

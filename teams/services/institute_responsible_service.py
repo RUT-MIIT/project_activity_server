@@ -17,6 +17,8 @@ from teams.dto.institute_responsible import (
     InstituteResponsibleGroupDTO,
     InstituteResponsibleGroupMentorsDTO,
 )
+from teams.dto.mentor_groups import MentorGroupListDTO
+from teams.repositories.mentor_groups import MentorGroupsRepository
 from teams.repositories.study_group_semester import StudyGroupSemesterRepository
 
 User = get_user_model()
@@ -27,6 +29,7 @@ class InstituteResponsibleService:
 
     def __init__(self) -> None:
         self.repository = StudyGroupSemesterRepository()
+        self.groups_overview_repository = MentorGroupsRepository()
         self.domain = InstituteResponsibleDomain()
 
     def _check_access(self, user: User) -> None:
@@ -120,6 +123,23 @@ class InstituteResponsibleService:
         )
         groups = self.repository.list_active_groups(resolved_institute_code)
         return [InstituteResponsibleGroupDTO(group).to_dict() for group in groups]
+
+    def list_groups_overview(
+        self,
+        user: User,
+        institute_code: str | None,
+        semester_id_raw: str,
+    ) -> list[dict[str, Any]]:
+        """Список активных групп института со счётчиками студентов и команд."""
+        semester_id, resolved_institute_code, _ = self._resolve_context(
+            user, institute_code, semester_id_raw
+        )
+        groups = list(
+            self.groups_overview_repository.list_for_institutes(
+                [resolved_institute_code], semester_id
+            )
+        )
+        return MentorGroupListDTO(groups).to_list()
 
     def list_employees(
         self,

@@ -124,6 +124,24 @@ class TestMentorGroupDetailViewSet:
 
         assert response.status_code == 403
 
+    def test_institute_validator_can_access_without_mentor_assignment(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+        semester: Semester,
+    ) -> None:
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        response = api_client.get(
+            f"{_detail_url(study_group.id)}?semester_id={semester.id}"
+        )
+
+        assert response.status_code == 200
+        assert response.data["id"] == study_group.id
+
     def test_ended_group_returns_403(
         self,
         api_client: APIClient,
@@ -167,7 +185,7 @@ class TestMentorGroupDetailViewSet:
             snils="11111111111",
             personnel_number="100001",
             group=study_group,
-            student=registered,
+            user=registered,
         )
         PreRegisteredStudent.objects.create(
             last_name="Петров",

@@ -155,3 +155,20 @@ class MentorTeamRepository:
             user_id=user_id,
             semester_id=semester_id,
         )
+
+    def create_team_with_semester(
+        self,
+        *,
+        name: str,
+        group_id: int,
+        semester_id: int,
+        captain_id: int,
+    ) -> TeamSemester:
+        """Создаёт команду в семестре с капитаном."""
+        return self._lobby.create_team_with_semester(
+            name=name,
+            group_id=group_id,
+            semester_id=semester_id,
+            track_id=None,
+            captain_id=captain_id,
+        )

@@ -115,10 +115,10 @@ class PreRegisteredStudentService:
 
         if (
             pre_registered.has_placeholder_user
-            and pre_registered.student is not None
-            and pre_registered.student.is_placeholder
+            and pre_registered.user is not None
+            and pre_registered.user.is_placeholder
         ):
-            user = pre_registered.student
+            user = pre_registered.user
             user.email = email
             user.set_password(password)
             user.is_active = True
@@ -148,7 +148,7 @@ class PreRegisteredStudentService:
                 role=role,
                 study_group=pre_registered.group,
             )
-            self._repository.link_student(pre_registered, user.pk)
+            self._repository.link_user(pre_registered, user.pk)
 
         self._send_registration_email(
             pre_registered=pre_registered,

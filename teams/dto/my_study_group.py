@@ -40,7 +40,7 @@ class StudyGroupMemberDTO:
         pre_registered: PreRegisteredStudent,
         include_team: bool = False,
     ):
-        student = pre_registered.student
+        student = pre_registered.user
         self.id = pre_registered.id
         self.last_name = pre_registered.last_name
         self.first_name = pre_registered.first_name

@@ -94,10 +94,12 @@ class PreRegisteredStudentAdmin(admin.ModelAdmin):
         "student_card",
         "personnel_number",
         "snils",
+        "role",
+        "department",
         "group",
-        "student",
+        "user",
     )
-    list_filter = ("group__institute", "group")
+    list_filter = ("role", "group__institute", "group", "department")
     search_fields = (
         "last_name",
         "first_name",
@@ -106,8 +108,8 @@ class PreRegisteredStudentAdmin(admin.ModelAdmin):
         "personnel_number",
         "snils",
     )
-    autocomplete_fields = ("group", "student")
-    readonly_fields = ("student",)
+    autocomplete_fields = ("group", "user", "department", "role")
+    readonly_fields = ("user",)
 
 
 @admin.register(Department)

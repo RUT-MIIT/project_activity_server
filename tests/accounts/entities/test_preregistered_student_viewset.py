@@ -204,12 +204,12 @@ class TestPreRegisteredStudentRegister:
         assert "Вы успешно зарегистрированы" in mail.outbox[0].body
 
         pre_registered_student.refresh_from_db()
-        assert pre_registered_student.student is not None
+        assert pre_registered_student.user is not None
         assert (
-            pre_registered_student.student.study_group_id
+            pre_registered_student.user.study_group_id
             == pre_registered_student.group_id
         )
-        assert pre_registered_student.student.role.code == "student"
+        assert pre_registered_student.user.role.code == "student"
 
     def test_register_ended_group_returns_400(
         self,
@@ -263,7 +263,7 @@ class TestPreRegisteredStudentRegister:
         assert "Регистрация отменена" in response.data["detail"]
 
         pre_registered_student.refresh_from_db()
-        assert pre_registered_student.student is None
+        assert pre_registered_student.user is None
         assert not get_user_model().objects.filter(email="student@example.com").exists()
 
     def test_register_already_registered(
@@ -273,10 +273,10 @@ class TestPreRegisteredStudentRegister:
         make_user,
         roles: dict[str, Any],
     ) -> None:
-        pre_registered_student.student = make_user(
+        pre_registered_student.user = make_user(
             role_code="user", email="existing@example.com"
         )
-        pre_registered_student.save(update_fields=["student"])
+        pre_registered_student.save(update_fields=["user"])
 
         response = api_client.post(
             REGISTER_URL,

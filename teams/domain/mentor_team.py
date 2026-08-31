@@ -85,6 +85,16 @@ class MentorTeamDomain:
             raise ValueError("Студент должен быть из этой учебной группы")
 
     @staticmethod
+    def ensure_create_payload(name: str, captain_id: int) -> tuple[str, int]:
+        """Валидирует название и ID капитана при создании команды."""
+        cleaned_name = name.strip()
+        if not cleaned_name:
+            raise ValueError("Название команды не может быть пустым")
+        if captain_id < 1:
+            raise ValueError("Некорректный captainId")
+        return cleaned_name, captain_id
+
+    @staticmethod
     def resolve_add_role(members_count: int) -> str:
         """Первый участник пустой команды становится капитаном."""
         if members_count == 0:

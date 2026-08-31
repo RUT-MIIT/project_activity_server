@@ -61,7 +61,7 @@ def student_user(
         snils="18457362806",
         personnel_number="1335090",
         group=study_group,
-        student=user,
+        user=user,
     )
     return user
 

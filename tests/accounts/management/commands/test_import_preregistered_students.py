@@ -198,8 +198,8 @@ class TestImportPreRegisteredStudentsCommand:
         call_command("import_preregistered_students", file=str(sample_contingent_file))
         registered = PreRegisteredStudent.objects.get(personnel_number="1335090")
         user = make_user(role_code="user", email="registered@example.com")
-        registered.student = user
-        registered.save(update_fields=["student"])
+        registered.user = user
+        registered.save(update_fields=["user"])
 
         call_command(
             "import_preregistered_students",
@@ -208,8 +208,8 @@ class TestImportPreRegisteredStudentsCommand:
         )
 
         registered.refresh_from_db()
-        assert registered.student_id == user.pk
-        assert PreRegisteredStudent.objects.filter(student__isnull=True).count() == 1
+        assert registered.user_id == user.pk
+        assert PreRegisteredStudent.objects.filter(user__isnull=True).count() == 1
         assert PreRegisteredStudent.objects.count() == 2
 
     def test_import_fails_without_groups(self, sample_contingent_file: Path) -> None:
@@ -254,12 +254,12 @@ class TestImportPreRegisteredStudentsCommand:
             student_card="25009999",
             snils="",
             group=study_group,
-            student=user,
+            user=user,
         )
 
         call_command("import_preregistered_students", file=str(sample_contingent_file))
 
         registered.refresh_from_db()
         assert registered.pk is not None
-        assert registered.student_id == user.pk
+        assert registered.user_id == user.pk
         assert PreRegisteredStudent.objects.count() == 3

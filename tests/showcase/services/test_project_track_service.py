@@ -235,7 +235,7 @@ class TestProjectTrackService:
             snils="22222222222",
             personnel_number="100002",
             group=group,
-            student=registered_user,
+            user=registered_user,
         )
 
         user = make_user(role_code="admin")

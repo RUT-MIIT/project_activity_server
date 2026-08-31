@@ -13,6 +13,13 @@ def user_model():
     return get_user_model()
 
 
+@pytest.fixture(autouse=True)
+def _ensure_preregistration_roles(db):
+    """Роли, необходимые для FK предрегистраций."""
+    for code in ("student", "mentor"):
+        Role.objects.get_or_create(code=code, defaults={"name": code})
+
+
 @pytest.fixture
 def roles(db):
     """Создаёт набор ролей, используемых в тестах.
@@ -31,7 +38,9 @@ def roles(db):
     ]
     roles_map = {}
     for code in codes:
-        roles_map[code] = Role.objects.create(code=code, name=code)
+        roles_map[code], _ = Role.objects.get_or_create(
+            code=code, defaults={"name": code}
+        )
     return roles_map
 
 

@@ -99,6 +99,32 @@ class InstituteResponsibleViewSet(viewsets.ViewSet):
 
     @extend_schema(
         tags=["teams"],
+        parameters=[_SEMESTER_PARAM, _INSTITUTE_PARAM],
+        summary="Группы института со счётчиками студентов и команд",
+    )
+    @action(detail=False, methods=["get"], url_path="groups-overview")
+    def list_groups_overview(self, request: Request) -> Response:
+        """GET /api/teams/institute-responsible/groups-overview/."""
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = InstituteResponsibleService()
+            items = service.list_groups_overview(
+                request.user,
+                self._parse_institute_code(request),
+                semester_id_raw,
+            )
+            return Response(items)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
         parameters=[_INSTITUTE_PARAM],
         summary="Сотрудники института",
     )

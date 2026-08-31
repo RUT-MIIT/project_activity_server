@@ -129,6 +129,94 @@ class TestInstituteResponsibleViewSet:
         assert response.status_code == 400
         assert "semester_id" in response.data["error"]
 
+    def test_list_groups_overview_returns_all_institute_groups_with_counts(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        study_groups,
+        direction,
+        institute,
+    ):
+        from accounts.models import PreRegisteredStudent
+        from teams.models import Team, TeamSemester
+
+        user = make_user(role_code="institute_validator", with_department=True)
+        captain = make_user(role_code="student", email="overview-captain@example.com")
+        captain.study_group = study_groups["active"]
+        captain.save(update_fields=["study_group"])
+        api_client.force_authenticate(user=user)
+
+        extra_group = StudyGroup.objects.create(
+            name="Группа 2",
+            code="g2",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        for index in range(2):
+            PreRegisteredStudent.objects.create(
+                last_name=f"Фамилия{index}",
+                first_name=f"Имя{index}",
+                student_card=f"SC{index}",
+                snils=f"1234567890{index}",
+                personnel_number=f"PN{index}",
+                group=study_groups["active"],
+            )
+        team = Team.objects.create(
+            name="Alpha",
+            home_study_group=study_groups["active"],
+        )
+        TeamSemester.objects.create(team=team, semester=semester, captain=captain)
+
+        response = api_client.get(
+            f"{BASE_URL}groups-overview/?semester_id={semester.id}"
+        )
+
+        assert response.status_code == 200
+        by_id = {item["id"]: item for item in response.data}
+        assert set(by_id) == {study_groups["active"].id, extra_group.id}
+        active_item = by_id[study_groups["active"].id]
+        assert active_item["name"] == "Группа 1"
+        assert active_item["studentsCount"] == 2
+        assert active_item["teamsCount"] == 1
+        assert by_id[extra_group.id]["studentsCount"] == 0
+        assert by_id[extra_group.id]["teamsCount"] == 0
+
+    def test_list_groups_overview_excludes_foreign_institute(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        study_groups,
+        other_institute,
+        direction,
+    ):
+        user = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get(
+            f"{BASE_URL}groups-overview/?semester_id={semester.id}"
+        )
+
+        assert response.status_code == 200
+        ids = {item["id"] for item in response.data}
+        assert study_groups["foreign"].id not in ids
+        assert study_groups["active"].id in ids
+
+    def test_list_groups_overview_missing_semester_returns_400(
+        self, roles, make_user, api_client, study_groups
+    ):
+        user = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get(f"{BASE_URL}groups-overview/")
+
+        assert response.status_code == 400
+        assert "semester_id" in response.data["error"]
+
     def test_list_employees_excludes_students(
         self, roles, make_user, api_client, study_groups
     ):

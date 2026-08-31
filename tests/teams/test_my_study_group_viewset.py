@@ -57,7 +57,7 @@ def _make_preregistered(
     student_card: str,
     personnel_number: str,
     snils: str,
-    student=None,
+    user=None,
     middle_name: str = "",
 ) -> PreRegisteredStudent:
     return PreRegisteredStudent.objects.create(
@@ -68,7 +68,7 @@ def _make_preregistered(
         snils=snils,
         personnel_number=personnel_number,
         group=group,
-        student=student,
+        user=user,
     )
 
 
@@ -147,7 +147,7 @@ class TestMyStudyGroupViewSet:
             student_card="25010001",
             personnel_number="100001",
             snils="11111111111",
-            student=registered,
+            user=registered,
         )
         _make_preregistered(
             study_group,
@@ -230,7 +230,7 @@ class TestMyStudyGroupViewSet:
             student_card="25010001",
             personnel_number="100001",
             snils="11111111111",
-            student=registered,
+            user=registered,
         )
         _make_preregistered(
             study_group,
@@ -317,7 +317,7 @@ class TestMyStudyGroupService:
                 student_card=f"2501000{index}",
                 personnel_number=f"10000{index}",
                 snils=f"1111111111{index}",
-                student=student,
+                user=student,
             )
 
         group = StudyGroupRepository().get_my_group_detail(study_group.id)
@@ -358,7 +358,7 @@ class TestMyStudyGroupService:
                 student_card=f"2501001{index}",
                 personnel_number=f"20000{index}",
                 snils=f"3333333333{index}",
-                student=student,
+                user=student,
             )
 
         group = StudyGroupRepository().get_my_group_detail(

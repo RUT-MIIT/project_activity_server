@@ -51,7 +51,7 @@ class ProjectTrackRepository:
             students_count=Count("pre_registered_students", distinct=True),
             registered_students_count=Count(
                 "pre_registered_students",
-                filter=Q(pre_registered_students__student_id__isnull=False),
+                filter=Q(pre_registered_students__user_id__isnull=False),
                 distinct=True,
             ),
         )

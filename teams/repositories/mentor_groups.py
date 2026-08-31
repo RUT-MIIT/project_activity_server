@@ -21,14 +21,10 @@ class MentorGroupsRepository:
     def __init__(self) -> None:
         self._team_lobby_repository = TeamLobbyRepository()
 
-    def list_for_mentor(self, user_id: int, semester_id: int) -> QuerySet[StudyGroup]:
-        """Группы наставника в семестре со счётчиками студентов и команд."""
-        mentor_group_ids = StudyGroup.objects.filter(
-            is_end=False,
-            semester_enrollments__semester_id=semester_id,
-            semester_enrollments__mentors__id=user_id,
-        ).values("id")
-
+    def _with_counts(
+        self, queryset: QuerySet[StudyGroup], semester_id: int
+    ) -> QuerySet[StudyGroup]:
+        """Добавляет счётчики студентов и команд в семестре."""
         teams_count_subquery = (
             TeamSemester.objects.filter(
                 team__home_study_group_id=OuterRef("pk"),
@@ -38,16 +34,38 @@ class MentorGroupsRepository:
             .annotate(count=Count("pk"))
             .values("count")
         )
-
-        return (
-            StudyGroup.objects.filter(id__in=mentor_group_ids)
-            .annotate(
-                students_count=Count("pre_registered_students", distinct=True),
-                teams_count=Coalesce(Subquery(teams_count_subquery), 0),
-            )
-            .only("id", "name")
-            .order_by("name")
+        return queryset.annotate(
+            students_count=Count("pre_registered_students", distinct=True),
+            teams_count=Coalesce(Subquery(teams_count_subquery), 0),
         )
+
+    def list_for_mentor(self, user_id: int, semester_id: int) -> QuerySet[StudyGroup]:
+        """Группы наставника в семестре со счётчиками студентов и команд."""
+        mentor_group_ids = StudyGroup.objects.filter(
+            is_end=False,
+            semester_enrollments__semester_id=semester_id,
+            semester_enrollments__mentors__id=user_id,
+        ).values("id")
+
+        return self._with_counts(
+            StudyGroup.objects.filter(id__in=mentor_group_ids).only("id", "name"),
+            semester_id,
+        ).order_by("name")
+
+    def list_for_institutes(
+        self, institute_codes: list[str], semester_id: int
+    ) -> QuerySet[StudyGroup]:
+        """Активные группы институтов со счётчиками студентов и команд."""
+        if not institute_codes:
+            return StudyGroup.objects.none()
+
+        return self._with_counts(
+            StudyGroup.objects.filter(
+                institute_id__in=institute_codes,
+                is_end=False,
+            ).only("id", "name"),
+            semester_id,
+        ).order_by("name")
 
     def is_mentor(self, user_id: int, group_id: int, semester_id: int) -> bool:
         """Возвращает True, если пользователь — наставник группы в семестре."""
@@ -60,7 +78,9 @@ class MentorGroupsRepository:
     def get_group_header(self, group_id: int) -> StudyGroup | None:
         """Возвращает заголовок группы (id, name) или None."""
         return (
-            StudyGroup.objects.filter(pk=group_id).only("id", "name", "is_end").first()
+            StudyGroup.objects.filter(pk=group_id)
+            .only("id", "name", "is_end", "institute_id")
+            .first()
         )
 
     def list_students(
@@ -69,10 +89,10 @@ class MentorGroupsRepository:
         """Контингент группы с командой студента в семестре (без N+1)."""
         students_qs = (
             PreRegisteredStudent.objects.filter(group_id=group_id)
-            .select_related("student")
+            .select_related("user")
             .prefetch_related(
                 Prefetch(
-                    "student__team_semester_memberships",
+                    "user__team_semester_memberships",
                     queryset=TeamSemesterMember.objects.filter(
                         semester_id=semester_id
                     ).select_related("team_semester__team"),

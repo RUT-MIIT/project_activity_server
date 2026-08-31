@@ -65,6 +65,11 @@ urlpatterns = [
         name="my-team-kick",
     ),
     path(
+        "study-groups/<int:group_id>/teams/",
+        MentorTeamViewSet.as_view({"post": "create"}),
+        name="mentor-team-create",
+    ),
+    path(
         "study-groups/<int:group_id>/teams/<int:team_semester_id>/",
         MentorTeamViewSet.as_view(
             {

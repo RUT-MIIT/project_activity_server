@@ -14,7 +14,7 @@ from teams.domain.mentor_groups import MentorGroupsDomain
 from teams.domain.mentor_team import MentorTeamDomain
 from teams.domain.team_lobby import TeamLobbyDomain
 from teams.dto.mentor_team import MentorTeamDetailDTO
-from teams.models import TeamSemester, TeamSemesterMember
+from teams.models import StudyGroup, TeamSemester, TeamSemesterMember
 from teams.repositories.mentor_groups import MentorGroupsRepository
 from teams.repositories.mentor_team import MentorTeamRepository
 
@@ -69,7 +69,7 @@ class MentorTeamService:
         group = self.groups_repository.get_group_header(group_id)
         self.groups_domain.ensure_group_exists(group)
         is_mentor = self.groups_repository.is_mentor(user.id, group_id, semester_id)
-        self.groups_domain.ensure_mentor_access(is_mentor)
+        self.groups_domain.ensure_group_access(user, group, is_mentor)
 
         team_semester = self.repository.get_team_semester_detail(
             team_semester_id=team_semester_id,
@@ -82,6 +82,76 @@ class MentorTeamService:
         if check_project_enrollment:
             self.domain.ensure_not_enrolled_in_project(team_semester)
         return semester_id, team_semester
+
+    def _authorize_group(
+        self,
+        user: User,
+        *,
+        group_id: int,
+        semester_id_raw: str | None,
+    ) -> tuple[int, StudyGroup]:
+        """Проверяет доступ к группе без загрузки команды."""
+        semester_id = Semester.resolve_list_semester_id(semester_id_raw)
+        group = self.groups_repository.get_group_header(group_id)
+        self.groups_domain.ensure_group_exists(group)
+        self.groups_domain.ensure_group_active(group)
+        is_mentor = self.groups_repository.is_mentor(user.id, group_id, semester_id)
+        self.groups_domain.ensure_group_access(user, group, is_mentor)
+        return semester_id, group
+
+    @transaction.atomic
+    def create_team(
+        self,
+        user: User,
+        *,
+        group_id: int,
+        name: str,
+        captain_id: int,
+        semester_id_raw: str | None,
+    ) -> dict[str, Any]:
+        """Создаёт команду в группе с указанным капитаном."""
+        semester_id, _group = self._authorize_group(
+            user,
+            group_id=group_id,
+            semester_id_raw=semester_id_raw,
+        )
+        cleaned_name, captain_id_value = self.domain.ensure_create_payload(
+            name, captain_id
+        )
+
+        captain = self.repository.get_user(captain_id_value)
+        if captain is None:
+            raise ValueError("Пользователь не найден")
+        self.domain.ensure_student_role(captain.role.code if captain.role else None)
+        self.domain.ensure_same_study_group(captain.study_group_id, group_id)
+
+        if self.repository.user_has_team_in_semester(
+            user_id=captain_id_value,
+            semester_id=semester_id,
+        ):
+            raise ValueError("Студент уже состоит в команде")
+
+        team_semester = self.repository.create_team_with_semester(
+            name=cleaned_name,
+            group_id=group_id,
+            semester_id=semester_id,
+            captain_id=captain_id_value,
+        )
+        self.repository.mark_user_requests_obsolete(
+            user_id=captain_id_value,
+            semester_id=semester_id,
+        )
+        self.repository.add_event_log(
+            team_id=team_semester.team_id,
+            team_semester_id=team_semester.id,
+            user_id=user.id,
+            text=(
+                f"Создана команда «{cleaned_name}» с капитаном "
+                f"{self.lobby_domain.user_display_name(captain)}"
+            ),
+        )
+        team_semester = self.repository.reload_team_semester(team_semester.id)
+        return self._to_detail(team_semester)
 
     def _member_limits(
         self, team_semester: TeamSemester, group_id: int, semester_id: int
@@ -316,8 +386,8 @@ class MentorTeamService:
             raise ValueError("Предрегистрация не найдена")
         if pre_registered.group_id != group_id:
             raise ValueError("Студент должен быть из этой учебной группы")
-        if pre_registered.student_id is not None:
-            return pre_registered.student
+        if pre_registered.user_id is not None:
+            return pre_registered.user
         return self.placeholder_service.get_or_create_placeholder(pre_registered)
 
     @transaction.atomic

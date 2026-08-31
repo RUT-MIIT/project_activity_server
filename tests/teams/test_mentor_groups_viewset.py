@@ -224,6 +224,37 @@ class TestMentorGroupsViewSet:
         assert response.status_code == 200
         assert response.data == []
 
+    def test_institute_validator_gets_empty_list_without_mentor_assignment(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        semester,
+        study_groups,
+        direction,
+        institute,
+    ) -> None:
+        mentor = make_user(role_code="mentor", with_department=True)
+        validator = make_user(
+            role_code="institute_validator",
+            with_department=True,
+            email="validator@x.com",
+        )
+        StudyGroup.objects.create(
+            name="ИВТ-103",
+            code="IVT-103",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        _enrollment_with_mentors(study_groups["first"], semester, mentor)
+
+        api_client.force_authenticate(user=validator)
+        response = api_client.get(f"{MY_GROUPS_URL}?semester_id={semester.id}")
+
+        assert response.status_code == 200
+        assert response.data == []
+
 
 @pytest.mark.django_db
 class TestMentorGroupsQueryPerformance:

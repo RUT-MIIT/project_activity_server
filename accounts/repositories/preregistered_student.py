@@ -23,7 +23,7 @@ class PreRegisteredStudentRepository:
     ) -> PreRegisteredStudent | None:
         """Возвращает предрегистрацию по табельному номеру."""
         return (
-            PreRegisteredStudent.objects.select_related("group")
+            PreRegisteredStudent.objects.select_related("group", "department", "role")
             .filter(personnel_number=personnel_number)
             .first()
         )
@@ -46,7 +46,7 @@ class PreRegisteredStudentRepository:
 
     def delete_unregistered(self) -> int:
         """Удаляет предрегистрации без привязанного пользователя."""
-        deleted, _ = PreRegisteredStudent.objects.filter(student__isnull=True).delete()
+        deleted, _ = PreRegisteredStudent.objects.filter(user__isnull=True).delete()
         return deleted
 
     def upsert_from_import(
@@ -56,7 +56,7 @@ class PreRegisteredStudentRepository:
         group_id: int,
         existing: PreRegisteredStudent | None = None,
     ) -> tuple[PreRegisteredStudent, bool]:
-        """Создаёт или обновляет предрегистрацию по табельному номеру."""
+        """Создаёт или обновляет предрегистрацию студента по табельному номеру."""
         defaults = {
             "last_name": row.last_name,
             "first_name": row.first_name,
@@ -64,6 +64,7 @@ class PreRegisteredStudentRepository:
             "student_card": row.student_card,
             "snils": row.snils,
             "group_id": group_id,
+            "role_id": "student",
         }
         if existing is not None:
             for field, value in defaults.items():
@@ -79,14 +80,43 @@ class PreRegisteredStudentRepository:
             True,
         )
 
-    def link_student(
+    def upsert_mentor_from_import(
+        self,
+        *,
+        row,
+        department_id: int | None,
+        existing: PreRegisteredStudent | None = None,
+    ) -> tuple[PreRegisteredStudent, bool]:
+        """Создаёт или обновляет предрегистрацию наставника по табельному номеру."""
+        defaults = {
+            "last_name": row.last_name,
+            "first_name": row.first_name,
+            "middle_name": row.middle_name,
+            "department_id": department_id,
+            "role_id": "mentor",
+        }
+        if existing is not None:
+            for field, value in defaults.items():
+                setattr(existing, field, value)
+            existing.save()
+            return existing, False
+
+        return (
+            PreRegisteredStudent.objects.create(
+                personnel_number=row.personnel_number,
+                **defaults,
+            ),
+            True,
+        )
+
+    def link_user(
         self, pre_registered: PreRegisteredStudent, user_id: int
     ) -> PreRegisteredStudent:
-        """Привязывает предрегистрацию к созданному пользователю."""
-        pre_registered.student_id = user_id
-        pre_registered.save(update_fields=["student"])
+        """Привязывает предрегистрацию к пользователю."""
+        pre_registered.user_id = user_id
+        pre_registered.save(update_fields=["user"])
         return pre_registered
 
     def list_unregistered(self) -> QuerySet[PreRegisteredStudent]:
         """Возвращает queryset предрегистраций без пользователя."""
-        return PreRegisteredStudent.objects.filter(student__isnull=True)
+        return PreRegisteredStudent.objects.filter(user__isnull=True)

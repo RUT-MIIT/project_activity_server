@@ -45,9 +45,7 @@ class Command(BaseCommand):
             raise CommandError(f"Файл не найден: {path}")
 
         if options["clear"]:
-            deleted, _ = PreRegisteredStudent.objects.filter(
-                student__isnull=True
-            ).delete()
+            deleted, _ = PreRegisteredStudent.objects.filter(user__isnull=True).delete()
             self.stdout.write(f"Удалено предрегистраций: {deleted}")
 
         df = self._read_contingent(path)
@@ -96,6 +94,7 @@ class Command(BaseCommand):
                     "student_card": parsed.student_card,
                     "snils": parsed.snils,
                     "group": group,
+                    "role_id": "student",
                 }
                 if existing is not None:
                     for field, value in defaults.items():
@@ -110,7 +109,7 @@ class Command(BaseCommand):
                     created += 1
 
             deleted, _ = (
-                PreRegisteredStudent.objects.filter(student__isnull=True)
+                PreRegisteredStudent.objects.filter(user__isnull=True)
                 .exclude(personnel_number__in=imported_personnel_numbers)
                 .delete()
             )

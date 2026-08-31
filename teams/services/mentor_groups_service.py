@@ -41,7 +41,7 @@ class MentorGroupsService:
         self.domain.ensure_group_exists(group)
         self.domain.ensure_group_active(group)
         is_mentor = self.repository.is_mentor(user.id, group_id, semester_id)
-        self.domain.ensure_mentor_access(is_mentor)
+        self.domain.ensure_group_access(user, group, is_mentor)
         students = self.repository.list_students(group_id, semester_id)
         teams = self.repository.list_teams(group_id, semester_id)
         return MentorGroupDetailDTO(group, students, teams).to_dict()

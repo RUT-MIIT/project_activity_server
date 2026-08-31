@@ -42,6 +42,10 @@ def _team_url(group_id: int, team_semester_id: int, suffix: str = "") -> str:
     return f"{base}{suffix}" if suffix.startswith("/") else f"{base}/{suffix}"
 
 
+def _create_team_url(group_id: int) -> str:
+    return f"/api/teams/study-groups/{group_id}/teams/"
+
+
 def _enrollment_with_mentors(
     group: StudyGroup, semester: Semester, *mentors: User
 ) -> StudyGroupSemester:
@@ -182,6 +186,159 @@ def mentor_team_setup(
         "study_group": study_group,
         "semester": semester,
     }
+
+
+@pytest.mark.django_db
+class TestMentorTeamCreate:
+    def test_mentor_creates_team(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+        semester: Semester,
+    ) -> None:
+        mentor = make_user(role_code="mentor", with_department=True)
+        captain = make_user(role_code="student", email="new-captain@example.com")
+        captain.study_group = study_group
+        captain.save(update_fields=["study_group"])
+        _enrollment_with_mentors(study_group, semester, mentor)
+
+        api_client.force_authenticate(user=mentor)
+        response = api_client.post(
+            f"{_create_team_url(study_group.id)}?semester_id={semester.id}",
+            {"name": "Gamma", "captainId": captain.id},
+            format="json",
+        )
+
+        assert response.status_code == 201
+        assert response.data["name"] == "Gamma"
+        assert response.data["status"] == TeamSemester.Status.FORMING
+        assert response.data["membersCount"] == 1
+        leader = response.data["members"][0]
+        assert leader["userId"] == captain.id
+        assert leader["role"] == TeamSemesterMember.Role.LEADER
+
+    def test_institute_validator_creates_team(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+        semester: Semester,
+    ) -> None:
+        validator = make_user(
+            role_code="institute_validator",
+            with_department=True,
+            email="validator-create@example.com",
+        )
+        captain = make_user(role_code="student", email="validator-captain@example.com")
+        captain.study_group = study_group
+        captain.save(update_fields=["study_group"])
+
+        api_client.force_authenticate(user=validator)
+        response = api_client.post(
+            f"{_create_team_url(study_group.id)}?semester_id={semester.id}",
+            {"name": "Delta", "captainId": captain.id},
+            format="json",
+        )
+
+        assert response.status_code == 201
+        assert response.data["name"] == "Delta"
+
+    def test_not_authorized_returns_403(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+        semester: Semester,
+    ) -> None:
+        captain = make_user(role_code="student", email="captain-only@example.com")
+        captain.study_group = study_group
+        captain.save(update_fields=["study_group"])
+        viewer = make_user(role_code="user", with_department=True, email="viewer@x.com")
+
+        api_client.force_authenticate(user=viewer)
+        response = api_client.post(
+            f"{_create_team_url(study_group.id)}?semester_id={semester.id}",
+            {"name": "Blocked", "captainId": captain.id},
+            format="json",
+        )
+
+        assert response.status_code == 403
+
+    def test_captain_already_in_team_returns_400(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+    ) -> None:
+        setup = mentor_team_setup
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_create_team_url(setup['study_group'].id)}?semester_id={setup['semester'].id}",
+            {"name": "Second", "captainId": setup["captain"].id},
+            format="json",
+        )
+
+        assert response.status_code == 400
+        assert "уже состоит" in response.data["error"]
+
+    def test_captain_from_other_group_returns_400(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+        semester: Semester,
+        direction,
+        institute,
+    ) -> None:
+        mentor = make_user(role_code="mentor", with_department=True)
+        other_group = StudyGroup.objects.create(
+            name="OTHER",
+            code="OTHER",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        foreign_captain = make_user(role_code="student", email="foreign@example.com")
+        foreign_captain.study_group = other_group
+        foreign_captain.save(update_fields=["study_group"])
+        _enrollment_with_mentors(study_group, semester, mentor)
+
+        api_client.force_authenticate(user=mentor)
+        response = api_client.post(
+            f"{_create_team_url(study_group.id)}?semester_id={semester.id}",
+            {"name": "Foreign", "captainId": foreign_captain.id},
+            format="json",
+        )
+
+        assert response.status_code == 400
+        assert "учебной группы" in response.data["error"]
+
+    def test_empty_name_returns_400(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+        semester: Semester,
+    ) -> None:
+        mentor = make_user(role_code="mentor", with_department=True)
+        captain = make_user(role_code="student", email="empty-name@example.com")
+        captain.study_group = study_group
+        captain.save(update_fields=["study_group"])
+        _enrollment_with_mentors(study_group, semester, mentor)
+
+        api_client.force_authenticate(user=mentor)
+        response = api_client.post(
+            f"{_create_team_url(study_group.id)}?semester_id={semester.id}",
+            {"name": "   ", "captainId": captain.id},
+            format="json",
+        )
+
+        assert response.status_code == 400
 
 
 @pytest.mark.django_db
@@ -589,11 +746,11 @@ class TestMentorTeamMutations:
         assert response.status_code == 200
         pre_registered.refresh_from_db()
         assert pre_registered.has_placeholder_user is True
-        assert pre_registered.student.is_placeholder is True
+        assert pre_registered.user.is_placeholder is True
         placeholder_member = next(
             item
             for item in response.data["members"]
-            if item["userId"] == pre_registered.student_id
+            if item["userId"] == pre_registered.user_id
         )
         assert placeholder_member["isPlaceholder"] is True
 

@@ -77,7 +77,45 @@ GET /api/teams/institute-responsible/groups/?semester_id=actual
 
 ---
 
-## 2. Сотрудники института
+## 2. Обзор групп института (со счётчиками)
+
+```http
+GET /api/teams/institute-responsible/groups-overview/?semester_id=actual
+```
+
+Возвращает все активные группы института в том же формате, что и список «Мои группы» наставника (`studentsCount`, `teamsCount`). Удобен для экрана ответственного по институту.
+
+### Ответ `200`
+
+```json
+[
+  {
+    "id": 1,
+    "name": "ИВТ-101",
+    "studentsCount": 25,
+    "teamsCount": 3
+  }
+]
+```
+
+| Поле | Описание |
+|------|----------|
+| `id` | ID учебной группы |
+| `name` | Название группы |
+| `studentsCount` | Число студентов в контингенте группы |
+| `teamsCount` | Число команд с `home_study_group` этой группы в выбранном семестре |
+
+### Ошибки
+
+| Код | Когда |
+|-----|--------|
+| `401` | Нет авторизации |
+| `403` | Недостаточно прав |
+| `400` | Не передан / некорректный `semester_id` |
+
+---
+
+## 3. Сотрудники института
 
 ```http
 GET /api/teams/institute-responsible/employees/
@@ -120,7 +158,7 @@ GET /api/teams/institute-responsible/employees/?institute_code=INST-1
 
 ---
 
-## 3. Группы с назначенными наставниками
+## 4. Группы с назначенными наставниками
 
 ```http
 GET /api/teams/institute-responsible/group-mentors/?semester_id=actual
@@ -167,7 +205,7 @@ GET /api/teams/institute-responsible/group-mentors/?semester_id=actual
 
 ---
 
-## 4. Назначить наставника группе
+## 5. Назначить наставника группе
 
 ```http
 POST /api/teams/institute-responsible/groups/{groupId}/mentor/?semester_id=actual
@@ -219,7 +257,7 @@ Content-Type: application/json
 
 ---
 
-## 5. Снять наставника с группы
+## 6. Снять наставника с группы
 
 ```http
 DELETE /api/teams/institute-responsible/groups/{groupId}/mentor/?semester_id=actual&mentor_id=42

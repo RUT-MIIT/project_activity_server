@@ -27,8 +27,8 @@ class PlaceholderUserService:
         Raises:
             ValueError: если роль student не найдена.
         """
-        if pre_registered.student_id is not None:
-            return pre_registered.student
+        if pre_registered.user_id is not None:
+            return pre_registered.user
 
         try:
             role = Role.objects.get(code="student")
@@ -48,7 +48,7 @@ class PlaceholderUserService:
             is_placeholder=True,
         )
         pre_registered.has_placeholder_user = True
-        self._repository.link_student(pre_registered, user.pk)
+        self._repository.link_user(pre_registered, user.pk)
         pre_registered.save(update_fields=["has_placeholder_user"])
         return user
 

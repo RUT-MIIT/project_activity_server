@@ -11,6 +11,13 @@ from teams.domain.mentor_team import TeamEnrolledInProjectError
 from teams.services.mentor_team_service import MentorTeamService
 
 
+class MentorTeamCreateSerializer(serializers.Serializer):
+    """Тело POST создания команды."""
+
+    name = serializers.CharField(max_length=255)
+    captainId = serializers.IntegerField(min_value=1)
+
+
 class MentorTeamUpdateNameSerializer(serializers.Serializer):
     """Тело PATCH переименования команды."""
 
@@ -60,6 +67,24 @@ class MentorTeamViewSet(viewsets.ViewSet):
             return Response({"error": str(exc)}, status=status.HTTP_404_NOT_FOUND)
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def create(self, request: Request, group_id: int) -> Response:
+        """POST /study-groups/{groupId}/teams/ — создать команду."""
+        serializer = MentorTeamCreateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        service = MentorTeamService()
+
+        def action() -> Response:
+            data = service.create_team(
+                request.user,
+                group_id=group_id,
+                name=serializer.validated_data["name"],
+                captain_id=serializer.validated_data["captainId"],
+                semester_id_raw=self._semester_id_raw(request),
+            )
+            return Response(data, status=status.HTTP_201_CREATED)
+
+        return self._handle_errors(action)
 
     def retrieve(
         self,
