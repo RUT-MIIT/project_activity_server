@@ -1,15 +1,24 @@
-"""Сверка преподавателей из Excel со списком пользователей prod API."""
+"""Сверка преподавателей из Excel со списком пользователей prod API.
+
+.. deprecated::
+    Используйте ``python data/sync_project_teachers.py`` — единый пайплайн
+    парсинга расписания и сверки с prod.
+"""
 
 from __future__ import annotations
 
 import json
 from pathlib import Path
-import re
+import sys
+import warnings
+
+DATA_DIR = Path(__file__).resolve().parent
+sys.path.insert(0, str(DATA_DIR))
 
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill
+from teacher_matching import build_user_indexes, find_user
 
-DATA_DIR = Path(__file__).resolve().parent
 USERS_JSON = DATA_DIR / "prod_users.json"
 SOURCE_XLSX = DATA_DIR / "project_teachers.xlsx"
 OUTPUT_XLSX = DATA_DIR / "project_teachers_marked.xlsx"
@@ -21,61 +30,14 @@ COL_USER_ID = 15  # O
 COL_USER_EMAIL = 16  # P
 
 
-def normalize_name(value: str | None) -> str:
-    """Нормализует ФИО для сравнения."""
-    if not value:
-        return ""
-    text = str(value).strip().lower().replace("ё", "е")
-    text = re.sub(r"\s+", " ", text)
-    text = re.sub(r"[^a-zа-я0-9\s]", "", text)
-    return text
-
-
-def token_key(value: str | None) -> tuple[str, ...]:
-    """Ключ из набора слов ФИО (устойчив к перестановке частей)."""
-    normalized = normalize_name(value)
-    if not normalized:
-        return tuple()
-    return tuple(sorted(normalized.split()))
-
-
-def build_user_indexes(
-    users: list[dict],
-) -> tuple[dict[str, dict], dict[tuple[str, ...], list[dict]]]:
-    """Строит индексы пользователей по ФИО."""
-    by_name: dict[str, dict] = {}
-    by_tokens: dict[tuple[str, ...], list[dict]] = {}
-    for user in users:
-        full_name = user.get("full_name") or ""
-        norm = normalize_name(full_name)
-        if norm:
-            by_name.setdefault(norm, user)
-        tokens = token_key(full_name)
-        if tokens:
-            by_tokens.setdefault(tokens, []).append(user)
-    return by_name, by_tokens
-
-
-def find_user(
-    teacher_name: str | None,
-    *,
-    by_name: dict[str, dict],
-    by_tokens: dict[tuple[str, ...], list[dict]],
-) -> dict | None:
-    """Ищет пользователя по ФИО преподавателя."""
-    norm = normalize_name(teacher_name)
-    if not norm:
-        return None
-    if norm in by_name:
-        return by_name[norm]
-    matches = by_tokens.get(token_key(teacher_name), [])
-    if len(matches) == 1:
-        return matches[0]
-    return None
-
-
 def main() -> None:
     """Отмечает преподавателей из Excel, которые есть в prod."""
+    warnings.warn(
+        "mark_teachers_in_system.py устарел. "
+        "Используйте: python data/sync_project_teachers.py",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     users = json.loads(USERS_JSON.read_text(encoding="utf-8"))
     by_name, by_tokens = build_user_indexes(users)
 

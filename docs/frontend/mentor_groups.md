@@ -186,7 +186,15 @@ GET /api/teams/study-groups/{groupId}/project-showcase/?semester_id=actual
 
 Во всех запросах обязателен query-параметр `semester_id`.
 
-### Карточка команды (ответ всех мутаций)
+### Карточка команды
+
+```http
+GET /api/teams/study-groups/{groupId}/teams/{teamSemesterId}/?semester_id=actual
+```
+
+Возвращает название, статус и полный состав команды. Доступен даже если команда записана на проект (в отличие от мутаций).
+
+Ответ `200` — тот же формат, что и у мутаций ниже.
 
 ```json
 {

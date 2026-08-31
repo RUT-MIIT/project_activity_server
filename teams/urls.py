@@ -68,6 +68,7 @@ urlpatterns = [
         "study-groups/<int:group_id>/teams/<int:team_semester_id>/",
         MentorTeamViewSet.as_view(
             {
+                "get": "retrieve",
                 "patch": "partial_update",
                 "delete": "destroy",
             }

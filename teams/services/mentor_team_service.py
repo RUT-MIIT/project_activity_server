@@ -37,6 +37,24 @@ class MentorTeamService:
         """Сериализует карточку команды."""
         return MentorTeamDetailDTO(team_semester).to_dict()
 
+    def get_detail(
+        self,
+        user: User,
+        *,
+        group_id: int,
+        team_semester_id: int,
+        semester_id_raw: str | None,
+    ) -> dict[str, Any]:
+        """Возвращает карточку команды для экрана наставника."""
+        _, team_semester = self._authorize_and_load(
+            user,
+            group_id=group_id,
+            team_semester_id=team_semester_id,
+            semester_id_raw=semester_id_raw,
+            check_project_enrollment=False,
+        )
+        return self._to_detail(team_semester)
+
     def _authorize_and_load(
         self,
         user: User,

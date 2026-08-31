@@ -1,1 +1,1774 @@
-[{"id":125,"full_name":"Test123 Test123 Test123","email":"priem@edu.emiit.ru","phone":"89435323525","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":66,"name":"Кафедра «Современные технологии социально-экономического образования»","short_name":"СТСЭО"},"authored_projects_count":0},{"id":16,"full_name":"Агафонова Ирина Владимировна","email":"murmurashki@gmail.com","phone":"+79160760206","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":37,"name":"Институт транспортной техники и систем управления","short_name":"ИЖТ (ИТТСУ)"},"authored_projects_count":27},{"id":116,"full_name":"Аль Али Насер А Н","email":"alali-naser@rut-miit.ru","phone":"+79175736970","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":96,"name":"Кафедра «Морское право и международное право» Юридического института","short_name":"МП"},"authored_projects_count":1},{"id":18,"full_name":"Андриянова Наталья Александровна","email":"nalarkova@mail.ru","phone":"+79265778505","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":50,"name":"Институт управления и цифровых технологий","short_name":"ИЖТ (ИУЦТ)"},"authored_projects_count":8},{"id":12,"full_name":"Аристова Дарья Александровна","email":"daria_a_aristova@list.ru","phone":"79165563309","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":64,"name":"Кафедра «Международный финансовый и управленческий учет»","short_name":"МФиУУ"},"authored_projects_count":14},{"id":64,"full_name":"Балмакова Ксения Юрьевна","email":"avtomonova-ky@rut-miit.ru","phone":"+79099670549","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":55,"name":"Кафедра «Логистика и управление транспортными системами»","short_name":"ЛиУТС"},"authored_projects_count":0},{"id":109,"full_name":"Беличенко Римма Владимировна","email":"belichenko.rv@rut-miit.ru","phone":"+79005665334","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":102,"name":"Кафедра «Уголовное право, уголовный процесс и правоохранительная деятельность» Юридического института","short_name":"УПиПД"},"authored_projects_count":3},{"id":22,"full_name":"Боброва Елена Викторовна","email":"oumnique@gmail.com","phone":"+79165138133","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":13,"name":"Институт международных транспортных коммуникаций","short_name":"ИМТК"},"authored_projects_count":0},{"id":4,"full_name":"Боков Константин Андреевич","email":"society95@bk.ru","phone":"+79296245095","role":{"code":"department_validator","name":"Представитель кафедры"},"department":null,"authored_projects_count":0},{"id":65,"full_name":"Боландова Юлия Константиновна","email":"jbolandova@gmail.com","phone":"+79166832899","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":59,"name":"Кафедра «Химия и инженерная экология»","short_name":"ХиИЭ"},"authored_projects_count":9},{"id":48,"full_name":"Болотина Александра Борисовна","email":"abbolotina-work@yandex.ru","phone":"+79032173431","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":40,"name":"Кафедра «Машиноведение, проектирование, стандартизация и сертификация»","short_name":"МПСиС"},"authored_projects_count":12},{"id":112,"full_name":"Васильева ильева Елена Юрьевна","email":"Vasileva.ei@rut-miit.ru","phone":"+79036198199","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":99,"name":"Кафедра «Таможенное право и организация таможенного дела»","short_name":"ТПиОТД"},"authored_projects_count":1},{"id":60,"full_name":"Веселкова Марина Григорьевна","email":"veselkova110598@gmail.com","phone":"+79253468215","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":56,"name":"Кафедра «Логистические транспортные системы и технологии»","short_name":"ЛТСТ"},"authored_projects_count":2},{"id":137,"full_name":"Власкин Вадим Викторович","email":"test2@emiit.ru","phone":"","role":{"code":"student","name":"Студент"},"department":null,"authored_projects_count":0},{"id":119,"full_name":"Воронина Елена Ивановна","email":"EIVoronina753@yandex.ru","phone":"+79263907535","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":27,"name":"Кафедра «Проектирование и строительство железных дорог»","short_name":"ПСЖД"},"authored_projects_count":3},{"id":81,"full_name":"Галеева Полина Эдуардовна","email":"polinagaleeva03@mail.ru","phone":"+79002204412","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":18,"name":"Институт пути, строительства и сооружений","short_name":"ИПСС"},"authored_projects_count":5},{"id":53,"full_name":"герасимов михаил михайлович","email":"germihmih@yandex.ru","phone":"+79629993802","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":70,"name":"Кафедра «Экономика транспортной инфраструктуры и управление строительным бизнесом»","short_name":"ЭТИиУСБ"},"authored_projects_count":6},{"id":136,"full_name":"Гинда Данила Александрович","email":"ginda.da@rut-miit.ru","phone":"","role":{"code":"student","name":"Студент"},"department":null,"authored_projects_count":0},{"id":23,"full_name":"Глыва Анна Валерьевна","email":"anna.glyva@mail.ru","phone":"+79265639947","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":61,"name":"Институт экономики и финансов","short_name":"ИЭФ"},"authored_projects_count":13},{"id":49,"full_name":"Горелова Мария Витальевна","email":"marusalen@mail.ru","phone":"+79197250849","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":41,"name":"Кафедра «Наземные транспортно-технологические средства»","short_name":"НТТС"},"authored_projects_count":30},{"id":44,"full_name":"Горохов Дмитрий Александрович","email":"gorokhov.da@rut-miit.ru","phone":"+79153305448","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":68,"name":"Кафедра «Экономика и управление на транспорте»","short_name":"ЭУТ"},"authored_projects_count":9},{"id":14,"full_name":"Григорьев Павел Александрович","email":"grigorievpavel1996@yandex.ru","phone":"+79154340724","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":37,"name":"Институт транспортной техники и систем управления","short_name":"ИЖТ (ИТТСУ)"},"authored_projects_count":300},{"id":50,"full_name":"Григорьев Павел Сергеевич","email":"grigorev.p@gmail.com","phone":"+79055491551","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":48,"name":"Кафедра «Электропоезда и локомотивы»","short_name":"ЭиЛ"},"authored_projects_count":29},{"id":106,"full_name":"Гришко Наталья Александровна","email":"grish.nat88@ya.ru","phone":"+79036416325","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":102,"name":"Кафедра «Уголовное право, уголовный процесс и правоохранительная деятельность» Юридического института","short_name":"УПиПД"},"authored_projects_count":1},{"id":52,"full_name":"Данилина Мария Геннадьевна","email":"danilina-mg@rut-miit.ru","phone":"+79264304706","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":68,"name":"Кафедра «Экономика и управление на транспорте»","short_name":"ЭУТ"},"authored_projects_count":0},{"id":75,"full_name":"Деникаева Екатерина Александровна","email":"carkova87@mail.ru","phone":"+79653318083","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":105,"name":"Академия дорожного хозяйства","short_name":"АДХ"},"authored_projects_count":0},{"id":26,"full_name":"Дроздова Елена Анатольевна","email":"gorbunovala@yandex.ru","phone":"+79153326261","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":94,"name":"Юридический институт","short_name":"ЮИ"},"authored_projects_count":4},{"id":140,"full_name":"Егоров Артём Андреевич","email":"test6@emiit.ru","phone":"","role":{"code":"student","name":"Студент"},"department":null,"authored_projects_count":0},{"id":31,"full_name":"Егоров Сергей Владимирович","email":"egorov@rut-miit.ru","phone":"+79265624239","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":62,"name":"Кафедра «Информационные системы цифровой экономики»","short_name":"ИСЦЭ"},"authored_projects_count":14},{"id":39,"full_name":"Ефимова Ольга Владимировна","email":"ovefimova@mail.ru","phone":"79164353861","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":69,"name":"Кафедра «Экономика, организация производства и менеджмент»","short_name":"ЭОПМ"},"authored_projects_count":0},{"id":42,"full_name":"Жаков Владимир Владимирович","email":"v.jakov@yandex.ru","phone":"+79104553235","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":68,"name":"Кафедра «Экономика и управление на транспорте»","short_name":"ЭУТ"},"authored_projects_count":17},{"id":66,"full_name":"Ждакаев Сергей Олегович","email":"zhdakaev-so@rut-miit.ru","phone":"+79067403582","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":58,"name":"Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»","short_name":"УЭРиБТ"},"authored_projects_count":20},{"id":107,"full_name":"Жмылев Николай Андреевич","email":"zhmylev.na@rut-miit.ru","phone":"+79169052757","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":99,"name":"Кафедра «Таможенное право и организация таможенного дела»","short_name":"ТПиОТД"},"authored_projects_count":9},{"id":131,"full_name":"Жук Анастасия Андреевна","email":"a.zhuk@rut.digital","phone":"+79803638304","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":106,"name":"Высшая инженерная школа","short_name":"ВИШ"},"authored_projects_count":4},{"id":138,"full_name":"Завьялов Илья Андреевич","email":"test3@emiit.ru","phone":"","role":{"code":"student","name":"Студент"},"department":null,"authored_projects_count":0},{"id":58,"full_name":"Засорина Галина Валерьевна","email":"Zasorina-gv@rut-miit.ru","phone":"+79150608137","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":58,"name":"Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»","short_name":"УЭРиБТ"},"authored_projects_count":8},{"id":2,"full_name":"Иван Костюлин Алексеевич","email":"ief07@bk.ru","phone":"","role":{"code":"cpds","name":"ЦПДС"},"department":{"id":113,"name":"ЦПДС","short_name":"ЦПДС"},"authored_projects_count":0},{"id":30,"full_name":"Иванов Артем Владимирович","email":"ivanov-av@rut-miit.ru","phone":"+79851142851","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":67,"name":"Кафедра «Финансы и кредит»","short_name":"ФК"},"authored_projects_count":34},{"id":5,"full_name":"Иванов Иван Иванович","email":"admin@emiit.ru","phone":"+79999999999","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":61,"name":"Институт экономики и финансов","short_name":"ИЭФ"},"authored_projects_count":1},{"id":21,"full_name":"Иванова Мария Викторовна","email":"Ivanova.M.V.I@yandex.com","phone":"+79151294970","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":13,"name":"Институт международных транспортных коммуникаций","short_name":"ИМТК"},"authored_projects_count":19},{"id":117,"full_name":"Ивлиева Ксения Васильевна","email":"kvi-ltst@rambler.ru","phone":"+79035398776","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":60,"name":"Кафедра «Цифровые технологии управления транспортными процессами»","short_name":"ЦТУТП"},"authored_projects_count":0},{"id":10,"full_name":"Ишханян Маргарита Владимировна","email":"ishkhanyan-mv@rut-miit.ru","phone":"+79773500455","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":61,"name":"Институт экономики и финансов","short_name":"ИЭФ"},"authored_projects_count":0},{"id":113,"full_name":"Карпухина Александра Александровна","email":"aleks.karpukhina@mail.ru","phone":"+79774883996","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":18,"name":"Институт пути, строительства и сооружений","short_name":"ИПСС"},"authored_projects_count":26},{"id":3,"full_name":"Касымжанова Самира Рустамовна","email":"samirakas1507@mail.ru","phone":"+79169503988","role":{"code":"mentor","name":"Сотрудник"},"department":null,"authored_projects_count":1},{"id":115,"full_name":"Кобзева Екатерина Ивановна","email":"Keti_v_7@mail.ru","phone":"+79251458959","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":100,"name":"Кафедра «Теория права, гражданское право и гражданский процесс» Юридического института","short_name":"ТПиГП"},"authored_projects_count":0},{"id":54,"full_name":"Кожевникова Алла Николаевна","email":"kozhevnikova.an@rut-miit.ru","phone":"+79778924415","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":68,"name":"Кафедра «Экономика и управление на транспорте»","short_name":"ЭУТ"},"authored_projects_count":0},{"id":17,"full_name":"Козловцева Екатерина Александровна","email":"ekkozlovtseva@mail.ru","phone":"89772794761","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":106,"name":"Высшая инженерная школа","short_name":"ВИШ"},"authored_projects_count":0},{"id":59,"full_name":"Конарева Наталья Андреевна","email":"konareva-na@rut-miit.ru","phone":"+79267033684","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":56,"name":"Кафедра «Логистические транспортные системы и технологии»","short_name":"ЛТСТ"},"authored_projects_count":0},{"id":43,"full_name":"Королькова Наталья Вячеславовна","email":"shulgina-nv@yandex.ru","phone":"+79175180740","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":68,"name":"Кафедра «Экономика и управление на транспорте»","short_name":"ЭУТ"},"authored_projects_count":10},{"id":61,"full_name":"Косогляд Роман Александрович","email":"logistickr@googlemail.com","phone":"+79035684032","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":56,"name":"Кафедра «Логистические транспортные системы и технологии»","short_name":"ЛТСТ"},"authored_projects_count":6},{"id":28,"full_name":"Костюлин Иван Алексеевич","email":"kostyulin-ia@rut-miit.ru","phone":"+79257816485","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":66,"name":"Кафедра «Современные технологии социально-экономического образования»","short_name":"СТСЭО"},"authored_projects_count":0},{"id":40,"full_name":"Костюлин Иван Алексеевич","email":"ivan-kostyulin@yandex.ru","phone":"+79257816485","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":66,"name":"Кафедра «Современные технологии социально-экономического образования»","short_name":"СТСЭО"},"authored_projects_count":0},{"id":25,"full_name":"Краснов Евгений Сергеевич","email":"krasnov-es@rut-miit.ru","phone":"+79378807746","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":104,"name":"Академия гражданской авиации","short_name":"АГА"},"authored_projects_count":3},{"id":29,"full_name":"Лавров Илья Михайлович","email":"lavrov-im@rut-miit.ru","phone":"+79168289997","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":67,"name":"Кафедра «Финансы и кредит»","short_name":"ФК"},"authored_projects_count":0},{"id":62,"full_name":"Лахметкина Наталья Юрьевна","email":"lahmetkina-ny@rut-miit.ru","phone":"+79032584898","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":56,"name":"Кафедра «Логистические транспортные системы и технологии»","short_name":"ЛТСТ"},"authored_projects_count":3},{"id":9,"full_name":"Логинова Людмила Николаевна","email":"ludmilanv@mail.ru","phone":"+79191092594","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":37,"name":"Институт транспортной техники и систем управления","short_name":"ИЖТ (ИТТСУ)"},"authored_projects_count":24},{"id":35,"full_name":"Макеева Елена Захаровна","email":"pk_ief_miit@mail.ru","phone":"+79166359717","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":64,"name":"Кафедра «Международный финансовый и управленческий учет»","short_name":"МФиУУ"},"authored_projects_count":0},{"id":72,"full_name":"Мамина Оксана Ивановна","email":"mamina.oi@rut-miit.ru","phone":"+79162875477","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":97,"name":"Кафедра «Правовое обеспечение государственного управления и экономики» Юридического института","short_name":"ПОГУиЭ"},"authored_projects_count":8},{"id":73,"full_name":"Маркунцова Ирина Александровна","email":"markuntsova.ia@rut-miit.ru","phone":"+7 (916) 113 56 68","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":102,"name":"Кафедра «Уголовное право, уголовный процесс и правоохранительная деятельность» Юридического института","short_name":"УПиПД"},"authored_projects_count":0},{"id":77,"full_name":"Можейко Данила Андреевич","email":"mozheyko.da@rut-miit.ru","phone":"+79037227743","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":59,"name":"Кафедра «Химия и инженерная экология»","short_name":"ХиИЭ"},"authored_projects_count":5},{"id":76,"full_name":"Мусатов Дмитрий Вадимович","email":"musatov-dv@rut-miit.ru","phone":"79851092021","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":55,"name":"Кафедра «Логистика и управление транспортными системами»","short_name":"ЛиУТС"},"authored_projects_count":3},{"id":7,"full_name":"Новиков Александр Дмитриевич","email":"nad-0529@ya.ru","phone":"+79154516484","role":{"code":"cpds","name":"ЦПДС"},"department":{"id":113,"name":"ЦПДС","short_name":"ЦПДС"},"authored_projects_count":1},{"id":118,"full_name":"Олимпиев Александр Владимирович","email":"sasha-madi@yandex.ru","phone":"+79169500805","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":58,"name":"Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»","short_name":"УЭРиБТ"},"authored_projects_count":0},{"id":110,"full_name":"Панина Светлана Анатольевна","email":"panina.sa@rut-miit.ru","phone":"+79262471861","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":100,"name":"Кафедра «Теория права, гражданское право и гражданский процесс» Юридического института","short_name":"ТПиГП"},"authored_projects_count":0},{"id":121,"full_name":"Панова Марина Вячеславовна","email":"mvpanova@yandex.ru","phone":"+79651646177","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":104,"name":"Академия гражданской авиации","short_name":"АГА"},"authored_projects_count":0},{"id":20,"full_name":"Парамонов Михаил Александрович","email":"mixas9796@gmail.com","phone":"89653223575","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":18,"name":"Институт пути, строительства и сооружений","short_name":"ИПСС"},"authored_projects_count":53},{"id":47,"full_name":"Парулева Ирина Валентиновна","email":"paruleva@yandex.ru","phone":"+79152580496","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":44,"name":"Кафедра «Управление безопасностью в техносфере»","short_name":"УБТ"},"authored_projects_count":15},{"id":46,"full_name":"Пашуков Артём Валерьевич","email":"art_pash@mail.ru","phone":"+79817517982","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":38,"name":"Кафедра «Автоматика, телемеханика и связь на железнодорожном транспорте»","short_name":"АТСнаЖТ"},"authored_projects_count":54},{"id":135,"full_name":"Петухов Григорий Сергеевич","email":"test1@emiit.ru","phone":"","role":{"code":"student","name":"Студент"},"department":null,"authored_projects_count":0},{"id":129,"full_name":"Плетнев Дмитрий Сергеевич","email":"pletnyov7@mail.ru","phone":"+79308573377","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":49,"name":"Кафедра «Электроэнергетика транспорта»","short_name":"ЭЭТ"},"authored_projects_count":1},{"id":127,"full_name":"Подлеснова Дарья Николаевна","email":"dariapodlesnova@yandex.ru","phone":"+79253444991","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":18,"name":"Институт пути, строительства и сооружений","short_name":"ИПСС"},"authored_projects_count":11},{"id":41,"full_name":"Поляков Андрей Дмитриевич","email":"polyakov-ad@rut-miit.ru","phone":"+79036841816","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":63,"name":"Кафедра «Лингвистика»","short_name":"Лин"},"authored_projects_count":0},{"id":80,"full_name":"Прасол Анастасия Александровна","email":"prasoll@mail.ru","phone":"+79031840368","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":18,"name":"Институт пути, строительства и сооружений","short_name":"ИПСС"},"authored_projects_count":13},{"id":128,"full_name":"Прохорова Инна Сергеевна","email":"isp-kim@yandex.ru","phone":"+79161811605","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":46,"name":"Кафедра «Управление инновациями на транспорте»","short_name":"УИТ"},"authored_projects_count":6},{"id":37,"full_name":"Разумовский Кирилл Андреевич","email":"razumovskiy.ka@rut-miit.ru","phone":"+7 9151900937","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":69,"name":"Кафедра «Экономика, организация производства и менеджмент»","short_name":"ЭОПМ"},"authored_projects_count":6},{"id":104,"full_name":"Рожновская Элеонора Игоревна","email":"rozhnovskaya.ei@rut-miit.ru","phone":"+79932780598","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":99,"name":"Кафедра «Таможенное право и организация таможенного дела»","short_name":"ТПиОТД"},"authored_projects_count":15},{"id":13,"full_name":"Розов Василий Владимирович","email":"zavlabrozov@gmail.com","phone":"+79168063802","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":8,"name":"Академия водного транспорта","short_name":"АВТ"},"authored_projects_count":0},{"id":70,"full_name":"Рудакова Елена Николаевна","email":"rudakova-en@rut-miit.ru","phone":"+79161416123","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":94,"name":"Юридический институт","short_name":"ЮИ"},"authored_projects_count":0},{"id":78,"full_name":"Рыбаков Павел Валерьевич","email":"rybakov.sc@mail.ru","phone":"+7-916-907-16-81","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":57,"name":"Кафедра «Управление транспортным бизнесом и интеллектуальные системы»","short_name":"УТБиИС"},"authored_projects_count":0},{"id":15,"full_name":"Рябчик Татьяна Анатольевна","email":"Rybchik05@mail.ru","phone":"+79164118651","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":18,"name":"Институт пути, строительства и сооружений","short_name":"ИПСС"},"authored_projects_count":1},{"id":105,"full_name":"Сабирова Алсу Ягфаровна","email":"sabirova.ai@rut-miit.ru","phone":"+79775490120","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":99,"name":"Кафедра «Таможенное право и организация таможенного дела»","short_name":"ТПиОТД"},"authored_projects_count":0},{"id":69,"full_name":"Семёнушков Александр Валентинович","email":"SemyonushkovAV@gmail.com","phone":"89213768050","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":56,"name":"Кафедра «Логистические транспортные системы и технологии»","short_name":"ЛТСТ"},"authored_projects_count":1},{"id":79,"full_name":"Семерикова Мария Евгеньевна","email":"semerikova-me@rut-miit.ru","phone":"+79154345320","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":60,"name":"Кафедра «Цифровые технологии управления транспортными процессами»","short_name":"ЦТУТП"},"authored_projects_count":0},{"id":134,"full_name":"Семин Михаил Михайлович","email":"test@emiit.ru","phone":"","role":{"code":"student","name":"Студент"},"department":null,"authored_projects_count":0},{"id":122,"full_name":"Сергеев Иван Константинович","email":"sergeev.workmail@yandex.ru","phone":"+79636389682","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":39,"name":"Кафедра «Вагоны и вагонное хозяйство»","short_name":"ВВХ"},"authored_projects_count":17},{"id":103,"full_name":"Сидоров Артём Юрьевич","email":"artem.home.04@gmail.com","phone":"89150006154","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":53,"name":"Кафедра «Железнодорожные станции и транспортные узлы»","short_name":"ЖДСТУ"},"authored_projects_count":17},{"id":68,"full_name":"Синицына Анна Сергеевна","email":"sinitsyna_as@rut-miit.ru","phone":"+79859283380","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":56,"name":"Кафедра «Логистические транспортные системы и технологии»","short_name":"ЛТСТ"},"authored_projects_count":0},{"id":32,"full_name":"Смагина Виктория Игоревна","email":"smagina-vi@rut-miit.ru","phone":"+79267064462","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":71,"name":"Кафедра «Экономика труда и управление человеческими ресурсами»","short_name":"ЭТиУЧР"},"authored_projects_count":19},{"id":8,"full_name":"Смирнова Жанна Владимировна","email":"zh.s.miit@gmail.com","phone":"+79262490047","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":61,"name":"Институт экономики и финансов","short_name":"ИЭФ"},"authored_projects_count":0},{"id":24,"full_name":"Смирнова Жанна Владимировна","email":"smirnova-zhv@rut-miit.ru","phone":"+79262490047","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":61,"name":"Институт экономики и финансов","short_name":"ИЭФ"},"authored_projects_count":11},{"id":63,"full_name":"Степанова Дарья Владимировна","email":"stepanova-dv@rut-miit.ru","phone":"89253401095","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":56,"name":"Кафедра «Логистические транспортные системы и технологии»","short_name":"ЛТСТ"},"authored_projects_count":0},{"id":123,"full_name":"Сугоровский Антон Васильевич","email":"gthdsq555@yandex.ru","phone":"89523871499","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":58,"name":"Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»","short_name":"УЭРиБТ"},"authored_projects_count":10},{"id":124,"full_name":"Сугоровский Артём Васильевич","email":"c123945@yandex.ru","phone":"79602855139","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":58,"name":"Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»","short_name":"УЭРиБТ"},"authored_projects_count":9},{"id":130,"full_name":"Тарусов Роман Вячеславович","email":"tarusovr@mail.ru","phone":"+79161565683","role":{"code":"cpds","name":"ЦПДС"},"department":{"id":113,"name":"ЦПДС","short_name":"ЦПДС"},"authored_projects_count":0},{"id":38,"full_name":"Титов Руслан Анатольевич","email":"titov-ra@rut-miit.ru","phone":"+79252969534","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":70,"name":"Кафедра «Экономика транспортной инфраструктуры и управление строительным бизнесом»","short_name":"ЭТИиУСБ"},"authored_projects_count":19},{"id":71,"full_name":"Титова Наталья Константиновна","email":"nk_titova88@mail.ru","phone":"+79169170549","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":94,"name":"Юридический институт","short_name":"ЮИ"},"authored_projects_count":2},{"id":19,"full_name":"Ушакова Анастасия Романовна","email":"ushakova-ar@rut-miit.ru","phone":"+79817115161","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":50,"name":"Институт управления и цифровых технологий","short_name":"ИЖТ (ИУЦТ)"},"authored_projects_count":0},{"id":34,"full_name":"Фионова Карина Вячеславовна","email":"fionova-kv@rut-miit.ru","phone":"+79645914470","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":71,"name":"Кафедра «Экономика труда и управление человеческими ресурсами»","short_name":"ЭТиУЧР"},"authored_projects_count":1},{"id":111,"full_name":"Химич Татьяна Михайловна","email":"khimich.tm@rut-miit.ru","phone":"+79057807461","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":100,"name":"Кафедра «Теория права, гражданское право и гражданский процесс» Юридического института","short_name":"ТПиГП"},"authored_projects_count":0},{"id":74,"full_name":"Царева Елена Александровна","email":"Tsareva.ea@rut-miit.ru","phone":"+79134111611","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":102,"name":"Кафедра «Уголовное право, уголовный процесс и правоохранительная деятельность» Юридического института","short_name":"УПиПД"},"authored_projects_count":6},{"id":67,"full_name":"Цыганова Наталия Алексеевна","email":"Dze.panda@gmail.com","phone":"+79854134589","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":52,"name":"Кафедра «Вычислительные системы, сети и информационная безопасность»","short_name":"ВССиИБ"},"authored_projects_count":0},{"id":108,"full_name":"Чеботарев Владимир Евгеньевич","email":"chebotarev-ve@rut-miit.ru","phone":"+79163091475","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":96,"name":"Кафедра «Морское право и международное право» Юридического института","short_name":"МП"},"authored_projects_count":2},{"id":33,"full_name":"Черникова Елена Олеговна","email":"chernikova-eo@rut-miit.ru","phone":"+79153957235","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":63,"name":"Кафедра «Лингвистика»","short_name":"Лин"},"authored_projects_count":5},{"id":126,"full_name":"Шаповалов Артур Геннадьевич","email":"shapovalov.ag@rut-miit.ru","phone":"+ 7 9267168356","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":97,"name":"Кафедра «Правовое обеспечение государственного управления и экономики» Юридического института","short_name":"ПОГУиЭ"},"authored_projects_count":2},{"id":11,"full_name":"Шационок Павел Васильевич","email":"p.shatsionok@miit-ief.ru","phone":"+7 9055790238","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":62,"name":"Кафедра «Информационные системы цифровой экономики»","short_name":"ИСЦЭ"},"authored_projects_count":10},{"id":120,"full_name":"Швыдченко Татьяна Алексеевна","email":"sazonowata@gmail.com","phone":"+79991114698","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":27,"name":"Кафедра «Проектирование и строительство железных дорог»","short_name":"ПСЖД"},"authored_projects_count":8},{"id":114,"full_name":"Юркова Юлия Николаевна","email":"yulia.yurkova@list.ru","phone":"+79160406661","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":18,"name":"Институт пути, строительства и сооружений","short_name":"ИПСС"},"authored_projects_count":6},{"id":51,"full_name":"Ягодкин Максим Викторович","email":"ymv.21@mail.ru","phone":"+79932285665","role":{"code":"department_validator","name":"Представитель кафедры"},"department":{"id":43,"name":"Кафедра «Технология транспортного машиностроения и ремонта подвижного состава»","short_name":"ТТМиРПС"},"authored_projects_count":0},{"id":36,"full_name":"Янев Живко -","email":"janevzhivkomiit@yandex.ru","phone":"+79151704281","role":{"code":"institute_validator","name":"Ответственный от института"},"department":{"id":50,"name":"Институт управления и цифровых технологий","short_name":"ИЖТ (ИУЦТ)"},"authored_projects_count":13},{"id":132,"full_name":"Япаскурт Олег Васильевич","email":"ov@yapaskurt.ru","phone":"+79250259690","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":106,"name":"Высшая инженерная школа","short_name":"ВИШ"},"authored_projects_count":6},{"id":45,"full_name":"Ярина Евгения Владиславовна","email":"yarina.ev@rut-miit.ru","phone":"+79037448132","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":71,"name":"Кафедра «Экономика труда и управление человеческими ресурсами»","short_name":"ЭТиУЧР"},"authored_projects_count":0},{"id":139,"full_name":"Ясыбаш Герман Николаевич","email":"test5@emiit.ru","phone":"","role":{"code":"student","name":"Студент"},"department":null,"authored_projects_count":0},{"id":55,"full_name":"Яшина Анна Сергеевна","email":"yashina-as@rut-miit.ru","phone":"+79168008932","role":{"code":"mentor","name":"Сотрудник"},"department":{"id":68,"name":"Кафедра «Экономика и управление на транспорте»","short_name":"ЭУТ"},"authored_projects_count":2}]
+[
+  {
+    "id": 125,
+    "full_name": "Test123 Test123 Test123",
+    "email": "priem@edu.emiit.ru",
+    "phone": "89435323525",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 66,
+      "name": "Кафедра «Современные технологии социально-экономического образования»",
+      "short_name": "СТСЭО"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 16,
+    "full_name": "Агафонова Ирина Владимировна",
+    "email": "murmurashki@gmail.com",
+    "phone": "+79160760206",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 37,
+      "name": "Институт транспортной техники и систем управления",
+      "short_name": "ИЖТ (ИТТСУ)"
+    },
+    "authored_projects_count": 27
+  },
+  {
+    "id": 116,
+    "full_name": "Аль Али Насер А Н",
+    "email": "alali-naser@rut-miit.ru",
+    "phone": "+79175736970",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 96,
+      "name": "Кафедра «Морское право и международное право» Юридического института",
+      "short_name": "МП"
+    },
+    "authored_projects_count": 1
+  },
+  {
+    "id": 18,
+    "full_name": "Андриянова Наталья Александровна",
+    "email": "nalarkova@mail.ru",
+    "phone": "+79265778505",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 50,
+      "name": "Институт управления и цифровых технологий",
+      "short_name": "ИЖТ (ИУЦТ)"
+    },
+    "authored_projects_count": 8
+  },
+  {
+    "id": 12,
+    "full_name": "Аристова Дарья Александровна",
+    "email": "daria_a_aristova@list.ru",
+    "phone": "79165563309",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 64,
+      "name": "Кафедра «Международный финансовый и управленческий учет»",
+      "short_name": "МФиУУ"
+    },
+    "authored_projects_count": 14
+  },
+  {
+    "id": 64,
+    "full_name": "Балмакова Ксения Юрьевна",
+    "email": "avtomonova-ky@rut-miit.ru",
+    "phone": "+79099670549",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 55,
+      "name": "Кафедра «Логистика и управление транспортными системами»",
+      "short_name": "ЛиУТС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 109,
+    "full_name": "Беличенко Римма Владимировна",
+    "email": "belichenko.rv@rut-miit.ru",
+    "phone": "+79005665334",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 102,
+      "name": "Кафедра «Уголовное право, уголовный процесс и правоохранительная деятельность» Юридического института",
+      "short_name": "УПиПД"
+    },
+    "authored_projects_count": 3
+  },
+  {
+    "id": 22,
+    "full_name": "Боброва Елена Викторовна",
+    "email": "oumnique@gmail.com",
+    "phone": "+79165138133",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 13,
+      "name": "Институт международных транспортных коммуникаций",
+      "short_name": "ИМТК"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 4,
+    "full_name": "Боков Константин Андреевич",
+    "email": "society95@bk.ru",
+    "phone": "+79296245095",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 65,
+    "full_name": "Боландова Юлия Константиновна",
+    "email": "jbolandova@gmail.com",
+    "phone": "+79166832899",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 59,
+      "name": "Кафедра «Химия и инженерная экология»",
+      "short_name": "ХиИЭ"
+    },
+    "authored_projects_count": 9
+  },
+  {
+    "id": 48,
+    "full_name": "Болотина Александра Борисовна",
+    "email": "abbolotina-work@yandex.ru",
+    "phone": "+79032173431",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 40,
+      "name": "Кафедра «Машиноведение, проектирование, стандартизация и сертификация»",
+      "short_name": "МПСиС"
+    },
+    "authored_projects_count": 12
+  },
+  {
+    "id": 112,
+    "full_name": "Васильева ильева Елена Юрьевна",
+    "email": "Vasileva.ei@rut-miit.ru",
+    "phone": "+79036198199",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 99,
+      "name": "Кафедра «Таможенное право и организация таможенного дела»",
+      "short_name": "ТПиОТД"
+    },
+    "authored_projects_count": 1
+  },
+  {
+    "id": 60,
+    "full_name": "Веселкова Марина Григорьевна",
+    "email": "veselkova110598@gmail.com",
+    "phone": "+79253468215",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 56,
+      "name": "Кафедра «Логистические транспортные системы и технологии»",
+      "short_name": "ЛТСТ"
+    },
+    "authored_projects_count": 2
+  },
+  {
+    "id": 137,
+    "full_name": "Власкин Вадим Викторович",
+    "email": "test2@emiit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 119,
+    "full_name": "Воронина Елена Ивановна",
+    "email": "EIVoronina753@yandex.ru",
+    "phone": "+79263907535",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 27,
+      "name": "Кафедра «Проектирование и строительство железных дорог»",
+      "short_name": "ПСЖД"
+    },
+    "authored_projects_count": 3
+  },
+  {
+    "id": 81,
+    "full_name": "Галеева Полина Эдуардовна",
+    "email": "polinagaleeva03@mail.ru",
+    "phone": "+79002204412",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 18,
+      "name": "Институт пути, строительства и сооружений",
+      "short_name": "ИПСС"
+    },
+    "authored_projects_count": 13
+  },
+  {
+    "id": 53,
+    "full_name": "герасимов михаил михайлович",
+    "email": "germihmih@yandex.ru",
+    "phone": "+79629993802",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 70,
+      "name": "Кафедра «Экономика транспортной инфраструктуры и управление строительным бизнесом»",
+      "short_name": "ЭТИиУСБ"
+    },
+    "authored_projects_count": 6
+  },
+  {
+    "id": 136,
+    "full_name": "Гинда Данила Александрович",
+    "email": "ginda.da@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 23,
+    "full_name": "Глыва Анна Валерьевна",
+    "email": "anna.glyva@mail.ru",
+    "phone": "+79265639947",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 61,
+      "name": "Институт экономики и финансов",
+      "short_name": "ИЭФ"
+    },
+    "authored_projects_count": 13
+  },
+  {
+    "id": 49,
+    "full_name": "Горелова Мария Витальевна",
+    "email": "marusalen@mail.ru",
+    "phone": "+79197250849",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 41,
+      "name": "Кафедра «Наземные транспортно-технологические средства»",
+      "short_name": "НТТС"
+    },
+    "authored_projects_count": 30
+  },
+  {
+    "id": 44,
+    "full_name": "Горохов Дмитрий Александрович",
+    "email": "gorokhov.da@rut-miit.ru",
+    "phone": "+79153305448",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 9
+  },
+  {
+    "id": 14,
+    "full_name": "Григорьев Павел Александрович",
+    "email": "grigorievpavel1996@yandex.ru",
+    "phone": "+79154340724",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 37,
+      "name": "Институт транспортной техники и систем управления",
+      "short_name": "ИЖТ (ИТТСУ)"
+    },
+    "authored_projects_count": 300
+  },
+  {
+    "id": 50,
+    "full_name": "Григорьев Павел Сергеевич",
+    "email": "grigorev.p@gmail.com",
+    "phone": "+79055491551",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 48,
+      "name": "Кафедра «Электропоезда и локомотивы»",
+      "short_name": "ЭиЛ"
+    },
+    "authored_projects_count": 29
+  },
+  {
+    "id": 106,
+    "full_name": "Гришко Наталья Александровна",
+    "email": "grish.nat88@ya.ru",
+    "phone": "+79036416325",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 102,
+      "name": "Кафедра «Уголовное право, уголовный процесс и правоохранительная деятельность» Юридического института",
+      "short_name": "УПиПД"
+    },
+    "authored_projects_count": 1
+  },
+  {
+    "id": 52,
+    "full_name": "Данилина Мария Геннадьевна",
+    "email": "danilina-mg@rut-miit.ru",
+    "phone": "+79264304706",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 75,
+    "full_name": "Деникаева Екатерина Александровна",
+    "email": "carkova87@mail.ru",
+    "phone": "+79653318083",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 105,
+      "name": "Академия дорожного хозяйства",
+      "short_name": "АДХ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 26,
+    "full_name": "Дроздова Елена Анатольевна",
+    "email": "gorbunovala@yandex.ru",
+    "phone": "+79153326261",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 94,
+      "name": "Юридический институт",
+      "short_name": "ЮИ"
+    },
+    "authored_projects_count": 4
+  },
+  {
+    "id": 140,
+    "full_name": "Егоров Артём Андреевич",
+    "email": "test6@emiit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 31,
+    "full_name": "Егоров Сергей Владимирович",
+    "email": "egorov@rut-miit.ru",
+    "phone": "+79265624239",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 62,
+      "name": "Кафедра «Информационные системы цифровой экономики»",
+      "short_name": "ИСЦЭ"
+    },
+    "authored_projects_count": 14
+  },
+  {
+    "id": 39,
+    "full_name": "Ефимова Ольга Владимировна",
+    "email": "ovefimova@mail.ru",
+    "phone": "79164353861",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 69,
+      "name": "Кафедра «Экономика, организация производства и менеджмент»",
+      "short_name": "ЭОПМ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 42,
+    "full_name": "Жаков Владимир Владимирович",
+    "email": "v.jakov@yandex.ru",
+    "phone": "+79104553235",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 17
+  },
+  {
+    "id": 66,
+    "full_name": "Ждакаев Сергей Олегович",
+    "email": "zhdakaev-so@rut-miit.ru",
+    "phone": "+79067403582",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 58,
+      "name": "Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»",
+      "short_name": "УЭРиБТ"
+    },
+    "authored_projects_count": 20
+  },
+  {
+    "id": 107,
+    "full_name": "Жмылев Николай Андреевич",
+    "email": "zhmylev.na@rut-miit.ru",
+    "phone": "+79169052757",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 99,
+      "name": "Кафедра «Таможенное право и организация таможенного дела»",
+      "short_name": "ТПиОТД"
+    },
+    "authored_projects_count": 9
+  },
+  {
+    "id": 131,
+    "full_name": "Жук Анастасия Андреевна",
+    "email": "a.zhuk@rut.digital",
+    "phone": "+79803638304",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 106,
+      "name": "Высшая инженерная школа",
+      "short_name": "ВИШ"
+    },
+    "authored_projects_count": 4
+  },
+  {
+    "id": 138,
+    "full_name": "Завьялов Илья Андреевич",
+    "email": "test3@emiit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 58,
+    "full_name": "Засорина Галина Валерьевна",
+    "email": "Zasorina-gv@rut-miit.ru",
+    "phone": "+79150608137",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 58,
+      "name": "Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»",
+      "short_name": "УЭРиБТ"
+    },
+    "authored_projects_count": 8
+  },
+  {
+    "id": 2,
+    "full_name": "Иван Костюлин Алексеевич",
+    "email": "ief07@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 61,
+      "name": "Институт экономики и финансов",
+      "short_name": "ИЭФ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 30,
+    "full_name": "Иванов Артем Владимирович",
+    "email": "ivanov-av@rut-miit.ru",
+    "phone": "+79851142851",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 67,
+      "name": "Кафедра «Финансы и кредит»",
+      "short_name": "ФК"
+    },
+    "authored_projects_count": 34
+  },
+  {
+    "id": 5,
+    "full_name": "Иванов Иван Иванович",
+    "email": "admin@emiit.ru",
+    "phone": "+79999999999",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 61,
+      "name": "Институт экономики и финансов",
+      "short_name": "ИЭФ"
+    },
+    "authored_projects_count": 1
+  },
+  {
+    "id": 21,
+    "full_name": "Иванова Мария Викторовна",
+    "email": "Ivanova.M.V.I@yandex.com",
+    "phone": "+79151294970",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 13,
+      "name": "Институт международных транспортных коммуникаций",
+      "short_name": "ИМТК"
+    },
+    "authored_projects_count": 19
+  },
+  {
+    "id": 117,
+    "full_name": "Ивлиева Ксения Васильевна",
+    "email": "kvi-ltst@rambler.ru",
+    "phone": "+79035398776",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 60,
+      "name": "Кафедра «Цифровые технологии управления транспортными процессами»",
+      "short_name": "ЦТУТП"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 10,
+    "full_name": "Ишханян Маргарита Владимировна",
+    "email": "ishkhanyan-mv@rut-miit.ru",
+    "phone": "+79773500455",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 61,
+      "name": "Институт экономики и финансов",
+      "short_name": "ИЭФ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 113,
+    "full_name": "Карпухина Александра Александровна",
+    "email": "aleks.karpukhina@mail.ru",
+    "phone": "+79774883996",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 18,
+      "name": "Институт пути, строительства и сооружений",
+      "short_name": "ИПСС"
+    },
+    "authored_projects_count": 26
+  },
+  {
+    "id": 3,
+    "full_name": "Касымжанова Самира Рустамовна",
+    "email": "samirakas1507@mail.ru",
+    "phone": "+79169503988",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": null,
+    "authored_projects_count": 1
+  },
+  {
+    "id": 115,
+    "full_name": "Кобзева Екатерина Ивановна",
+    "email": "Keti_v_7@mail.ru",
+    "phone": "+79251458959",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 100,
+      "name": "Кафедра «Теория права, гражданское право и гражданский процесс» Юридического института",
+      "short_name": "ТПиГП"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 54,
+    "full_name": "Кожевникова Алла Николаевна",
+    "email": "kozhevnikova.an@rut-miit.ru",
+    "phone": "+79778924415",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 17,
+    "full_name": "Козловцева Екатерина Александровна",
+    "email": "ekkozlovtseva@mail.ru",
+    "phone": "89772794761",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 106,
+      "name": "Высшая инженерная школа",
+      "short_name": "ВИШ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 59,
+    "full_name": "Конарева Наталья Андреевна",
+    "email": "konareva-na@rut-miit.ru",
+    "phone": "+79267033684",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 56,
+      "name": "Кафедра «Логистические транспортные системы и технологии»",
+      "short_name": "ЛТСТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 43,
+    "full_name": "Королькова Наталья Вячеславовна",
+    "email": "shulgina-nv@yandex.ru",
+    "phone": "+79175180740",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 10
+  },
+  {
+    "id": 61,
+    "full_name": "Косогляд Роман Александрович",
+    "email": "logistickr@googlemail.com",
+    "phone": "+79035684032",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 56,
+      "name": "Кафедра «Логистические транспортные системы и технологии»",
+      "short_name": "ЛТСТ"
+    },
+    "authored_projects_count": 6
+  },
+  {
+    "id": 28,
+    "full_name": "Костюлин Иван Алексеевич",
+    "email": "kostyulin-ia@rut-miit.ru",
+    "phone": "+79257816485",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 66,
+      "name": "Кафедра «Современные технологии социально-экономического образования»",
+      "short_name": "СТСЭО"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 40,
+    "full_name": "Костюлин Иван Алексеевич",
+    "email": "ivan-kostyulin@yandex.ru",
+    "phone": "+79257816485",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 66,
+      "name": "Кафедра «Современные технологии социально-экономического образования»",
+      "short_name": "СТСЭО"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 25,
+    "full_name": "Краснов Евгений Сергеевич",
+    "email": "krasnov-es@rut-miit.ru",
+    "phone": "+79378807746",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 104,
+      "name": "Академия гражданской авиации",
+      "short_name": "АГА"
+    },
+    "authored_projects_count": 3
+  },
+  {
+    "id": 29,
+    "full_name": "Лавров Илья Михайлович",
+    "email": "lavrov-im@rut-miit.ru",
+    "phone": "+79168289997",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 67,
+      "name": "Кафедра «Финансы и кредит»",
+      "short_name": "ФК"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 62,
+    "full_name": "Лахметкина Наталья Юрьевна",
+    "email": "lahmetkina-ny@rut-miit.ru",
+    "phone": "+79032584898",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 56,
+      "name": "Кафедра «Логистические транспортные системы и технологии»",
+      "short_name": "ЛТСТ"
+    },
+    "authored_projects_count": 3
+  },
+  {
+    "id": 9,
+    "full_name": "Логинова Людмила Николаевна",
+    "email": "ludmilanv@mail.ru",
+    "phone": "+79191092594",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 37,
+      "name": "Институт транспортной техники и систем управления",
+      "short_name": "ИЖТ (ИТТСУ)"
+    },
+    "authored_projects_count": 25
+  },
+  {
+    "id": 35,
+    "full_name": "Макеева Елена Захаровна",
+    "email": "pk_ief_miit@mail.ru",
+    "phone": "+79166359717",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 64,
+      "name": "Кафедра «Международный финансовый и управленческий учет»",
+      "short_name": "МФиУУ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 72,
+    "full_name": "Мамина Оксана Ивановна",
+    "email": "mamina.oi@rut-miit.ru",
+    "phone": "+79162875477",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 97,
+      "name": "Кафедра «Правовое обеспечение государственного управления и экономики» Юридического института",
+      "short_name": "ПОГУиЭ"
+    },
+    "authored_projects_count": 8
+  },
+  {
+    "id": 73,
+    "full_name": "Маркунцова Ирина Александровна",
+    "email": "markuntsova.ia@rut-miit.ru",
+    "phone": "+7 (916) 113 56 68",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 102,
+      "name": "Кафедра «Уголовное право, уголовный процесс и правоохранительная деятельность» Юридического института",
+      "short_name": "УПиПД"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 77,
+    "full_name": "Можейко Данила Андреевич",
+    "email": "mozheyko.da@rut-miit.ru",
+    "phone": "+79037227743",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 59,
+      "name": "Кафедра «Химия и инженерная экология»",
+      "short_name": "ХиИЭ"
+    },
+    "authored_projects_count": 5
+  },
+  {
+    "id": 76,
+    "full_name": "Мусатов Дмитрий Вадимович",
+    "email": "musatov-dv@rut-miit.ru",
+    "phone": "79851092021",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 55,
+      "name": "Кафедра «Логистика и управление транспортными системами»",
+      "short_name": "ЛиУТС"
+    },
+    "authored_projects_count": 3
+  },
+  {
+    "id": 7,
+    "full_name": "Новиков Александр Дмитриевич",
+    "email": "nad-0529@ya.ru",
+    "phone": "+79154516484",
+    "role": {
+      "code": "cpds",
+      "name": "ЦПДС"
+    },
+    "department": {
+      "id": 113,
+      "name": "ЦПДС",
+      "short_name": "ЦПДС"
+    },
+    "authored_projects_count": 1
+  },
+  {
+    "id": 118,
+    "full_name": "Олимпиев Александр Владимирович",
+    "email": "sasha-madi@yandex.ru",
+    "phone": "+79169500805",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 58,
+      "name": "Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»",
+      "short_name": "УЭРиБТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 110,
+    "full_name": "Панина Светлана Анатольевна",
+    "email": "panina.sa@rut-miit.ru",
+    "phone": "+79262471861",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 100,
+      "name": "Кафедра «Теория права, гражданское право и гражданский процесс» Юридического института",
+      "short_name": "ТПиГП"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 121,
+    "full_name": "Панова Марина Вячеславовна",
+    "email": "mvpanova@yandex.ru",
+    "phone": "+79651646177",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 104,
+      "name": "Академия гражданской авиации",
+      "short_name": "АГА"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 20,
+    "full_name": "Парамонов Михаил Александрович",
+    "email": "mixas9796@gmail.com",
+    "phone": "89653223575",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 18,
+      "name": "Институт пути, строительства и сооружений",
+      "short_name": "ИПСС"
+    },
+    "authored_projects_count": 82
+  },
+  {
+    "id": 47,
+    "full_name": "Парулева Ирина Валентиновна",
+    "email": "paruleva@yandex.ru",
+    "phone": "+79152580496",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 44,
+      "name": "Кафедра «Управление безопасностью в техносфере»",
+      "short_name": "УБТ"
+    },
+    "authored_projects_count": 15
+  },
+  {
+    "id": 46,
+    "full_name": "Пашуков Артём Валерьевич",
+    "email": "art_pash@mail.ru",
+    "phone": "+79817517982",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 38,
+      "name": "Кафедра «Автоматика, телемеханика и связь на железнодорожном транспорте»",
+      "short_name": "АТСнаЖТ"
+    },
+    "authored_projects_count": 54
+  },
+  {
+    "id": 135,
+    "full_name": "Петухов Григорий Сергеевич",
+    "email": "test1@emiit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 129,
+    "full_name": "Плетнев Дмитрий Сергеевич",
+    "email": "pletnyov7@mail.ru",
+    "phone": "+79308573377",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 49,
+      "name": "Кафедра «Электроэнергетика транспорта»",
+      "short_name": "ЭЭТ"
+    },
+    "authored_projects_count": 39
+  },
+  {
+    "id": 127,
+    "full_name": "Подлеснова Дарья Николаевна",
+    "email": "dariapodlesnova@yandex.ru",
+    "phone": "+79253444991",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 18,
+      "name": "Институт пути, строительства и сооружений",
+      "short_name": "ИПСС"
+    },
+    "authored_projects_count": 11
+  },
+  {
+    "id": 41,
+    "full_name": "Поляков Андрей Дмитриевич",
+    "email": "polyakov-ad@rut-miit.ru",
+    "phone": "+79036841816",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 63,
+      "name": "Кафедра «Лингвистика»",
+      "short_name": "Лин"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 80,
+    "full_name": "Прасол Анастасия Александровна",
+    "email": "prasoll@mail.ru",
+    "phone": "+79031840368",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 18,
+      "name": "Институт пути, строительства и сооружений",
+      "short_name": "ИПСС"
+    },
+    "authored_projects_count": 20
+  },
+  {
+    "id": 128,
+    "full_name": "Прохорова Инна Сергеевна",
+    "email": "isp-kim@yandex.ru",
+    "phone": "+79161811605",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 46,
+      "name": "Кафедра «Управление инновациями на транспорте»",
+      "short_name": "УИТ"
+    },
+    "authored_projects_count": 6
+  },
+  {
+    "id": 37,
+    "full_name": "Разумовский Кирилл Андреевич",
+    "email": "razumovskiy.ka@rut-miit.ru",
+    "phone": "+7 9151900937",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 69,
+      "name": "Кафедра «Экономика, организация производства и менеджмент»",
+      "short_name": "ЭОПМ"
+    },
+    "authored_projects_count": 6
+  },
+  {
+    "id": 104,
+    "full_name": "Рожновская Элеонора Игоревна",
+    "email": "rozhnovskaya.ei@rut-miit.ru",
+    "phone": "+79932780598",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 99,
+      "name": "Кафедра «Таможенное право и организация таможенного дела»",
+      "short_name": "ТПиОТД"
+    },
+    "authored_projects_count": 15
+  },
+  {
+    "id": 13,
+    "full_name": "Розов Василий Владимирович",
+    "email": "zavlabrozov@gmail.com",
+    "phone": "+79168063802",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 8,
+      "name": "Академия водного транспорта",
+      "short_name": "АВТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 70,
+    "full_name": "Рудакова Елена Николаевна",
+    "email": "rudakova-en@rut-miit.ru",
+    "phone": "+79161416123",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 94,
+      "name": "Юридический институт",
+      "short_name": "ЮИ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 78,
+    "full_name": "Рыбаков Павел Валерьевич",
+    "email": "rybakov.sc@mail.ru",
+    "phone": "+7-916-907-16-81",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 57,
+      "name": "Кафедра «Управление транспортным бизнесом и интеллектуальные системы»",
+      "short_name": "УТБиИС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 15,
+    "full_name": "Рябчик Татьяна Анатольевна",
+    "email": "Rybchik05@mail.ru",
+    "phone": "+79164118651",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 18,
+      "name": "Институт пути, строительства и сооружений",
+      "short_name": "ИПСС"
+    },
+    "authored_projects_count": 1
+  },
+  {
+    "id": 105,
+    "full_name": "Сабирова Алсу Ягфаровна",
+    "email": "sabirova.ai@rut-miit.ru",
+    "phone": "+79775490120",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 99,
+      "name": "Кафедра «Таможенное право и организация таможенного дела»",
+      "short_name": "ТПиОТД"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 69,
+    "full_name": "Семёнушков Александр Валентинович",
+    "email": "SemyonushkovAV@gmail.com",
+    "phone": "89213768050",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 56,
+      "name": "Кафедра «Логистические транспортные системы и технологии»",
+      "short_name": "ЛТСТ"
+    },
+    "authored_projects_count": 3
+  },
+  {
+    "id": 79,
+    "full_name": "Семерикова Мария Евгеньевна",
+    "email": "semerikova-me@rut-miit.ru",
+    "phone": "+79154345320",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 60,
+      "name": "Кафедра «Цифровые технологии управления транспортными процессами»",
+      "short_name": "ЦТУТП"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 134,
+    "full_name": "Семин Михаил Михайлович",
+    "email": "test@emiit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 122,
+    "full_name": "Сергеев Иван Константинович",
+    "email": "sergeev.workmail@yandex.ru",
+    "phone": "+79636389682",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 39,
+      "name": "Кафедра «Вагоны и вагонное хозяйство»",
+      "short_name": "ВВХ"
+    },
+    "authored_projects_count": 19
+  },
+  {
+    "id": 103,
+    "full_name": "Сидоров Артём Юрьевич",
+    "email": "artem.home.04@gmail.com",
+    "phone": "89150006154",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 53,
+      "name": "Кафедра «Железнодорожные станции и транспортные узлы»",
+      "short_name": "ЖДСТУ"
+    },
+    "authored_projects_count": 17
+  },
+  {
+    "id": 68,
+    "full_name": "Синицына Анна Сергеевна",
+    "email": "sinitsyna_as@rut-miit.ru",
+    "phone": "+79859283380",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 56,
+      "name": "Кафедра «Логистические транспортные системы и технологии»",
+      "short_name": "ЛТСТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 32,
+    "full_name": "Смагина Виктория Игоревна",
+    "email": "smagina-vi@rut-miit.ru",
+    "phone": "+79267064462",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 71,
+      "name": "Кафедра «Экономика труда и управление человеческими ресурсами»",
+      "short_name": "ЭТиУЧР"
+    },
+    "authored_projects_count": 19
+  },
+  {
+    "id": 8,
+    "full_name": "Смирнова Жанна Владимировна",
+    "email": "zh.s.miit@gmail.com",
+    "phone": "+79262490047",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 61,
+      "name": "Институт экономики и финансов",
+      "short_name": "ИЭФ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 24,
+    "full_name": "Смирнова Жанна Владимировна",
+    "email": "smirnova-zhv@rut-miit.ru",
+    "phone": "+79262490047",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 61,
+      "name": "Институт экономики и финансов",
+      "short_name": "ИЭФ"
+    },
+    "authored_projects_count": 11
+  },
+  {
+    "id": 63,
+    "full_name": "Степанова Дарья Владимировна",
+    "email": "stepanova-dv@rut-miit.ru",
+    "phone": "89253401095",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 56,
+      "name": "Кафедра «Логистические транспортные системы и технологии»",
+      "short_name": "ЛТСТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 123,
+    "full_name": "Сугоровский Антон Васильевич",
+    "email": "gthdsq555@yandex.ru",
+    "phone": "89523871499",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 58,
+      "name": "Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»",
+      "short_name": "УЭРиБТ"
+    },
+    "authored_projects_count": 10
+  },
+  {
+    "id": 124,
+    "full_name": "Сугоровский Артём Васильевич",
+    "email": "c123945@yandex.ru",
+    "phone": "79602855139",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 58,
+      "name": "Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»",
+      "short_name": "УЭРиБТ"
+    },
+    "authored_projects_count": 9
+  },
+  {
+    "id": 130,
+    "full_name": "Тарусов Роман Вячеславович",
+    "email": "tarusovr@mail.ru",
+    "phone": "+79161565683",
+    "role": {
+      "code": "cpds",
+      "name": "ЦПДС"
+    },
+    "department": {
+      "id": 113,
+      "name": "ЦПДС",
+      "short_name": "ЦПДС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 38,
+    "full_name": "Титов Руслан Анатольевич",
+    "email": "titov-ra@rut-miit.ru",
+    "phone": "+79252969534",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 70,
+      "name": "Кафедра «Экономика транспортной инфраструктуры и управление строительным бизнесом»",
+      "short_name": "ЭТИиУСБ"
+    },
+    "authored_projects_count": 19
+  },
+  {
+    "id": 71,
+    "full_name": "Титова Наталья Константиновна",
+    "email": "nk_titova88@mail.ru",
+    "phone": "+79169170549",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 94,
+      "name": "Юридический институт",
+      "short_name": "ЮИ"
+    },
+    "authored_projects_count": 2
+  },
+  {
+    "id": 19,
+    "full_name": "Ушакова Анастасия Романовна",
+    "email": "ushakova-ar@rut-miit.ru",
+    "phone": "+79817115161",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 50,
+      "name": "Институт управления и цифровых технологий",
+      "short_name": "ИЖТ (ИУЦТ)"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 34,
+    "full_name": "Фионова Карина Вячеславовна",
+    "email": "fionova-kv@rut-miit.ru",
+    "phone": "+79645914470",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 71,
+      "name": "Кафедра «Экономика труда и управление человеческими ресурсами»",
+      "short_name": "ЭТиУЧР"
+    },
+    "authored_projects_count": 1
+  },
+  {
+    "id": 111,
+    "full_name": "Химич Татьяна Михайловна",
+    "email": "khimich.tm@rut-miit.ru",
+    "phone": "+79057807461",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 100,
+      "name": "Кафедра «Теория права, гражданское право и гражданский процесс» Юридического института",
+      "short_name": "ТПиГП"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 74,
+    "full_name": "Царева Елена Александровна",
+    "email": "Tsareva.ea@rut-miit.ru",
+    "phone": "+79134111611",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 102,
+      "name": "Кафедра «Уголовное право, уголовный процесс и правоохранительная деятельность» Юридического института",
+      "short_name": "УПиПД"
+    },
+    "authored_projects_count": 6
+  },
+  {
+    "id": 67,
+    "full_name": "Цыганова Наталия Алексеевна",
+    "email": "Dze.panda@gmail.com",
+    "phone": "+79854134589",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 52,
+      "name": "Кафедра «Вычислительные системы, сети и информационная безопасность»",
+      "short_name": "ВССиИБ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 108,
+    "full_name": "Чеботарев Владимир Евгеньевич",
+    "email": "chebotarev-ve@rut-miit.ru",
+    "phone": "+79163091475",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 96,
+      "name": "Кафедра «Морское право и международное право» Юридического института",
+      "short_name": "МП"
+    },
+    "authored_projects_count": 2
+  },
+  {
+    "id": 33,
+    "full_name": "Черникова Елена Олеговна",
+    "email": "chernikova-eo@rut-miit.ru",
+    "phone": "+79153957235",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 63,
+      "name": "Кафедра «Лингвистика»",
+      "short_name": "Лин"
+    },
+    "authored_projects_count": 5
+  },
+  {
+    "id": 126,
+    "full_name": "Шаповалов Артур Геннадьевич",
+    "email": "shapovalov.ag@rut-miit.ru",
+    "phone": "+ 7 9267168356",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 97,
+      "name": "Кафедра «Правовое обеспечение государственного управления и экономики» Юридического института",
+      "short_name": "ПОГУиЭ"
+    },
+    "authored_projects_count": 2
+  },
+  {
+    "id": 11,
+    "full_name": "Шационок Павел Васильевич",
+    "email": "p.shatsionok@miit-ief.ru",
+    "phone": "+7 9055790238",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 62,
+      "name": "Кафедра «Информационные системы цифровой экономики»",
+      "short_name": "ИСЦЭ"
+    },
+    "authored_projects_count": 10
+  },
+  {
+    "id": 120,
+    "full_name": "Швыдченко Татьяна Алексеевна",
+    "email": "sazonowata@gmail.com",
+    "phone": "+79991114698",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 27,
+      "name": "Кафедра «Проектирование и строительство железных дорог»",
+      "short_name": "ПСЖД"
+    },
+    "authored_projects_count": 8
+  },
+  {
+    "id": 114,
+    "full_name": "Юркова Юлия Николаевна",
+    "email": "yulia.yurkova@list.ru",
+    "phone": "+79160406661",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 18,
+      "name": "Институт пути, строительства и сооружений",
+      "short_name": "ИПСС"
+    },
+    "authored_projects_count": 6
+  },
+  {
+    "id": 51,
+    "full_name": "Ягодкин Максим Викторович",
+    "email": "ymv.21@mail.ru",
+    "phone": "+79932285665",
+    "role": {
+      "code": "department_validator",
+      "name": "Представитель кафедры"
+    },
+    "department": {
+      "id": 43,
+      "name": "Кафедра «Технология транспортного машиностроения и ремонта подвижного состава»",
+      "short_name": "ТТМиРПС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 36,
+    "full_name": "Янев Живко -",
+    "email": "janevzhivkomiit@yandex.ru",
+    "phone": "+79151704281",
+    "role": {
+      "code": "institute_validator",
+      "name": "Ответственный от института"
+    },
+    "department": {
+      "id": 50,
+      "name": "Институт управления и цифровых технологий",
+      "short_name": "ИЖТ (ИУЦТ)"
+    },
+    "authored_projects_count": 16
+  },
+  {
+    "id": 132,
+    "full_name": "Япаскурт Олег Васильевич",
+    "email": "ov@yapaskurt.ru",
+    "phone": "+79250259690",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 106,
+      "name": "Высшая инженерная школа",
+      "short_name": "ВИШ"
+    },
+    "authored_projects_count": 6
+  },
+  {
+    "id": 45,
+    "full_name": "Ярина Евгения Владиславовна",
+    "email": "yarina.ev@rut-miit.ru",
+    "phone": "+79037448132",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 71,
+      "name": "Кафедра «Экономика труда и управление человеческими ресурсами»",
+      "short_name": "ЭТиУЧР"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 139,
+    "full_name": "Ясыбаш Герман Николаевич",
+    "email": "test5@emiit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 55,
+    "full_name": "Яшина Анна Сергеевна",
+    "email": "yashina-as@rut-miit.ru",
+    "phone": "+79168008932",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 2
+  }
+]

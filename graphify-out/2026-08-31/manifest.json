@@ -1062,9 +1062,9 @@
     "semantic_hash": "9ecb11dea178a35524ab92e35004b248"
   },
   "teams/domain/study_group_import.py": {
-    "mtime": 1788000507.833551,
-    "seen": 1788000577.5005858,
-    "ast_hash": "7151ea0e8557bed0cac44c81668eb745",
+    "mtime": 1788000617.5987003,
+    "seen": 1788004221.9396358,
+    "ast_hash": "cb27c7b1c1e30dd6a037e784ab0c4c45",
     "semantic_hash": ""
   },
   "teams/domain/team_lobby.py": {
@@ -1308,9 +1308,9 @@
     "semantic_hash": ""
   },
   "teams/urls.py": {
-    "mtime": 1787999494.6672287,
-    "seen": 1788000577.5131116,
-    "ast_hash": "0d0ddc2ff99bf8e6d9ddea7b1037690e",
+    "mtime": 1788004147.7640934,
+    "seen": 1788004221.951185,
+    "ast_hash": "03d66939984be4d164663d589db4e8ad",
     "semantic_hash": ""
   },
   "teams/views.py": {
@@ -1584,9 +1584,9 @@
     "semantic_hash": "d41d8cd98f00b204e9800998ecf8427e"
   },
   "tests/teams/management/commands/test_import_study_groups_from_contingent.py": {
-    "mtime": 1788000533.7917342,
-    "seen": 1788000577.5221372,
-    "ast_hash": "910838438e60675d065ce4919aa0050c",
+    "mtime": 1788000617.315401,
+    "seen": 1788004221.961727,
+    "ast_hash": "5807aa71e42bd265b5f5a58b6d7954ff",
     "semantic_hash": ""
   },
   "tests/teams/test_direction_domain.py": {
@@ -1992,9 +1992,9 @@
     "semantic_hash": ""
   },
   "docs/frontend/mentor_groups.md": {
-    "mtime": 1787999548.597363,
-    "seen": 1788000577.52967,
-    "ast_hash": "6240eea9de36de8b5f190672f331a289",
+    "mtime": 1788004148.5980859,
+    "seen": 1788004221.9689016,
+    "ast_hash": "b5d896f5ce9e84aac1fdf5d93ff6125f",
     "semantic_hash": ""
   },
   "teams/domain/mentor_groups.py": {
@@ -2046,9 +2046,9 @@
     "semantic_hash": ""
   },
   "teams/entities/MentorTeam.py": {
-    "mtime": 1787999148.541777,
-    "seen": 1788000577.5025854,
-    "ast_hash": "16135d937ff3191901173f07e29e95e2",
+    "mtime": 1788004147.2720962,
+    "seen": 1788004221.941632,
+    "ast_hash": "7aaa0187cbbefbe329b67348a214105f",
     "semantic_hash": ""
   },
   "teams/repositories/mentor_team.py": {
@@ -2058,15 +2058,15 @@
     "semantic_hash": ""
   },
   "teams/services/mentor_team_service.py": {
-    "mtime": 1787999550.5749857,
-    "seen": 1788000577.5121117,
-    "ast_hash": "fbefaf7a36264f9671b839f7a83150fc",
+    "mtime": 1788004146.2025454,
+    "seen": 1788004221.951185,
+    "ast_hash": "4f478ff8a96d74c42b4edad606a73094",
     "semantic_hash": ""
   },
   "tests/teams/test_mentor_team_viewset.py": {
-    "mtime": 1787999550.0526261,
-    "seen": 1788000577.5231342,
-    "ast_hash": "44b9130f38d3a31d1bedd32cb23053cb",
+    "mtime": 1788004164.3674283,
+    "seen": 1788004221.9627266,
+    "ast_hash": "399c823dd0a3d52ce59b5c4e4fcf5d86",
     "semantic_hash": ""
   }
 }

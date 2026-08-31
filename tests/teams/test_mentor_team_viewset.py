@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import Any
 
 from django.contrib.auth import get_user_model
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
 import pytest
 from rest_framework.test import APIClient
 
@@ -18,6 +20,8 @@ from showcase.models import (
     ProjectTrackApplication,
     ProjectTrackGroup,
 )
+from teams.domain.team_lobby import TeamLobbyDomain
+from teams.dto.mentor_team import MentorTeamDetailDTO
 from teams.models import (
     Direction,
     StudyGroup,
@@ -26,6 +30,7 @@ from teams.models import (
     TeamSemester,
     TeamSemesterMember,
 )
+from teams.repositories.mentor_team import MentorTeamRepository
 
 User = get_user_model()
 
@@ -236,6 +241,245 @@ class TestMentorTeamAccess:
             format="json",
         )
         assert response.status_code == 404
+
+
+@pytest.mark.django_db
+class TestMentorTeamRetrieve:
+    def test_retrieve_team_detail(
+        self, api_client: APIClient, mentor_team_setup: dict[str, Any]
+    ) -> None:
+        setup = mentor_team_setup
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.get(
+            f"{_team_url(setup['study_group'].id, setup['team_semester'].id)}"
+            f"?semester_id={setup['semester'].id}"
+        )
+        assert response.status_code == 200
+        assert response.data == {
+            "id": setup["team_semester"].id,
+            "name": "Alpha",
+            "status": TeamSemester.Status.FORMING,
+            "membersCount": 2,
+            "members": [
+                {
+                    "userId": setup["captain"].id,
+                    "fullName": TeamLobbyDomain.user_display_name(setup["captain"]),
+                    "role": TeamSemesterMember.Role.LEADER,
+                    "isPlaceholder": False,
+                },
+                {
+                    "userId": setup["member"].id,
+                    "fullName": TeamLobbyDomain.user_display_name(setup["member"]),
+                    "role": TeamSemesterMember.Role.MEMBER,
+                    "isPlaceholder": False,
+                },
+            ],
+        }
+
+    def test_unauthenticated_returns_401(
+        self, api_client: APIClient, mentor_team_setup: dict[str, Any]
+    ) -> None:
+        setup = mentor_team_setup
+        response = api_client.get(
+            f"{_team_url(setup['study_group'].id, setup['team_semester'].id)}"
+            f"?semester_id={setup['semester'].id}"
+        )
+        assert response.status_code == 401
+
+    def test_not_mentor_returns_403(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        mentor_team_setup: dict[str, Any],
+    ) -> None:
+        setup = mentor_team_setup
+        viewer = make_user(
+            role_code="user", with_department=True, email="viewer2@x.com"
+        )
+        api_client.force_authenticate(user=viewer)
+        response = api_client.get(
+            f"{_team_url(setup['study_group'].id, setup['team_semester'].id)}"
+            f"?semester_id={setup['semester'].id}"
+        )
+        assert response.status_code == 403
+
+    def test_wrong_group_returns_404(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        direction,
+        institute,
+        semester: Semester,
+    ) -> None:
+        setup = mentor_team_setup
+        other_group = StudyGroup.objects.create(
+            name="OTHER-2",
+            code="OTHER-2",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        _enrollment_with_mentors(other_group, semester, setup["mentor"])
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.get(
+            f"{_team_url(other_group.id, setup['team_semester'].id)}"
+            f"?semester_id={setup['semester'].id}"
+        )
+        assert response.status_code == 404
+
+    def test_missing_semester_id_returns_400(
+        self, api_client: APIClient, mentor_team_setup: dict[str, Any]
+    ) -> None:
+        setup = mentor_team_setup
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.get(
+            _team_url(setup["study_group"].id, setup["team_semester"].id)
+        )
+        assert response.status_code == 400
+        assert "semester_id" in response.data["error"]
+
+
+@pytest.mark.django_db
+class TestMentorTeamRetrieveQueryPerformance:
+    def test_dto_serialization_has_no_extra_queries(
+        self,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+        semester: Semester,
+        departments,
+        statuses,
+        django_assert_num_queries,
+    ) -> None:
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_group, semester, mentor)
+        app = _approved_app(
+            semester=semester, statuses=statuses, departments=departments
+        )
+        track = _track(
+            semester=semester,
+            department=departments["child"],
+            author=mentor,
+            group=study_group,
+            applications=[app],
+        )
+        team = Team.objects.create(name="Perf", home_study_group=study_group)
+        team_semester = TeamSemester.objects.create(
+            team=team,
+            semester=semester,
+            project_track=track,
+            captain=mentor,
+            status=TeamSemester.Status.FORMING,
+        )
+        for index in range(12):
+            student = make_user(
+                role_code="student",
+                email=f"perf-student-{index}@example.com",
+            )
+            student.study_group = study_group
+            student.save(update_fields=["study_group"])
+            TeamSemesterMember.objects.create(
+                team_semester=team_semester,
+                user=student,
+                semester=semester,
+                role=TeamSemesterMember.Role.MEMBER,
+            )
+
+        repository = MentorTeamRepository()
+        loaded = repository.get_team_semester_detail(
+            team_semester_id=team_semester.id,
+            group_id=study_group.id,
+            semester_id=semester.id,
+        )
+
+        with django_assert_num_queries(0):
+            payload = MentorTeamDetailDTO(loaded).to_dict()
+
+        assert payload["membersCount"] == 12
+
+    def test_retrieve_query_count_does_not_scale_with_members(
+        self,
+        roles,
+        make_user,
+        api_client: APIClient,
+        study_group: StudyGroup,
+        semester: Semester,
+        departments,
+        statuses,
+    ) -> None:
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_group, semester, mentor)
+        app = _approved_app(
+            semester=semester, statuses=statuses, departments=departments
+        )
+        track = _track(
+            semester=semester,
+            department=departments["child"],
+            author=mentor,
+            group=study_group,
+            applications=[app],
+        )
+        api_client.force_authenticate(user=mentor)
+
+        def _create_team(member_count: int, prefix: str) -> TeamSemester:
+            team = Team.objects.create(
+                name=f"{prefix}-team",
+                home_study_group=study_group,
+            )
+            captain = make_user(
+                role_code="student",
+                email=f"{prefix}-captain@example.com",
+            )
+            captain.study_group = study_group
+            captain.save(update_fields=["study_group"])
+            team_semester = TeamSemester.objects.create(
+                team=team,
+                semester=semester,
+                project_track=track,
+                captain=captain,
+                status=TeamSemester.Status.FORMING,
+            )
+            TeamSemesterMember.objects.create(
+                team_semester=team_semester,
+                user=captain,
+                semester=semester,
+                role=TeamSemesterMember.Role.LEADER,
+            )
+            for index in range(member_count - 1):
+                student = make_user(
+                    role_code="student",
+                    email=f"{prefix}-member-{index}@example.com",
+                )
+                student.study_group = study_group
+                student.save(update_fields=["study_group"])
+                TeamSemesterMember.objects.create(
+                    team_semester=team_semester,
+                    user=student,
+                    semester=semester,
+                    role=TeamSemesterMember.Role.MEMBER,
+                )
+            return team_semester
+
+        small_team = _create_team(2, "small")
+        with CaptureQueriesContext(connection) as small_ctx:
+            response = api_client.get(
+                f"{_team_url(study_group.id, small_team.id)}"
+                f"?semester_id={semester.id}"
+            )
+        assert response.status_code == 200
+        small_count = len(small_ctx.captured_queries)
+
+        large_team = _create_team(15, "large")
+        with CaptureQueriesContext(connection) as large_ctx:
+            response = api_client.get(
+                f"{_team_url(study_group.id, large_team.id)}"
+                f"?semester_id={semester.id}"
+            )
+        assert response.status_code == 200
+        large_count = len(large_ctx.captured_queries)
+
+        assert large_count == small_count
 
 
 @pytest.mark.django_db

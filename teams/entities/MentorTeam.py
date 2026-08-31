@@ -61,6 +61,26 @@ class MentorTeamViewSet(viewsets.ViewSet):
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
 
+    def retrieve(
+        self,
+        request: Request,
+        group_id: int,
+        team_semester_id: int,
+    ) -> Response:
+        """GET /study-groups/{groupId}/teams/{teamSemesterId}/ — карточка команды."""
+        service = MentorTeamService()
+
+        def action() -> Response:
+            data = service.get_detail(
+                request.user,
+                group_id=group_id,
+                team_semester_id=team_semester_id,
+                semester_id_raw=self._semester_id_raw(request),
+            )
+            return Response(data)
+
+        return self._handle_errors(action)
+
     def partial_update(
         self,
         request: Request,
