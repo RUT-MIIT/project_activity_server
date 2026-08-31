@@ -25,7 +25,7 @@ User = get_user_model()
 DEFAULT_FILE = "data/Заявки ИМТК 31.08.2026.xlsx"
 DEFAULT_STATUS = "await_cpds"
 DEFAULT_INSTITUTE = "IMTK"
-DEFAULT_AUTHOR = "Иванов Мария"
+DEFAULT_AUTHOR = "Иванова Мария"
 
 
 class Command(BaseCommand):
