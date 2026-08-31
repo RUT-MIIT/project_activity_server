@@ -1,0 +1,25 @@
+"""Убирает limit_choices_to у M2M mentors на StudyGroupSemester."""
+
+from django.conf import settings
+from django.db import migrations, models
+
+
+class Migration(migrations.Migration):
+
+    dependencies = [
+        ("teams", "0018_studygroupsemester_mentors_m2m"),
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.AlterField(
+            model_name="studygroupsemester",
+            name="mentors",
+            field=models.ManyToManyField(
+                blank=True,
+                related_name="mentored_group_semesters",
+                to=settings.AUTH_USER_MODEL,
+                verbose_name="Наставники",
+            ),
+        ),
+    ]

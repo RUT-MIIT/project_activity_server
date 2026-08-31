@@ -14,16 +14,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AlterField(
-            model_name='studygroupsemester',
-            name='mentors',
-            field=models.ManyToManyField(
-                blank=True,
-                related_name='mentored_group_semesters',
-                to=settings.AUTH_USER_MODEL,
-                verbose_name='Наставники',
-            ),
-        ),
         migrations.CreateModel(
             name='StudyGroupProjectTeacher',
             fields=[
