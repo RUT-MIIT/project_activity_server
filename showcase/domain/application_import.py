@@ -10,6 +10,9 @@ from typing import Any
 import pandas as pd
 
 from showcase.dto.application import ProjectApplicationCreateDTO
+from showcase.dto.tag import TagCreateDTO
+from showcase.models import ProjectApplication, Tag
+from showcase.repositories.tag import TagRepository
 
 COLUMN_ORDER_NUMBER = "Порядковый номер"
 COLUMN_CUSTOMER_TYPE = "ТИП Организация-заказчик*"
@@ -211,3 +214,67 @@ def iter_application_import_rows(
             )
         )
     return rows
+
+
+def find_existing_imported_application(
+    *,
+    author_id: int,
+    title: str,
+    company: str,
+) -> ProjectApplication | None:
+    """Ищет уже импортированную заявку по автору, названию и заказчику."""
+    normalized_title = title.strip()
+    normalized_company = company.strip()
+    if not normalized_title or not normalized_company:
+        return None
+
+    return (
+        ProjectApplication.objects.filter(
+            author_id=author_id,
+            title__iexact=normalized_title,
+            company__iexact=normalized_company,
+        )
+        .order_by("id")
+        .first()
+    )
+
+
+def get_or_create_institute_tag(
+    tag_name: str,
+    *,
+    department_id: int,
+    institute_name: str,
+) -> tuple[Tag, bool]:
+    """Возвращает тег направления и флаг, был ли тег создан.
+
+    Сначала ищет общий (базовый) тег, затем институтский.
+    Если не найден — создаёт небазовый тег, привязанный к подразделению института.
+    """
+    normalized_name = tag_name.strip()
+    if not normalized_name:
+        raise ValueError("Название тега не может быть пустым")
+
+    base_tag = Tag.objects.filter(
+        name__iexact=normalized_name,
+        is_base=True,
+    ).first()
+    if base_tag:
+        return base_tag, False
+
+    institute_tag = Tag.objects.filter(
+        name__iexact=normalized_name,
+        departments__id=department_id,
+    ).first()
+    if institute_tag:
+        return institute_tag, False
+
+    repository = TagRepository()
+    created_tag = repository.create(
+        TagCreateDTO(
+            name=normalized_name,
+            category=institute_name,
+            department_ids=[department_id],
+            is_base=False,
+        )
+    )
+    return created_tag, True

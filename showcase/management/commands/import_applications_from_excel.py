@@ -12,10 +12,12 @@ import pandas as pd
 from accounts.models import Semester
 from showcase.domain.application import ProjectApplicationDomain
 from showcase.domain.application_import import (
+    find_existing_imported_application,
+    get_or_create_institute_tag,
     iter_application_import_rows,
     parse_author_name,
 )
-from showcase.models import Institute, Tag
+from showcase.models import Institute
 from showcase.repositories.application import ProjectApplicationRepository
 from showcase.services.involved_service import InvolvedManagementService
 from showcase.services.logging_service import ApplicationLoggingService
@@ -138,10 +140,36 @@ class Command(BaseCommand):
         logging_service = ApplicationLoggingService()
         status_code = options["status"]
         created_count = 0
+        skipped_count = 0
+        tags_created_count = 0
         warnings: list[str] = []
+        tag_department_id = institute.department_id or author.department_id
 
         with transaction.atomic():
             for item in import_rows:
+                existing = find_existing_imported_application(
+                    author_id=author.id,
+                    title=item.dto.title,
+                    company=item.dto.company,
+                )
+                if existing:
+                    if item.tag_name and tag_department_id:
+                        tag, tag_created = get_or_create_institute_tag(
+                            item.tag_name,
+                            department_id=tag_department_id,
+                            institute_name=institute.name,
+                        )
+                        if tag_created:
+                            tags_created_count += 1
+                        if not existing.tags.filter(pk=tag.pk).exists():
+                            existing.tags.add(tag)
+                    skipped_count += 1
+                    self.stdout.write(
+                        f"Пропущена заявка #{item.row_number}: "
+                        f"{existing.print_number} — {existing.title} (уже существует)"
+                    )
+                    continue
+
                 validation = ProjectApplicationDomain.validate_create(item.dto)
                 if not validation.is_valid:
                     raise CommandError(
@@ -180,14 +208,20 @@ class Command(BaseCommand):
                     )
 
                 if item.tag_name:
-                    tag = Tag.objects.filter(name__iexact=item.tag_name).first()
-                    if tag:
-                        application.tags.add(tag)
-                    else:
+                    if not tag_department_id:
                         warnings.append(
-                            "Строка "
-                            f"{item.row_number}: тег «{item.tag_name}» не найден"
+                            f"Строка {item.row_number}: "
+                            "не удалось определить подразделение для тега"
                         )
+                    else:
+                        tag, tag_created = get_or_create_institute_tag(
+                            item.tag_name,
+                            department_id=tag_department_id,
+                            institute_name=institute.name,
+                        )
+                        if tag_created:
+                            tags_created_count += 1
+                        application.tags.add(tag)
 
                 logging_service.log_status_change(
                     application=application,
@@ -201,7 +235,12 @@ class Command(BaseCommand):
                     f"{application.print_number} — {application.title}"
                 )
 
-        self.stdout.write(self.style.SUCCESS(f"Импортировано заявок: {created_count}"))
+        self.stdout.write(
+            self.style.SUCCESS(
+                f"Импортировано заявок: {created_count}, пропущено: {skipped_count}, "
+                f"тегов создано: {tags_created_count}"
+            )
+        )
         for warning in warnings:
             self.stdout.write(self.style.WARNING(warning))
 
