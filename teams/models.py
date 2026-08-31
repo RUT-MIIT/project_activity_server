@@ -135,6 +135,79 @@ class StudyGroupSemester(models.Model):
         return f"{self.study_group} — {self.semester}"
 
 
+class StudyGroupProjectTeacher(models.Model):
+    """Преподаватель проектной деятельности группы в семестре (импорт 1С/РУТ)."""
+
+    semester = models.ForeignKey(
+        "accounts.Semester",
+        on_delete=models.PROTECT,
+        related_name="project_teachers",
+        verbose_name="Семестр",
+    )
+    study_group = models.ForeignKey(
+        StudyGroup,
+        on_delete=models.CASCADE,
+        related_name="project_teachers",
+        verbose_name="Учебная группа",
+    )
+    tutor = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="project_teacher_assignments",
+        verbose_name="Преподаватель в PD",
+    )
+    mentor_full_name = models.CharField(
+        max_length=255,
+        verbose_name="ФИО наставника",
+    )
+    external_teacher_id = models.CharField(
+        max_length=32,
+        db_index=True,
+        verbose_name="ID преподавателя (1С)",
+    )
+    external_group_id = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        verbose_name="ID группы (1С)",
+    )
+    mentor_short_name = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        verbose_name="ФИО наставника (кратко)",
+    )
+    lesson_count = models.PositiveSmallIntegerField(
+        null=True,
+        blank=True,
+        verbose_name="Кол-во пар",
+    )
+    import_status = models.CharField(
+        max_length=32,
+        blank=True,
+        default="",
+        verbose_name="Статус импорта",
+    )
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Дата создания")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Дата изменения")
+
+    class Meta:
+        verbose_name = "Преподаватель проектной деятельности группы"
+        verbose_name_plural = "Преподаватели проектной деятельности групп"
+        ordering = ("study_group", "semester", "external_teacher_id")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["semester", "study_group", "external_teacher_id"],
+                name="unique_project_teacher_per_group_semester",
+            ),
+        ]
+
+    def __str__(self) -> str:
+        return f"{self.study_group} — {self.semester}: {self.mentor_full_name}"
+
+
 class Team(models.Model):
     """Постоянная команда участников проектной деятельности."""
 

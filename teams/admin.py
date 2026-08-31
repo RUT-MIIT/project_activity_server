@@ -3,6 +3,7 @@ from django.contrib import admin
 from teams.models import (
     Direction,
     StudyGroup,
+    StudyGroupProjectTeacher,
     Team,
     TeamEventLog,
     TeamInvitation,
@@ -44,6 +45,32 @@ class StudyGroupAdmin(admin.ModelAdmin):
         "institute__name",
     )
     autocomplete_fields = ("direction", "institute", "mentor")
+
+
+@admin.register(StudyGroupProjectTeacher)
+class StudyGroupProjectTeacherAdmin(admin.ModelAdmin):
+    list_display = (
+        "id",
+        "semester",
+        "study_group",
+        "mentor_full_name",
+        "tutor",
+        "external_teacher_id",
+        "import_status",
+        "updated_at",
+    )
+    list_filter = ("semester", "import_status")
+    search_fields = (
+        "mentor_full_name",
+        "mentor_short_name",
+        "study_group__name",
+        "study_group__code",
+        "external_teacher_id",
+        "tutor__email",
+        "tutor__last_name",
+    )
+    autocomplete_fields = ("semester", "study_group", "tutor")
+    readonly_fields = ("created_at", "updated_at")
 
 
 class TeamSemesterInline(admin.TabularInline):
