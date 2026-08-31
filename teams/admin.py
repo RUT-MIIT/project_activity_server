@@ -4,6 +4,7 @@ from teams.models import (
     Direction,
     StudyGroup,
     StudyGroupProjectTeacher,
+    StudyGroupSemester,
     Team,
     TeamEventLog,
     TeamInvitation,
@@ -18,6 +19,15 @@ class DirectionAdmin(admin.ModelAdmin):
     list_display = ("code", "level", "name")
     list_filter = ("level",)
     search_fields = ("code", "name")
+
+
+class StudyGroupSemesterInline(admin.StackedInline):
+    model = StudyGroupSemester
+    extra = 0
+    autocomplete_fields = ("semester",)
+    filter_horizontal = ("mentors",)
+    verbose_name = "Группа в семестре"
+    verbose_name_plural = "Группы в семестрах"
 
 
 @admin.register(StudyGroup)
@@ -45,6 +55,29 @@ class StudyGroupAdmin(admin.ModelAdmin):
         "institute__name",
     )
     autocomplete_fields = ("direction", "institute", "mentor")
+    inlines = [StudyGroupSemesterInline]
+
+
+@admin.register(StudyGroupSemester)
+class StudyGroupSemesterAdmin(admin.ModelAdmin):
+    list_display = ("id", "study_group", "semester", "mentors_display")
+    list_filter = ("semester", "study_group__institute")
+    search_fields = (
+        "study_group__name",
+        "study_group__code",
+        "mentors__email",
+        "mentors__last_name",
+    )
+    autocomplete_fields = ("study_group", "semester")
+    filter_horizontal = ("mentors",)
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("mentors")
+
+    @admin.display(description="Наставники")
+    def mentors_display(self, obj: StudyGroupSemester) -> str:
+        emails = [user.email for user in obj.mentors.all()]
+        return ", ".join(emails) if emails else "—"
 
 
 @admin.register(StudyGroupProjectTeacher)
