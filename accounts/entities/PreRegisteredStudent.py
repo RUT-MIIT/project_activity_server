@@ -23,7 +23,7 @@ from accounts.services.preregistered_student_service import PreRegisteredStudent
         tags=["accounts"],
         request=PreRegisteredStudentLookupSerializer,
         responses={200: PreRegisteredStudentLookupResponseSerializer},
-        summary="Поиск предрегистрации студента",
+        summary="Поиск предрегистрации (студент или сотрудник)",
     ),
     register=extend_schema(
         tags=["accounts"],
@@ -62,7 +62,7 @@ class PreRegisteredStudentViewSet(viewsets.GenericViewSet):
             return Response({"detail": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         if result is None:
             return Response(
-                {"detail": "Студент не найден"},
+                {"detail": "Предрегистрация не найдена"},
                 status=status.HTTP_404_NOT_FOUND,
             )
         return Response(result.to_dict(), status=status.HTTP_200_OK)

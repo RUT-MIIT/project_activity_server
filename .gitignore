@@ -205,6 +205,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+# graphify (локальный knowledge graph, генерируется командой graphify update)
+graphify-out/
+
 # Marimo
 marimo/_static/
 marimo/_lsp/

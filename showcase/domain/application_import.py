@@ -43,7 +43,7 @@ INSTITUTE_NAME_ALIASES: dict[str, str] = {
     "АГА": "AGA",
     "АДХ": "ADH",
     "ВИШ": "VISH",
-    "ИПСС": "IPSS",
+    "ИПСС": "ISTI",
     "ЮИ": "YUI",
     "ПИШ ВСМ": "VSM",
 }

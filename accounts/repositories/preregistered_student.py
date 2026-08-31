@@ -13,8 +13,9 @@ class PreRegisteredStudentRepository:
     def get_by_student_card(self, student_card: str) -> PreRegisteredStudent | None:
         """Возвращает предрегистрацию по номеру студенческого билета."""
         return (
-            PreRegisteredStudent.objects.select_related("group")
+            PreRegisteredStudent.objects.select_related("group", "department", "role")
             .filter(student_card=student_card)
+            .exclude(student_card="")
             .first()
         )
 
@@ -33,7 +34,7 @@ class PreRegisteredStudentRepository:
         if not snils:
             return None
         return (
-            PreRegisteredStudent.objects.select_related("group")
+            PreRegisteredStudent.objects.select_related("group", "department", "role")
             .filter(snils=snils)
             .first()
         )
@@ -41,7 +42,9 @@ class PreRegisteredStudentRepository:
     def get_by_id(self, pk: int) -> PreRegisteredStudent | None:
         """Возвращает предрегистрацию по первичному ключу."""
         return (
-            PreRegisteredStudent.objects.select_related("group").filter(pk=pk).first()
+            PreRegisteredStudent.objects.select_related("group", "department", "role")
+            .filter(pk=pk)
+            .first()
         )
 
     def delete_unregistered(self) -> int:

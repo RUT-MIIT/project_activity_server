@@ -31,7 +31,9 @@ class PreRegisteredStudentLookupResult:
     last_name: str
     first_name: str
     middle_name: str
+    role: str
     group_name: str
+    department_name: str
     student_card: str
     is_registered: bool
 
@@ -42,7 +44,9 @@ class PreRegisteredStudentLookupResult:
             "last_name": self.last_name,
             "first_name": self.first_name,
             "middle_name": self.middle_name,
+            "role": self.role,
             "group_name": self.group_name,
+            "department_name": self.department_name or None,
             "student_card": self.student_card,
             "is_registered": self.is_registered,
         }
@@ -80,8 +84,9 @@ class PreRegisteredStudentService:
             return None
         if not last_names_match(pre_registered.last_name, last_name):
             raise ValueError("Фамилия не совпадает с данными в системе")
-        if pre_registered.group.is_end:
-            return None
+        if pre_registered.role_id == "student":
+            if pre_registered.group is None or pre_registered.group.is_end:
+                return None
         return self._to_lookup_result(pre_registered)
 
     @transaction.atomic
@@ -259,12 +264,20 @@ class PreRegisteredStudentService:
     def _to_lookup_result(
         pre_registered: PreRegisteredStudent,
     ) -> PreRegisteredStudentLookupResult:
+        group_name = ""
+        if pre_registered.group_id is not None:
+            group_name = pre_registered.group.name
+        department_name = ""
+        if pre_registered.department_id is not None:
+            department_name = pre_registered.department.name
         return PreRegisteredStudentLookupResult(
             id=pre_registered.pk,
             last_name=pre_registered.last_name,
             first_name=pre_registered.first_name,
             middle_name=pre_registered.middle_name,
-            group_name=pre_registered.group.name,
+            role=pre_registered.role_id,
+            group_name=group_name,
+            department_name=department_name,
             student_card=pre_registered.student_card,
             is_registered=pre_registered.is_registered,
         )

@@ -472,8 +472,10 @@ class PreRegisteredStudentLookupResponseSerializer(serializers.Serializer):
     last_name = serializers.CharField()
     first_name = serializers.CharField()
     middle_name = serializers.CharField()
-    group_name = serializers.CharField()
-    student_card = serializers.CharField()
+    role = serializers.CharField()
+    group_name = serializers.CharField(allow_blank=True)
+    department_name = serializers.CharField(allow_blank=True, allow_null=True)
+    student_card = serializers.CharField(allow_blank=True)
     is_registered = serializers.BooleanField()
 
 

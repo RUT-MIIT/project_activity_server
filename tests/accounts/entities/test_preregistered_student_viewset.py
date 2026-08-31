@@ -73,6 +73,7 @@ class TestPreRegisteredStudentLookup:
 
         assert response.status_code == 200
         assert response.data["last_name"] == "Иванов"
+        assert response.data["role"] == "student"
         assert response.data["group_name"] == "АМБ-211"
         assert response.data["student_card"] == "25011884"
         assert response.data["is_registered"] is False
@@ -109,7 +110,7 @@ class TestPreRegisteredStudentLookup:
         )
 
         assert response.status_code == 404
-        assert response.data["detail"] == "Студент не найден"
+        assert response.data["detail"] == "Предрегистрация не найдена"
 
     def test_lookup_requires_single_identifier(self, api_client: APIClient) -> None:
         response = api_client.post(
@@ -174,6 +175,57 @@ class TestPreRegisteredStudentLookup:
         )
 
         assert response.status_code == 404
+
+
+@pytest.fixture
+def pre_registered_mentor(departments) -> PreRegisteredStudent:
+    return PreRegisteredStudent.objects.create(
+        last_name="Ишханян",
+        first_name="Маргарита",
+        middle_name="Владимировна",
+        personnel_number="1347607",
+        role_id="mentor",
+        department=departments["child"],
+    )
+
+
+@pytest.mark.django_db
+class TestPreRegisteredMentorLookup:
+    def test_lookup_by_personnel_number(
+        self, api_client: APIClient, pre_registered_mentor: PreRegisteredStudent
+    ) -> None:
+        response = api_client.post(
+            LOOKUP_URL,
+            {"personnel_number": "1347607", "last_name": "Ишханян"},
+            format="json",
+        )
+
+        assert response.status_code == 200
+        assert response.data["id"] == pre_registered_mentor.pk
+        assert response.data["role"] == "mentor"
+        assert response.data["department_name"] == "Child Dept"
+        assert response.data["group_name"] == ""
+        assert response.data["student_card"] == ""
+        assert response.data["is_registered"] is False
+
+    def test_lookup_mentor_without_department(self, api_client: APIClient) -> None:
+        PreRegisteredStudent.objects.create(
+            last_name="Петров",
+            first_name="Пётр",
+            middle_name="",
+            personnel_number="900099",
+            role_id="mentor",
+        )
+
+        response = api_client.post(
+            LOOKUP_URL,
+            {"personnel_number": "900099", "last_name": "Петров"},
+            format="json",
+        )
+
+        assert response.status_code == 200
+        assert response.data["role"] == "mentor"
+        assert response.data["department_name"] is None
 
 
 @pytest.mark.django_db
