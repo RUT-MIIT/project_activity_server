@@ -26,6 +26,9 @@ from teams.domain.study_group_import import normalize_cell
 User = get_user_model()
 
 DEFAULT_FILE = "data/преподаватели.xls"
+DEFAULT_MISSING_DEPARTMENTS_OUT = (
+    "data/import_preregistered_mentors_missing_departments.txt"
+)
 HEADER_ROW = 1
 
 
@@ -47,6 +50,7 @@ class Command(BaseCommand):
         super().__init__(*args, **options)
         self._repository = PreRegisteredStudentRepository()
         self._department_conflict_action: DepartmentConflictAction | None = None
+        self._missing_department_names: set[str] = set()
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -59,6 +63,15 @@ class Command(BaseCommand):
             "--non-interactive",
             action="store_true",
             help="Не спрашивать при конфликте подразделений (пропускать привязку)",
+        )
+        parser.add_argument(
+            "--missing-departments-out",
+            type=str,
+            default=DEFAULT_MISSING_DEPARTMENTS_OUT,
+            help=(
+                "Путь к txt со списком уникальных ненайденных подразделений "
+                f"(по умолчанию: {DEFAULT_MISSING_DEPARTMENTS_OUT})"
+            ),
         )
 
     def handle(self, *args, **options):
@@ -114,9 +127,11 @@ class Command(BaseCommand):
                 f"Готово: создано {created}, обновлено {updated}, "
                 f"привязано пользователей {linked}, пропущено {skipped}, "
                 f"дубликатов строк {duplicate_rows}, "
-                f"подразделений не найдено {departments_not_found}"
+                f"подразделений не найдено {departments_not_found} "
+                f"(уникальных: {len(self._missing_department_names)})"
             )
         )
+        self._write_missing_departments_file(options["missing_departments_out"])
 
     def _process_row(
         self,
@@ -133,6 +148,7 @@ class Command(BaseCommand):
         result_code = "updated"
 
         if parsed.department_name and department is None:
+            self._missing_department_names.add(parsed.department_name)
             self.stdout.write(
                 self.style.WARNING(
                     f"Строка {line_no}: подразделение «{parsed.department_name}» "
@@ -276,6 +292,19 @@ class Command(BaseCommand):
             "3": DepartmentConflictAction.LINK_UPDATE_USER_DEPT,
         }
         return mapping.get(choice)
+
+    def _write_missing_departments_file(self, output_path: str) -> None:
+        """Записывает уникальные ненайденные подразделения в txt."""
+        path = Path(output_path).resolve()
+        path.parent.mkdir(parents=True, exist_ok=True)
+        lines = sorted(self._missing_department_names, key=str.casefold)
+        path.write_text("\n".join(lines) + ("\n" if lines else ""), encoding="utf-8")
+        if lines:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Уникальные ненайденные подразделения ({len(lines)}): {path}"
+                )
+            )
 
     def _collect_unique_rows(
         self, df: pd.DataFrame
