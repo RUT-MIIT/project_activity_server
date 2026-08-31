@@ -343,6 +343,35 @@ class TestPreRegisteredStudentRegister:
         assert response.status_code == 400
         assert "уже зарегистрирован" in response.data["detail"]
 
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_register_mentor_creates_user_with_mentor_role(
+        self,
+        api_client: APIClient,
+        pre_registered_mentor: PreRegisteredStudent,
+        roles: dict[str, Any],
+    ) -> None:
+        response = api_client.post(
+            REGISTER_URL,
+            {
+                "id": pre_registered_mentor.pk,
+                "email": "mentor@example.com",
+                "password": "StrongPass123!",
+            },
+            format="json",
+        )
+
+        assert response.status_code == 201
+        assert response.data["user"]["email"] == "mentor@example.com"
+
+        pre_registered_mentor.refresh_from_db()
+        assert pre_registered_mentor.user is not None
+        assert pre_registered_mentor.user.role.code == "mentor"
+        assert (
+            pre_registered_mentor.user.department_id
+            == pre_registered_mentor.department_id
+        )
+        assert pre_registered_mentor.user.study_group_id is None
+
     def test_register_duplicate_email(
         self,
         api_client: APIClient,
