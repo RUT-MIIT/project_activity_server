@@ -26,6 +26,7 @@ COLUMNS = [
     "Начало обучения в группе",
     "Вид уровня образования",
     "Курс",
+    "Группа",
     "Пол",
     "Телефон",
     "Электронная почта",
@@ -54,7 +55,8 @@ def _write_sample_contingent(path: Path) -> None:
             "25011884",
             "01.09.2025",
             "бакалавриат",
-            1,
+            2,
+            "АМБ-211",
             "м",
             "79161384053",
             "test@mail.ru",
@@ -76,7 +78,8 @@ def _write_sample_contingent(path: Path) -> None:
             "25005843",
             "01.09.2025",
             "бакалавриат",
-            1,
+            2,
+            "АМБ-211",
             "м",
             "79920040184",
             "test2@mail.ru",
@@ -84,9 +87,9 @@ def _write_sample_contingent(path: Path) -> None:
             "20064882942",
             "1330766",
             "6048844",
-            "205393",
+            "197175",
             "АМБ-2025-11",
-            "309835",
+            "309371",
         ],
         [
             "очная",
@@ -98,7 +101,8 @@ def _write_sample_contingent(path: Path) -> None:
             "",
             "01.09.2025",
             "бакалавриат",
-            1,
+            2,
+            "АМБ-211",
             "м",
             "",
             "",
@@ -263,3 +267,184 @@ class TestImportPreRegisteredStudentsCommand:
         assert registered.pk is not None
         assert registered.user_id == user.pk
         assert PreRegisteredStudent.objects.count() == 3
+
+    def test_import_assigns_lagging_student_by_teaching_group_name(
+        self, tmp_path: Path, aga_institute: Institute
+    ) -> None:
+        direction = Direction.objects.create(
+            code="38.03.02",
+            name="Менеджмент",
+            level=Direction.Level.BAKALAVRIAT,
+        )
+        main_group = StudyGroup.objects.create(
+            name="ТПВг-341",
+            code="ТПВг-2024-41",
+            enrollment_year=2024,
+            course_number=3,
+            direction=direction,
+            institute=aga_institute,
+            external_group_id="ext-341",
+        )
+        lagging_group = StudyGroup.objects.create(
+            name="ТПВг-241",
+            code="ТПВг-2023-99",
+            enrollment_year=2023,
+            course_number=2,
+            direction=direction,
+            institute=aga_institute,
+            external_group_id="ext-241",
+        )
+
+        path = tmp_path / "lagging.xlsx"
+        title_row = ["Заголовок"] + [""] * (len(COLUMNS) - 1)
+        data_rows = [
+            [
+                "очная",
+                "38.03.02",
+                "Иванов Иван Иванович",
+                "Академия гражданской авиации",
+                "Менеджмент",
+                "Профиль",
+                "25011884",
+                "01.09.2024",
+                "бакалавриат",
+                3,
+                "ТПВг-341",
+                "м",
+                "",
+                "",
+                "31.08.2029",
+                "18457362806",
+                "1335090",
+                "",
+                "ext-341",
+                "ТПВг-2024-41",
+                "perm-341",
+            ],
+            [
+                "очная",
+                "38.03.02",
+                "Петров Пётр",
+                "Академия гражданской авиации",
+                "Менеджмент",
+                "Профиль",
+                "25005843",
+                "01.09.2024",
+                "бакалавриат",
+                2,
+                "ТПВг-241",
+                "м",
+                "",
+                "",
+                "31.08.2029",
+                "20064882942",
+                "1330766",
+                "",
+                "ext-241",
+                "ТПВг-2024-41",
+                "perm-341",
+            ],
+        ]
+        pd.DataFrame([title_row, COLUMNS, *data_rows]).to_excel(
+            path, index=False, header=False
+        )
+
+        call_command(
+            "import_preregistered_students",
+            file=str(path),
+            year=2026,
+            semester="autumn",
+        )
+
+        convergent = PreRegisteredStudent.objects.get(personnel_number="1335090")
+        lagging = PreRegisteredStudent.objects.get(personnel_number="1330766")
+        assert convergent.group_id == main_group.pk
+        assert lagging.group_id == lagging_group.pk
+
+    def test_import_syncs_registered_user_study_group(
+        self,
+        sample_contingent_file: Path,
+        study_group: StudyGroup,
+        roles: dict[str, Any],
+        make_user,
+    ) -> None:
+        user = make_user(role_code="user", email="registered@example.com")
+        other_direction = Direction.objects.create(
+            code="09.03.01",
+            name="Другое",
+            level=Direction.Level.BAKALAVRIAT,
+        )
+        other_group = StudyGroup.objects.create(
+            name="Другая",
+            code="ДР-2020-01",
+            direction=other_direction,
+            institute=study_group.institute,
+        )
+        user.study_group = other_group
+        user.save(update_fields=["study_group"])
+
+        PreRegisteredStudent.objects.create(
+            personnel_number="1335090",
+            last_name="Иванов",
+            first_name="Иван",
+            middle_name="Иванович",
+            student_card="25011884",
+            snils="18457362806",
+            group=other_group,
+            user=user,
+        )
+
+        call_command(
+            "import_preregistered_students",
+            file=str(sample_contingent_file),
+            year=2026,
+            semester="autumn",
+        )
+
+        user.refresh_from_db()
+        student = PreRegisteredStudent.objects.get(personnel_number="1335090")
+        assert student.group_id == study_group.pk
+        assert user.study_group_id == study_group.pk
+
+    def test_import_skips_student_when_teaching_group_not_found(
+        self, tmp_path: Path, study_group: StudyGroup
+    ) -> None:
+        path = tmp_path / "missing_teaching_group.xlsx"
+        title_row = ["Заголовок"] + [""] * (len(COLUMNS) - 1)
+        data_row = [
+            "очная",
+            "25.03.03",
+            "Иванов Иван Иванович",
+            "Академия гражданской авиации",
+            "Аэронавигация",
+            "Профиль",
+            "25011884",
+            "01.09.2025",
+            "бакалавриат",
+            2,
+            "НЕСУЩЕСТВУЮЩАЯ-999",
+            "м",
+            "",
+            "",
+            "31.08.2029",
+            "18457362806",
+            "1335090",
+            "",
+            "",
+            "АМБ-2025-11",
+            "",
+        ]
+        pd.DataFrame([title_row, COLUMNS, data_row]).to_excel(
+            path, index=False, header=False
+        )
+
+        call_command(
+            "import_preregistered_students",
+            file=str(path),
+            year=2026,
+            semester="autumn",
+        )
+
+        assert (
+            PreRegisteredStudent.objects.filter(personnel_number="1335090").count() == 0
+        )

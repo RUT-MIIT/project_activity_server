@@ -11,9 +11,13 @@ import pandas as pd
 
 from showcase.models import Institute
 from teams.domain.study_group_import import (
+    OPTIONAL_EXTERNAL_ID_COLUMNS,
+    OPTIONAL_PERMANENT_EXTERNAL_ID_COLUMN,
     REQUIRED_COLUMNS,
+    ContingentRowForExternalIds,
     GroupImportRow,
     build_group_import_row,
+    collect_external_ids_for_group,
     group_ended_by_planned_dates,
     normalize_cell,
     parse_planned_end_date,
@@ -105,6 +109,14 @@ class Command(BaseCommand):
             else:
                 updated += 1
 
+        external_updated, external_skipped, external_conflicts = (
+            self._backfill_external_ids(
+                df=df,
+                current_year=current_year,
+                semester=semester,  # type: ignore[arg-type]
+            )
+        )
+
         ended_missing_count = 0
         if not options["clear"]:
             imported_codes = set(rows.keys())
@@ -122,6 +134,11 @@ class Command(BaseCommand):
                 f", завершено отсутствующих {ended_missing_count}, "
                 f"завершено по дате {ended_by_date_count}"
             )
+        summary += (
+            f", external ID обновлено {external_updated}, "
+            f"без сходящихся строк {external_skipped}, "
+            f"конфликтов ID {external_conflicts}"
+        )
         self.stdout.write(self.style.SUCCESS(summary))
 
     def _read_contingent(self, path: Path) -> pd.DataFrame:
@@ -228,6 +245,88 @@ class Command(BaseCommand):
             groups[code] = replace(group_row, is_end=is_end)
 
         return groups
+
+    def _backfill_external_ids(
+        self,
+        *,
+        df: pd.DataFrame,
+        current_year: int,
+        semester: str,
+    ) -> tuple[int, int, int]:
+        """
+        Заполняет external_group_id на существующих StudyGroup по сходящимся строкам.
+
+        Returns:
+            Кортеж (обновлено, пропущено без сходящихся строк, конфликтов).
+        """
+        if not all(column in df.columns for column in OPTIONAL_EXTERNAL_ID_COLUMNS):
+            missing = [
+                column
+                for column in OPTIONAL_EXTERNAL_ID_COLUMNS
+                if column not in df.columns
+            ]
+            self.stdout.write(
+                self.style.WARNING(
+                    "Колонки для external ID отсутствуют — фаза 2 пропущена: "
+                    + ", ".join(missing)
+                )
+            )
+            return 0, 0, 0
+
+        has_permanent_id_column = OPTIONAL_PERMANENT_EXTERNAL_ID_COLUMN in df.columns
+
+        rows_by_permanent: dict[str, list[ContingentRowForExternalIds]] = {}
+        for _, row in df.iterrows():
+            permanent_group = normalize_cell(row.get("Постоянная группа"))
+            if not permanent_group:
+                continue
+            permanent_external_id = ""
+            if has_permanent_id_column:
+                permanent_external_id = normalize_cell(
+                    row.get(OPTIONAL_PERMANENT_EXTERNAL_ID_COLUMN)
+                )
+            rows_by_permanent.setdefault(permanent_group, []).append(
+                ContingentRowForExternalIds(
+                    teaching_group_name=normalize_cell(row.get("Группа")),
+                    course_from_file=normalize_cell(row.get("Курс")),
+                    external_group_id=normalize_cell(row.get("ID группы")),
+                    external_permanent_group_id=permanent_external_id,
+                )
+            )
+
+        updated = 0
+        skipped = 0
+        conflicts = 0
+        for permanent_code, contingent_rows in rows_by_permanent.items():
+            study_group = StudyGroup.objects.filter(code=permanent_code).first()
+            if study_group is None:
+                continue
+
+            result = collect_external_ids_for_group(
+                contingent_rows,
+                permanent_code=permanent_code,
+                current_year=current_year,
+                semester=semester,  # type: ignore[arg-type]
+            )
+            if result.ids is None:
+                if result.conflict_reason and "конфликт" in result.conflict_reason:
+                    conflicts += 1
+                    self.stdout.write(
+                        self.style.WARNING(
+                            f"Группа «{permanent_code}»: {result.conflict_reason}"
+                        )
+                    )
+                else:
+                    skipped += 1
+                continue
+
+            StudyGroup.objects.filter(pk=study_group.pk).update(
+                external_group_id=result.ids.external_group_id,
+                external_permanent_group_id=result.ids.external_permanent_group_id,
+            )
+            updated += 1
+
+        return updated, skipped, conflicts
 
     def _get_or_create_direction(self, row: GroupImportRow) -> Direction:
         """Возвращает направление подготовки, создавая при необходимости."""

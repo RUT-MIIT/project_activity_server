@@ -13,6 +13,18 @@ PERMANENT_GROUP_PATTERN = re.compile(
     r"^(?P<abbrev>.+)-(?P<year>\d{4})-(?P<num>\d+)(?:-\d+)?$"
 )
 
+TEACHING_GROUP_NAME_PATTERN = re.compile(
+    r"^(?P<abbrev>.+)-(?P<course>\d)(?P<group_num>\d+)$"
+)
+
+OPTIONAL_EXTERNAL_ID_COLUMNS = (
+    "Группа",
+    "Курс",
+    "ID группы",
+)
+
+OPTIONAL_PERMANENT_EXTERNAL_ID_COLUMN = "ID постоянной группы"
+
 INSTITUTE_NAME_TO_CODE: dict[str, str] = {
     "Академия гражданской авиации": "AGA",
     "Академия водного транспорта": "AVT",
@@ -68,6 +80,32 @@ class GroupImportRow:
     profile: str
     form: str
     is_end: bool = False
+
+
+@dataclass(frozen=True)
+class ExternalIds:
+    """Внешние идентификаторы группы из отчёта 1С."""
+
+    external_group_id: str
+    external_permanent_group_id: str
+
+
+@dataclass(frozen=True)
+class ExternalIdsResult:
+    """Результат сбора внешних ID для одной постоянной группы."""
+
+    ids: ExternalIds | None
+    conflict_reason: str | None = None
+
+
+@dataclass(frozen=True)
+class ContingentRowForExternalIds:
+    """Поля строки контингента, нужные для backfill внешних ID."""
+
+    teaching_group_name: str
+    course_from_file: str
+    external_group_id: str
+    external_permanent_group_id: str
 
 
 def normalize_cell(value: object) -> str:
@@ -164,6 +202,139 @@ def build_group_name(
 ) -> str:
     """Собирает отображаемое название группы, например «АМБ-211»."""
     return f"{abbrev}-{course_number}{group_num}"
+
+
+def parse_course_from_teaching_group_name(name: str) -> int | None:
+    """
+    Извлекает номер курса из названия учебной группы, например «ТПВг-341» → 3.
+
+    Предполагается однозначный номер курса в формате «{abbrev}-{course}{group_num}».
+    """
+    cleaned = normalize_cell(name)
+    if not cleaned:
+        return None
+    match = TEACHING_GROUP_NAME_PATTERN.match(cleaned)
+    if not match:
+        return None
+    return int(match.group("course"))
+
+
+def parse_course_from_file_value(value: object) -> int | None:
+    """Парсит номер курса из колонки «Курс» отчёта."""
+    text = normalize_cell(value)
+    if not text:
+        return None
+    try:
+        course = int(float(text))
+    except ValueError:
+        return None
+    if course < 1:
+        return None
+    return course
+
+
+def is_convergent_contingent_row(
+    permanent_code: str,
+    teaching_group_name: str,
+    course_from_file: object,
+    *,
+    current_year: int,
+    semester: Semester,
+) -> bool:
+    """
+    Возвращает True, если строка относится к «нормальному» потоку:
+    учебная группа совпадает с расчётным именем для постоянной группы.
+    """
+    teaching_name = normalize_cell(teaching_group_name)
+    if not teaching_name:
+        return True
+
+    try:
+        parsed = parse_permanent_group_code(permanent_code)
+        course_number = calculate_course_number(
+            current_year=current_year,
+            enrollment_year=parsed.enrollment_year,
+            semester=semester,
+        )
+        expected_name = build_group_name(
+            abbrev=parsed.abbrev,
+            course_number=course_number,
+            group_num=parsed.group_num,
+        )
+    except ValueError:
+        return False
+
+    if teaching_name != expected_name:
+        return False
+
+    file_course = parse_course_from_file_value(course_from_file)
+    if file_course is not None and file_course != course_number:
+        return False
+
+    return True
+
+
+def collect_external_ids_for_group(
+    rows: list[ContingentRowForExternalIds],
+    *,
+    permanent_code: str,
+    current_year: int,
+    semester: Semester,
+) -> ExternalIdsResult:
+    """
+    Собирает внешние ID из сходящихся строк одной постоянной группы.
+
+    Возвращает None, если сходящихся строк нет или ID противоречат друг другу.
+    """
+    convergent_rows = [
+        row
+        for row in rows
+        if is_convergent_contingent_row(
+            permanent_code,
+            row.teaching_group_name,
+            row.course_from_file,
+            current_year=current_year,
+            semester=semester,
+        )
+    ]
+    if not convergent_rows:
+        return ExternalIdsResult(
+            ids=None,
+            conflict_reason="нет сходящихся строк",
+        )
+
+    group_ids: set[str] = set()
+    permanent_ids: set[str] = set()
+    for row in convergent_rows:
+        if row.external_group_id:
+            group_ids.add(row.external_group_id)
+        if row.external_permanent_group_id:
+            permanent_ids.add(row.external_permanent_group_id)
+
+    if len(group_ids) > 1:
+        return ExternalIdsResult(
+            ids=None,
+            conflict_reason=f"конфликт ID группы: {sorted(group_ids)}",
+        )
+    if len(permanent_ids) > 1:
+        return ExternalIdsResult(
+            ids=None,
+            conflict_reason=f"конфликт ID постоянной группы: {sorted(permanent_ids)}",
+        )
+    if not group_ids:
+        return ExternalIdsResult(
+            ids=None,
+            conflict_reason="нет ID группы в сходящихся строках",
+        )
+
+    return ExternalIdsResult(
+        ids=ExternalIds(
+            external_group_id=next(iter(group_ids)),
+            external_permanent_group_id=(
+                next(iter(permanent_ids)) if permanent_ids else ""
+            ),
+        ),
+    )
 
 
 def resolve_institute_code(institute_name: str) -> str:

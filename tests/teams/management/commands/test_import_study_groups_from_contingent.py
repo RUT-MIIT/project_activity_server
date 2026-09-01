@@ -36,6 +36,7 @@ COLUMNS = [
     "Начало обучения в группе",
     "Вид уровня образования",
     "Курс",
+    "Группа",
     "Пол",
     "Телефон",
     "Электронная почта",
@@ -64,7 +65,8 @@ def _write_sample_contingent(path: Path) -> None:
             "25011884",
             "01.09.2025",
             "бакалавриат",
-            1,
+            2,
+            "АМБ-211",
             "м",
             "79161384053",
             "test@mail.ru",
@@ -86,7 +88,8 @@ def _write_sample_contingent(path: Path) -> None:
             "25005843",
             "01.09.2025",
             "бакalavriat",
-            1,
+            2,
+            "АМБ-211",
             "м",
             "79920040184",
             "test2@mail.ru",
@@ -94,9 +97,9 @@ def _write_sample_contingent(path: Path) -> None:
             "20064882942",
             "1330766",
             "6048844",
-            "205393",
+            "197175",
             "АМБ-2025-11",
-            "309835",
+            "309371",
         ],
     ]
     # Исправляем опечатку в level второй строки
@@ -308,7 +311,8 @@ class TestImportStudyGroupsFromContingentCommand:
             "25011884",
             "01.09.2025",
             "бакалавриат",
-            1,
+            2,
+            "АМБ-211",
             "м",
             "79161384053",
             "test@mail.ru",
@@ -391,7 +395,8 @@ class TestImportStudyGroupsFromContingentCommand:
                 "25011884",
                 "01.09.2020",
                 "бакалавриат",
-                1,
+                7,
+                "АМБ-711",
                 "м",
                 "79161384053",
                 "test@mail.ru",
@@ -413,7 +418,8 @@ class TestImportStudyGroupsFromContingentCommand:
                 "25005843",
                 "01.09.2020",
                 "бакалавриат",
-                1,
+                7,
+                "АМБ-711",
                 "м",
                 "79920040184",
                 "test2@mail.ru",
@@ -456,7 +462,8 @@ class TestImportStudyGroupsFromContingentCommand:
                 "25011884",
                 "01.09.2025",
                 "бакалавриат",
-                1,
+                2,
+                "АМБ-212",
                 "м",
                 "79161384053",
                 "test@mail.ru",
@@ -478,7 +485,8 @@ class TestImportStudyGroupsFromContingentCommand:
                 "25005843",
                 "01.09.2025",
                 "бакалавриат",
-                1,
+                2,
+                "АМБ-212",
                 "м",
                 "79920040184",
                 "test2@mail.ru",
@@ -504,3 +512,60 @@ class TestImportStudyGroupsFromContingentCommand:
 
         group = StudyGroup.objects.get(code="АМБ-2025-12")
         assert group.is_end is False
+
+    def test_import_backfills_external_group_id(
+        self, sample_contingent_file: Path, aga_institute: Institute
+    ) -> None:
+        call_command(
+            "import_study_groups_from_contingent",
+            file=str(sample_contingent_file),
+            year=2026,
+            semester="autumn",
+        )
+
+        group = StudyGroup.objects.get(code="АМБ-2025-11")
+        assert group.external_group_id == "197175"
+        assert group.external_permanent_group_id == "309371"
+
+    def test_import_without_external_columns_skips_phase_two(
+        self, tmp_path: Path, aga_institute: Institute
+    ) -> None:
+        path = tmp_path / "no_external_cols.xlsx"
+        columns = [
+            col
+            for col in COLUMNS
+            if col not in ("ID группы", "ID постоянной группы", "Группа", "Курс")
+        ]
+        title_row = ["Заголовок"] + [""] * (len(columns) - 1)
+        data_row = [
+            "очная",
+            "25.03.03",
+            "Студент 1",
+            "Академия гражданской авиации",
+            "Аэронавигация",
+            "Организация бизнес-процессов",
+            "25011884",
+            "01.09.2025",
+            "бакалавриат",
+            "м",
+            "79161384053",
+            "test@mail.ru",
+            "31.08.2029",
+            "18457362806",
+            "1335090",
+            "6054707",
+            "АМБ-2025-11",
+        ]
+        pd.DataFrame([title_row, columns, data_row]).to_excel(
+            path, index=False, header=False
+        )
+
+        call_command(
+            "import_study_groups_from_contingent",
+            file=str(path),
+            year=2026,
+            semester="autumn",
+        )
+
+        group = StudyGroup.objects.get(code="АМБ-2025-11")
+        assert group.external_group_id == ""

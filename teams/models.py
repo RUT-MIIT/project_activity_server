@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from django.db.models import Q
 
 
 class Direction(models.Model):
@@ -86,11 +87,31 @@ class StudyGroup(models.Model):
         verbose_name="Наставник",
         limit_choices_to={"role__code": "mentor"},
     )
+    external_group_id = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        db_index=True,
+        verbose_name="ID группы (1С)",
+    )
+    external_permanent_group_id = models.CharField(
+        max_length=64,
+        blank=True,
+        default="",
+        verbose_name="ID постоянной группы (1С)",
+    )
 
     class Meta:
         verbose_name = "Учебная группа"
         verbose_name_plural = "Учебные группы"
         ordering = ("institute", "name")
+        constraints = [
+            models.UniqueConstraint(
+                fields=["external_group_id"],
+                condition=Q(external_group_id__gt=""),
+                name="unique_studygroup_external_group_id",
+            ),
+        ]
 
     def __str__(self) -> str:
         if self.code:
