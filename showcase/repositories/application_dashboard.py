@@ -439,7 +439,7 @@ class ApplicationDashboardRepository:
     ) -> list[dict]:
         """Данные категорий рейтинга по институтам."""
         institutes = list(
-            Institute.objects.filter(is_active=True)
+            Institute.objects.filter(is_active=True, department_id__isnull=False)
             .select_related("department")
             .order_by("position")
         )

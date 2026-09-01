@@ -708,6 +708,43 @@ class TestApplicationDashboardService:
         assert category["id"] == institute.department_id
         assert category["code"] == institute.code
 
+    def test_rating_chart_excludes_institutes_without_department(
+        self, statuses, institute, semester, departments, make_user
+    ):
+        """Институты без связанного подразделения не попадают в рейтинг."""
+        orphan_institute = Institute.objects.create(
+            code="ORPHAN",
+            name="Orphan Institute",
+            position=99,
+            department=None,
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["approved"],
+            institute=orphan_institute,
+        )
+        _create_app(
+            semester=semester,
+            status=statuses["approved"],
+            main_department=departments["child"],
+            institute=institute,
+        )
+        user = make_user(role_code="admin")
+        service = ApplicationDashboardService()
+        data = service.get_dashboard(
+            user=user,
+            semester_id_raw=str(semester.pk),
+            institute_code=None,
+            department_id_raw=None,
+            status_raw=None,
+            application_type_raw=None,
+            days_raw=None,
+        )
+
+        categories = data["rating_chart"]["categories"]
+        assert all(category is not None for category in categories)
+        assert {category["code"] for category in categories} == {institute.code}
+
     def test_department_child_includes_parent_institute_code(
         self, statuses, institute, semester, departments, make_user
     ):
