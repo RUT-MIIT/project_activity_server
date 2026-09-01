@@ -104,6 +104,15 @@ class User(AbstractBaseUser, PermissionsMixin):
         verbose_name_plural = "Пользователи"
 
 
+class UserWithEmailProvision(User):
+    """Proxy-модель для отдельного admin-интерфейса создания пользователя с письмом."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Создать пользователя (с письмом)"
+        verbose_name_plural = "Создать пользователя (с письмом)"
+
+
 class Department(models.Model):
     name = models.CharField("Название подразделения", max_length=255)
     short_name = models.CharField("Краткое название", max_length=64)

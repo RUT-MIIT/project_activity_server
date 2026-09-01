@@ -1,5 +1,13 @@
-from django.contrib import admin
+from django.contrib import admin, messages
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.http import HttpResponseRedirect
+from django.urls import reverse
+
+from accounts.forms.admin_user_provision_form import AdminUserProvisionForm
+from accounts.services.admin_user_provision_service import (
+    AdminUserProvisionResult,
+    AdminUserProvisionService,
+)
 
 from .models import (
     AcademicYear,
@@ -10,6 +18,7 @@ from .models import (
     Semester,
     Settings,
     User,
+    UserWithEmailProvision,
 )
 
 
@@ -82,6 +91,71 @@ class UserAdmin(BaseUserAdmin):
             },
         ),
     )
+
+
+@admin.register(UserWithEmailProvision)
+class UserWithEmailProvisionAdmin(admin.ModelAdmin):
+    """Отдельный admin-интерфейс: создание пользователя с письмом на email."""
+
+    form = AdminUserProvisionForm
+    _provision_result: AdminUserProvisionResult | None = None
+
+    def get_queryset(self, request):
+        return User.objects.none()
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def changelist_view(self, request, extra_context=None):
+        return HttpResponseRedirect(
+            reverse("admin:accounts_userwithemailprovision_add")
+        )
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            return
+        self._provision_result = (
+            AdminUserProvisionService().create_user_with_credentials_email(
+                email=form.cleaned_data["email"],
+                first_name=form.cleaned_data["first_name"],
+                last_name=form.cleaned_data["last_name"],
+                middle_name=form.cleaned_data.get("middle_name", ""),
+                role=form.cleaned_data["role"],
+                department=form.cleaned_data.get("department"),
+                study_group=form.cleaned_data.get("study_group"),
+                phone=form.cleaned_data.get("phone"),
+                is_staff=form.cleaned_data.get("is_staff", False),
+                is_active=form.cleaned_data.get("is_active", True),
+            )
+        )
+
+    def response_add(self, request, obj, post_url_continue=None):
+        result = self._provision_result
+        self._provision_result = None
+        if result is None:
+            return super().response_add(request, obj, post_url_continue)
+
+        if result.email_sent:
+            self.message_user(
+                request,
+                f"Пользователь создан. Письмо с учётными данными отправлено на {result.user.email}.",
+                level=messages.SUCCESS,
+            )
+        else:
+            self.message_user(
+                request,
+                (
+                    "Пользователь создан, но не удалось отправить письмо: "
+                    f"{result.email_error}"
+                ),
+                level=messages.WARNING,
+            )
+        return HttpResponseRedirect(
+            reverse("admin:accounts_userwithemailprovision_add")
+        )
 
 
 @admin.register(PreRegisteredStudent)
