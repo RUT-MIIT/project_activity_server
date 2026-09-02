@@ -14,11 +14,14 @@ from teams.domain.study_group_import import (
     OPTIONAL_EXTERNAL_ID_COLUMNS,
     OPTIONAL_PERMANENT_EXTERNAL_ID_COLUMN,
     REQUIRED_COLUMNS,
+    SKIPPED_PERMANENT_GROUP_CODES,
+    SKIPPED_PERMANENT_GROUP_PREFIXES,
     ContingentRowForExternalIds,
     GroupImportRow,
     build_group_import_row,
     collect_external_ids_for_group,
     group_ended_by_planned_dates,
+    is_skipped_permanent_group,
     normalize_cell,
     parse_planned_end_date,
 )
@@ -76,7 +79,7 @@ class Command(BaseCommand):
             self.stdout.write(f"Удалено групп: {deleted}")
 
         df = self._read_contingent(path)
-        rows = self._collect_group_rows(
+        rows, skipped_by_config = self._collect_group_rows(
             df=df,
             current_year=current_year,
             semester=semester,
@@ -118,17 +121,22 @@ class Command(BaseCommand):
         )
 
         ended_missing_count = 0
-        if not options["clear"]:
+        if not options["clear"] and rows:
             imported_codes = set(rows.keys())
-            ended_missing_count = StudyGroup.objects.exclude(
-                code__in=imported_codes
-            ).update(is_end=True)
+            ended_qs = StudyGroup.objects.exclude(code__in=imported_codes).exclude(
+                code__in=SKIPPED_PERMANENT_GROUP_CODES
+            )
+            for prefix in SKIPPED_PERMANENT_GROUP_PREFIXES:
+                ended_qs = ended_qs.exclude(code__startswith=prefix)
+            ended_missing_count = ended_qs.update(is_end=True)
 
         summary = (
             f"Готово: создано {created}, обновлено {updated}, "
             f"уникальных групп {len(rows)} "
             f"(year={current_year}, semester={semester})"
         )
+        if skipped_by_config:
+            summary += f", пропущено исключённых групп {skipped_by_config}"
         if not options["clear"]:
             summary += (
                 f", завершено отсутствующих {ended_missing_count}, "
@@ -166,12 +174,13 @@ class Command(BaseCommand):
         current_year: int,
         semester: str,
         today: date,
-    ) -> dict[str, GroupImportRow]:
+    ) -> tuple[dict[str, GroupImportRow], int]:
         """Дедуплицирует строки по коду постоянной группы."""
         groups: dict[str, GroupImportRow] = {}
         planned_dates_by_group: dict[str, list[date | None]] = {}
         unknown_institutes: set[str] = set()
         skipped = 0
+        skipped_by_config = 0
 
         for line_no, (_, row) in enumerate(df.iterrows(), start=HEADER_ROW + 2):
             permanent_group = normalize_cell(row.get("Постоянная группа"))
@@ -179,6 +188,9 @@ class Command(BaseCommand):
 
             if not permanent_group:
                 skipped += 1
+                continue
+            if is_skipped_permanent_group(permanent_group):
+                skipped_by_config += 1
                 continue
             if not institute_name:
                 self.stdout.write(
@@ -233,8 +245,14 @@ class Command(BaseCommand):
             self.stdout.write(
                 self.style.WARNING(f"Пропущено строк без группы/института: {skipped}")
             )
+        if skipped_by_config:
+            self.stdout.write(
+                self.style.WARNING(
+                    f"Пропущено строк исключённых постоянных групп: {skipped_by_config}"
+                )
+            )
 
-        if not groups:
+        if not groups and not skipped_by_config:
             raise CommandError("Не найдено ни одной валидной учебной группы")
 
         for code, group_row in groups.items():
@@ -244,7 +262,7 @@ class Command(BaseCommand):
             )
             groups[code] = replace(group_row, is_end=is_end)
 
-        return groups
+        return groups, skipped_by_config
 
     def _backfill_external_ids(
         self,
@@ -278,7 +296,7 @@ class Command(BaseCommand):
         rows_by_permanent: dict[str, list[ContingentRowForExternalIds]] = {}
         for _, row in df.iterrows():
             permanent_group = normalize_cell(row.get("Постоянная группа"))
-            if not permanent_group:
+            if not permanent_group or is_skipped_permanent_group(permanent_group):
                 continue
             permanent_external_id = ""
             if has_permanent_id_column:
@@ -298,6 +316,8 @@ class Command(BaseCommand):
         skipped = 0
         conflicts = 0
         for permanent_code, contingent_rows in rows_by_permanent.items():
+            if is_skipped_permanent_group(permanent_code):
+                continue
             study_group = StudyGroup.objects.filter(code=permanent_code).first()
             if study_group is None:
                 continue

@@ -569,3 +569,38 @@ class TestImportStudyGroupsFromContingentCommand:
 
         group = StudyGroup.objects.get(code="АМБ-2025-11")
         assert group.external_group_id == ""
+
+    def test_import_skips_excluded_permanent_group(
+        self, sample_contingent_file: Path, aga_institute: Institute, monkeypatch
+    ) -> None:
+        monkeypatch.setattr(
+            "teams.domain.study_group_import.SKIPPED_PERMANENT_GROUP_CODES",
+            frozenset({"АМБ-2025-11"}),
+        )
+
+        call_command(
+            "import_study_groups_from_contingent",
+            file=str(sample_contingent_file),
+            year=2026,
+            semester="autumn",
+        )
+
+        assert not StudyGroup.objects.filter(code="АМБ-2025-11").exists()
+
+    def test_import_applies_name_override(
+        self, sample_contingent_file: Path, aga_institute: Institute, monkeypatch
+    ) -> None:
+        monkeypatch.setattr(
+            "teams.domain.study_group_import.STUDY_GROUP_NAME_OVERRIDES_BY_CODE",
+            {"АМБ-2025-11": "АМБ-211Н"},
+        )
+
+        call_command(
+            "import_study_groups_from_contingent",
+            file=str(sample_contingent_file),
+            year=2026,
+            semester="autumn",
+        )
+
+        group = StudyGroup.objects.get(code="АМБ-2025-11")
+        assert group.name == "АМБ-211Н"

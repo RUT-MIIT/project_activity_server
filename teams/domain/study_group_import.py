@@ -54,6 +54,23 @@ REQUIRED_COLUMNS = (
 
 VALID_LEVELS = {"бакалавриат", "специалитет"}
 
+# Постоянные группы, полностью исключённые из импорта (группы и студенты).
+SKIPPED_PERMANENT_GROUP_CODES: frozenset[str] = frozenset()
+
+# Префиксы постоянных групп для исключения из импорта (например, все ТУП-*).
+SKIPPED_PERMANENT_GROUP_PREFIXES: tuple[str, ...] = ("ТУП-",)
+
+# Переименование учебных групп: расчётное имя из 1С → имя в БД.
+STUDY_GROUP_NAME_OVERRIDES: dict[str, str] = {}
+
+# Переименование по коду постоянной группы (приоритетнее STUDY_GROUP_NAME_OVERRIDES).
+STUDY_GROUP_NAME_OVERRIDES_BY_CODE: dict[str, str] = {}
+
+# Замена аббревиатуры в имени группы: ЭБП-211 → ЭПТ-211.
+GROUP_ABBREV_RENAMES: dict[str, str] = {
+    "ЭБП": "ЭПТ",
+}
+
 
 @dataclass(frozen=True)
 class ParsedPermanentGroup:
@@ -116,6 +133,55 @@ def normalize_cell(value: object) -> str:
     if text.lower() == "nan":
         return ""
     return text
+
+
+def is_skipped_permanent_group(permanent_group_code: str) -> bool:
+    """Возвращает True, если постоянная группа исключена из импорта."""
+    code = normalize_cell(permanent_group_code)
+    if code in SKIPPED_PERMANENT_GROUP_CODES:
+        return True
+    return any(code.startswith(prefix) for prefix in SKIPPED_PERMANENT_GROUP_PREFIXES)
+
+
+def apply_group_abbrev_renames(name: str) -> str:
+    """Заменяет аббревиатуру в начале имени учебной группы, например ЭБП → ЭПТ."""
+    cleaned = normalize_cell(name)
+    if not cleaned:
+        return ""
+    for old_abbrev, new_abbrev in GROUP_ABBREV_RENAMES.items():
+        prefix = f"{old_abbrev}-"
+        if cleaned.startswith(prefix):
+            return f"{new_abbrev}-{cleaned[len(prefix):]}"
+    return cleaned
+
+
+def resolve_study_group_display_name(
+    *,
+    calculated_name: str,
+    permanent_group_code: str,
+) -> str:
+    """
+    Возвращает имя учебной группы для сохранения в БД.
+
+    Приоритет: переименование по коду постоянной группы → по расчётному имени.
+    """
+    code = normalize_cell(permanent_group_code)
+    by_code = STUDY_GROUP_NAME_OVERRIDES_BY_CODE.get(code)
+    if by_code:
+        return apply_group_abbrev_renames(by_code)
+
+    name = normalize_cell(calculated_name)
+    renamed = STUDY_GROUP_NAME_OVERRIDES.get(name, name)
+    return apply_group_abbrev_renames(renamed)
+
+
+def map_teaching_group_name_for_lookup(teaching_group_name: str) -> str:
+    """Преобразует имя из колонки «Группа» к имени в БД для поиска группы."""
+    name = normalize_cell(teaching_group_name)
+    if not name:
+        return ""
+    renamed = STUDY_GROUP_NAME_OVERRIDES.get(name, name)
+    return apply_group_abbrev_renames(renamed)
 
 
 def parse_planned_end_date(value: object) -> date | None:
@@ -394,12 +460,17 @@ def build_group_import_row(
     if not direction_name.strip():
         raise ValueError("Пустое название специальности")
 
+    calculated_name = build_group_name(
+        abbrev=parsed.abbrev,
+        course_number=course_number,
+        group_num=parsed.group_num,
+    )
+
     return GroupImportRow(
         code=permanent_group_code.strip(),
-        name=build_group_name(
-            abbrev=parsed.abbrev,
-            course_number=course_number,
-            group_num=parsed.group_num,
+        name=resolve_study_group_display_name(
+            calculated_name=calculated_name,
+            permanent_group_code=permanent_group_code,
         ),
         enrollment_year=parsed.enrollment_year,
         course_number=course_number,

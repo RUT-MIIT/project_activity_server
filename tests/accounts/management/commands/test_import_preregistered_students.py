@@ -448,3 +448,20 @@ class TestImportPreRegisteredStudentsCommand:
         assert (
             PreRegisteredStudent.objects.filter(personnel_number="1335090").count() == 0
         )
+
+    def test_import_skips_excluded_permanent_group(
+        self, sample_contingent_file: Path, study_group: StudyGroup, monkeypatch
+    ) -> None:
+        monkeypatch.setattr(
+            "teams.domain.study_group_import.SKIPPED_PERMANENT_GROUP_CODES",
+            frozenset({"АМБ-2025-11"}),
+        )
+
+        call_command(
+            "import_preregistered_students",
+            file=str(sample_contingent_file),
+            year=2026,
+            semester="autumn",
+        )
+
+        assert PreRegisteredStudent.objects.count() == 0

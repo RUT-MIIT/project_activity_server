@@ -18,7 +18,7 @@ from accounts.domain.preregistered_student_import import (
     resolve_study_group_for_student,
 )
 from accounts.models import PreRegisteredStudent
-from teams.domain.study_group_import import normalize_cell
+from teams.domain.study_group_import import is_skipped_permanent_group, normalize_cell
 from teams.models import StudyGroup
 
 DEFAULT_FILE = "data/контингент_29_08.xls"
@@ -79,6 +79,7 @@ class Command(BaseCommand):
         updated = 0
         skipped_invalid = 0
         skipped_no_group = 0
+        skipped_excluded_group = 0
         imported_personnel_numbers: set[str] = set()
         users_to_sync: dict[int, int] = {}
 
@@ -102,6 +103,10 @@ class Command(BaseCommand):
                         self.style.WARNING(f"Строка {line_no}: пропущена — {exc}")
                     )
                     skipped_invalid += 1
+                    continue
+
+                if is_skipped_permanent_group(parsed.group_code):
+                    skipped_excluded_group += 1
                     continue
 
                 resolve_result = resolve_study_group_for_student(
@@ -169,6 +174,7 @@ class Command(BaseCommand):
                 f"Готово: создано {created}, обновлено {updated}, "
                 f"удалено {deleted}, пропущено невалидных {skipped_invalid}, "
                 f"пропущено без группы {skipped_no_group}, "
+                f"пропущено исключённых групп {skipped_excluded_group}, "
                 f"синхронизировано пользователей {len(users_to_sync)}"
             )
         )
@@ -215,6 +221,7 @@ class Command(BaseCommand):
             normalize_cell(value)
             for value in df["Постоянная группа"].tolist()
             if normalize_cell(value)
+            and not is_skipped_permanent_group(normalize_cell(value))
         }
         missing_codes = sorted(codes - set(lookup.by_code))
         if missing_codes:

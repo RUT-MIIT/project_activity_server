@@ -8,6 +8,7 @@ import re
 from teams.domain.study_group_import import (
     Semester,
     is_convergent_contingent_row,
+    map_teaching_group_name_for_lookup,
     normalize_cell,
 )
 
@@ -201,7 +202,8 @@ def resolve_study_group_for_student(
             ),
         )
 
-    matches = lookup.by_name.get(teaching_name, [])
+    lookup_name = map_teaching_group_name_for_lookup(teaching_name)
+    matches = lookup.by_name.get(lookup_name, [])
     if len(matches) == 1:
         return StudyGroupResolveResult(group=matches[0])
     if len(matches) > 1:
