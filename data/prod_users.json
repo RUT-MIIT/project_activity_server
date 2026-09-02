@@ -16,6 +16,62 @@
     "authored_projects_count": 0
   },
   {
+    "id": 444,
+    "full_name": "Абрамов Олег Сергеевич",
+    "email": "dude_oleg@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 349,
+    "full_name": "Аверьянова Оксана Александровна",
+    "email": "ksusha05.07@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 61,
+      "name": "Институт экономики и финансов",
+      "short_name": "ИЭФ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 497,
+    "full_name": "Авилова Наталия Дмитриевна",
+    "email": "avilova_nata@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 64,
+      "name": "Кафедра «Международный финансовый и управленческий учет»",
+      "short_name": "МФиУУ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 605,
+    "full_name": "Агамалян Никита Арменович",
+    "email": "n.agamalyan@list.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 16,
     "full_name": "Агафонова Ирина Владимировна",
     "email": "murmurashki@gmail.com",
@@ -30,6 +86,70 @@
       "short_name": "ИЖТ (ИТТСУ)"
     },
     "authored_projects_count": 27
+  },
+  {
+    "id": 625,
+    "full_name": "Агишев Глеб Алексеевич",
+    "email": "Gribok894@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 505,
+    "full_name": "Агишева Наталья Александровна",
+    "email": "neagisheva@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 549,
+    "full_name": "Аксенов Роман Павлович",
+    "email": "roma.aksyonov.12@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 316,
+    "full_name": "Акульшин Артём Павлович",
+    "email": "artemakulsin7@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 163,
+    "full_name": "Алферов Иван Валерьевич",
+    "email": "ialferov@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 31,
+      "name": "Кафедра «Строительная механика»",
+      "short_name": "СМ"
+    },
+    "authored_projects_count": 0
   },
   {
     "id": 116,
@@ -48,6 +168,30 @@
     "authored_projects_count": 1
   },
   {
+    "id": 548,
+    "full_name": "Алянчиков Кирилл Александрович",
+    "email": "look.game.net@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 448,
+    "full_name": "Амерханов Тимур Артурович",
+    "email": "timuramerk@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 18,
     "full_name": "Андриянова Наталья Александровна",
     "email": "nalarkova@mail.ru",
@@ -62,6 +206,18 @@
       "short_name": "ИЖТ (ИУЦТ)"
     },
     "authored_projects_count": 8
+  },
+  {
+    "id": 513,
+    "full_name": "Анисимова Валерия Анатольевна",
+    "email": "lera_anisimova_03@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 12,
@@ -80,6 +236,122 @@
     "authored_projects_count": 14
   },
   {
+    "id": 229,
+    "full_name": "Арифметов Леонид Алексеевич",
+    "email": "leonidarifmetov@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 246,
+    "full_name": "Архипов Владимир Владимирович",
+    "email": "allaiva1998@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 637,
+    "full_name": "Астайченкова Полина Сергеевна",
+    "email": "P.asta@inbox.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 13,
+      "name": "Институт международных транспортных коммуникаций",
+      "short_name": "ИМТК"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 321,
+    "full_name": "Афанасьев Виталий Борисович",
+    "email": "afanasiev@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 50,
+      "name": "Институт управления и цифровых технологий",
+      "short_name": "ИЖТ (ИУЦТ)"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 342,
+    "full_name": "Ахмедов Артём Вугарович",
+    "email": "artm.akhmedov.07@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 401,
+    "full_name": "Ачоян Артур Арамович",
+    "email": "arturachoyan1@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 494,
+    "full_name": "Бабышев Сергей Викторович",
+    "email": "sergejbabysev90@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 297,
+    "full_name": "Багдасарян Артём Артемович",
+    "email": "baglasarana@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 611,
+    "full_name": "Бадаянц Тамерлан Эдуардович",
+    "email": "tamerlaxa@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 64,
     "full_name": "Балмакова Ксения Юрьевна",
     "email": "avtomonova-ky@rut-miit.ru",
@@ -93,6 +365,78 @@
       "name": "Кафедра «Логистика и управление транспортными системами»",
       "short_name": "ЛиУТС"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 173,
+    "full_name": "Баранов Дмитрий Денисович",
+    "email": "barash0912@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 511,
+    "full_name": "Баранов Дмитрий Сергеевич",
+    "email": "dmitrybaranov9@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 209,
+    "full_name": "Баранов Никита Дмитриевич",
+    "email": "baranovnikita100@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 596,
+    "full_name": "Баранова Елизавета Юрьевна",
+    "email": "elizavetabaranova182006@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 290,
+    "full_name": "Барановская Полина Александровна",
+    "email": "polina.baranovskaya.05@inbox.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 220,
+    "full_name": "Баркалов Роман Константинович",
+    "email": "a.vmiller@list.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -112,6 +456,82 @@
     "authored_projects_count": 3
   },
   {
+    "id": 386,
+    "full_name": "Белов Александр Олегович",
+    "email": "alexbelov.06@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 635,
+    "full_name": "Березнев Дмитрий Сергеевич",
+    "email": "Bereznev07@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 550,
+    "full_name": "Березовский Артем Сергеевич",
+    "email": "artem-beruza25@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 306,
+    "full_name": "Биркин Иван Сергеевич",
+    "email": "ivanfeed84@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 161,
+    "full_name": "Бирюков Антон Сергеевич",
+    "email": "sovietassault001@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 41,
+      "name": "Кафедра «Наземные транспортно-технологические средства»",
+      "short_name": "НТТС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 178,
+    "full_name": "Блохина Екатерина Витальевна",
+    "email": "ekbbl@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 22,
     "full_name": "Боброва Елена Викторовна",
     "email": "oumnique@gmail.com",
@@ -125,6 +545,34 @@
       "name": "Институт международных транспортных коммуникаций",
       "short_name": "ИМТК"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 504,
+    "full_name": "Бобырь Анатолий Борисович",
+    "email": "a.b.bobyr@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 67,
+      "name": "Кафедра «Финансы и кредит»",
+      "short_name": "ФК"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 420,
+    "full_name": "Богаченко Анастасия Николаевна",
+    "email": "bogachenko.an@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -172,6 +620,166 @@
     "authored_projects_count": 12
   },
   {
+    "id": 445,
+    "full_name": "Бондарев Даниил Сергеевич",
+    "email": "daniilbondarev38@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 322,
+    "full_name": "Бондаренко Константин Максимович",
+    "email": "1252275@edu.rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 390,
+    "full_name": "Борисов Максим Олегович",
+    "email": "maks.borisov858@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 196,
+    "full_name": "Борисова Мария Викторовна",
+    "email": "masha2006.13@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 192,
+    "full_name": "Борщёв Александр Михайлович",
+    "email": "samebor@ya.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 554,
+    "full_name": "Бояринцев Данил Дмитриевич",
+    "email": "luisborges@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 199,
+    "full_name": "Брижан Андрей Александрович",
+    "email": "brizanandreu@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 410,
+    "full_name": "Бринько Данил Сергеевич",
+    "email": "brinko2045@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 500,
+    "full_name": "Булахова Полина Андреевна",
+    "email": "bulakhova.pa@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 485,
+    "full_name": "Буянов Петер Андреевич",
+    "email": "killura205@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 580,
+    "full_name": "Быков Вадим Владимирович",
+    "email": "vsdimka22@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 208,
+    "full_name": "Бяширов Илнур Айратович",
+    "email": "ilnurbalakovo@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 607,
+    "full_name": "Вагапов Александр Станиславович",
+    "email": "12312400sacha@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 112,
     "full_name": "Васильева ильева Елена Юрьевна",
     "email": "Vasileva.ei@rut-miit.ru",
@@ -186,6 +794,18 @@
       "short_name": "ТПиОТД"
     },
     "authored_projects_count": 1
+  },
+  {
+    "id": 307,
+    "full_name": "Венидиктов Кирилл Владимирович",
+    "email": "venidiktovkirill85@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 60,
@@ -204,15 +824,71 @@
     "authored_projects_count": 2
   },
   {
-    "id": 137,
-    "full_name": "Власкин Вадим Викторович",
-    "email": "test2@emiit.ru",
+    "id": 382,
+    "full_name": "Веснин Никита Константинович",
+    "email": "vesnin-nekit65@mail.ru",
     "phone": "",
     "role": {
       "code": "student",
       "name": "Студент"
     },
     "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 280,
+    "full_name": "Ветлинская Элеонора Сергеевна",
+    "email": "eleonora_vetlinskaya@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 347,
+    "full_name": "Вешкурова Алина Борисовна",
+    "email": "veshkurova.ab@edu.rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 71,
+      "name": "Кафедра «Экономика труда и управление человеческими ресурсами»",
+      "short_name": "ЭТиУЧР"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 393,
+    "full_name": "Вилков Максим Владимирович",
+    "email": "vilkov-05@list.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 317,
+    "full_name": "Воробьева Виктория Георгиевна",
+    "email": "vorobieva-vg@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 71,
+      "name": "Кафедра «Экономика труда и управление человеческими ресурсами»",
+      "short_name": "ЭТиУЧР"
+    },
     "authored_projects_count": 0
   },
   {
@@ -232,6 +908,86 @@
     "authored_projects_count": 3
   },
   {
+    "id": 320,
+    "full_name": "Воронкин Артем Александрович",
+    "email": "voronkin2005@list.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 338,
+    "full_name": "Воронова Лариса Анатольевна",
+    "email": "Lara-163@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 42,
+      "name": "Кафедра «Теплоэнергетика транспорта» Института транспортной техники и систем управления",
+      "short_name": "ТТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 584,
+    "full_name": "Воронцова Мария Сергеевна",
+    "email": "2006mariyav@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 197,
+    "full_name": "Востряков Никита Владимирович",
+    "email": "vostryakovaolv819@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 526,
+    "full_name": "Гаврилюк Татьяна Михайловна",
+    "email": "gavrilyuk-tm@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 64,
+      "name": "Кафедра «Международный финансовый и управленческий учет»",
+      "short_name": "МФиУУ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 609,
+    "full_name": "Галанова Ирина Вадимовна",
+    "email": "igalanova14@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 81,
     "full_name": "Галеева Полина Эдуардовна",
     "email": "polinagaleeva03@mail.ru",
@@ -242,10 +998,58 @@
     },
     "department": {
       "id": 18,
-      "name": "Институт пути, строительства и сооружений",
-      "short_name": "ИПСС"
+      "name": "Институт строительства транспортной инфраструктуры",
+      "short_name": "ИСТИ"
     },
-    "authored_projects_count": 13
+    "authored_projects_count": 14
+  },
+  {
+    "id": 264,
+    "full_name": "Галкина Софья Ивановна",
+    "email": "Sofikoglk@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 304,
+    "full_name": "Галкина Ульяна Сергеевна",
+    "email": "galkinaulana6@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 281,
+    "full_name": "Ганиева Севара Аманжон кизи",
+    "email": "Sevaraganieva7153@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 379,
+    "full_name": "Гаспарян Артём Артурович",
+    "email": "artemgaspary@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 53,
@@ -292,6 +1096,114 @@
     "authored_projects_count": 13
   },
   {
+    "id": 489,
+    "full_name": "Головина Дарья Дмитриевна",
+    "email": "dariagolovina82831@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 477,
+    "full_name": "Головко Дарья Вячеславовна",
+    "email": "i.am.daria@icloud.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 627,
+    "full_name": "Головков Анатолий Иванович",
+    "email": "20040007.zoxzox@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 459,
+    "full_name": "Гончаров Ярослав Алексеевич",
+    "email": "gyay2806@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 409,
+    "full_name": "Гончарова Алёна Антоновна",
+    "email": "goncharova.alena2005@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 238,
+    "full_name": "Горб Михаил Васильевич",
+    "email": "mixa.580@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 433,
+    "full_name": "Горбунов Артём Александрович",
+    "email": "artm.gorbunov@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 443,
+    "full_name": "Горбылев Александр Иванович",
+    "email": "gorbylev30@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 255,
+    "full_name": "Горев Максим Дмитриевич",
+    "email": "gorevmax295@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 49,
     "full_name": "Горелова Мария Витальевна",
     "email": "marusalen@mail.ru",
@@ -322,6 +1234,18 @@
       "short_name": "ЭУТ"
     },
     "authored_projects_count": 9
+  },
+  {
+    "id": 600,
+    "full_name": "Гречман Виктор Викторович",
+    "email": "vitya22112006@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 14,
@@ -356,6 +1280,18 @@
     "authored_projects_count": 29
   },
   {
+    "id": 389,
+    "full_name": "Гришин Михаил Андреевич",
+    "email": "poll3das@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 106,
     "full_name": "Гришко Наталья Александровна",
     "email": "grish.nat88@ya.ru",
@@ -372,6 +1308,126 @@
     "authored_projects_count": 1
   },
   {
+    "id": 385,
+    "full_name": "Груздов Денис Максимович",
+    "email": "gruzdow.denis2004@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 643,
+    "full_name": "Груненко Матвей Вячеславович",
+    "email": "mgrunenko@list.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 253,
+    "full_name": "Гуничев Никита Александрович",
+    "email": "HidraKill1285403@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 602,
+    "full_name": "Гуня Анастасия Юрьевна",
+    "email": "anasta.gunya@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 289,
+    "full_name": "Гураба Адам Хуссейнович",
+    "email": "Adamhussein599@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 569,
+    "full_name": "Гусаров Иван Александрович",
+    "email": "ivan.gusarov2006@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 610,
+    "full_name": "Гусаров Никита Владимирович",
+    "email": "nikitagusarov8318@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 423,
+    "full_name": "Густова Арина Сергеевна",
+    "email": "arina_gustova@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 176,
+    "full_name": "Гущин Тимофей Андреевич",
+    "email": "stfaer44@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 412,
+    "full_name": "Дамбаев Аюр Баторович",
+    "email": "dambaev.ayur@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 52,
     "full_name": "Данилина Мария Геннадьевна",
     "email": "danilina-mg@rut-miit.ru",
@@ -385,6 +1441,18 @@
       "name": "Кафедра «Экономика и управление на транспорте»",
       "short_name": "ЭУТ"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 545,
+    "full_name": "Дедов Роман Олегович",
+    "email": "rdedov169@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -404,6 +1472,126 @@
     "authored_projects_count": 0
   },
   {
+    "id": 590,
+    "full_name": "Денисенко Никита Витальевич",
+    "email": "egordodov6@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 613,
+    "full_name": "Денисов Максим Семенович",
+    "email": "dms2612@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 561,
+    "full_name": "Денищенко Валерия Игоревна",
+    "email": "simpledoxfire@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 413,
+    "full_name": "Дербасова Дарья Максимовна",
+    "email": "derbasovadara1@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 557,
+    "full_name": "Дмитренко Ярослав Константинович",
+    "email": "fabuloushornet51@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 201,
+    "full_name": "Дмитриева Мила Андреевна",
+    "email": "dmitrievamila2007@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 235,
+    "full_name": "Дозморова Ульяна Александровна",
+    "email": "ulianadozm@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 604,
+    "full_name": "Долгов Тимофей Владимирович",
+    "email": "timofei.dolgoff@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 335,
+    "full_name": "Долгополик Евгений Игоревич",
+    "email": "1195634@edu.rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 378,
+    "full_name": "Дохолян Герман Оганесович",
+    "email": "gerahautani@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 26,
     "full_name": "Дроздова Елена Анатольевна",
     "email": "gorbunovala@yandex.ru",
@@ -420,9 +1608,85 @@
     "authored_projects_count": 4
   },
   {
-    "id": 140,
-    "full_name": "Егоров Артём Андреевич",
-    "email": "test6@emiit.ru",
+    "id": 442,
+    "full_name": "Дулуб Михаил Петрович",
+    "email": "dulubmp@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 156,
+    "full_name": "Дьяченко Мария Александровна",
+    "email": "dyachenko.ma@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 99,
+      "name": "Кафедра «Таможенное право и организация таможенного дела»",
+      "short_name": "ТПиОТД"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 464,
+    "full_name": "Дюжева Маргарита Евгеньевна",
+    "email": "duzhevamargo@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 249,
+    "full_name": "Евтушенко Ирина Михайловна",
+    "email": "ira_evt135@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 632,
+    "full_name": "Евтюшин Матвей Александрович",
+    "email": "matveyeutushin@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 374,
+    "full_name": "Егоров Артём Денисович",
+    "email": "a45934484@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 568,
+    "full_name": "Егоров Константин Евгеньевич",
+    "email": "egorov12asw@gmail.com",
     "phone": "",
     "role": {
       "code": "student",
@@ -448,6 +1712,114 @@
     "authored_projects_count": 14
   },
   {
+    "id": 534,
+    "full_name": "Елизарьева Анастасия Александровна",
+    "email": "a.a.elizareva@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 70,
+      "name": "Кафедра «Экономика транспортной инфраструктуры и управление строительным бизнесом»",
+      "short_name": "ЭТИиУСБ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 288,
+    "full_name": "Еременко Михаил Витальевич",
+    "email": "Konvas31@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 165,
+    "full_name": "Ермакова Елена Владимировна",
+    "email": "Ermakovae@rambler.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 15,
+      "name": "Кафедра «Международный бизнес»",
+      "short_name": "МБ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 571,
+    "full_name": "Ерошкин Максим Юрьевич",
+    "email": "yeroshkinm@list.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 402,
+    "full_name": "Ершов Андрей Дмитриевич",
+    "email": "mailrabochiy1@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 57,
+      "name": "Кафедра «Управление транспортным бизнесом и интеллектуальные системы»",
+      "short_name": "УТБиИС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 336,
+    "full_name": "Ершов Егор Евгеньевич",
+    "email": "wase4kaegor@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 465,
+    "full_name": "Ефимов Илья Максимович",
+    "email": "efim3960@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 470,
+    "full_name": "Ефимов Станислав Вячеславович",
+    "email": "Stas144off@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 39,
     "full_name": "Ефимова Ольга Владимировна",
     "email": "ovefimova@mail.ru",
@@ -461,6 +1833,18 @@
       "name": "Кафедра «Экономика, организация производства и менеджмент»",
       "short_name": "ЭОПМ"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 260,
+    "full_name": "Ефремов Максим Николаевич",
+    "email": "zvezdaju88g6@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -485,8 +1869,8 @@
     "email": "zhdakaev-so@rut-miit.ru",
     "phone": "+79067403582",
     "role": {
-      "code": "mentor",
-      "name": "Сотрудник"
+      "code": "institute_validator",
+      "name": "Ответственный от института"
     },
     "department": {
       "id": 58,
@@ -494,6 +1878,50 @@
       "short_name": "УЭРиБТ"
     },
     "authored_projects_count": 20
+  },
+  {
+    "id": 166,
+    "full_name": "Желенкова Маргарита Борисовна",
+    "email": "vfhujirf5@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 52,
+      "name": "Кафедра «Вычислительные системы, сети и информационная безопасность»",
+      "short_name": "ВССиИБ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 162,
+    "full_name": "Жижков Алексей Владиславович",
+    "email": "slava134567890@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 213,
+    "full_name": "Жихарева Елена Дмитриевна",
+    "email": "lenyuch@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 13,
+      "name": "Институт международных транспортных коммуникаций",
+      "short_name": "ИМТК"
+    },
+    "authored_projects_count": 0
   },
   {
     "id": 107,
@@ -528,9 +1956,57 @@
     "authored_projects_count": 4
   },
   {
-    "id": 138,
-    "full_name": "Завьялов Илья Андреевич",
-    "email": "test3@emiit.ru",
+    "id": 450,
+    "full_name": "Жукова Евгения Денисовна",
+    "email": "zukovazena1@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 642,
+    "full_name": "Журило Матвей Алексеевич",
+    "email": "matvey.zakirov.2019@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 644,
+    "full_name": "Забайрачный Данил Николаевич",
+    "email": "dan.zabairachniy@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 597,
+    "full_name": "Забиров Никита Александрович",
+    "email": "nikitazabirov519@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 355,
+    "full_name": "Заболотних Данила Игоревич",
+    "email": "dencikcadillac@gmail.com",
     "phone": "",
     "role": {
       "code": "student",
@@ -556,19 +2032,199 @@
     "authored_projects_count": 8
   },
   {
+    "id": 466,
+    "full_name": "Захаров Дмитрий Романович",
+    "email": "dimitriy_zaharov@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 517,
+    "full_name": "Захаров Илья Сергеевич",
+    "email": "zakharish2005@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 498,
+    "full_name": "Захарова Татьяна Павловна",
+    "email": "tpzaharova@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 30,
+      "name": "Кафедра «Системы автоматизированного проектирования»",
+      "short_name": "САП"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 636,
+    "full_name": "Зворыкин Дмитрий Александрович",
+    "email": "dima.zvorykin@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 325,
+    "full_name": "Зеленецкий Александр Романович",
+    "email": "shura281105@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 266,
+    "full_name": "Зеленина Виктория Витальевна",
+    "email": "Dlertiva@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 503,
+    "full_name": "Зенина Надежда Николаевна",
+    "email": "Znn1@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 47,
+      "name": "Кафедра «Управление производством и кадровое обеспечение транспортного комплекса»",
+      "short_name": "УПиКОТК"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 452,
+    "full_name": "Зенов Михаил Алексеевич",
+    "email": "expertpostmz@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 337,
+    "full_name": "Зенцов Никита Сергеевич",
+    "email": "zentsovn07@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 573,
+    "full_name": "Злобина Анастасия Андреевна",
+    "email": "azlobina84@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 434,
+    "full_name": "Золоткова Марианна Сергеевна",
+    "email": "mariannazolotkova@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 496,
+    "full_name": "Зудилина Вера Андреевна",
+    "email": "zudilina-va@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 67,
+      "name": "Кафедра «Финансы и кредит»",
+      "short_name": "ФК"
+    },
+    "authored_projects_count": 0
+  },
+  {
     "id": 2,
     "full_name": "Иван Костюлин Алексеевич",
     "email": "ief07@bk.ru",
     "phone": "",
     "role": {
-      "code": "institute_validator",
-      "name": "Ответственный от института"
+      "code": "cpds",
+      "name": "ЦПДС"
     },
     "department": {
-      "id": 61,
-      "name": "Институт экономики и финансов",
-      "short_name": "ИЭФ"
+      "id": 18,
+      "name": "Институт строительства транспортной инфраструктуры",
+      "short_name": "ИСТИ"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 398,
+    "full_name": "Иванов Алексей Павлович",
+    "email": "Lexa.ivanov008@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 345,
+    "full_name": "Иванов Андрей Вячеславович",
+    "email": "Ivandreipk@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -588,6 +2244,30 @@
     "authored_projects_count": 34
   },
   {
+    "id": 239,
+    "full_name": "Иванов Артём Романович",
+    "email": "artem4ik.onekkuss@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 577,
+    "full_name": "Иванов Виктор Сергеевич",
+    "email": "sorix.pt@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 5,
     "full_name": "Иванов Иван Иванович",
     "email": "admin@emiit.ru",
@@ -597,11 +2277,55 @@
       "name": "Ответственный от института"
     },
     "department": {
-      "id": 61,
-      "name": "Институт экономики и финансов",
-      "short_name": "ИЭФ"
+      "id": 13,
+      "name": "Институт международных транспортных коммуникаций",
+      "short_name": "ИМТК"
     },
     "authored_projects_count": 1
+  },
+  {
+    "id": 372,
+    "full_name": "Иванов Кирилл Константинович",
+    "email": "suppik555@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 474,
+    "full_name": "Иванов Пётр Владимирович",
+    "email": "pyotrivanov5@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 57,
+      "name": "Кафедра «Управление транспортным бизнесом и интеллектуальные системы»",
+      "short_name": "УТБиИС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 359,
+    "full_name": "Иванова Елена Алексеевна",
+    "email": "ivanova-ea@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 0
   },
   {
     "id": 21,
@@ -617,7 +2341,7 @@
       "name": "Институт международных транспортных коммуникаций",
       "short_name": "ИМТК"
     },
-    "authored_projects_count": 19
+    "authored_projects_count": 46
   },
   {
     "id": 117,
@@ -633,6 +2357,58 @@
       "name": "Кафедра «Цифровые технологии управления транспортными процессами»",
       "short_name": "ЦТУТП"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 315,
+    "full_name": "Игольников Борис Владимирович",
+    "email": "b.igolnikov@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 69,
+      "name": "Кафедра «Экономика, организация производства и менеджмент»",
+      "short_name": "ЭОПМ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 286,
+    "full_name": "Ильясова Александра Павловна",
+    "email": "alexandrailyasowa@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 587,
+    "full_name": "Имамов Артём Ренатович",
+    "email": "artemimamov1@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 436,
+    "full_name": "Ишанов Серик Рамильевич",
+    "email": "serik_ishanov@vk.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -652,6 +2428,114 @@
     "authored_projects_count": 0
   },
   {
+    "id": 210,
+    "full_name": "Калачев Михаил Анатольевич",
+    "email": "kalachev-ma@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 64,
+      "name": "Кафедра «Международный финансовый и управленческий учет»",
+      "short_name": "МФиУУ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 375,
+    "full_name": "Калинин Дмитрий Александрович",
+    "email": "dima33390pzv@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 406,
+    "full_name": "Калинин Кирилл Антонович",
+    "email": "kalinin-ka@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 57,
+      "name": "Кафедра «Управление транспортным бизнесом и интеллектуальные системы»",
+      "short_name": "УТБиИС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 566,
+    "full_name": "Калянина Мария Матвеевна",
+    "email": "kalianinamaria@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 391,
+    "full_name": "Каменев Арсений Александрович",
+    "email": "arsenykam73@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 160,
+    "full_name": "Карачевский Павел Андреевич",
+    "email": "karachevskiy.pa@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 39,
+      "name": "Кафедра «Вагоны и вагонное хозяйство»",
+      "short_name": "ВВХ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 530,
+    "full_name": "Каримов Назар Алишерович",
+    "email": "nazarkarimov99@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 242,
+    "full_name": "Карпов Михаил Викторович",
+    "email": "1192111@edu.rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 113,
     "full_name": "Карпухина Александра Александровна",
     "email": "aleks.karpukhina@mail.ru",
@@ -662,10 +2546,50 @@
     },
     "department": {
       "id": 18,
-      "name": "Институт пути, строительства и сооружений",
-      "short_name": "ИПСС"
+      "name": "Институт строительства транспортной инфраструктуры",
+      "short_name": "ИСТИ"
     },
     "authored_projects_count": 26
+  },
+  {
+    "id": 564,
+    "full_name": "Карпычева Марина Вячеславовна",
+    "email": "karpycheva.mv@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 544,
+    "full_name": "Карцев Дмитрий Андреевич",
+    "email": "lolpert7@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 278,
+    "full_name": "Касторный Роман Игоревич",
+    "email": "Kastorniyroman001@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 3,
@@ -678,6 +2602,126 @@
     },
     "department": null,
     "authored_projects_count": 1
+  },
+  {
+    "id": 231,
+    "full_name": "Кашкаров Иван Алексеевич",
+    "email": "ivan.kashkarov.05@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 599,
+    "full_name": "Квашнина Марина Алексеевна",
+    "email": "ma.kvashnina@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 628,
+    "full_name": "Кирдяшкин Александр Юрьевич",
+    "email": "vtamygin780@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 614,
+    "full_name": "Кириллов Егор Александрович",
+    "email": "Kirillov.egor1205@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 640,
+    "full_name": "Киселев Иван Олегович",
+    "email": "128kiselev@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 185,
+    "full_name": "Киселев Матвей Александрович",
+    "email": "mates.prime.2007@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 552,
+    "full_name": "Кислов Максим Алексеевич",
+    "email": "m.alekseevich20@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 159,
+    "full_name": "Клюев Никита Анатольевич",
+    "email": "kluevnikita221@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 380,
+    "full_name": "Князев Евгений Васильевич",
+    "email": "yeugenyknyazev2003@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 273,
+    "full_name": "Князев Егор Сергеевич",
+    "email": "egorka838307@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 115,
@@ -693,6 +2737,18 @@
       "name": "Кафедра «Теория права, гражданское право и гражданский процесс» Юридического института",
       "short_name": "ТПиГП"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 377,
+    "full_name": "Ковтун Денис Андреевич",
+    "email": "Majnkraft.son@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -712,6 +2768,18 @@
     "authored_projects_count": 0
   },
   {
+    "id": 641,
+    "full_name": "Кожичкин Александр Викторович",
+    "email": "aleksdio1805@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 17,
     "full_name": "Козловцева Екатерина Александровна",
     "email": "ekkozlovtseva@mail.ru",
@@ -725,6 +2793,118 @@
       "name": "Высшая инженерная школа",
       "short_name": "ВИШ"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 387,
+    "full_name": "Колесников Артемий Валерьевич",
+    "email": "kav-kmv@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 439,
+    "full_name": "Колисниченко Полина Дмитриевна",
+    "email": "polinacolis@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 453,
+    "full_name": "Колногузенко Дмитрий Витальевич",
+    "email": "dmkolnoguzenko@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 352,
+    "full_name": "Колобанов Максим Алексеевич",
+    "email": "bmax473@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 634,
+    "full_name": "Колобухова Василиса Дмитриевна",
+    "email": "vasilisa.kolobukhova@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 241,
+    "full_name": "Колосков Никита Владиславович",
+    "email": "koloskovin@inbox.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 616,
+    "full_name": "Комаров Иван Сергеевич",
+    "email": "ivan130706@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 581,
+    "full_name": "Комарова Юлия Вячеславовна",
+    "email": "yuvkomarova@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 69,
+      "name": "Кафедра «Экономика, организация производства и менеджмент»",
+      "short_name": "ЭОПМ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 463,
+    "full_name": "Конаплева Лилия Александровна",
+    "email": "kon.lilya@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -744,6 +2924,138 @@
     "authored_projects_count": 0
   },
   {
+    "id": 519,
+    "full_name": "Кондратьев Иван Антонович",
+    "email": "illianmember@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 528,
+    "full_name": "Коновалов Егор Олегович",
+    "email": "yegor.konovalov.05@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 394,
+    "full_name": "Коновалов Ярослав Константинович",
+    "email": "190kakadysh@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 542,
+    "full_name": "Коновалова Анастасия Валерьевна",
+    "email": "starostenkoanastasia4@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 227,
+    "full_name": "Конькова Алина Антоновна",
+    "email": "andwhatwillyoudo@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 258,
+    "full_name": "Копытин Дмитрий Владиславович",
+    "email": "oldpupka@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 291,
+    "full_name": "Корейво Максим Игоревич",
+    "email": "m.koreyvo64@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 348,
+    "full_name": "Коренченко Евгений Дмитриевич",
+    "email": "evgeniydkor@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 626,
+    "full_name": "Корнеева Анастасия Дмитриевна",
+    "email": "korneevaad2405@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 261,
+    "full_name": "Коровинский Иван Сергеевич",
+    "email": "ramivanpochta777@rambler.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 520,
+    "full_name": "Корольков Кирилл Алексеевич",
+    "email": "korolkovkirill2005@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 43,
     "full_name": "Королькова Наталья Вячеславовна",
     "email": "shulgina-nv@yandex.ru",
@@ -758,6 +3070,34 @@
       "short_name": "ЭУТ"
     },
     "authored_projects_count": 10
+  },
+  {
+    "id": 207,
+    "full_name": "Коршунов Александр Александрович",
+    "email": "korsh_13@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 32,
+      "name": "Кафедра «Строительные конструкции, здания и сооружения»",
+      "short_name": "СКЗиС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 427,
+    "full_name": "Космынин Максим Сергеевич",
+    "email": "kosmyninmaks@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 61,
@@ -808,6 +3148,102 @@
     "authored_projects_count": 0
   },
   {
+    "id": 483,
+    "full_name": "Котельник Алла Евгеньевна",
+    "email": "allakotelnik2005@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 476,
+    "full_name": "Коцоева Валерия Сергеевна",
+    "email": "kotsoevavs@ya.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 67,
+      "name": "Кафедра «Финансы и кредит»",
+      "short_name": "ФК"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 618,
+    "full_name": "Кочергин Артемий Игоревич",
+    "email": "arko6827@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 215,
+    "full_name": "Кочурков Александр Александрович",
+    "email": "akotchurkov@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 41,
+      "name": "Кафедра «Наземные транспортно-технологические средства»",
+      "short_name": "НТТС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 318,
+    "full_name": "Кравченко Анна Александровна",
+    "email": "Annacravcenco11@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 324,
+    "full_name": "Кравченко Артём Сергеевич",
+    "email": "artemk2077@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 481,
+    "full_name": "Красильников Павел Андреевич",
+    "email": "krasilnikov-pa@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 57,
+      "name": "Кафедра «Управление транспортным бизнесом и интеллектуальные системы»",
+      "short_name": "УТБиИС"
+    },
+    "authored_projects_count": 0
+  },
+  {
     "id": 25,
     "full_name": "Краснов Евгений Сергеевич",
     "email": "krasnov-es@rut-miit.ru",
@@ -821,7 +3257,275 @@
       "name": "Академия гражданской авиации",
       "short_name": "АГА"
     },
-    "authored_projects_count": 3
+    "authored_projects_count": 14
+  },
+  {
+    "id": 493,
+    "full_name": "Крупенко Савва Игоревич",
+    "email": "savva_krupenko@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 537,
+    "full_name": "Крупина Виктория Александровна",
+    "email": "krupina.15@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 588,
+    "full_name": "Крыжановская Елизавета Евгеньевна",
+    "email": "korzhik.bam018@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 555,
+    "full_name": "Крылов Ярослав Вячеславович",
+    "email": "aroslavkrylov810@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 563,
+    "full_name": "Крылова Дарья Сергеевна",
+    "email": "DariaMorozova04@icloud.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 224,
+    "full_name": "Крючков Артём Ильич",
+    "email": "Tropka0909@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 194,
+    "full_name": "Кудрявцев Степан Дмитриевич",
+    "email": "stepan.07@icloud.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 293,
+    "full_name": "Кузина Дарья Александровна",
+    "email": "Dkuzina07@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 361,
+    "full_name": "Кузнецов Денис Константинович",
+    "email": "desire2desu@yandex.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 251,
+    "full_name": "Кузнецова Елизавета Вячеславовна",
+    "email": "EvK-1201@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 346,
+    "full_name": "Кузовлев Кирилл Валерьевич",
+    "email": "bibkin587@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 174,
+    "full_name": "Кузьмин Владислав Сергеевич",
+    "email": "kuzmin-vs@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 38,
+      "name": "Кафедра «Автоматика, телемеханика и связь на железнодорожном транспорте»",
+      "short_name": "АТСнаЖТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 275,
+    "full_name": "Кузьмина Елизавета Максимовна",
+    "email": "lkuzmina791@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 460,
+    "full_name": "Кукушкина Екатерина Андреевна",
+    "email": "zarebulya1@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 449,
+    "full_name": "Кулагин Иван Игоревич",
+    "email": "ivanku2005@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 585,
+    "full_name": "Кулагин Олег Эдуардович",
+    "email": "Olegk6696@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 180,
+    "full_name": "Куликов Илья Максимович",
+    "email": "Kuly2607.ru.ro@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 228,
+    "full_name": "Кулова Вероника Алексеевна",
+    "email": "nikakulova16@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 515,
+    "full_name": "Куприянов Кирилл Сергеевич",
+    "email": "kirillkuprianov179@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 169,
+    "full_name": "Курзина Ангелина Михайловна",
+    "email": "aekfm@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 583,
+    "full_name": "Кутепова Дарья Сергеевна",
+    "email": "d-kutepova@inbox.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 186,
+    "full_name": "Кучина Ирина Дмитриевна",
+    "email": "aph3xtw1n00@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 29,
@@ -837,6 +3541,58 @@
       "name": "Кафедра «Финансы и кредит»",
       "short_name": "ФК"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 431,
+    "full_name": "Ладырда Олеся Геннадьевна",
+    "email": "belmmur@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 221,
+    "full_name": "Лазарева Мария Александровна",
+    "email": "m.a.kolosova@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 42,
+      "name": "Кафедра «Теплоэнергетика транспорта» Института транспортной техники и систем управления",
+      "short_name": "ТТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 305,
+    "full_name": "Ласточкина Полина Сергеевна",
+    "email": "polinalasto@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 247,
+    "full_name": "Латынцев Семён Викторович",
+    "email": "semen.latyntsev@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -856,6 +3612,134 @@
     "authored_projects_count": 3
   },
   {
+    "id": 279,
+    "full_name": "Лебедева Юлия Сергеевна",
+    "email": "Lets3try2@yandex.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 222,
+    "full_name": "Лельков Матвей Денисович",
+    "email": "matvik22801@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 404,
+    "full_name": "Леонова Анна Владимировна",
+    "email": "hanneli1@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 66,
+      "name": "Кафедра «Современные технологии социально-экономического образования»",
+      "short_name": "СТСЭО"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 574,
+    "full_name": "Лернер Владимир Романович",
+    "email": "vlerner1@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 362,
+    "full_name": "Линев Тимофей Олегович",
+    "email": "linev3997@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 245,
+    "full_name": "Липатова Дарья Максимовна",
+    "email": "lyuponka@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 630,
+    "full_name": "Липовский Артём Александрович",
+    "email": "ferter888@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 283,
+    "full_name": "Литвинова Арина Александровна",
+    "email": "arlitvinova23@icloud.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 462,
+    "full_name": "Лобанов Владислав Федорович",
+    "email": "lobanovv244@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 212,
+    "full_name": "Лобас Яков Дмитриевич",
+    "email": "lobas.yakov@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
     "id": 9,
     "full_name": "Логинова Людмила Николаевна",
     "email": "ludmilanv@mail.ru",
@@ -869,7 +3753,79 @@
       "name": "Институт транспортной техники и систем управления",
       "short_name": "ИЖТ (ИТТСУ)"
     },
-    "authored_projects_count": 25
+    "authored_projects_count": 29
+  },
+  {
+    "id": 572,
+    "full_name": "Локить Константин Геннадьевич",
+    "email": "lokitk@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 532,
+    "full_name": "Ломухин Евгений Владимирович",
+    "email": "stipingemes38@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 265,
+    "full_name": "Лупичева Полина Андреевна",
+    "email": "plupicheva@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 302,
+    "full_name": "Лущик Карина Владимировна",
+    "email": "karlushchik_31@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 268,
+    "full_name": "Майсурадзе Артём Малхазович",
+    "email": "1192571@edu.rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 499,
+    "full_name": "Макевнин Глеб Иванович",
+    "email": "glebmakevnin@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 35,
@@ -885,6 +3841,66 @@
       "name": "Кафедра «Международный финансовый и управленческий учет»",
       "short_name": "МФиУУ"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 458,
+    "full_name": "Максименко Марина Вячеславовна",
+    "email": "marina.maksimenko2005@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 259,
+    "full_name": "Максимов Олег Геннадьевич",
+    "email": "olegmegomax228@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 518,
+    "full_name": "Малова Ирина Валерьевна",
+    "email": "ira.malova.05@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 344,
+    "full_name": "Маляев Валерий Сергеевич",
+    "email": "noname1013@list.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 591,
+    "full_name": "Мамедов Эмиль Ильхамович",
+    "email": "mamedovemil269@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -904,6 +3920,54 @@
     "authored_projects_count": 8
   },
   {
+    "id": 312,
+    "full_name": "Мамонтова Мария Михайловна",
+    "email": "mamontova.maria07@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 331,
+    "full_name": "Марабян Левон Вагинакович",
+    "email": "levon782@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 300,
+    "full_name": "Маргарян Давид Григорович",
+    "email": "did07mrk@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 424,
+    "full_name": "Мариничев Андрей Александрович",
+    "email": "marinichev12345@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 73,
     "full_name": "Маркунцова Ирина Александровна",
     "email": "markuntsova.ia@rut-miit.ru",
@@ -917,6 +3981,326 @@
       "name": "Кафедра «Уголовное право, уголовный процесс и правоохранительная деятельность» Юридического института",
       "short_name": "УПиПД"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 257,
+    "full_name": "Маслов Алексей Денисович",
+    "email": "maslov.d.alex@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 230,
+    "full_name": "Маслова Карина Евгеньевна",
+    "email": "Maslova.Karina05@inbox.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 254,
+    "full_name": "Матвеев Тимофей Павлович",
+    "email": "tima04.80@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 211,
+    "full_name": "Матвеева Ирина Георгиевна",
+    "email": "matveeva-ig@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 64,
+      "name": "Кафедра «Международный финансовый и управленческий учет»",
+      "short_name": "МФиУУ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 329,
+    "full_name": "Матицына Любовь Александровна",
+    "email": "Matitsyna07@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 451,
+    "full_name": "Маюнов Иван Павлович",
+    "email": "Ipm06@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 506,
+    "full_name": "Медникова Мария Алексеевна",
+    "email": "fleytess@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 438,
+    "full_name": "Межеедова Мария Сергеевна",
+    "email": "mariamezheedova@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 487,
+    "full_name": "Мельник Артём Львович",
+    "email": "melnik.a.l.001@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 183,
+    "full_name": "Мерзликина Полина Григорьевна",
+    "email": "polina_marie@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 608,
+    "full_name": "Меркулов Артём Валерьевич",
+    "email": "merkulov_mt@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 371,
+    "full_name": "Мефёд Иван Евгеньевич",
+    "email": "imefd@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 189,
+    "full_name": "Мещерякова Полина Михайловна",
+    "email": "poli.ilina1861@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 648,
+    "full_name": "Мизерина Ольга Сергеевна",
+    "email": "mizerinao@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 364,
+    "full_name": "Милкин Александр Александрович",
+    "email": "milkin.aleks2017@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 507,
+    "full_name": "Мильдиянов Артем Валерьевич",
+    "email": "artem_mildiyanov@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 206,
+    "full_name": "Минаков Павел Андреевич",
+    "email": "minakov-pa@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 58,
+      "name": "Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»",
+      "short_name": "УЭРиБТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 285,
+    "full_name": "Миронов Максим Сергеевич",
+    "email": "maksimmironov550@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 422,
+    "full_name": "Мирошниченко Анжелика Владимировна",
+    "email": "angelikamiroshnichenko2002@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 343,
+    "full_name": "Митрохина Анастасия Алексеевна",
+    "email": "anastasiamitrohina94@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 646,
+    "full_name": "Митюшников Владимир Владимирович",
+    "email": "vovamitusnikov5867@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 547,
+    "full_name": "Михайлова Анна Сергеевна",
+    "email": "mihajlovaanya2107@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 495,
+    "full_name": "Михайлычев Артём Валерьевич",
+    "email": "min76eng@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 539,
+    "full_name": "Михалков Александр Александрович",
+    "email": "alexander332002@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 603,
+    "full_name": "Мишин Николай Александрович",
+    "email": "misinn75@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 225,
+    "full_name": "Мишняков Семён Сергеевич",
+    "email": "mishnyakov95@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -936,6 +4320,102 @@
     "authored_projects_count": 5
   },
   {
+    "id": 219,
+    "full_name": "Молодцов Вадим Алексеевич",
+    "email": "vadim.molodtsov.06@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 508,
+    "full_name": "Молюшис Андрей Алексеевич",
+    "email": "moluhis.a@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 523,
+    "full_name": "Морозов Александр Сергеевич",
+    "email": "alexmorozow3006@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 332,
+    "full_name": "Морозов Артём Александрович",
+    "email": "artyom-home04@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 202,
+    "full_name": "Морозов Евгений Викторович",
+    "email": "em.morfis.zole@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 400,
+    "full_name": "Москалёв Роман Александрович",
+    "email": "romanmos2005@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 370,
+    "full_name": "Москаленко Владислав Алексеевич",
+    "email": "vvvv.vvaw@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 319,
+    "full_name": "Мужидов Дени Ахмедович",
+    "email": "israilovmohmad10@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 76,
     "full_name": "Мусатов Дмитрий Вадимович",
     "email": "musatov-dv@rut-miit.ru",
@@ -949,7 +4429,231 @@
       "name": "Кафедра «Логистика и управление транспортными системами»",
       "short_name": "ЛиУТС"
     },
-    "authored_projects_count": 3
+    "authored_projects_count": 6
+  },
+  {
+    "id": 543,
+    "full_name": "Мухаметзянов Салават Расымович",
+    "email": "salavatmuhametzanov64@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 234,
+    "full_name": "Мухортов Павел Дмитриевич",
+    "email": "zybak205@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 536,
+    "full_name": "Мытницкая Елизавета Владимировна",
+    "email": "liza.mytnitskaya@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 473,
+    "full_name": "Мясников Александр Владимирович",
+    "email": "alekkm@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 25,
+      "name": "Кафедра «Мосты и тоннели»",
+      "short_name": "МиТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 340,
+    "full_name": "Нагаркин Егор Дмитриевич",
+    "email": "egornagarkin@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 328,
+    "full_name": "Нархова Екатерина Васильевна",
+    "email": "ekaterinanarkhova@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 397,
+    "full_name": "Наумов Денис Андреевич",
+    "email": "naumovdenis281@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 367,
+    "full_name": "Нгуен Куанг Хоа",
+    "email": "nguen.kh@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 154,
+    "full_name": "Неклюдов Юрий Николаевич",
+    "email": "ynn143@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 38,
+      "name": "Кафедра «Автоматика, телемеханика и связь на железнодорожном транспорте»",
+      "short_name": "АТСнаЖТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 292,
+    "full_name": "Некрасов Владимир Владимирович",
+    "email": "vladimir.nekrasov2007@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 631,
+    "full_name": "Нелюбов Кирилл Алексеевич",
+    "email": "knelubov297@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 559,
+    "full_name": "Немитов Павел Дмитриевич",
+    "email": "pnemitov@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 567,
+    "full_name": "Нестеров Артем Анатольевич",
+    "email": "artem.nestor15@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 471,
+    "full_name": "Низсковская Анастасия Дмитриевна",
+    "email": "nastyniz@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 392,
+    "full_name": "Николаев Арсений Денисович",
+    "email": "arseniy.nikolaev2003@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 598,
+    "full_name": "Николаев Даниил Иванович",
+    "email": "yurivladisatech@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 541,
+    "full_name": "Николаев Ярослав Сергеевич",
+    "email": "ya.nikolaev21200@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 181,
+    "full_name": "Никольский Максим Станиславович",
+    "email": "ciklviklviklc@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 7,
@@ -968,6 +4672,130 @@
     "authored_projects_count": 1
   },
   {
+    "id": 150,
+    "full_name": "Новиков Вячеслав Геннадьевич",
+    "email": "9268888805@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 116,
+      "name": "Кафедра «Интеллектуальное управление и информационная безопасность в высокоавтоматизированных транспортных системах»",
+      "short_name": "ИУиИБ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 486,
+    "full_name": "Новосёлов Илья Антонович",
+    "email": "ilya8novoselov@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 252,
+    "full_name": "Ночвин Александр Сергеевич",
+    "email": "nochvin.alexsander@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 560,
+    "full_name": "Нуриева Юлия Валерьевна",
+    "email": "unurieva85@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 272,
+    "full_name": "Обозов Алексей Вячеславович",
+    "email": "obozovaleksej99@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 326,
+    "full_name": "Обозова Евдокия Романовна",
+    "email": "ducu1414@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 484,
+    "full_name": "Обухов Владислав Дмитриевич",
+    "email": "missthetuny@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 425,
+    "full_name": "Овсинский Орест Валерьевич",
+    "email": "semaxorohui@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 330,
+    "full_name": "Оганян Кристина Араиковна",
+    "email": "oganyan.k.606@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 408,
+    "full_name": "Огарков Георгий Владимирович",
+    "email": "g.ogarckov@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 118,
     "full_name": "Олимпиев Александр Владимирович",
     "email": "sasha-madi@yandex.ru",
@@ -981,6 +4809,166 @@
       "name": "Кафедра «Управление эксплуатационной работой и безопасностью на транспорте»",
       "short_name": "УЭРиБТ"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 446,
+    "full_name": "Омельчак Ольга Севериновна",
+    "email": "olyaomelchak@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 388,
+    "full_name": "Омельченко Даниил Александрович",
+    "email": "danom9954219@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 488,
+    "full_name": "Осипов Артем Юрьевич",
+    "email": "osipovwtema@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 175,
+    "full_name": "Осипов Денис Витальевич",
+    "email": "osipov-dv@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 62,
+      "name": "Кафедра «Информационные системы цифровой экономики»",
+      "short_name": "ИСЦЭ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 430,
+    "full_name": "Очеев Сергей Сергеевич",
+    "email": "sergius_2005@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 243,
+    "full_name": "Ошев Михаил Сергеевич",
+    "email": "oshev.05@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 407,
+    "full_name": "Павлов Алексей Иванович",
+    "email": "Needick@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 419,
+    "full_name": "Павловский Ростислав Сергеевич",
+    "email": "rostislav.youtube@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 478,
+    "full_name": "Павлушкин Николай Сергеевич",
+    "email": "koliakolkolkol@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 236,
+    "full_name": "Пак Татьяна Сергеевна",
+    "email": "paktana31@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 531,
+    "full_name": "Паляничка Денис Александрович",
+    "email": "denispalianichka@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 395,
+    "full_name": "Панин Денис Сергеевич",
+    "email": "blud.den@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 525,
+    "full_name": "Панин Никита Анатольевич",
+    "email": "Paninrus2002@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -1016,6 +5004,18 @@
     "authored_projects_count": 0
   },
   {
+    "id": 578,
+    "full_name": "Папченко Сергей Евгеньевич",
+    "email": "s.papchenko555@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 20,
     "full_name": "Парамонов Михаил Александрович",
     "email": "mixas9796@gmail.com",
@@ -1026,8 +5026,8 @@
     },
     "department": {
       "id": 18,
-      "name": "Институт пути, строительства и сооружений",
-      "short_name": "ИПСС"
+      "name": "Институт строительства транспортной инфраструктуры",
+      "short_name": "ИСТИ"
     },
     "authored_projects_count": 82
   },
@@ -1048,6 +5048,42 @@
     "authored_projects_count": 15
   },
   {
+    "id": 592,
+    "full_name": "Паршиков Александр Игоревич",
+    "email": "dioniks10@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 296,
+    "full_name": "Пастухов Артем Николаевич",
+    "email": "pastyxovoartem105@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 492,
+    "full_name": "Пасюра Александр Сергеевич",
+    "email": "aleksandrpasura@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 46,
     "full_name": "Пашуков Артём Валерьевич",
     "email": "art_pash@mail.ru",
@@ -1064,9 +5100,33 @@
     "authored_projects_count": 54
   },
   {
-    "id": 135,
-    "full_name": "Петухов Григорий Сергеевич",
-    "email": "test1@emiit.ru",
+    "id": 193,
+    "full_name": "Петренко Виктория Сергеевна",
+    "email": "89175865067@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 620,
+    "full_name": "Петров Петр Александрович",
+    "email": "2007_petr@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 405,
+    "full_name": "Петрушенко Антон Сергеевич",
+    "email": "petrushenckoanton@yandex.ru",
     "phone": "",
     "role": {
       "code": "student",
@@ -1092,6 +5152,30 @@
     "authored_projects_count": 39
   },
   {
+    "id": 558,
+    "full_name": "Плешанов Иван Сергеевич",
+    "email": "ivanpleshanov249@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 491,
+    "full_name": "Плиев Антон Ибрагимович",
+    "email": "plievanton2005@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 127,
     "full_name": "Подлеснова Дарья Николаевна",
     "email": "dariapodlesnova@yandex.ru",
@@ -1102,10 +5186,98 @@
     },
     "department": {
       "id": 18,
-      "name": "Институт пути, строительства и сооружений",
-      "short_name": "ИПСС"
+      "name": "Институт строительства транспортной инфраструктуры",
+      "short_name": "ИСТИ"
     },
     "authored_projects_count": 11
+  },
+  {
+    "id": 357,
+    "full_name": "Подлесный Владимир Владиславович",
+    "email": "podlesniy4gg@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 582,
+    "full_name": "Подорожкина Алла Валентиновна",
+    "email": "jdsu.pav@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 269,
+    "full_name": "Полгари Данила Юрьевич",
+    "email": "d.polgary@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 323,
+    "full_name": "Поливанов Максим Валерьевич",
+    "email": "1242490@edu.rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 533,
+    "full_name": "Половинчук Екатерина Алексеевна",
+    "email": "katya.polovinchuk@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 167,
+    "full_name": "Полунина Арина Владимировна",
+    "email": "arishastrakhova@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 40,
+      "name": "Кафедра «Машиноведение, проектирование, стандартизация и сертификация»",
+      "short_name": "МПСиС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 414,
+    "full_name": "Полусуров Роман Дмитриевич",
+    "email": "roman.polusurov@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 41,
@@ -1124,6 +5296,70 @@
     "authored_projects_count": 0
   },
   {
+    "id": 540,
+    "full_name": "Пономарева Дарья Андреевна",
+    "email": "darmar04@icloud.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 373,
+    "full_name": "Пономаренко Александр Дмитриевич",
+    "email": "aleks272006@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 205,
+    "full_name": "Попапова Дарья Юрьевна",
+    "email": "dpotapova2009@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 104,
+      "name": "Академия гражданской авиации",
+      "short_name": "АГА"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 441,
+    "full_name": "Попов Егор Сергеевич",
+    "email": "egorpopov20011@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 396,
+    "full_name": "Попова Анжелика Михайловна",
+    "email": "popovaangelika3@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 80,
     "full_name": "Прасол Анастасия Александровна",
     "email": "prasoll@mail.ru",
@@ -1134,8 +5370,8 @@
     },
     "department": {
       "id": 18,
-      "name": "Институт пути, строительства и сооружений",
-      "short_name": "ИПСС"
+      "name": "Институт строительства транспортной инфраструктуры",
+      "short_name": "ИСТИ"
     },
     "authored_projects_count": 20
   },
@@ -1156,6 +5392,54 @@
     "authored_projects_count": 6
   },
   {
+    "id": 455,
+    "full_name": "Прусаков Иван Вячеславович",
+    "email": "ilimon4ik-pess@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 399,
+    "full_name": "Пягай Михаил Артурович",
+    "email": "mr.misha1205@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 313,
+    "full_name": "Радченко Мария Александровна",
+    "email": "radchenkomaria8@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 461,
+    "full_name": "Раевская Екатерина Александровна",
+    "email": "wiekater@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 37,
     "full_name": "Разумовский Кирилл Андреевич",
     "email": "razumovskiy.ka@rut-miit.ru",
@@ -1170,6 +5454,42 @@
       "short_name": "ЭОПМ"
     },
     "authored_projects_count": 6
+  },
+  {
+    "id": 480,
+    "full_name": "Ридингер Герман Витальевич",
+    "email": "germanridinger666@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 369,
+    "full_name": "Рогинский Родион Кириллович",
+    "email": "rodionroginskiy@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 623,
+    "full_name": "Рождественский Денис Олегович",
+    "email": "glebro1707@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 104,
@@ -1204,6 +5524,82 @@
     "authored_projects_count": 0
   },
   {
+    "id": 538,
+    "full_name": "Ролин Дмитрий Викторович",
+    "email": "dimon.10.2005@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 435,
+    "full_name": "Ромаданов Никита Александрович",
+    "email": "moudome123@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 155,
+    "full_name": "Романычева Екатерина Владимировна",
+    "email": "romanycheva124@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 214,
+    "full_name": "Ротенберг Софья Александровна",
+    "email": "rotenberg.sa@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 556,
+    "full_name": "Роштов Александр Алексеевич",
+    "email": "alexanderroshtov21@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 516,
+    "full_name": "Рубченко Михаил Дмитриевич",
+    "email": "mikhail.rubchenko@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 70,
     "full_name": "Рудакова Елена Николаевна",
     "email": "rudakova-en@rut-miit.ru",
@@ -1233,6 +5629,30 @@
       "name": "Кафедра «Управление транспортным бизнесом и интеллектуальные системы»",
       "short_name": "УТБиИС"
     },
+    "authored_projects_count": 11
+  },
+  {
+    "id": 411,
+    "full_name": "Рыжов Владимир Андреевич",
+    "email": "t9067668787@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 647,
+    "full_name": "Рябова Елизавета Александровна",
+    "email": "elizaveta.ryabova.04@inbox.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -1246,10 +5666,22 @@
     },
     "department": {
       "id": 18,
-      "name": "Институт пути, строительства и сооружений",
-      "short_name": "ИПСС"
+      "name": "Институт строительства транспортной инфраструктуры",
+      "short_name": "ИСТИ"
     },
     "authored_projects_count": 1
+  },
+  {
+    "id": 299,
+    "full_name": "Саакян Грач Давидович",
+    "email": "grachsaaa@icloud.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 105,
@@ -1265,6 +5697,198 @@
       "name": "Кафедра «Таможенное право и организация таможенного дела»",
       "short_name": "ТПиОТД"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 358,
+    "full_name": "Саввин Максим Алексеевич",
+    "email": "firamirkarock@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 168,
+    "full_name": "Савельева Эвелина Александровна",
+    "email": "saveleva.ea@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 29,
+      "name": "Кафедра «Путь и путевое хозяйство»",
+      "short_name": "ППХ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 612,
+    "full_name": "Савинков Илья Тимофеевич",
+    "email": "savinkovit@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 356,
+    "full_name": "Савков Александр Сергеевич",
+    "email": "sashasavkov2016@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 546,
+    "full_name": "Саган Элиза Владиславовна",
+    "email": "eliza.sagan18@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 593,
+    "full_name": "Сазонов Владислав Дмитриевич",
+    "email": "sazonov.vlad2k6@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 170,
+    "full_name": "Сафронов Антон Игоревич",
+    "email": "safronov-ai@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 45,
+      "name": "Кафедра «Управление и защита информации»",
+      "short_name": "УиЗИ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 200,
+    "full_name": "Сафронов Георгий Александрович",
+    "email": "20gocha07@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 529,
+    "full_name": "Сачкова Елена Владимировна",
+    "email": "november29@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 63,
+      "name": "Кафедра «Лингвистика»",
+      "short_name": "Лин"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 271,
+    "full_name": "Сбродова Дарья Сергеевна",
+    "email": "sbrodowa.d@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 490,
+    "full_name": "Свержевский Олег Викторович",
+    "email": "svaro11@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 191,
+    "full_name": "Свешникова София Ильинична",
+    "email": "sofisveshnikova@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 621,
+    "full_name": "Семенов Дмитрий Эдуардович",
+    "email": "semenovdimasik1207@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 562,
+    "full_name": "Семенов Ярослав Эдуардович",
+    "email": "wu66a_lu66a_du6_du6@vk.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 606,
+    "full_name": "Семёнов Владислав Сергеевич",
+    "email": "s.vlad1802@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -1300,18 +5924,6 @@
     "authored_projects_count": 0
   },
   {
-    "id": 134,
-    "full_name": "Семин Михаил Михайлович",
-    "email": "test@emiit.ru",
-    "phone": "",
-    "role": {
-      "code": "student",
-      "name": "Студент"
-    },
-    "department": null,
-    "authored_projects_count": 0
-  },
-  {
     "id": 122,
     "full_name": "Сергеев Иван Константинович",
     "email": "sergeev.workmail@yandex.ru",
@@ -1325,7 +5937,31 @@
       "name": "Кафедра «Вагоны и вагонное хозяйство»",
       "short_name": "ВВХ"
     },
-    "authored_projects_count": 19
+    "authored_projects_count": 21
+  },
+  {
+    "id": 418,
+    "full_name": "Сергеева Анастасия Романовна",
+    "email": "Nastya5347@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 182,
+    "full_name": "Сивинюк Варвара Андреевна",
+    "email": "varvar_siv@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 103,
@@ -1344,6 +5980,42 @@
     "authored_projects_count": 17
   },
   {
+    "id": 456,
+    "full_name": "Сизов Михаил Сергеевич",
+    "email": "sizovmihail620@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 301,
+    "full_name": "Симонова Виктория Александровна",
+    "email": "viktoriasimonova64@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 579,
+    "full_name": "Симушин Иван Игоревич",
+    "email": "ivanov.roary2015@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 68,
     "full_name": "Синицына Анна Сергеевна",
     "email": "sinitsyna_as@rut-miit.ru",
@@ -1357,6 +6029,78 @@
       "name": "Кафедра «Логистические транспортные системы и технологии»",
       "short_name": "ЛТСТ"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 294,
+    "full_name": "Синцов Максим Алексеевич",
+    "email": "maxim.sintsov@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 417,
+    "full_name": "Ситдикова Амина Ильшатовна",
+    "email": "Tyminami@ya.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 334,
+    "full_name": "Скачко Олег Сергеевич",
+    "email": "olegwinston2k@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 594,
+    "full_name": "Скворцов Владимир Алексеевич",
+    "email": "koroch00@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 149,
+    "full_name": "Скворцов Максим Игоревич",
+    "email": "samandmaks@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 376,
+    "full_name": "Скрипников Егор Сергеевич",
+    "email": "egorskrip07@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -1376,18 +6120,66 @@
     "authored_projects_count": 19
   },
   {
-    "id": 8,
-    "full_name": "Смирнова Жанна Владимировна",
-    "email": "zh.s.miit@gmail.com",
-    "phone": "+79262490047",
+    "id": 354,
+    "full_name": "Смертин Фёдор Алексеевич",
+    "email": "vasilisk.industries@yandex.ru",
+    "phone": "",
     "role": {
-      "code": "institute_validator",
-      "name": "Ответственный от института"
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 595,
+    "full_name": "Смирнов Владислав Евгеньевич",
+    "email": "vlad2006789@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 365,
+    "full_name": "Смирнов Данила Александрович",
+    "email": "dany-s.smirnov2015@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 287,
+    "full_name": "Смирнов Сергей Валерьевич",
+    "email": "ss0069@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 502,
+    "full_name": "Смирнова Анна Владимировна",
+    "email": "smirnova-av@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
     },
     "department": {
-      "id": 61,
-      "name": "Институт экономики и финансов",
-      "short_name": "ИЭФ"
+      "id": 55,
+      "name": "Кафедра «Логистика и управление транспортными системами»",
+      "short_name": "ЛиУТС"
     },
     "authored_projects_count": 0
   },
@@ -1408,6 +6200,150 @@
     "authored_projects_count": 11
   },
   {
+    "id": 467,
+    "full_name": "Смирнова Наталья Борисовна",
+    "email": "smirnova-nb@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 67,
+      "name": "Кафедра «Финансы и кредит»",
+      "short_name": "ФК"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 501,
+    "full_name": "Соколов Михаил Юрьевич",
+    "email": "misha.u.sokolov@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 57,
+      "name": "Кафедра «Управление транспортным бизнесом и интеллектуальные системы»",
+      "short_name": "УТБиИС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 509,
+    "full_name": "Соколова Анастасия Вячеславовна",
+    "email": "ansokolova14@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 426,
+    "full_name": "Соловов Тимофей Денисович",
+    "email": "tihonfomyc@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 622,
+    "full_name": "Соловьев Иван Олегович",
+    "email": "va9105571282@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 198,
+    "full_name": "Соловьева София Сергеевна",
+    "email": "Sofia.soloveva.07@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 195,
+    "full_name": "Сон Сабина Кенчеровна",
+    "email": "sson86000@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 440,
+    "full_name": "Сорокина Варвара Алексеевна",
+    "email": "sorokvarvara@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 428,
+    "full_name": "Сороковиков Максим Николаевич",
+    "email": "sorokovikovmn@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 60,
+      "name": "Кафедра «Цифровые технологии управления транспортными процессами»",
+      "short_name": "ЦТУТП"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 244,
+    "full_name": "Староверов Сергей Эдуардович",
+    "email": "sergey29092004@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 437,
+    "full_name": "Степанов Владислав Николаевич",
+    "email": "yusov1991@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 63,
     "full_name": "Степанова Дарья Владимировна",
     "email": "stepanova-dv@rut-miit.ru",
@@ -1420,6 +6356,46 @@
       "id": 56,
       "name": "Кафедра «Логистические транспортные системы и технологии»",
       "short_name": "ЛТСТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 308,
+    "full_name": "Степанова Кира Вячеславовна",
+    "email": "st.kira.v@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 164,
+    "full_name": "Степаньков Сергей Вячеславович",
+    "email": "stepankov2005@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 171,
+    "full_name": "Стрельцов Александр Сергеевич",
+    "email": "streltsov.as@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 25,
+      "name": "Кафедра «Мосты и тоннели»",
+      "short_name": "МиТ"
     },
     "authored_projects_count": 0
   },
@@ -1456,6 +6432,30 @@
     "authored_projects_count": 9
   },
   {
+    "id": 366,
+    "full_name": "Сурнаев Ярослав Юрьевич",
+    "email": "yarik.surnaev@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 551,
+    "full_name": "Сысоев Егор Дмитриевич",
+    "email": "sysoevegor2006@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 130,
     "full_name": "Тарусов Роман Вячеславович",
     "email": "tarusovr@mail.ru",
@@ -1469,6 +6469,66 @@
       "name": "ЦПДС",
       "short_name": "ЦПДС"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 482,
+    "full_name": "Татаринова Дарья Сергеевна",
+    "email": "tatarinova.dasha.9@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 383,
+    "full_name": "Теканов Фёдор Андреевич",
+    "email": "ftekanov@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 415,
+    "full_name": "Теплоухова Ольга Борисовна",
+    "email": "olgateplo99@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 510,
+    "full_name": "Терещенко Вероника Геннадьевна",
+    "email": "nikaTVG2006@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 619,
+    "full_name": "Тимофеев Всеволод Евгеньевич",
+    "email": "sevatimofeev2008@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -1504,6 +6564,230 @@
     "authored_projects_count": 2
   },
   {
+    "id": 248,
+    "full_name": "Толкачев Михаил Владиславович",
+    "email": "qwertykek2004@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 232,
+    "full_name": "Томниковский Матвей Павлович",
+    "email": "matveyka213@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 327,
+    "full_name": "Трегубов Илья Александрович",
+    "email": "Iliatreg2007@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 645,
+    "full_name": "Третьяков Роман Александрович",
+    "email": "r9155725480@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 479,
+    "full_name": "Трофимова Виктория Александровна",
+    "email": "Vika.Trofimova2004@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 469,
+    "full_name": "Трофимова Мария Сергеевна",
+    "email": "mariatrofimova21@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 512,
+    "full_name": "Трофимова Татьяна Викторовна",
+    "email": "ttrofimova843@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 216,
+    "full_name": "Трошко Илья Васильевич",
+    "email": "troshko_iv@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 41,
+      "name": "Кафедра «Наземные транспортно-технологические средства»",
+      "short_name": "НТТС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 282,
+    "full_name": "Тужиков Игорь Владимирович",
+    "email": "tuzhikov2@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 177,
+    "full_name": "Туловский Евгений Станиславович",
+    "email": "e.tulovsky@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 218,
+    "full_name": "Тулупова Яна Вадимовна",
+    "email": "Tkacheva-yana@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 47,
+      "name": "Кафедра «Управление производством и кадровое обеспечение транспортного комплекса»",
+      "short_name": "УПиКОТК"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 333,
+    "full_name": "Тучкина Вероника Андреевна",
+    "email": "tuckinaveronika@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 240,
+    "full_name": "Тюрина Анна Андреевна",
+    "email": "tyur1n4ann@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 403,
+    "full_name": "Уваров Даниил Дмитриевич",
+    "email": "daniilussssss@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 454,
+    "full_name": "Ульянов Всеволод Дмитриевич",
+    "email": "vsevolodulyanovx@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 179,
+    "full_name": "Усанов Илья Павлович",
+    "email": "usanoviliya@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 570,
+    "full_name": "Усик Николай Алексеевич",
+    "email": "nicolaysic2221@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 341,
+    "full_name": "Уткин Иван Владимирович",
+    "email": "Utkin.ivan.v@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 19,
     "full_name": "Ушакова Анастасия Романовна",
     "email": "ushakova-ar@rut-miit.ru",
@@ -1517,6 +6801,54 @@
       "name": "Институт управления и цифровых технологий",
       "short_name": "ИЖТ (ИУЦТ)"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 274,
+    "full_name": "Фараджев Арсентий Сергеевич",
+    "email": "anafaradzeva644@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 384,
+    "full_name": "Феденко Илья Васильевич",
+    "email": "genetix@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 575,
+    "full_name": "Федоров Дмитрий Павлович",
+    "email": "Gbyudbytyjn@yanex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 277,
+    "full_name": "Филатов Павел Антонович",
+    "email": "pavelfilat2407@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -1536,6 +6868,70 @@
     "authored_projects_count": 1
   },
   {
+    "id": 204,
+    "full_name": "Флягина Татьяна Анатольевна",
+    "email": "flyagina.ta@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 624,
+    "full_name": "Фролова Валерия Сергеевна",
+    "email": "frolova.valeria.68@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 421,
+    "full_name": "Хакимов Тимур Русланович",
+    "email": "khakitim@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 250,
+    "full_name": "Харин Тимур Артемович",
+    "email": "harintimur2001@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 363,
+    "full_name": "Хестанов Давид Олегович",
+    "email": "screambvb1@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 111,
     "full_name": "Химич Татьяна Михайловна",
     "email": "khimich.tm@rut-miit.ru",
@@ -1549,6 +6945,70 @@
       "name": "Кафедра «Теория права, гражданское право и гражданский процесс» Юридического института",
       "short_name": "ТПиГП"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 468,
+    "full_name": "Ходырев Иван Александрович",
+    "email": "ivan.xhoderev@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 151,
+    "full_name": "Хоменко Илья Степанович",
+    "email": "iliyahomenko@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 217,
+    "full_name": "Хомутов Андрей Сергеевич",
+    "email": "andrey_93.06@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 62,
+      "name": "Кафедра «Информационные системы цифровой экономики»",
+      "short_name": "ИСЦЭ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 237,
+    "full_name": "Хоперский Михаил Романович",
+    "email": "mihail.hopersky@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 311,
+    "full_name": "Хохлова Арина Владимировна",
+    "email": "arhoholok@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -1568,6 +7028,42 @@
     "authored_projects_count": 6
   },
   {
+    "id": 267,
+    "full_name": "Цветова Ольга Олеговна",
+    "email": "cvetovaolya@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 353,
+    "full_name": "Цуркан Варвара Юрьевна",
+    "email": "tsurkanvarvara0@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 310,
+    "full_name": "Цуркан Виталина Юлиановна",
+    "email": "tsurkan_07@inbox.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 67,
     "full_name": "Цыганова Наталия Алексеевна",
     "email": "Dze.panda@gmail.com",
@@ -1581,6 +7077,82 @@
       "name": "Кафедра «Вычислительные системы, сети и информационная безопасность»",
       "short_name": "ВССиИБ"
     },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 368,
+    "full_name": "Цыкунов Максим Алексеевич",
+    "email": "enelit1719@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 188,
+    "full_name": "Чабунина Полина Дмитриевна",
+    "email": "omatsumae@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 475,
+    "full_name": "Чайка Кирилл Анатольевич",
+    "email": "cajka01928@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 303,
+    "full_name": "Чайченко Екатерина Романовна",
+    "email": "kat052007@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 172,
+    "full_name": "Чалова Маргарита Юрьевна",
+    "email": "Margarita_chalova@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 41,
+      "name": "Кафедра «Наземные транспортно-технологические средства»",
+      "short_name": "НТТС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 416,
+    "full_name": "Чамина Милена Вячеславовна",
+    "email": "chamina-milena@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
     "authored_projects_count": 0
   },
   {
@@ -1600,6 +7172,54 @@
     "authored_projects_count": 2
   },
   {
+    "id": 601,
+    "full_name": "Черевкова Екатерина Владимировна",
+    "email": "Cherevkova.katya@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 565,
+    "full_name": "Черенков Глеб Александрович",
+    "email": "glebcerenkov3@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 527,
+    "full_name": "Черенков Никита Андреевич",
+    "email": "nikita-cherenkov@inbox.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 633,
+    "full_name": "Черкашин Александр Сергеевич",
+    "email": "alexandercherkashin3@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 33,
     "full_name": "Черникова Елена Олеговна",
     "email": "chernikova-eo@rut-miit.ru",
@@ -1614,6 +7234,194 @@
       "short_name": "Лин"
     },
     "authored_projects_count": 5
+  },
+  {
+    "id": 522,
+    "full_name": "Черняков Сергей Николаевич",
+    "email": "laper979@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 514,
+    "full_name": "Черячукин Михаил Сергеевич",
+    "email": "cherik05@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 535,
+    "full_name": "Чечулин Владислав Евгеньевич",
+    "email": "vladceculin29@xmail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 432,
+    "full_name": "Чжан Мянь",
+    "email": "am683839@foxmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 262,
+    "full_name": "Чжао Сыцяо",
+    "email": "1309380@edu.rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 158,
+    "full_name": "Чигарев Валентин Николаевич",
+    "email": "chigarev.vn@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 14,
+      "name": "Кафедра «Международные отношения и геополитика транспорта»",
+      "short_name": "МОиГТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 521,
+    "full_name": "Чигарин Олег Александрович",
+    "email": "cigarinoleg8@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 524,
+    "full_name": "Чигирев Кирилл Владимирович",
+    "email": "chigirev.kv@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 256,
+    "full_name": "Чирков Арсений Сергеевич",
+    "email": "bruh.2004@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 553,
+    "full_name": "Чуверина Ольга Геннадьевна",
+    "email": "chuverina@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 68,
+      "name": "Кафедра «Экономика и управление на транспорте»",
+      "short_name": "ЭУТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 447,
+    "full_name": "Чувилин Никита Олегович",
+    "email": "nktchuvilin@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 314,
+    "full_name": "Чуфирин Артём Максимович",
+    "email": "vitagolovorezov@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 184,
+    "full_name": "Шадрин Максим Евгеньевич",
+    "email": "maxshad2023@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 589,
+    "full_name": "Шалов Николай Николаевич",
+    "email": "stor6253@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 276,
+    "full_name": "Шапкина Евгения Максимовна",
+    "email": "Zhenya.8.sha@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 126,
@@ -1632,6 +7440,50 @@
     "authored_projects_count": 2
   },
   {
+    "id": 360,
+    "full_name": "Шаповалова Юлия Владимировна",
+    "email": "Meldis_@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 38,
+      "name": "Кафедра «Автоматика, телемеханика и связь на железнодорожном транспорте»",
+      "short_name": "АТСнаЖТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 295,
+    "full_name": "Шарипов Артур Маратович",
+    "email": "artur.sharipov.77@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 25,
+      "name": "Кафедра «Мосты и тоннели»",
+      "short_name": "МиТ"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 586,
+    "full_name": "Шаров Артём Геннадьевич",
+    "email": "artm.sharov.12@inbox.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 11,
     "full_name": "Шационок Павел Васильевич",
     "email": "p.shatsionok@miit-ief.ru",
@@ -1646,6 +7498,18 @@
       "short_name": "ИСЦЭ"
     },
     "authored_projects_count": 10
+  },
+  {
+    "id": 638,
+    "full_name": "Шварцман Дмитрий Дмитриевич",
+    "email": "ddschwqqwwe@bk.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 120,
@@ -1664,6 +7528,146 @@
     "authored_projects_count": 8
   },
   {
+    "id": 226,
+    "full_name": "Шевелёв Даниил Витальевич",
+    "email": "daniil.shevelev.05@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 629,
+    "full_name": "Шевченко Анастасия Александровна",
+    "email": "shevchenko-aa@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 60,
+      "name": "Кафедра «Цифровые технологии управления транспортными процессами»",
+      "short_name": "ЦТУТП"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 284,
+    "full_name": "Шестоперов Леонид Евгеньевич",
+    "email": "leonidsestoperov4754@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 298,
+    "full_name": "Шехватов Матвей Павлович",
+    "email": "m.sheh@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 270,
+    "full_name": "Ши Боян",
+    "email": "1309430@edu.rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 457,
+    "full_name": "Шкребко Максим Владимирович",
+    "email": "Maksshkreb@ya.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 381,
+    "full_name": "Шлаев Константин Юрьевич",
+    "email": "kostya.shlaev@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 309,
+    "full_name": "Шурыгин Тимофей Алексеевич",
+    "email": "timofea1324@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 190,
+    "full_name": "Щенникова Милана Владимировна",
+    "email": "Dekabristov-3@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 472,
+    "full_name": "Щербаков Дмитрий Александрович",
+    "email": "sherbakov-da@rut-miit.ru",
+    "phone": "",
+    "role": {
+      "code": "mentor",
+      "name": "Сотрудник"
+    },
+    "department": {
+      "id": 117,
+      "name": "Кафедра «Моделирование и пространственная организация транспортных систем»",
+      "short_name": "МиПОТС"
+    },
+    "authored_projects_count": 0
+  },
+  {
+    "id": 223,
+    "full_name": "Щербаков Лев Алексеевич",
+    "email": "leva.murmansk@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 114,
     "full_name": "Юркова Юлия Николаевна",
     "email": "yulia.yurkova@list.ru",
@@ -1674,10 +7678,10 @@
     },
     "department": {
       "id": 18,
-      "name": "Институт пути, строительства и сооружений",
-      "short_name": "ИПСС"
+      "name": "Институт строительства транспортной инфраструктуры",
+      "short_name": "ИСТИ"
     },
-    "authored_projects_count": 6
+    "authored_projects_count": 7
   },
   {
     "id": 51,
@@ -1696,6 +7700,42 @@
     "authored_projects_count": 0
   },
   {
+    "id": 187,
+    "full_name": "Ядловская Анна Михайловна",
+    "email": "lissapatrikeevna2007@gmail.com",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 157,
+    "full_name": "Яковлев Андрей Сергеевич",
+    "email": "garitvin@list.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 576,
+    "full_name": "Якунин Григорий Михайлович",
+    "email": "grishayakunin2006@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
     "id": 36,
     "full_name": "Янев Живко -",
     "email": "janevzhivkomiit@yandex.ru",
@@ -1710,6 +7750,30 @@
       "short_name": "ИЖТ (ИУЦТ)"
     },
     "authored_projects_count": 16
+  },
+  {
+    "id": 339,
+    "full_name": "Янков Вадим Алексеевич",
+    "email": "jankov.vadim@yandex.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 639,
+    "full_name": "Янчев Иван Иванович",
+    "email": "silitra_29@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
   },
   {
     "id": 132,
@@ -1744,9 +7808,21 @@
     "authored_projects_count": 0
   },
   {
-    "id": 139,
-    "full_name": "Ясыбаш Герман Николаевич",
-    "email": "test5@emiit.ru",
+    "id": 263,
+    "full_name": "Ясыбаш Григорий Николаевич",
+    "email": "g.yasybash@mail.ru",
+    "phone": "",
+    "role": {
+      "code": "student",
+      "name": "Студент"
+    },
+    "department": null,
+    "authored_projects_count": 0
+  },
+  {
+    "id": 233,
+    "full_name": "Ячина Татьяна Вячеславовна",
+    "email": "Tanya25012006@yandex.ru",
     "phone": "",
     "role": {
       "code": "student",
