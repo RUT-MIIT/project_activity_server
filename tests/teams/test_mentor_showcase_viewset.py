@@ -274,6 +274,54 @@ class TestMentorShowcaseViewSet:
         )
         assert response.status_code == 403
 
+    def test_institute_validator_can_access_without_mentor_assignment(
+        self, api_client: APIClient, roles, make_user, mentor_showcase_setup
+    ) -> None:
+        validator = make_user(
+            role_code="institute_validator",
+            with_department=True,
+            email="validator@x.com",
+        )
+        api_client.force_authenticate(user=validator)
+        group = mentor_showcase_setup["group"]
+        semester = mentor_showcase_setup["semester"]
+
+        response = api_client.get(
+            f"{_showcase_url(group.id)}?semester_id={semester.id}"
+        )
+
+        assert response.status_code == 200
+        tracks = {t["id"]: t for t in response.data}
+        assert mentor_showcase_setup["track1"].id in tracks
+        assert mentor_showcase_setup["app1"].id in {
+            p["id"] for p in tracks[mentor_showcase_setup["track1"].id]["projects"]
+        }
+
+    def test_mentor_can_retrieve_project_application_from_group_track(
+        self, api_client: APIClient, mentor_showcase_setup
+    ) -> None:
+        mentor = mentor_showcase_setup["mentor"]
+        app = mentor_showcase_setup["app1"]
+        api_client.force_authenticate(user=mentor)
+
+        response = api_client.get(f"/api/showcase/project-applications/{app.id}/")
+
+        assert response.status_code == 200
+        assert response.data["id"] == app.id
+
+    def test_unrelated_mentor_cannot_retrieve_project_application(
+        self, api_client: APIClient, roles, make_user, mentor_showcase_setup
+    ) -> None:
+        other_mentor = make_user(
+            role_code="mentor", with_department=True, email="other@x.com"
+        )
+        app = mentor_showcase_setup["app1"]
+        api_client.force_authenticate(user=other_mentor)
+
+        response = api_client.get(f"/api/showcase/project-applications/{app.id}/")
+
+        assert response.status_code == 403
+
     def test_lists_tracks_with_same_fields_as_student_showcase(
         self, api_client: APIClient, mentor_showcase_setup
     ) -> None:

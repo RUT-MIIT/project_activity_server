@@ -46,9 +46,3 @@ class MentorGroupsDomain:
         """Проверяет доступ к группе для списка и деталей."""
         if not MentorGroupsDomain.has_group_access(user, group, is_mentor):
             raise PermissionError("Нет доступа к этой учебной группе")
-
-    @staticmethod
-    def ensure_mentor_access(is_mentor: bool) -> None:
-        """Проверяет, что пользователь назначен наставником группы в семестре."""
-        if not is_mentor:
-            raise PermissionError("Нет доступа к этой учебной группе")

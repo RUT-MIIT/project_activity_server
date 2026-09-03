@@ -3,7 +3,7 @@ from unittest.mock import patch
 from django.contrib.auth import get_user_model
 import pytest
 
-from accounts.models import Department
+from accounts.models import Department, Semester
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
@@ -15,8 +15,12 @@ from showcase.models import (
     Institute,
     ProjectApplication,
     ProjectApplicationStatusLog,
+    ProjectTrack,
+    ProjectTrackApplication,
+    ProjectTrackGroup,
 )
 from showcase.services.application_service import ProjectApplicationService
+from teams.models import Direction, StudyGroup, StudyGroupSemester
 
 User = get_user_model()
 
@@ -1321,6 +1325,67 @@ class TestUpdateAndQueriesService:
         # автор может
         got = service.get_application(app.id, author)
         assert got.id == app.id
+
+    def test_get_application_mentor_of_group_track_allowed(
+        self, statuses, make_user, departments, institute
+    ):
+        """Наставник группы видит заявку из трека своей группы."""
+        author = make_user(role_code="user")
+        mentor = make_user(role_code="mentor", with_department=True)
+        other_mentor = make_user(
+            role_code="mentor", with_department=True, email="other-mentor@x.com"
+        )
+        semester = Semester.objects.create(code="s-m", name="S", position=99)
+        direction = Direction.objects.create(
+            code="09.03.99",
+            name="Тест",
+            level=Direction.Level.BAKALAVRIAT,
+        )
+        group = StudyGroup.objects.create(
+            name="ГР-1",
+            code="GR-1",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        enrollment = StudyGroupSemester.objects.create(
+            study_group=group, semester=semester
+        )
+        enrollment.mentors.set([mentor])
+
+        app = self._create_app(author=author, status_code="approved")
+        app.semester = semester
+        app.save(update_fields=["semester"])
+        track = ProjectTrack.objects.create(
+            name="Трек",
+            description="Описание",
+            department=departments["child"],
+            semester=semester,
+            author=author,
+            min_team_members=2,
+            max_team_members=5,
+            recommended_teams_count=1,
+        )
+        ProjectTrackGroup.objects.create(project_track=track, study_group=group)
+        ProjectTrackApplication.objects.create(
+            project_track=track, project_application=app
+        )
+
+        service = ProjectApplicationService()
+        got = service.get_application(app.id, mentor)
+        assert got.id == app.id
+
+        with pytest.raises(PermissionError):
+            service.get_application(app.id, other_mentor)
+
+    def test_get_application_mentor_without_track_denied(self, statuses, make_user):
+        """Наставник без связи через трек группы не видит чужую заявку."""
+        author = make_user(role_code="user")
+        mentor = make_user(role_code="mentor", with_department=True)
+        app = self._create_app(author=author, status_code="approved")
+        service = ProjectApplicationService()
+        with pytest.raises(PermissionError):
+            service.get_application(app.id, mentor)
 
     def test_get_user_applications_and_queryset(self, statuses, make_user):
         """Списки по пользователю возвращаются без ошибок для user роли."""

@@ -4,7 +4,7 @@
 """
 
 from django.contrib.auth import get_user_model
-from django.db.models import Max
+from django.db.models import F, Max
 from django.utils import timezone
 
 from accounts.models import Department, Semester
@@ -12,7 +12,13 @@ from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
 )
-from showcase.models import ApplicationStatus, Institute, ProjectApplication, Tag
+from showcase.models import (
+    ApplicationStatus,
+    Institute,
+    ProjectApplication,
+    ProjectTrackApplication,
+    Tag,
+)
 
 User = get_user_model()
 
@@ -151,6 +157,18 @@ class ProjectApplicationRepository:
         return ProjectApplication.objects.select_related(
             "status", "author", "main_department", "semester"
         ).get(pk=application_id)
+
+    def is_accessible_to_mentor(self, user_id: int, application_id: int) -> bool:
+        """True, если заявка в треке группы, где user — наставник в том же семестре."""
+        return ProjectTrackApplication.objects.filter(
+            project_application_id=application_id,
+            project_track__group_links__study_group__semester_enrollments__mentors__id=(
+                user_id
+            ),
+            project_track__group_links__study_group__semester_enrollments__semester_id=F(
+                "project_track__semester_id"
+            ),
+        ).exists()
 
     def filter_by_user(self, user: User) -> list[ProjectApplication]:
         """Получение заявок пользователя, где он является автором.

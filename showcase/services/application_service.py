@@ -619,20 +619,34 @@ class ProjectApplicationService:
 
         return application
 
-    def get_application(self, application_id: int, viewer: User):
-        """Бизнес-операция: получение заявки."""
-        # 1. Получаем заявку (Repository)
-        application = self.repository.get_by_id(application_id)
-
-        # 2. Проверка доступа (Domain)
+    def _ensure_can_view_application(
+        self, application: ProjectApplication, viewer: User
+    ) -> None:
+        """Проверяет право просмотра заявки (роль/автор или витрина наставника)."""
         can_view, error = ApplicationCapabilities.view_application(
             application.status.code,
             viewer.role.code if viewer.role else "user",
             application.author.id if application.author else 0,
             viewer.id,
         )
-        if not can_view:
-            raise PermissionError(error)
+        if can_view:
+            return
+
+        role_code = viewer.role.code if viewer.role else None
+        if role_code == "mentor" and self.repository.is_accessible_to_mentor(
+            viewer.id, application.id
+        ):
+            return
+
+        raise PermissionError(error)
+
+    def get_application(self, application_id: int, viewer: User):
+        """Бизнес-операция: получение заявки."""
+        # 1. Получаем заявку (Repository)
+        application = self.repository.get_by_id(application_id)
+
+        # 2. Проверка доступа (Domain + витрина наставника)
+        self._ensure_can_view_application(application, viewer)
 
         self._mark_application_viewed_by_author(application, viewer)
 
@@ -645,14 +659,7 @@ class ProjectApplicationService:
         except ObjectDoesNotExist as err:
             raise ValueError(f"Заявка с ID {application_id} не найдена") from err
 
-        can_view, error = ApplicationCapabilities.view_application(
-            application.status.code,
-            viewer.role.code if viewer.role else "user",
-            application.author.id if application.author else 0,
-            viewer.id,
-        )
-        if not can_view:
-            raise PermissionError(error)
+        self._ensure_can_view_application(application, viewer)
 
         self._mark_application_viewed_by_author(application, viewer)
 
