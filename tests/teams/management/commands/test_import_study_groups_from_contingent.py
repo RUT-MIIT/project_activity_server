@@ -66,6 +66,7 @@ def _base_row(
     direction_name: str = "Аэронавигация",
     personnel: str = "1335090",
     permanent_id: str = "309371",
+    planned_end: str = "31.08.2029",
 ) -> list[object]:
     return [
         "очная",
@@ -82,7 +83,7 @@ def _base_row(
         "м",
         "",
         "",
-        "31.08.2029",
+        planned_end,
         "18457362806",
         personnel,
         "",
@@ -283,6 +284,41 @@ class TestImportStudyGroupsFromContingentCommand:
         assert orphan.is_end is True
         assert empty.is_end is True
         assert imported.is_end is False
+
+    def test_import_keeps_group_active_despite_past_planned_end_date(
+        self, tmp_path: Path, aga_institute: Institute, direction: Direction
+    ) -> None:
+        """Дата планового окончания не влияет на is_end — только наличие в Excel."""
+        existing = StudyGroup.objects.create(
+            name="ОМН-311",
+            code="ОМН-2022-11",
+            direction=direction,
+            institute=aga_institute,
+            external_group_id="141099",
+            is_end=True,
+        )
+        path = tmp_path / "past_end.xlsx"
+        _write_contingent(
+            path,
+            [
+                _base_row(
+                    fio="Студент ОМН",
+                    card="22001111",
+                    course=3,
+                    group_name="ОМН-311",
+                    group_id="141099",
+                    permanent="ОМН-2022-11",
+                    personnel="1410991",
+                    planned_end="31.08.2026",
+                )
+            ],
+        )
+
+        call_command("import_study_groups_from_contingent", file=str(path))
+
+        existing.refresh_from_db()
+        assert existing.is_end is False
+        assert existing.external_group_id == "141099"
 
     def test_import_skips_remapped_away_id(
         self, tmp_path: Path, aga_institute: Institute

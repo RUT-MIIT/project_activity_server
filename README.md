@@ -18,6 +18,7 @@ python manage.py import_preregistered_students --file data/контингент_
 Поведение импорта групп:
 
 - upsert / claim по `external_group_id`; при split одной постоянной на два ID старый `pk` забирает ID с совпадающим `name`, второй ID создаётся новой записью;
+- группы из файла всегда `is_end=False` (дата планового окончания **не** учитывается);
 - группы, чей ID нет в файле (или пустой `external_group_id`) → `is_end=True` (без `delete`);
 - слияния ID задаются в `EXTERNAL_GROUP_ID_REMAP` (например ТСТ-442→441: `193902`→`193901`);
 - оверрайды имени/института по ID — `STUDY_GROUP_OVERRIDES_BY_EXTERNAL_ID` (ЭПО и т.п.).

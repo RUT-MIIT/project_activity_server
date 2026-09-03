@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-from datetime import date
 from pathlib import Path
 
 from django.core.management.base import BaseCommand, CommandError
@@ -17,14 +15,12 @@ from teams.domain.study_group_import import (
     GroupImportRow,
     build_group_import_row,
     get_study_group_override_by_external_id,
-    group_ended_by_planned_dates,
     is_external_group_id_remapped_away,
     is_skipped_permanent_group,
     is_skipped_study_group_name,
     is_skipped_teaching_group_name,
     normalize_cell,
     normalize_external_group_id,
-    parse_planned_end_date,
     remap_external_group_id,
     resolve_existing_group_for_id,
 )
@@ -71,17 +67,12 @@ class Command(BaseCommand):
         if not path.is_file():
             raise CommandError(f"Файл не найден: {path}")
 
-        today = date.today()
-
         if options["clear"]:
             deleted, _ = StudyGroup.objects.all().delete()
             self.stdout.write(f"Удалено групп: {deleted}")
 
         df = self._read_contingent(path)
-        rows, skipped_by_config, skipped_remap = self._collect_group_rows(
-            df=df,
-            today=today,
-        )
+        rows, skipped_by_config, skipped_remap = self._collect_group_rows(df=df)
 
         candidates = [
             ExistingGroupCandidate(
@@ -101,7 +92,6 @@ class Command(BaseCommand):
         created = 0
         updated = 0
         claimed = 0
-        ended_by_date_count = 0
         claimed_pks: set[int] = set()
         imported_external_ids = set(rows.keys())
 
@@ -116,6 +106,7 @@ class Command(BaseCommand):
                 ids_per_permanent=ids_per_permanent,
                 claimed_pks=claimed_pks,
             )
+            # Группа из файла всегда активна; is_end только у отсутствующих в Excel.
             defaults = {
                 "name": row.name,
                 "code": row.code,
@@ -125,12 +116,10 @@ class Command(BaseCommand):
                 "institute": institute,
                 "profile": row.profile,
                 "form": row.form,
-                "is_end": row.is_end,
+                "is_end": False,
                 "external_group_id": row.external_group_id,
                 "external_permanent_group_id": row.external_permanent_group_id,
             }
-            if row.is_end:
-                ended_by_date_count += 1
 
             if existing is None:
                 StudyGroup.objects.create(**defaults)
@@ -174,10 +163,7 @@ class Command(BaseCommand):
         if skipped_remap:
             summary += f", пропущено слияний ID {skipped_remap}"
         if not options["clear"]:
-            summary += (
-                f", завершено отсутствующих/без ID {ended_missing_count}, "
-                f"завершено по дате {ended_by_date_count}"
-            )
+            summary += f", завершено отсутствующих/без ID {ended_missing_count}"
         self.stdout.write(self.style.SUCCESS(summary))
 
     def _read_contingent(self, path: Path) -> pd.DataFrame:
@@ -202,11 +188,9 @@ class Command(BaseCommand):
         self,
         *,
         df: pd.DataFrame,
-        today: date,
     ) -> tuple[dict[str, GroupImportRow], int, int]:
         """Дедуплицирует строки по ID группы (после remap)."""
         groups: dict[str, GroupImportRow] = {}
-        planned_dates_by_id: dict[str, list[date | None]] = {}
         unknown_institutes: set[str] = set()
         skipped = 0
         skipped_by_config = 0
@@ -239,13 +223,6 @@ class Command(BaseCommand):
             if is_skipped_teaching_group_name(teaching_group) and not has_id_override:
                 skipped_by_config += 1
                 continue
-
-            try:
-                planned_end_date = parse_planned_end_date(
-                    row.get("Дата планового окончания")
-                )
-            except ValueError as exc:
-                raise CommandError(f"Строка {line_no}: {exc}") from exc
 
             permanent_external_id = ""
             if has_permanent_id_column:
@@ -282,9 +259,6 @@ class Command(BaseCommand):
                 skipped_by_config += 1
                 continue
 
-            planned_dates_by_id.setdefault(parsed.external_group_id, []).append(
-                planned_end_date
-            )
             if parsed.external_group_id in groups:
                 continue
             groups[parsed.external_group_id] = parsed
@@ -314,13 +288,6 @@ class Command(BaseCommand):
 
         if not groups and not skipped_by_config and not skipped_remap:
             raise CommandError("Не найдено ни одной валидной учебной группы")
-
-        for external_id, group_row in groups.items():
-            is_end = group_ended_by_planned_dates(
-                planned_dates_by_id.get(external_id, []),
-                today=today,
-            )
-            groups[external_id] = replace(group_row, is_end=is_end)
 
         return groups, skipped_by_config, skipped_remap
 
