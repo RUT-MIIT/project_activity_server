@@ -5,12 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 import re
 
-from teams.domain.study_group_import import (
-    Semester,
-    is_convergent_contingent_row,
-    map_teaching_group_name_for_lookup,
-    normalize_cell,
-)
+from teams.domain.study_group_import import normalize_cell, remap_external_group_id
 
 REQUIRED_COLUMNS = (
     "ФИО (полное)",
@@ -18,6 +13,7 @@ REQUIRED_COLUMNS = (
     "СНИЛС",
     "ID_E человека",
     "Постоянная группа",
+    "ID группы",
 )
 
 SNILS_DIGITS_PATTERN = re.compile(r"\D+")
@@ -47,6 +43,7 @@ class StudyGroupRef:
     code: str
     name: str
     external_group_id: str
+    is_end: bool = False
 
 
 @dataclass
@@ -54,19 +51,14 @@ class StudyGroupLookup:
     """Индексы учебных групп для резолвинга при импорте студентов."""
 
     by_external_id: dict[str, StudyGroupRef] = field(default_factory=dict)
-    by_code: dict[str, StudyGroupRef] = field(default_factory=dict)
-    by_name: dict[str, list[StudyGroupRef]] = field(default_factory=dict)
 
     @classmethod
     def from_groups(cls, groups: list[StudyGroupRef]) -> StudyGroupLookup:
-        """Строит lookup из списка групп."""
+        """Строит lookup из списка групп по ID группы 1С."""
         lookup = cls()
         for group in groups:
             if group.external_group_id:
                 lookup.by_external_id[group.external_group_id] = group
-            if group.code:
-                lookup.by_code[group.code] = group
-            lookup.by_name.setdefault(group.name, []).append(group)
         return lookup
 
 
@@ -133,6 +125,7 @@ def build_preregistered_student_import_row(
     card = normalize_cell(student_card)
     tab_number = normalize_cell(personnel_number)
     group_code = normalize_cell(permanent_group_code)
+    remapped_id = remap_external_group_id(external_group_id)
 
     if not card:
         raise ValueError("Пустой студенческий билет")
@@ -140,6 +133,8 @@ def build_preregistered_student_import_row(
         raise ValueError("Пустой табельный номер (ID_E человека)")
     if not group_code:
         raise ValueError("Пустая постоянная группа")
+    if not remapped_id:
+        raise ValueError("Пустой ID группы")
 
     return PreRegisteredStudentImportRow(
         last_name=last_name,
@@ -150,7 +145,7 @@ def build_preregistered_student_import_row(
         personnel_number=tab_number,
         group_code=group_code,
         teaching_group_name=normalize_cell(teaching_group_name),
-        external_group_id=normalize_cell(external_group_id),
+        external_group_id=remapped_id,
         course_from_file=normalize_cell(course_from_file),
     )
 
@@ -158,63 +153,32 @@ def build_preregistered_student_import_row(
 def resolve_study_group_for_student(
     row: PreRegisteredStudentImportRow,
     lookup: StudyGroupLookup,
-    *,
-    current_year: int,
-    semester: Semester,
 ) -> StudyGroupResolveResult:
     """
-    Определяет учебную группу для строки студента.
+    Определяет учебную группу для строки студента по ID группы 1С.
 
-    Приоритет: external_group_id → code (сходящаяся строка) → name (отстающие).
+    ID уже должен быть пропущен через remap_external_group_id.
     """
-    if row.external_group_id:
-        group = lookup.by_external_id.get(row.external_group_id)
-        if group is not None:
-            return StudyGroupResolveResult(group=group)
+    if not row.external_group_id:
+        return StudyGroupResolveResult(
+            group=None,
+            reason="не указан ID группы",
+        )
 
-    is_convergent = is_convergent_contingent_row(
-        row.group_code,
-        row.teaching_group_name,
-        row.course_from_file,
-        current_year=current_year,
-        semester=semester,
-    )
-
-    if is_convergent:
-        group = lookup.by_code.get(row.group_code)
-        if group is not None:
-            return StudyGroupResolveResult(group=group)
+    group = lookup.by_external_id.get(row.external_group_id)
+    if group is None:
         return StudyGroupResolveResult(
             group=None,
             reason=(
-                f"постоянная группа «{row.group_code}» не найдена в БД "
+                f"учебная группа с ID «{row.external_group_id}» не найдена в БД "
                 "(сначала import_study_groups_from_contingent)"
             ),
         )
-
-    teaching_name = normalize_cell(row.teaching_group_name)
-    if not teaching_name:
+    if group.is_end:
         return StudyGroupResolveResult(
             group=None,
             reason=(
-                f"отстающий студент без колонки «Группа» "
-                f"(постоянная «{row.group_code}»)"
+                f"учебная группа по ID «{row.external_group_id}» " "завершила обучение"
             ),
         )
-
-    lookup_name = map_teaching_group_name_for_lookup(teaching_name)
-    matches = lookup.by_name.get(lookup_name, [])
-    if len(matches) == 1:
-        return StudyGroupResolveResult(group=matches[0])
-    if len(matches) > 1:
-        return StudyGroupResolveResult(
-            group=None,
-            reason=(
-                f"неоднозначное имя учебной группы «{teaching_name}» "
-                f"({len(matches)} совпадений)"
-            ),
-        )
-    return StudyGroupResolveResult(
-        group=None,
-        reason=f"учебная группа «{teaching_name}» не найдена в БД",
-    )
+    return StudyGroupResolveResult(group=group)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date, datetime
 import re
 from typing import Literal
@@ -50,6 +50,8 @@ REQUIRED_COLUMNS = (
     "Профиль/специализация/программа",
     "Форма обучения",
     "Дата планового окончания",
+    "ID группы",
+    "Группа",
 )
 
 VALID_LEVELS = {"бакалавриат", "специалитет"}
@@ -58,7 +60,21 @@ VALID_LEVELS = {"бакалавриат", "специалитет"}
 SKIPPED_PERMANENT_GROUP_CODES: frozenset[str] = frozenset()
 
 # Префиксы постоянных групп для исключения из импорта (например, все ТУП-*).
+# Исключение снимается для ID из STUDY_GROUP_OVERRIDES_BY_EXTERNAL_ID.
 SKIPPED_PERMANENT_GROUP_PREFIXES: tuple[str, ...] = ("ТУП-",)
+
+# Имена учебных групп (StudyGroup.name), исключённые из импорта групп и студентов.
+SKIPPED_STUDY_GROUP_NAMES: frozenset[str] = frozenset(
+    {
+        "ОММ-221",
+        "ОММ-321",
+        "ОММ-421",
+        "ОММ-521",
+        "ОММу-221",
+        "ОММу-321",
+        "ОММу-421",
+    }
+)
 
 # Переименование учебных групп: расчётное имя из 1С → имя в БД.
 STUDY_GROUP_NAME_OVERRIDES: dict[str, str] = {}
@@ -69,6 +85,38 @@ STUDY_GROUP_NAME_OVERRIDES_BY_CODE: dict[str, str] = {}
 # Замена аббревиатуры в имени группы: ЭБП-211 → ЭПТ-211.
 GROUP_ABBREV_RENAMES: dict[str, str] = {
     "ЭБП": "ЭПТ",
+}
+
+
+@dataclass(frozen=True)
+class StudyGroupFieldOverride:
+    """Ручная правка полей учебной группы по ID группы из 1С."""
+
+    name: str | None = None
+    institute_name: str | None = None
+
+
+# Переопределение полей до записи в БД: ключ — ID группы (1С).
+# Также снимает исключение ТУП-/SKIPPED для этих ID.
+STUDY_GROUP_OVERRIDES_BY_EXTERNAL_ID: dict[str, StudyGroupFieldOverride] = {
+    "149820": StudyGroupFieldOverride(
+        name="ЭПО-211",
+        institute_name="Институт экономики и финансов",
+    ),
+    "140100": StudyGroupFieldOverride(
+        name="ЭПО-311",
+        institute_name="Институт экономики и финансов",
+    ),
+    "139672": StudyGroupFieldOverride(
+        name="ЭПО-411",
+        institute_name="Институт экономики и финансов",
+    ),
+}
+
+# Слияние учебных групп: исходный ID группы (1С) → целевой ID.
+# Студенты с исходным ID привязываются к целевой группе; исходная не создаётся.
+EXTERNAL_GROUP_ID_REMAP: dict[str, str] = {
+    "193902": "193901",  # ТСТ-442 → ТСТ-441
 }
 
 
@@ -85,6 +133,7 @@ class ParsedPermanentGroup:
 class GroupImportRow:
     """Строка отчёта, подготовленная к импорту одной учебной группы."""
 
+    external_group_id: str
     code: str
     name: str
     enrollment_year: int
@@ -96,7 +145,18 @@ class GroupImportRow:
     direction_level: str
     profile: str
     form: str
+    external_permanent_group_id: str = ""
     is_end: bool = False
+
+
+@dataclass(frozen=True)
+class ExistingGroupCandidate:
+    """Кандидат StudyGroup для claim без зависимости от ORM."""
+
+    pk: int
+    code: str
+    name: str
+    external_group_id: str
 
 
 @dataclass(frozen=True)
@@ -135,12 +195,90 @@ def normalize_cell(value: object) -> str:
     return text
 
 
+def normalize_external_group_id(value: object) -> str:
+    """Нормализует ID группы из 1С до строки без дробной части."""
+    text = normalize_cell(value)
+    if not text:
+        return ""
+    try:
+        return str(int(float(text)))
+    except ValueError:
+        return text
+
+
+def remap_external_group_id(value: object) -> str:
+    """
+    Нормализует ID группы и применяет EXTERNAL_GROUP_ID_REMAP.
+
+    Используется при импорте студентов (и при решении, создавать ли группу).
+    """
+    normalized = normalize_external_group_id(value)
+    if not normalized:
+        return ""
+    return EXTERNAL_GROUP_ID_REMAP.get(normalized, normalized)
+
+
+def is_external_group_id_remapped_away(value: object) -> bool:
+    """True, если ID слит в другую группу и отдельную StudyGroup создавать не нужно."""
+    normalized = normalize_external_group_id(value)
+    if not normalized:
+        return False
+    target = EXTERNAL_GROUP_ID_REMAP.get(normalized)
+    return target is not None and target != normalized
+
+
+def get_study_group_override_by_external_id(
+    external_group_id: object,
+) -> StudyGroupFieldOverride | None:
+    """Возвращает ручной оверрайд по ID группы или None."""
+    normalized = normalize_external_group_id(external_group_id)
+    if not normalized:
+        return None
+    return STUDY_GROUP_OVERRIDES_BY_EXTERNAL_ID.get(normalized)
+
+
+def apply_study_group_override_by_external_id(
+    row: GroupImportRow,
+    external_group_id: object,
+) -> GroupImportRow:
+    """
+    Переписывает name/институт по STUDY_GROUP_OVERRIDES_BY_EXTERNAL_ID.
+
+    Вызывается до записи в БД. Неизвестный ID оставляет row без изменений.
+    """
+    override = get_study_group_override_by_external_id(external_group_id)
+    if override is None:
+        return row
+
+    name = row.name
+    institute_name = row.institute_name
+    institute_code = row.institute_code
+
+    if override.name:
+        name = normalize_cell(override.name)
+    if override.institute_name:
+        institute_name = normalize_cell(override.institute_name)
+        institute_code = resolve_institute_code(institute_name)
+
+    return replace(
+        row,
+        name=name,
+        institute_name=institute_name,
+        institute_code=institute_code,
+    )
+
+
 def is_skipped_permanent_group(permanent_group_code: str) -> bool:
     """Возвращает True, если постоянная группа исключена из импорта."""
     code = normalize_cell(permanent_group_code)
     if code in SKIPPED_PERMANENT_GROUP_CODES:
         return True
     return any(code.startswith(prefix) for prefix in SKIPPED_PERMANENT_GROUP_PREFIXES)
+
+
+def is_skipped_study_group_name(study_group_name: str) -> bool:
+    """Возвращает True, если учебная группа исключена из импорта по имени."""
+    return normalize_cell(study_group_name) in SKIPPED_STUDY_GROUP_NAMES
 
 
 def apply_group_abbrev_renames(name: str) -> str:
@@ -182,6 +320,58 @@ def map_teaching_group_name_for_lookup(teaching_group_name: str) -> str:
         return ""
     renamed = STUDY_GROUP_NAME_OVERRIDES.get(name, name)
     return apply_group_abbrev_renames(renamed)
+
+
+def collect_teaching_group_names_in_file(values: list[object]) -> set[str]:
+    """
+    Собирает имена учебных групп из колонки «Группа» отчёта.
+
+    Имена нормализуются так же, как при поиске StudyGroup по name.
+    Пустые и исключённые имена пропускаются.
+    """
+    names: set[str] = set()
+    for value in values:
+        mapped = map_teaching_group_name_for_lookup(value)
+        if not mapped:
+            continue
+        if is_skipped_study_group_name(mapped):
+            continue
+        names.add(mapped)
+    return names
+
+
+def should_keep_missing_group_alive(
+    *,
+    group_code: str,
+    group_name: str,
+    imported_codes: set[str],
+    teaching_names_in_file: set[str],
+) -> bool:
+    """
+    True, если группу без кода в текущем импорте нельзя помечать is_end.
+
+    Группа остаётся живой, пока её name встречается в колонке «Группа»
+    (например, ТКИ-241 при постоянной ТКИ-2024-41 и year=2026).
+    """
+    code = normalize_cell(group_code)
+    if not code or code in imported_codes:
+        return False
+    if is_skipped_permanent_group(code):
+        return False
+    name = normalize_cell(group_name)
+    if not name or is_skipped_study_group_name(name):
+        return False
+    return name in teaching_names_in_file
+
+
+def is_skipped_teaching_group_name(teaching_group_name: str) -> bool:
+    """Проверяет имя из колонки «Группа» с учётом переименований для БД."""
+    name = normalize_cell(teaching_group_name)
+    if not name:
+        return False
+    if is_skipped_study_group_name(name):
+        return True
+    return is_skipped_study_group_name(map_teaching_group_name_for_lookup(name))
 
 
 def parse_planned_end_date(value: object) -> date | None:
@@ -433,26 +623,113 @@ def parse_direction_level(level_raw: str) -> str:
     return cleaned
 
 
+def resolve_existing_group_for_id(
+    candidates: list[ExistingGroupCandidate],
+    *,
+    external_id: str,
+    permanent_code: str,
+    teaching_name: str,
+    ids_per_permanent: dict[str, set[str]],
+    claimed_pks: set[int],
+) -> ExistingGroupCandidate | None:
+    """
+    Подбирает существующую StudyGroup для ID группы из 1С.
+
+    Приоритет:
+    1. уже с этим external_group_id;
+    2. незанятая с code=постоянная и name=учебная группа;
+    3. единственная незанятая с этим code, если у постоянной ровно один ID в файле.
+    """
+    target_id = remap_external_group_id(external_id)
+    if not target_id:
+        return None
+
+    for candidate in candidates:
+        if candidate.external_group_id == target_id:
+            return candidate
+
+    permanent = normalize_cell(permanent_code)
+    lookup_name = map_teaching_group_name_for_lookup(teaching_name)
+    unclaimed = [
+        candidate
+        for candidate in candidates
+        if candidate.pk not in claimed_pks
+        and not candidate.external_group_id
+        and normalize_cell(candidate.code) == permanent
+    ]
+    if not unclaimed:
+        return None
+
+    name_matches = [
+        candidate
+        for candidate in unclaimed
+        if normalize_cell(candidate.name) == lookup_name
+    ]
+    if len(name_matches) == 1:
+        return name_matches[0]
+    if len(name_matches) > 1:
+        return name_matches[0]
+
+    permanent_ids = ids_per_permanent.get(permanent, set())
+    if len(permanent_ids) == 1 and len(unclaimed) == 1:
+        return unclaimed[0]
+    return None
+
+
 def build_group_import_row(
     *,
     permanent_group_code: str,
+    teaching_group_name: str,
     institute_name: str,
     direction_code: str,
     direction_name: str,
     direction_level: str,
     profile: str,
     form: str,
-    current_year: int,
-    semester: Semester,
+    external_group_id: object,
+    course_from_file: object = "",
+    external_permanent_group_id: object = "",
 ) -> GroupImportRow:
-    """Собирает DTO одной группы из полей строки отчёта."""
-    parsed = parse_permanent_group_code(permanent_group_code)
-    course_number = calculate_course_number(
-        current_year=current_year,
-        enrollment_year=parsed.enrollment_year,
-        semester=semester,
-    )
-    institute_code = resolve_institute_code(institute_name)
+    """
+    Собирает DTO одной группы из полей строки отчёта.
+
+    Identity — ID группы из 1С; имя — колонка «Группа» (с оверрайдами).
+    """
+    remapped_id = remap_external_group_id(external_group_id)
+    if not remapped_id:
+        raise ValueError("Пустой ID группы")
+    if is_external_group_id_remapped_away(external_group_id):
+        raise ValueError(
+            f"ID группы «{normalize_external_group_id(external_group_id)}» "
+            f"слит в «{remapped_id}»"
+        )
+
+    permanent = normalize_cell(permanent_group_code)
+    if not permanent:
+        raise ValueError("Пустая постоянная группа")
+
+    parsed = parse_permanent_group_code(permanent)
+    teaching_name = map_teaching_group_name_for_lookup(teaching_group_name)
+    if not teaching_name:
+        raise ValueError("Пустое имя учебной группы («Группа»)")
+
+    file_course = parse_course_from_file_value(course_from_file)
+    if file_course is None:
+        name_course = parse_course_from_teaching_group_name(teaching_name)
+        if name_course is None:
+            raise ValueError(f"Не удалось определить курс для группы «{teaching_name}»")
+        course_number = name_course
+    else:
+        course_number = file_course
+
+    row_institute = normalize_cell(institute_name)
+    override = get_study_group_override_by_external_id(remapped_id)
+    if not row_institute and override is not None and override.institute_name:
+        row_institute = normalize_cell(override.institute_name)
+    if not row_institute:
+        raise ValueError("Пустое название института")
+
+    institute_code = resolve_institute_code(row_institute)
     level = parse_direction_level(direction_level)
 
     if not direction_code.strip():
@@ -460,25 +737,26 @@ def build_group_import_row(
     if not direction_name.strip():
         raise ValueError("Пустое название специальности")
 
-    calculated_name = build_group_name(
-        abbrev=parsed.abbrev,
-        course_number=course_number,
-        group_num=parsed.group_num,
+    display_name = resolve_study_group_display_name(
+        calculated_name=teaching_name,
+        permanent_group_code=permanent,
     )
 
-    return GroupImportRow(
-        code=permanent_group_code.strip(),
-        name=resolve_study_group_display_name(
-            calculated_name=calculated_name,
-            permanent_group_code=permanent_group_code,
-        ),
+    row = GroupImportRow(
+        external_group_id=remapped_id,
+        code=permanent,
+        name=display_name,
         enrollment_year=parsed.enrollment_year,
         course_number=course_number,
-        institute_name=institute_name.strip(),
+        institute_name=row_institute,
         institute_code=institute_code,
         direction_code=direction_code.strip(),
         direction_name=direction_name.strip(),
         direction_level=level,
         profile=profile.strip(),
         form=form.strip(),
+        external_permanent_group_id=normalize_external_group_id(
+            external_permanent_group_id
+        ),
     )
+    return apply_study_group_override_by_external_id(row, remapped_id)

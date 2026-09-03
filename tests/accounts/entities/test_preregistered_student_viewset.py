@@ -164,7 +164,7 @@ class TestPreRegisteredStudentLookup:
         assert response.status_code == 200
         assert response.data["last_name"] == "Иванов"
 
-    def test_lookup_ended_group_returns_404(
+    def test_lookup_ended_group_returns_400(
         self,
         api_client: APIClient,
         pre_registered_student: PreRegisteredStudent,
@@ -179,7 +179,8 @@ class TestPreRegisteredStudentLookup:
             format="json",
         )
 
-        assert response.status_code == 404
+        assert response.status_code == 400
+        assert "завершила обучение" in response.data["detail"]
 
 
 @pytest.fixture

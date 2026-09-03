@@ -86,8 +86,10 @@ class PreRegisteredStudentService:
         if not last_names_match(pre_registered.last_name, last_name):
             raise ValueError("Фамилия не совпадает с данными в системе")
         if pre_registered.role_id == "student":
-            if pre_registered.group is None or pre_registered.group.is_end:
+            if pre_registered.group is None:
                 return None
+            if pre_registered.group.is_end:
+                raise ValueError("Учебная группа завершила обучение")
         return self._to_lookup_result(pre_registered)
 
     @transaction.atomic

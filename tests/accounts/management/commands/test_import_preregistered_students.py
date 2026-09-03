@@ -152,6 +152,7 @@ def study_group(db: Any, aga_institute: Institute) -> StudyGroup:
         institute=aga_institute,
         profile="Организация бизнес-процессов",
         form="очная",
+        external_group_id="197175",
     )
 
 
@@ -268,48 +269,48 @@ class TestImportPreRegisteredStudentsCommand:
         assert registered.user_id == user.pk
         assert PreRegisteredStudent.objects.count() == 3
 
-    def test_import_assigns_lagging_student_by_teaching_group_name(
+    def test_import_assigns_students_by_external_group_id(
         self, tmp_path: Path, aga_institute: Institute
     ) -> None:
         direction = Direction.objects.create(
-            code="38.03.02",
-            name="Менеджмент",
+            code="09.03.01",
+            name="Информатика",
             level=Direction.Level.BAKALAVRIAT,
         )
-        main_group = StudyGroup.objects.create(
-            name="ТПВг-341",
-            code="ТПВг-2024-41",
+        group_241 = StudyGroup.objects.create(
+            name="ТКИ-241",
+            code="ТКИ-2024-41",
+            enrollment_year=2024,
+            course_number=2,
+            direction=direction,
+            institute=aga_institute,
+            external_group_id="193722",
+        )
+        group_341 = StudyGroup.objects.create(
+            name="ТКИ-341",
+            code="ТКИ-2024-41",
             enrollment_year=2024,
             course_number=3,
             direction=direction,
             institute=aga_institute,
-            external_group_id="ext-341",
-        )
-        lagging_group = StudyGroup.objects.create(
-            name="ТПВг-241",
-            code="ТПВг-2023-99",
-            enrollment_year=2023,
-            course_number=2,
-            direction=direction,
-            institute=aga_institute,
-            external_group_id="ext-241",
+            external_group_id="193714",
         )
 
-        path = tmp_path / "lagging.xlsx"
+        path = tmp_path / "tki_split.xlsx"
         title_row = ["Заголовок"] + [""] * (len(COLUMNS) - 1)
         data_rows = [
             [
                 "очная",
-                "38.03.02",
-                "Иванов Иван Иванович",
+                "09.03.01",
+                "Горячев Иван Иванович",
                 "Академия гражданской авиации",
-                "Менеджмент",
+                "Информатика",
                 "Профиль",
-                "25011884",
+                "25002390",
                 "01.09.2024",
                 "бакалавриат",
-                3,
-                "ТПВг-341",
+                2,
+                "ТКИ-241",
                 "м",
                 "",
                 "",
@@ -317,22 +318,22 @@ class TestImportPreRegisteredStudentsCommand:
                 "18457362806",
                 "1335090",
                 "",
-                "ext-341",
-                "ТПВг-2024-41",
+                "193722",
+                "ТКИ-2024-41",
                 "perm-341",
             ],
             [
                 "очная",
-                "38.03.02",
+                "09.03.01",
                 "Петров Пётр",
                 "Академия гражданской авиации",
-                "Менеджмент",
+                "Информатика",
                 "Профиль",
                 "25005843",
                 "01.09.2024",
                 "бакалавриат",
-                2,
-                "ТПВг-241",
+                3,
+                "ТКИ-341",
                 "м",
                 "",
                 "",
@@ -340,8 +341,8 @@ class TestImportPreRegisteredStudentsCommand:
                 "20064882942",
                 "1330766",
                 "",
-                "ext-241",
-                "ТПВг-2024-41",
+                "193714",
+                "ТКИ-2024-41",
                 "perm-341",
             ],
         ]
@@ -349,17 +350,65 @@ class TestImportPreRegisteredStudentsCommand:
             path, index=False, header=False
         )
 
-        call_command(
-            "import_preregistered_students",
-            file=str(path),
-            year=2026,
-            semester="autumn",
+        call_command("import_preregistered_students", file=str(path))
+
+        goryachev = PreRegisteredStudent.objects.get(personnel_number="1335090")
+        other = PreRegisteredStudent.objects.get(personnel_number="1330766")
+        assert goryachev.group_id == group_241.pk
+        assert goryachev.student_card == "25002390"
+        assert other.group_id == group_341.pk
+
+    def test_import_remaps_merged_external_group_id(
+        self, tmp_path: Path, aga_institute: Institute
+    ) -> None:
+        direction = Direction.objects.create(
+            code="09.03.01",
+            name="Информатика",
+            level=Direction.Level.BAKALAVRIAT,
+        )
+        target = StudyGroup.objects.create(
+            name="ТСТ-441",
+            code="ТСТ-2023-41",
+            enrollment_year=2023,
+            course_number=4,
+            direction=direction,
+            institute=aga_institute,
+            external_group_id="193901",
         )
 
-        convergent = PreRegisteredStudent.objects.get(personnel_number="1335090")
-        lagging = PreRegisteredStudent.objects.get(personnel_number="1330766")
-        assert convergent.group_id == main_group.pk
-        assert lagging.group_id == lagging_group.pk
+        path = tmp_path / "remap_students.xlsx"
+        title_row = ["Заголовок"] + [""] * (len(COLUMNS) - 1)
+        data_row = [
+            "очная",
+            "09.03.01",
+            "Студент ТСТ ТСТ",
+            "Академия гражданской авиации",
+            "Информатика",
+            "Профиль",
+            "25009999",
+            "01.09.2023",
+            "бакалавриат",
+            4,
+            "ТСТ-442",
+            "м",
+            "",
+            "",
+            "31.08.2027",
+            "18457362806",
+            "1444001",
+            "",
+            "193902",
+            "ТСТ-2023-42",
+            "perm-442",
+        ]
+        pd.DataFrame([title_row, COLUMNS, data_row]).to_excel(
+            path, index=False, header=False
+        )
+
+        call_command("import_preregistered_students", file=str(path))
+
+        student = PreRegisteredStudent.objects.get(personnel_number="1444001")
+        assert student.group_id == target.pk
 
     def test_import_syncs_registered_user_study_group(
         self,
@@ -397,8 +446,6 @@ class TestImportPreRegisteredStudentsCommand:
         call_command(
             "import_preregistered_students",
             file=str(sample_contingent_file),
-            year=2026,
-            semester="autumn",
         )
 
         user.refresh_from_db()
@@ -406,10 +453,10 @@ class TestImportPreRegisteredStudentsCommand:
         assert student.group_id == study_group.pk
         assert user.study_group_id == study_group.pk
 
-    def test_import_skips_student_when_teaching_group_not_found(
+    def test_import_skips_row_without_external_group_id(
         self, tmp_path: Path, study_group: StudyGroup
     ) -> None:
-        path = tmp_path / "missing_teaching_group.xlsx"
+        path = tmp_path / "missing_id.xlsx"
         title_row = ["Заголовок"] + [""] * (len(COLUMNS) - 1)
         data_row = [
             "очная",
@@ -422,7 +469,7 @@ class TestImportPreRegisteredStudentsCommand:
             "01.09.2025",
             "бакалавриат",
             2,
-            "НЕСУЩЕСТВУЮЩАЯ-999",
+            "АМБ-211",
             "м",
             "",
             "",
@@ -438,16 +485,9 @@ class TestImportPreRegisteredStudentsCommand:
             path, index=False, header=False
         )
 
-        call_command(
-            "import_preregistered_students",
-            file=str(path),
-            year=2026,
-            semester="autumn",
-        )
+        call_command("import_preregistered_students", file=str(path))
 
-        assert (
-            PreRegisteredStudent.objects.filter(personnel_number="1335090").count() == 0
-        )
+        assert PreRegisteredStudent.objects.count() == 0
 
     def test_import_skips_excluded_permanent_group(
         self, sample_contingent_file: Path, study_group: StudyGroup, monkeypatch
@@ -460,8 +500,6 @@ class TestImportPreRegisteredStudentsCommand:
         call_command(
             "import_preregistered_students",
             file=str(sample_contingent_file),
-            year=2026,
-            semester="autumn",
         )
 
         assert PreRegisteredStudent.objects.count() == 0

@@ -2,27 +2,37 @@
 
 ## Импорт контингента 1С
 
-Источник по умолчанию: `data/контингент_14_08.xls`.
+Источник по умолчанию: `data/контингент_29_08.xls` (актуальный файл кладите в `data/`).
+
+**Контракт идентичности:** учебная группа в PD = **ID группы из 1С** (`StudyGroup.external_group_id`).
+Имя берётся из колонки «Группа», код постоянной группы (`code`) — справочно, не ключ upsert.
+Студенты привязываются **только** по remapped `ID группы` (без fallback по name/code).
 
 Сначала учебные группы, затем предрегистрация студентов:
 
 ```bash
-python manage.py import_study_groups_from_contingent --file data/контингент_25_08.xls
-python manage.py import_preregistered_students --file data/контингент_25_08.xls
+python manage.py import_study_groups_from_contingent --file data/контингент_03_09.xls
+python manage.py import_preregistered_students --file data/контингент_03_09.xls
 ```
+
+Поведение импорта групп:
+
+- upsert / claim по `external_group_id`; при split одной постоянной на два ID старый `pk` забирает ID с совпадающим `name`, второй ID создаётся новой записью;
+- группы, чей ID нет в файле (или пустой `external_group_id`) → `is_end=True` (без `delete`);
+- слияния ID задаются в `EXTERNAL_GROUP_ID_REMAP` (например ТСТ-442→441: `193902`→`193901`);
+- оверрайды имени/института по ID — `STUDY_GROUP_OVERRIDES_BY_EXTERNAL_ID` (ЭПО и т.п.).
 
 Опции:
 
 ```bash
-# группы: семестр расчёта курса (autumn/spring), год, очистка всех групп
-python manage.py import_study_groups_from_contingent --file data/контингент_14_08.xls --semester autumn --year 2026
-python manage.py import_study_groups_from_contingent --file data/контингент_14_08.xls --clear
+# группы: --year/--semester устарели (не влияют на identity); --clear удаляет все группы
+python manage.py import_study_groups_from_contingent --file data/контингент_03_09.xls --clear
 
 # студенты: удалить только предрегистрации без привязанного User
-python manage.py import_preregistered_students --file data/контингент_14_08.xls --clear
+python manage.py import_preregistered_students --file data/контингент_03_09.xls --clear
 ```
 
-Если `--file` не указан, обе команды берут `data/контингент_14_08.xls`.
+Если `--file` не указан, обе команды берут файл по умолчанию из кода команды.
 `--clear` у студентов не трогает уже зарегистрированных пользователей.
 
 ## Преподаватели проектной деятельности (`project_teachers_marked.xlsx`)
@@ -90,8 +100,9 @@ python manage.py import_project_teachers_from_excel --file data/project_teachers
 **Типичный полный цикл на проде после обновления контингента:**
 
 ```bash
-python manage.py import_study_groups_from_contingent --file data/контингент_01_09.xls --year 2026 --semester autumn
-python manage.py import_preregistered_students --file data/контингент_01_09.xls --year 2026 --semester autumn
+# желательно: dumpdata teams.StudyGroup перед прогоном
+python manage.py import_study_groups_from_contingent --file data/контингент_03_09.xls
+python manage.py import_preregistered_students --file data/контингент_03_09.xls
 python manage.py import_project_teachers_from_excel --file data/project_teachers_marked.xlsx
 ```
 

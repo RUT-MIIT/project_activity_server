@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from datetime import date
 from pathlib import Path
 
 from django.contrib.auth import get_user_model
@@ -18,7 +17,14 @@ from accounts.domain.preregistered_student_import import (
     resolve_study_group_for_student,
 )
 from accounts.models import PreRegisteredStudent
-from teams.domain.study_group_import import is_skipped_permanent_group, normalize_cell
+from teams.domain.study_group_import import (
+    get_study_group_override_by_external_id,
+    is_skipped_permanent_group,
+    is_skipped_study_group_name,
+    is_skipped_teaching_group_name,
+    normalize_cell,
+    remap_external_group_id,
+)
 from teams.models import StudyGroup
 
 DEFAULT_FILE = "data/контингент_29_08.xls"
@@ -28,7 +34,8 @@ HEADER_ROW = 1
 class Command(BaseCommand):
     help = (
         "Импорт предрегистрации студентов из отчёта контингента 1С. "
-        "Ключ идемпотентности — табельный номер (ID_E человека)."
+        "Ключ идемпотентности — табельный номер (ID_E человека); "
+        "группа определяется по ID группы 1С."
     )
 
     def add_arguments(self, parser):
@@ -48,13 +55,13 @@ class Command(BaseCommand):
             type=str,
             choices=("autumn", "spring"),
             default="autumn",
-            help="Семестр для определения сходящихся строк: autumn или spring",
+            help="Устарело: не влияет на привязку к группе",
         )
         parser.add_argument(
             "--year",
             type=int,
             default=None,
-            help="Календарный год для определения сходящихся строк (по умолчанию — текущий)",
+            help="Устарело: не влияет на привязку к группе",
         )
 
     def handle(self, *args, **options):
@@ -62,18 +69,13 @@ class Command(BaseCommand):
         if not path.is_file():
             raise CommandError(f"Файл не найден: {path}")
 
-        current_year = (
-            options["year"] if options["year"] is not None else date.today().year
-        )
-        semester = options["semester"]
-
         if options["clear"]:
             deleted, _ = PreRegisteredStudent.objects.filter(user__isnull=True).delete()
             self.stdout.write(f"Удалено предрегистраций: {deleted}")
 
         df = self._read_contingent(path)
         lookup = self._build_group_lookup()
-        self._validate_permanent_groups_exist(df, lookup)
+        self._validate_external_group_ids_exist(df, lookup)
 
         created = 0
         updated = 0
@@ -95,7 +97,7 @@ class Command(BaseCommand):
                             row.get("Постоянная группа")
                         ),
                         teaching_group_name=normalize_cell(row.get("Группа")),
-                        external_group_id=normalize_cell(row.get("ID группы")),
+                        external_group_id=row.get("ID группы"),
                         course_from_file=row.get("Курс"),
                     )
                 except ValueError as exc:
@@ -105,16 +107,21 @@ class Command(BaseCommand):
                     skipped_invalid += 1
                     continue
 
-                if is_skipped_permanent_group(parsed.group_code):
+                if is_skipped_permanent_group(parsed.group_code) and (
+                    get_study_group_override_by_external_id(parsed.external_group_id)
+                    is None
+                ):
                     skipped_excluded_group += 1
                     continue
 
-                resolve_result = resolve_study_group_for_student(
-                    parsed,
-                    lookup,
-                    current_year=current_year,
-                    semester=semester,  # type: ignore[arg-type]
-                )
+                if is_skipped_teaching_group_name(parsed.teaching_group_name) and (
+                    get_study_group_override_by_external_id(parsed.external_group_id)
+                    is None
+                ):
+                    skipped_excluded_group += 1
+                    continue
+
+                resolve_result = resolve_study_group_for_student(parsed, lookup)
                 if resolve_result.group is None:
                     self.stdout.write(
                         self.style.WARNING(
@@ -122,6 +129,10 @@ class Command(BaseCommand):
                         )
                     )
                     skipped_no_group += 1
+                    continue
+
+                if is_skipped_study_group_name(resolve_result.group.name):
+                    skipped_excluded_group += 1
                     continue
 
                 group_pk = resolve_result.group.pk
@@ -198,9 +209,9 @@ class Command(BaseCommand):
         return df
 
     def _build_group_lookup(self) -> StudyGroupLookup:
-        """Строит индексы всех учебных групп для резолвинга."""
+        """Строит индексы учебных групп по ID группы 1С."""
         groups = StudyGroup.objects.all().only(
-            "pk", "code", "name", "external_group_id"
+            "pk", "code", "name", "external_group_id", "is_end"
         )
         refs = [
             StudyGroupRef(
@@ -208,26 +219,27 @@ class Command(BaseCommand):
                 code=group.code,
                 name=group.name,
                 external_group_id=group.external_group_id,
+                is_end=group.is_end,
             )
             for group in groups
         ]
         return StudyGroupLookup.from_groups(refs)
 
-    def _validate_permanent_groups_exist(
+    def _validate_external_group_ids_exist(
         self, df: pd.DataFrame, lookup: StudyGroupLookup
     ) -> None:
-        """Проверяет, что постоянные группы из файла есть в БД."""
-        codes = {
-            normalize_cell(value)
-            for value in df["Постоянная группа"].tolist()
-            if normalize_cell(value)
-            and not is_skipped_permanent_group(normalize_cell(value))
-        }
-        missing_codes = sorted(codes - set(lookup.by_code))
-        if missing_codes:
-            preview = ", ".join(missing_codes[:10])
-            suffix = "..." if len(missing_codes) > 10 else ""
+        """Проверяет, что ID групп из файла есть в БД (после remap)."""
+        needed_ids: set[str] = set()
+        for value in df["ID группы"].tolist():
+            remapped = remap_external_group_id(value)
+            if remapped:
+                needed_ids.add(remapped)
+        missing_ids = sorted(needed_ids - set(lookup.by_external_id))
+        if missing_ids:
+            preview = ", ".join(missing_ids[:10])
+            suffix = "..." if len(missing_ids) > 10 else ""
             raise CommandError(
-                f"В БД отсутствуют группы ({len(missing_codes)}): {preview}{suffix}. "
+                f"В БД отсутствуют группы по ID ({len(missing_ids)}): "
+                f"{preview}{suffix}. "
                 "Сначала выполните import_study_groups_from_contingent."
             )

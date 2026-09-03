@@ -11,19 +11,22 @@ import pandas as pd
 
 from showcase.models import Institute
 from teams.domain.study_group_import import (
-    OPTIONAL_EXTERNAL_ID_COLUMNS,
     OPTIONAL_PERMANENT_EXTERNAL_ID_COLUMN,
     REQUIRED_COLUMNS,
-    SKIPPED_PERMANENT_GROUP_CODES,
-    SKIPPED_PERMANENT_GROUP_PREFIXES,
-    ContingentRowForExternalIds,
+    ExistingGroupCandidate,
     GroupImportRow,
     build_group_import_row,
-    collect_external_ids_for_group,
+    get_study_group_override_by_external_id,
     group_ended_by_planned_dates,
+    is_external_group_id_remapped_away,
     is_skipped_permanent_group,
+    is_skipped_study_group_name,
+    is_skipped_teaching_group_name,
     normalize_cell,
+    normalize_external_group_id,
     parse_planned_end_date,
+    remap_external_group_id,
+    resolve_existing_group_for_id,
 )
 from teams.models import Direction, StudyGroup
 
@@ -34,7 +37,7 @@ HEADER_ROW = 1
 class Command(BaseCommand):
     help = (
         "Импорт учебных групп из отчёта контингента 1С. "
-        "Код группы — «Постоянная группа», название рассчитывается по семестру."
+        "Ключ идемпотентности — ID группы (1С), имя берётся из колонки «Группа»."
     )
 
     def add_arguments(self, parser):
@@ -49,13 +52,13 @@ class Command(BaseCommand):
             type=str,
             choices=("autumn", "spring"),
             default="autumn",
-            help="Семестр расчёта курса: autumn (осень, по умолчанию) или spring (весна)",
+            help="Устарело: не влияет на identity/имя (оставлено для совместимости CLI)",
         )
         parser.add_argument(
             "--year",
             type=int,
             default=None,
-            help="Календарный год для расчёта курса (по умолчанию — текущий год)",
+            help="Устарело: не влияет на identity/имя (оставлено для совместимости CLI)",
         )
         parser.add_argument(
             "--clear",
@@ -68,10 +71,6 @@ class Command(BaseCommand):
         if not path.is_file():
             raise CommandError(f"Файл не найден: {path}")
 
-        current_year = (
-            options["year"] if options["year"] is not None else date.today().year
-        )
-        semester = options["semester"]
         today = date.today()
 
         if options["clear"]:
@@ -79,74 +78,106 @@ class Command(BaseCommand):
             self.stdout.write(f"Удалено групп: {deleted}")
 
         df = self._read_contingent(path)
-        rows, skipped_by_config = self._collect_group_rows(
+        rows, skipped_by_config, skipped_remap = self._collect_group_rows(
             df=df,
-            current_year=current_year,
-            semester=semester,
             today=today,
         )
 
+        candidates = [
+            ExistingGroupCandidate(
+                pk=group.pk,
+                code=group.code,
+                name=group.name,
+                external_group_id=group.external_group_id or "",
+            )
+            for group in StudyGroup.objects.all().only(
+                "pk", "code", "name", "external_group_id"
+            )
+        ]
+        ids_per_permanent: dict[str, set[str]] = {}
+        for row in rows.values():
+            ids_per_permanent.setdefault(row.code, set()).add(row.external_group_id)
+
         created = 0
         updated = 0
+        claimed = 0
         ended_by_date_count = 0
-        for row in rows.values():
+        claimed_pks: set[int] = set()
+        imported_external_ids = set(rows.keys())
+
+        for external_id, row in rows.items():
             direction = self._get_or_create_direction(row)
             institute = self._get_institute(row.institute_code)
-            _, was_created = StudyGroup.objects.update_or_create(
-                code=row.code,
-                defaults={
-                    "name": row.name,
-                    "enrollment_year": row.enrollment_year,
-                    "course_number": row.course_number,
-                    "direction": direction,
-                    "institute": institute,
-                    "profile": row.profile,
-                    "form": row.form,
-                    "is_end": row.is_end,
-                },
+            existing = resolve_existing_group_for_id(
+                candidates,
+                external_id=external_id,
+                permanent_code=row.code,
+                teaching_name=row.name,
+                ids_per_permanent=ids_per_permanent,
+                claimed_pks=claimed_pks,
             )
+            defaults = {
+                "name": row.name,
+                "code": row.code,
+                "enrollment_year": row.enrollment_year,
+                "course_number": row.course_number,
+                "direction": direction,
+                "institute": institute,
+                "profile": row.profile,
+                "form": row.form,
+                "is_end": row.is_end,
+                "external_group_id": row.external_group_id,
+                "external_permanent_group_id": row.external_permanent_group_id,
+            }
             if row.is_end:
                 ended_by_date_count += 1
-            if was_created:
-                created += 1
-            else:
-                updated += 1
 
-        external_updated, external_skipped, external_conflicts = (
-            self._backfill_external_ids(
-                df=df,
-                current_year=current_year,
-                semester=semester,  # type: ignore[arg-type]
-            )
-        )
+            if existing is None:
+                StudyGroup.objects.create(**defaults)
+                created += 1
+                continue
+
+            was_claim = not existing.external_group_id
+            StudyGroup.objects.filter(pk=existing.pk).update(**defaults)
+            claimed_pks.add(existing.pk)
+            # Обновляем кандидата в памяти, чтобы повторно не claim'ить.
+            for idx, candidate in enumerate(candidates):
+                if candidate.pk == existing.pk:
+                    candidates[idx] = ExistingGroupCandidate(
+                        pk=existing.pk,
+                        code=row.code,
+                        name=row.name,
+                        external_group_id=row.external_group_id,
+                    )
+                    break
+            updated += 1
+            if was_claim:
+                claimed += 1
 
         ended_missing_count = 0
         if not options["clear"] and rows:
-            imported_codes = set(rows.keys())
-            ended_qs = StudyGroup.objects.exclude(code__in=imported_codes).exclude(
-                code__in=SKIPPED_PERMANENT_GROUP_CODES
+            ended_missing_count = (
+                StudyGroup.objects.exclude(external_group_id__in=imported_external_ids)
+                .exclude(external_group_id="")
+                .update(is_end=True)
             )
-            for prefix in SKIPPED_PERMANENT_GROUP_PREFIXES:
-                ended_qs = ended_qs.exclude(code__startswith=prefix)
-            ended_missing_count = ended_qs.update(is_end=True)
+            ended_missing_count += StudyGroup.objects.filter(
+                external_group_id=""
+            ).update(is_end=True)
 
         summary = (
-            f"Готово: создано {created}, обновлено {updated}, "
-            f"уникальных групп {len(rows)} "
-            f"(year={current_year}, semester={semester})"
+            f"Готово: создано {created}, обновлено {updated} "
+            f"(из них claim {claimed}), уникальных ID {len(rows)}"
         )
         if skipped_by_config:
-            summary += f", пропущено исключённых групп {skipped_by_config}"
+            summary += f", пропущено исключённых {skipped_by_config}"
+        if skipped_remap:
+            summary += f", пропущено слияний ID {skipped_remap}"
         if not options["clear"]:
             summary += (
-                f", завершено отсутствующих {ended_missing_count}, "
+                f", завершено отсутствующих/без ID {ended_missing_count}, "
                 f"завершено по дате {ended_by_date_count}"
             )
-        summary += (
-            f", external ID обновлено {external_updated}, "
-            f"без сходящихся строк {external_skipped}, "
-            f"конфликтов ID {external_conflicts}"
-        )
         self.stdout.write(self.style.SUCCESS(summary))
 
     def _read_contingent(self, path: Path) -> pd.DataFrame:
@@ -171,35 +202,42 @@ class Command(BaseCommand):
         self,
         *,
         df: pd.DataFrame,
-        current_year: int,
-        semester: str,
         today: date,
-    ) -> tuple[dict[str, GroupImportRow], int]:
-        """Дедуплицирует строки по коду постоянной группы."""
+    ) -> tuple[dict[str, GroupImportRow], int, int]:
+        """Дедуплицирует строки по ID группы (после remap)."""
         groups: dict[str, GroupImportRow] = {}
-        planned_dates_by_group: dict[str, list[date | None]] = {}
+        planned_dates_by_id: dict[str, list[date | None]] = {}
         unknown_institutes: set[str] = set()
         skipped = 0
         skipped_by_config = 0
+        skipped_remap = 0
+        has_permanent_id_column = OPTIONAL_PERMANENT_EXTERNAL_ID_COLUMN in df.columns
 
         for line_no, (_, row) in enumerate(df.iterrows(), start=HEADER_ROW + 2):
             permanent_group = normalize_cell(row.get("Постоянная группа"))
             institute_name = normalize_cell(row.get("Институт"))
+            raw_external_id = row.get("ID группы")
+            external_group_id = normalize_external_group_id(raw_external_id)
+            remapped_id = remap_external_group_id(raw_external_id)
+            has_id_override = (
+                get_study_group_override_by_external_id(remapped_id) is not None
+            )
 
             if not permanent_group:
                 skipped += 1
                 continue
-            if is_skipped_permanent_group(permanent_group):
+            if is_external_group_id_remapped_away(raw_external_id):
+                skipped_remap += 1
+                continue
+            if not external_group_id:
+                skipped += 1
+                continue
+            if is_skipped_permanent_group(permanent_group) and not has_id_override:
                 skipped_by_config += 1
                 continue
-            if not institute_name:
-                self.stdout.write(
-                    self.style.WARNING(
-                        f"Строка {line_no}: пропущена — пустой институт "
-                        f"(группа «{permanent_group}»)"
-                    )
-                )
-                skipped += 1
+            teaching_group = normalize_cell(row.get("Группа"))
+            if is_skipped_teaching_group_name(teaching_group) and not has_id_override:
+                skipped_by_config += 1
                 continue
 
             try:
@@ -209,33 +247,47 @@ class Command(BaseCommand):
             except ValueError as exc:
                 raise CommandError(f"Строка {line_no}: {exc}") from exc
 
-            planned_dates_by_group.setdefault(permanent_group, []).append(
-                planned_end_date
-            )
-
-            if permanent_group in groups:
-                continue
+            permanent_external_id = ""
+            if has_permanent_id_column:
+                permanent_external_id = normalize_external_group_id(
+                    row.get(OPTIONAL_PERMANENT_EXTERNAL_ID_COLUMN)
+                )
 
             try:
                 parsed = build_group_import_row(
                     permanent_group_code=permanent_group,
+                    teaching_group_name=teaching_group,
                     institute_name=institute_name,
                     direction_code=normalize_cell(row.get("Код специальности")),
                     direction_name=normalize_cell(row.get("Специальность")),
                     direction_level=normalize_cell(row.get("Вид уровня образования")),
                     profile=normalize_cell(row.get("Профиль/специализация/программа")),
                     form=normalize_cell(row.get("Форма обучения")),
-                    current_year=current_year,
-                    semester=semester,  # type: ignore[arg-type]
+                    external_group_id=raw_external_id,
+                    course_from_file=row.get("Курс"),
+                    external_permanent_group_id=permanent_external_id,
                 )
             except ValueError as exc:
                 message = str(exc)
                 if message.startswith("Неизвестный институт"):
                     unknown_institutes.add(institute_name)
                     continue
-                raise CommandError(f"Строка {line_no}: {message}") from exc
+                self.stdout.write(
+                    self.style.WARNING(f"Строка {line_no}: пропущена — {message}")
+                )
+                skipped += 1
+                continue
 
-            groups[parsed.code] = parsed
+            if is_skipped_study_group_name(parsed.name) and not has_id_override:
+                skipped_by_config += 1
+                continue
+
+            planned_dates_by_id.setdefault(parsed.external_group_id, []).append(
+                planned_end_date
+            )
+            if parsed.external_group_id in groups:
+                continue
+            groups[parsed.external_group_id] = parsed
 
         if unknown_institutes:
             names = ", ".join(sorted(unknown_institutes))
@@ -243,110 +295,34 @@ class Command(BaseCommand):
 
         if skipped:
             self.stdout.write(
-                self.style.WARNING(f"Пропущено строк без группы/института: {skipped}")
+                self.style.WARNING(
+                    f"Пропущено строк без группы/ID/института: {skipped}"
+                )
             )
         if skipped_by_config:
             self.stdout.write(
                 self.style.WARNING(
-                    f"Пропущено строк исключённых постоянных групп: {skipped_by_config}"
+                    f"Пропущено строк исключённых групп: {skipped_by_config}"
                 )
             )
-
-        if not groups and not skipped_by_config:
-            raise CommandError("Не найдено ни одной валидной учебной группы")
-
-        for code, group_row in groups.items():
-            is_end = group_ended_by_planned_dates(
-                planned_dates_by_group.get(code, []),
-                today=today,
-            )
-            groups[code] = replace(group_row, is_end=is_end)
-
-        return groups, skipped_by_config
-
-    def _backfill_external_ids(
-        self,
-        *,
-        df: pd.DataFrame,
-        current_year: int,
-        semester: str,
-    ) -> tuple[int, int, int]:
-        """
-        Заполняет external_group_id на существующих StudyGroup по сходящимся строкам.
-
-        Returns:
-            Кортеж (обновлено, пропущено без сходящихся строк, конфликтов).
-        """
-        if not all(column in df.columns for column in OPTIONAL_EXTERNAL_ID_COLUMNS):
-            missing = [
-                column
-                for column in OPTIONAL_EXTERNAL_ID_COLUMNS
-                if column not in df.columns
-            ]
+        if skipped_remap:
             self.stdout.write(
                 self.style.WARNING(
-                    "Колонки для external ID отсутствуют — фаза 2 пропущена: "
-                    + ", ".join(missing)
-                )
-            )
-            return 0, 0, 0
-
-        has_permanent_id_column = OPTIONAL_PERMANENT_EXTERNAL_ID_COLUMN in df.columns
-
-        rows_by_permanent: dict[str, list[ContingentRowForExternalIds]] = {}
-        for _, row in df.iterrows():
-            permanent_group = normalize_cell(row.get("Постоянная группа"))
-            if not permanent_group or is_skipped_permanent_group(permanent_group):
-                continue
-            permanent_external_id = ""
-            if has_permanent_id_column:
-                permanent_external_id = normalize_cell(
-                    row.get(OPTIONAL_PERMANENT_EXTERNAL_ID_COLUMN)
-                )
-            rows_by_permanent.setdefault(permanent_group, []).append(
-                ContingentRowForExternalIds(
-                    teaching_group_name=normalize_cell(row.get("Группа")),
-                    course_from_file=normalize_cell(row.get("Курс")),
-                    external_group_id=normalize_cell(row.get("ID группы")),
-                    external_permanent_group_id=permanent_external_id,
+                    f"Пропущено строк со слитым ID группы: {skipped_remap}"
                 )
             )
 
-        updated = 0
-        skipped = 0
-        conflicts = 0
-        for permanent_code, contingent_rows in rows_by_permanent.items():
-            if is_skipped_permanent_group(permanent_code):
-                continue
-            study_group = StudyGroup.objects.filter(code=permanent_code).first()
-            if study_group is None:
-                continue
+        if not groups and not skipped_by_config and not skipped_remap:
+            raise CommandError("Не найдено ни одной валидной учебной группы")
 
-            result = collect_external_ids_for_group(
-                contingent_rows,
-                permanent_code=permanent_code,
-                current_year=current_year,
-                semester=semester,  # type: ignore[arg-type]
+        for external_id, group_row in groups.items():
+            is_end = group_ended_by_planned_dates(
+                planned_dates_by_id.get(external_id, []),
+                today=today,
             )
-            if result.ids is None:
-                if result.conflict_reason and "конфликт" in result.conflict_reason:
-                    conflicts += 1
-                    self.stdout.write(
-                        self.style.WARNING(
-                            f"Группа «{permanent_code}»: {result.conflict_reason}"
-                        )
-                    )
-                else:
-                    skipped += 1
-                continue
+            groups[external_id] = replace(group_row, is_end=is_end)
 
-            StudyGroup.objects.filter(pk=study_group.pk).update(
-                external_group_id=result.ids.external_group_id,
-                external_permanent_group_id=result.ids.external_permanent_group_id,
-            )
-            updated += 1
-
-        return updated, skipped, conflicts
+        return groups, skipped_by_config, skipped_remap
 
     def _get_or_create_direction(self, row: GroupImportRow) -> Direction:
         """Возвращает направление подготовки, создавая при необходимости."""
