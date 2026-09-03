@@ -96,6 +96,7 @@ def _approved_app(
         barrier="Барьер проекта для витрины",
         existing_solutions="Существующие решения",
         context="Контекст проекта",
+        stakeholders="Заинтересованные стороны",
         project_level="L1",
         problem_holder="Носитель",
         recommended_teams_count=teams,
@@ -361,14 +362,15 @@ class TestStudentShowcaseDetail:
         assert data["company"] == "ООО Заказчик"
         assert data["goal"] == "Цель проекта для витрины"
         assert data["barrier"] == "Барьер проекта для витрины"
-        assert data["existingSolutions"] == "Существующие решения"
+        assert data["existing_solutions"] == "Существующие решения"
         assert data["context"] == "Контекст проекта"
-        assert data["projectLevel"] == "L1"
-        assert data["trackId"] == showcase_setup["track1"].id
-        assert data["maxTeams"] == 2
-        assert data["enrolledTeamsCount"] == 0
-        assert data["isContinuing"] is True
-        assert data["isCompetitiveSelection"] is True
+        assert data["stakeholders"] == "Заинтересованные стороны"
+        assert data["project_level"] == "L1"
+        assert data["track_id"] == showcase_setup["track1"].id
+        assert data["recommended_teams_count"] == 2
+        assert data["enrolled_teams_count"] == 0
+        assert data["is_continuing"] is True
+        assert data["is_competitive_selection"] is True
         assert "company_contacts" not in data
         assert "companyContacts" not in data
         assert "author_email" not in data
@@ -394,7 +396,7 @@ class TestStudentShowcaseDetail:
         api_client.force_authenticate(user=showcase_setup["captain"])
         response = api_client.get(f"{BASE}/projects/{showcase_setup['app1'].id}/")
         assert response.status_code == 200
-        assert response.data["canEnroll"] is True
+        assert response.data["can_enroll"] is True
 
 
 @pytest.mark.django_db

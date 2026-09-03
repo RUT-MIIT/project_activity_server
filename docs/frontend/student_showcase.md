@@ -91,37 +91,39 @@ GET /api/showcase/student-showcase/projects/{projectId}/?semester_id=actual
   "company": "ООО Заказчик",
   "goal": "Цель",
   "barrier": "Барьер",
-  "existingSolutions": "Существующие решения",
+  "existing_solutions": "Существующие решения",
   "context": "Контекст проекта",
-  "projectLevel": "L1",
+  "stakeholders": "Заинтересованные стороны",
+  "project_level": "L1",
   "tags": [
     { "id": 1, "name": "AI", "category": "Tech" }
   ],
-  "maxTeams": 3,
-  "enrolledTeamsCount": 1,
-  "minTeamMembers": 4,
-  "maxTeamMembers": 7,
-  "isContinuing": false,
-  "isCompetitiveSelection": false,
-  "trackId": 1,
-  "canEnroll": true
+  "recommended_teams_count": 3,
+  "enrolled_teams_count": 1,
+  "min_team_members": 4,
+  "max_team_members": 7,
+  "is_continuing": false,
+  "is_competitive_selection": false,
+  "track_id": 1,
+  "can_enroll": true
 }
 ```
 
 | Поле | Описание |
 |------|----------|
 | `company` | Организация-заказчик |
-| `projectLevel` | Направление / уровень проекта |
-| `trackId` | Трек, к которому привязан проект |
-| `canEnroll` | Можно ли **текущему** пользователю записать команду прямо сейчас |
+| `stakeholders` | Заинтересованные стороны |
+| `project_level` | Направление / уровень проекта |
+| `track_id` | Трек, к которому привязан проект |
+| `can_enroll` | Можно ли **текущему** пользователю записать команду прямо сейчас |
 
-`canEnroll === true`, только если:
+`can_enroll === true`, только если:
 - пользователь — капитан команды в семестре;
 - статус команды `assembled` (состав подтверждён);
 - команда ещё не записана на проект;
 - проект в треке команды;
 - число участников в `[minTeamMembers, maxTeamMembers]`;
-- есть свободный слот (`enrolledTeamsCount < maxTeams`).
+- есть свободный слот (`enrolled_teams_count < recommended_teams_count`).
 
 **Заголовок ответа:** `Cache-Control: private, max-age=30`
 
@@ -182,9 +184,9 @@ Body не нужен. Проект берётся из URL.
 
 1. **Список витрины** — `GET /` → аккордеон/табы по трекам, карточки проектов.
 2. **Карточка** — показать `title`, `company`, слоты `enrolledTeamsCount / maxTeams`, min/max участников, теги.
-3. **Детали** — `GET /projects/{id}/` → поля goal / barrier / existingSolutions / context / projectLevel.
+3. **Детали** — `GET /projects/{id}/` → поля goal / barrier / existing_solutions / context / stakeholders / project_level.
 4. **Кнопка «Записаться»**:
-   - показывать активной только если `canEnroll === true`;
+   - показывать активной только если `can_enroll === true`;
    - иначе disabled + подсказка (не капитан / состав не подтверждён / уже записаны / нет мест / не тот трек).
 5. После успешного `enroll` — обновить детали проекта и/или «Мою команду» (`/api/teams/my-team/`).
 

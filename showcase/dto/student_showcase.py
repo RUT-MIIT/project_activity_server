@@ -89,6 +89,7 @@ class StudentShowcaseProjectDetailDTO:
         self.barrier = application.barrier
         self.existing_solutions = application.existing_solutions
         self.context = application.context or ""
+        self.stakeholders = application.stakeholders
         self.project_level = application.project_level
         self.tags = [_tag_brief(tag) for tag in application.tags.all()]
         self.max_teams = application.recommended_teams_count
@@ -108,18 +109,19 @@ class StudentShowcaseProjectDetailDTO:
             "company": self.company,
             "goal": self.goal,
             "barrier": self.barrier,
-            "existingSolutions": self.existing_solutions,
+            "existing_solutions": self.existing_solutions,
             "context": self.context,
-            "projectLevel": self.project_level,
+            "stakeholders": self.stakeholders,
+            "project_level": self.project_level,
             "tags": self.tags,
-            "maxTeams": self.max_teams,
-            "enrolledTeamsCount": self.enrolled_teams_count,
-            "minTeamMembers": self.min_team_members,
-            "maxTeamMembers": self.max_team_members,
-            "isContinuing": self.is_continuing,
-            "isCompetitiveSelection": self.is_competitive_selection,
-            "trackId": self.track_id,
-            "canEnroll": self.can_enroll,
+            "recommended_teams_count": self.max_teams,
+            "enrolled_teams_count": self.enrolled_teams_count,
+            "min_team_members": self.min_team_members,
+            "max_team_members": self.max_team_members,
+            "is_continuing": self.is_continuing,
+            "is_competitive_selection": self.is_competitive_selection,
+            "track_id": self.track_id,
+            "can_enroll": self.can_enroll,
         }
 
 
