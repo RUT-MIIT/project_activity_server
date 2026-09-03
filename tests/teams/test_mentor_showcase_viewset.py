@@ -181,6 +181,9 @@ def mentor_showcase_setup(
         title="A1",
         teams=2,
     )
+    app1.is_continuing = True
+    app1.is_competitive_selection = True
+    app1.save(update_fields=["is_continuing", "is_competitive_selection"])
     app1.tags.add(tag)
     app2 = _approved_app(
         semester=semester,
@@ -354,6 +357,15 @@ class TestMentorShowcaseViewSet:
         assert projects[mentor_showcase_setup["app1"].id]["enrolledTeamsCount"] == 0
         assert projects[mentor_showcase_setup["app1"].id]["minTeamMembers"] == 2
         assert projects[mentor_showcase_setup["app1"].id]["maxTeamMembers"] == 5
+        assert projects[mentor_showcase_setup["app1"].id]["isContinuing"] is True
+        assert (
+            projects[mentor_showcase_setup["app1"].id]["isCompetitiveSelection"] is True
+        )
+        assert projects[mentor_showcase_setup["app2"].id]["isContinuing"] is False
+        assert (
+            projects[mentor_showcase_setup["app2"].id]["isCompetitiveSelection"]
+            is False
+        )
         assert projects[mentor_showcase_setup["app1"].id]["tags"] == [
             {
                 "id": mentor_showcase_setup["tag"].id,

@@ -213,6 +213,10 @@ class ProjectApplication(models.Model):
         default=False,
         verbose_name="Продолжающийся проект",
     )
+    is_competitive_selection = models.BooleanField(
+        default=False,
+        verbose_name="Конкурсный отбор",
+    )
     track_composer_comment = models.TextField(
         blank=True,
         default="",

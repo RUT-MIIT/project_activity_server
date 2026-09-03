@@ -18,6 +18,47 @@ REQUIRED_COLUMNS = (
 
 SNILS_DIGITS_PATTERN = re.compile(r"\D+")
 
+# Ручная привязка студента к ID группы 1С (ключ — ID_E человека).
+# Приоритетнее remap_external_group_id и ID из строки файла.
+STUDENT_EXTERNAL_GROUP_ID_OVERRIDES_BY_PERSONNEL: dict[str, str] = {
+    # Зеленин Роман Дмитриевич: в файле СЖД-242 (193685) → СЖД-241
+    "1293713": "193611",
+    # Акимочкин Артур Оганесович: в файле СТП-242 (193685) → СЖД-241
+    "1302227": "193611",
+    # Фирсанова Мария Павловна: в файле ОМНк-212 (208102) → УМБ-211
+    "1333226": "210487",
+    # Голубев Дмитрий Алексеевич: в файле УВВ-311 (177868) → УТН-211
+    "1224376": "194698",
+    # Вавилин Константин Станиславович: в файле СЖД-341 (193600) → СМТ-341
+    "1292128": "194336",
+    # Булаева Анастасия Олеговна: в файле ОМКк-312 (194430) → ОМКк-311
+    "1289627": "182576",
+    # Молчанов Владимир Денисович: в файле СЖД-443 (193598) → СМТ-441
+    "1246216": "194335",
+    # Шебаршин Никита Андреевич: в файле ТПЛ-241 (193797) → ТПЭ-241
+    "1330633": "193851",
+}
+
+
+@dataclass(frozen=True)
+class StudentNameOverride:
+    """Ручная разборка ФИО: фамилия, имя, отчество."""
+
+    last_name: str
+    first_name: str
+    middle_name: str = ""
+
+
+# Ручная разборка ФИО по ID_E (приоритетнее parse_full_name по пробелам).
+STUDENT_NAME_OVERRIDES_BY_PERSONNEL: dict[str, StudentNameOverride] = {
+    # Сантана Фернандес Ральди Энрике (составная фамилия, без отчества)
+    "1158617": StudentNameOverride(
+        last_name="Сантана Фернандес",
+        first_name="Ральди Энрике",
+        middle_name="",
+    ),
+}
+
 
 @dataclass(frozen=True)
 class PreRegisteredStudentImportRow:
@@ -109,6 +150,34 @@ def parse_full_name(full_name: str) -> tuple[str, str, str]:
     return last_name, first_name, middle_name
 
 
+def resolve_name_for_student(
+    *,
+    personnel_number: str,
+    full_name: str,
+) -> tuple[str, str, str]:
+    """Итоговые ФИО: оверрайд по табельному номеру, иначе parse_full_name."""
+    tab_number = normalize_cell(personnel_number)
+    override = STUDENT_NAME_OVERRIDES_BY_PERSONNEL.get(tab_number)
+    if override is not None:
+        return override.last_name, override.first_name, override.middle_name
+    return parse_full_name(full_name)
+
+
+def resolve_external_group_id_for_student(
+    *,
+    personnel_number: str,
+    external_group_id: object,
+) -> str:
+    """
+    Итоговый ID группы для студента: оверрайд по табельному номеру, иначе remap файла.
+    """
+    tab_number = normalize_cell(personnel_number)
+    override = STUDENT_EXTERNAL_GROUP_ID_OVERRIDES_BY_PERSONNEL.get(tab_number)
+    if override:
+        return override
+    return remap_external_group_id(external_group_id)
+
+
 def build_preregistered_student_import_row(
     *,
     full_name: str,
@@ -121,11 +190,17 @@ def build_preregistered_student_import_row(
     course_from_file: object = "",
 ) -> PreRegisteredStudentImportRow:
     """Собирает DTO одной предрегистрации из полей строки отчёта."""
-    last_name, first_name, middle_name = parse_full_name(full_name)
     card = normalize_cell(student_card)
     tab_number = normalize_cell(personnel_number)
+    last_name, first_name, middle_name = resolve_name_for_student(
+        personnel_number=tab_number,
+        full_name=full_name,
+    )
     group_code = normalize_cell(permanent_group_code)
-    remapped_id = remap_external_group_id(external_group_id)
+    resolved_id = resolve_external_group_id_for_student(
+        personnel_number=tab_number,
+        external_group_id=external_group_id,
+    )
 
     if not card:
         raise ValueError("Пустой студенческий билет")
@@ -133,7 +208,7 @@ def build_preregistered_student_import_row(
         raise ValueError("Пустой табельный номер (ID_E человека)")
     if not group_code:
         raise ValueError("Пустая постоянная группа")
-    if not remapped_id:
+    if not resolved_id:
         raise ValueError("Пустой ID группы")
 
     return PreRegisteredStudentImportRow(
@@ -145,7 +220,7 @@ def build_preregistered_student_import_row(
         personnel_number=tab_number,
         group_code=group_code,
         teaching_group_name=normalize_cell(teaching_group_name),
-        external_group_id=remapped_id,
+        external_group_id=resolved_id,
         course_from_file=normalize_cell(course_from_file),
     )
 
@@ -157,7 +232,7 @@ def resolve_study_group_for_student(
     """
     Определяет учебную группу для строки студента по ID группы 1С.
 
-    ID уже должен быть пропущен через remap_external_group_id.
+    ID уже должен быть итоговым (оверрайд / remap).
     """
     if not row.external_group_id:
         return StudyGroupResolveResult(

@@ -284,6 +284,7 @@ class ProjectApplicationReadDTO:
         self.is_internal_customer = application.is_internal_customer
         self.has_unseen_changes = application.has_unseen_changes
         self.is_continuing = application.is_continuing
+        self.is_competitive_selection = application.is_competitive_selection
         self.track_composer_comment = application.track_composer_comment
         self.recommended_teams_count = application.recommended_teams_count
         self.min_team_members = application.min_team_members
@@ -460,6 +461,7 @@ class ProjectApplicationReadDTO:
             "is_internal_customer": self.is_internal_customer,
             "has_unseen_changes": self.has_unseen_changes,
             "is_continuing": self.is_continuing,
+            "is_competitive_selection": self.is_competitive_selection,
             "track_composer_comment": self.track_composer_comment,
             "recommended_teams_count": self.recommended_teams_count,
             "min_team_members": self.min_team_members,
@@ -513,6 +515,7 @@ class ProjectApplicationListDTO:
         self.is_internal_customer = application.is_internal_customer
         self.has_unseen_changes = application.has_unseen_changes
         self.is_continuing = application.is_continuing
+        self.is_competitive_selection = application.is_competitive_selection
         self.track_composer_comment = application.track_composer_comment or ""
         self.recommended_teams_count = application.recommended_teams_count
         self.min_team_members = application.min_team_members
@@ -567,6 +570,7 @@ class ProjectApplicationListDTO:
             "is_internal_customer": self.is_internal_customer,
             "has_unseen_changes": self.has_unseen_changes,
             "is_continuing": self.is_continuing,
+            "is_competitive_selection": self.is_competitive_selection,
             "track_composer_comment": self.track_composer_comment,
             "recommended_teams_count": self.recommended_teams_count,
             "min_team_members": self.min_team_members,

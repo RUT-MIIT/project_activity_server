@@ -157,6 +157,8 @@ GET /api/teams/study-groups/{groupId}/project-showcase/?semester_id=actual
         "enrolledTeamsCount": 1,
         "minTeamMembers": 4,
         "maxTeamMembers": 7,
+        "isContinuing": false,
+        "isCompetitiveSelection": false,
         "tags": [{ "id": 1, "name": "AI", "category": "Tech" }]
       }
     ]

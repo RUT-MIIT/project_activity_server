@@ -41,6 +41,8 @@ GET /api/showcase/student-showcase/?semester_id=actual
         "enrolledTeamsCount": 1,
         "minTeamMembers": 4,
         "maxTeamMembers": 7,
+        "isContinuing": false,
+        "isCompetitiveSelection": false,
         "tags": [
           { "id": 1, "name": "AI", "category": "Tech" }
         ]
@@ -55,6 +57,8 @@ GET /api/showcase/student-showcase/?semester_id=actual
 | `maxTeams` | Максимум команд на проект |
 | `enrolledTeamsCount` | Сколько команд уже записалось |
 | `minTeamMembers` / `maxTeamMembers` | Лимиты размера команды для проекта |
+| `isContinuing` | Продолжающийся проект |
+| `isCompetitiveSelection` | В проекте есть конкурсный отбор |
 | `tags` | Теги проекта |
 
 **Заголовок ответа:** `Cache-Control: private, max-age=30`
@@ -97,6 +101,8 @@ GET /api/showcase/student-showcase/projects/{projectId}/?semester_id=actual
   "enrolledTeamsCount": 1,
   "minTeamMembers": 4,
   "maxTeamMembers": 7,
+  "isContinuing": false,
+  "isCompetitiveSelection": false,
   "trackId": 1,
   "canEnroll": true
 }

@@ -32,6 +32,8 @@ class StudentShowcaseProjectListItemDTO:
         self.enrolled_teams_count = enrolled_teams_count
         self.min_team_members = application.min_team_members
         self.max_team_members = application.max_team_members
+        self.is_continuing = application.is_continuing
+        self.is_competitive_selection = application.is_competitive_selection
         self.tags = [_tag_brief(tag) for tag in application.tags.all()]
 
     def to_dict(self) -> dict[str, Any]:
@@ -44,6 +46,8 @@ class StudentShowcaseProjectListItemDTO:
             "enrolledTeamsCount": self.enrolled_teams_count,
             "minTeamMembers": self.min_team_members,
             "maxTeamMembers": self.max_team_members,
+            "isContinuing": self.is_continuing,
+            "isCompetitiveSelection": self.is_competitive_selection,
             "tags": self.tags,
         }
 
@@ -91,6 +95,8 @@ class StudentShowcaseProjectDetailDTO:
         self.enrolled_teams_count = enrolled_teams_count
         self.min_team_members = application.min_team_members
         self.max_team_members = application.max_team_members
+        self.is_continuing = application.is_continuing
+        self.is_competitive_selection = application.is_competitive_selection
         self.track_id = track_id
         self.can_enroll = can_enroll
 
@@ -110,6 +116,8 @@ class StudentShowcaseProjectDetailDTO:
             "enrolledTeamsCount": self.enrolled_teams_count,
             "minTeamMembers": self.min_team_members,
             "maxTeamMembers": self.max_team_members,
+            "isContinuing": self.is_continuing,
+            "isCompetitiveSelection": self.is_competitive_selection,
             "trackId": self.track_id,
             "canEnroll": self.can_enroll,
         }

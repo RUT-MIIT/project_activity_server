@@ -104,6 +104,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
         "needs_consultation",
         "is_internal_customer",
         "is_continuing",
+        "is_competitive_selection",
         "semester",
         "application_year",
     )
@@ -158,6 +159,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
                     "company",
                     "is_internal_customer",
                     "is_continuing",
+                    "is_competitive_selection",
                     "track_composer_comment",
                     "recommended_teams_count",
                     "min_team_members",

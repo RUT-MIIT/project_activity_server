@@ -169,6 +169,28 @@ class TestProjectApplicationNewFieldsCreateUpdate:
             patch_response.data["track_composer_comment"] == "Обновлённый комментарий"
         )
 
+    def test_retrieve_returns_is_competitive_selection(self, statuses, make_user):
+        author = make_user(role_code="user", with_department=True)
+        service = ProjectApplicationService()
+        application = service.submit_application(
+            ProjectApplicationCreateDTO(**_base_create_payload()),
+            author,
+        )
+
+        client = APIClient()
+        client.force_authenticate(user=author)
+        response = client.get(f"/api/showcase/project-applications/{application.id}/")
+
+        assert response.status_code == 200
+        assert response.data["is_competitive_selection"] is False
+
+        application.is_competitive_selection = True
+        application.save(update_fields=["is_competitive_selection"])
+
+        response = client.get(f"/api/showcase/project-applications/{application.id}/")
+        assert response.status_code == 200
+        assert response.data["is_competitive_selection"] is True
+
 
 @pytest.mark.django_db
 class TestMyApplicationsNewFields:

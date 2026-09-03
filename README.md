@@ -7,6 +7,8 @@
 **Контракт идентичности:** учебная группа в PD = **ID группы из 1С** (`StudyGroup.external_group_id`).
 Имя берётся из колонки «Группа», код постоянной группы (`code`) — справочно, не ключ upsert.
 Студенты привязываются **только** по remapped `ID группы` (без fallback по name/code).
+Исключения: `STUDENT_EXTERNAL_GROUP_ID_OVERRIDES_BY_PERSONNEL` (табельный → ID группы),
+`STUDENT_NAME_OVERRIDES_BY_PERSONNEL` (табельный → фамилия/имя/отчество).
 
 Сначала учебные группы, затем предрегистрация студентов:
 

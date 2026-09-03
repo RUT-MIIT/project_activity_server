@@ -78,6 +78,116 @@ class TestPreRegisteredStudentImportDomain:
         )
         assert row.external_group_id == "193901"
 
+    def test_build_import_row_overrides_group_by_personnel_number(self) -> None:
+        row = build_preregistered_student_import_row(
+            full_name="Зеленин Роман Дмитриевич",
+            student_card="24101428",
+            snils="",
+            personnel_number="1293713",
+            permanent_group_code="СЖД-2025-42",
+            teaching_group_name="СЖД-242",
+            external_group_id="193685",
+        )
+        assert row.external_group_id == "193611"
+
+    def test_build_import_row_overrides_akimochkin_to_szhd_241(self) -> None:
+        row = build_preregistered_student_import_row(
+            full_name="Акимочкин Артур Оганесович",
+            student_card="24101844",
+            snils="",
+            personnel_number="1302227",
+            permanent_group_code="СЖД-2025-42",
+            teaching_group_name="СТП-242",
+            external_group_id="193685",
+        )
+        assert row.external_group_id == "193611"
+
+    def test_build_import_row_overrides_firsanova_to_umb_211(self) -> None:
+        row = build_preregistered_student_import_row(
+            full_name="Фирсанова Мария Павловна",
+            student_card="25012448",
+            snils="",
+            personnel_number="1333226",
+            permanent_group_code="ОМНк-2025-12-1",
+            teaching_group_name="ОМНк-212",
+            external_group_id="208102",
+        )
+        assert row.external_group_id == "210487"
+
+    def test_build_import_row_overrides_golubev_to_utn_211(self) -> None:
+        row = build_preregistered_student_import_row(
+            full_name="Голубев Дмитрий Алексеевич",
+            student_card="23000684",
+            snils="",
+            personnel_number="1224376",
+            permanent_group_code="УВВ-2024-11",
+            teaching_group_name="УВВ-311",
+            external_group_id="177868",
+        )
+        assert row.external_group_id == "194698"
+
+    def test_build_import_row_overrides_vavilin_to_smt_341(self) -> None:
+        row = build_preregistered_student_import_row(
+            full_name="Вавилин Константин Станиславович",
+            student_card="24101931",
+            snils="",
+            personnel_number="1292128",
+            permanent_group_code="СЖД-2024-41",
+            teaching_group_name="СЖД-341",
+            external_group_id="193600",
+        )
+        assert row.external_group_id == "194336"
+
+    def test_build_import_row_overrides_bulaeva_to_omkk_311(self) -> None:
+        row = build_preregistered_student_import_row(
+            full_name="Булаева Анастасия Олеговна",
+            student_card="24105355",
+            snils="16473327881",
+            personnel_number="1289627",
+            permanent_group_code="ОМКк-2024-12",
+            teaching_group_name="ОМКк-312",
+            external_group_id="194430",
+        )
+        assert row.external_group_id == "182576"
+
+    def test_build_import_row_overrides_molchanov_to_smt_441(self) -> None:
+        row = build_preregistered_student_import_row(
+            full_name="Молчанов Владимир Денисович",
+            student_card="23005015",
+            snils="18786597463",
+            personnel_number="1246216",
+            permanent_group_code="СЖД-2023-43",
+            teaching_group_name="СЖД-443",
+            external_group_id="193598",
+        )
+        assert row.external_group_id == "194335"
+
+    def test_build_import_row_overrides_shebarshin_to_tpe_241(self) -> None:
+        row = build_preregistered_student_import_row(
+            full_name="Шебаршин Никита Андреевич",
+            student_card="25005260",
+            snils="19532328986",
+            personnel_number="1330633",
+            permanent_group_code="ТПЛ-2025-41",
+            teaching_group_name="ТПЛ-241",
+            external_group_id="193797",
+        )
+        assert row.external_group_id == "193851"
+
+    def test_build_import_row_overrides_compound_name_santana(self) -> None:
+        row = build_preregistered_student_import_row(
+            full_name="Сантана Фернандес Ральди Энрике",
+            student_card="22000448",
+            snils="",
+            personnel_number="1158617",
+            permanent_group_code="ТСА-2021-41",
+            teaching_group_name="ТСА-541",
+            external_group_id="193863",
+        )
+        assert row.last_name == "Сантана Фернандес"
+        assert row.first_name == "Ральди Энрике"
+        assert row.middle_name == ""
+
     def test_last_names_match_case_insensitive(self) -> None:
         assert last_names_match("Иванов", "иванов") is True
 

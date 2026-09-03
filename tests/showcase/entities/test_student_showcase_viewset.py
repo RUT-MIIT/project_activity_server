@@ -182,6 +182,9 @@ def showcase_setup(
         title="A1",
         teams=2,
     )
+    app1.is_continuing = True
+    app1.is_competitive_selection = True
+    app1.save(update_fields=["is_continuing", "is_competitive_selection"])
     app1.tags.add(tag)
     app2 = _approved_app(
         semester=semester,
@@ -283,6 +286,10 @@ class TestStudentShowcaseList:
         assert projects[showcase_setup["app1"].id]["enrolledTeamsCount"] == 0
         assert projects[showcase_setup["app1"].id]["minTeamMembers"] == 2
         assert projects[showcase_setup["app1"].id]["maxTeamMembers"] == 5
+        assert projects[showcase_setup["app1"].id]["isContinuing"] is True
+        assert projects[showcase_setup["app1"].id]["isCompetitiveSelection"] is True
+        assert projects[showcase_setup["app2"].id]["isContinuing"] is False
+        assert projects[showcase_setup["app2"].id]["isCompetitiveSelection"] is False
         assert projects[showcase_setup["app1"].id]["tags"] == [
             {"id": showcase_setup["tag"].id, "name": "AI", "category": "Tech"}
         ]
@@ -360,6 +367,8 @@ class TestStudentShowcaseDetail:
         assert data["trackId"] == showcase_setup["track1"].id
         assert data["maxTeams"] == 2
         assert data["enrolledTeamsCount"] == 0
+        assert data["isContinuing"] is True
+        assert data["isCompetitiveSelection"] is True
         assert "company_contacts" not in data
         assert "companyContacts" not in data
         assert "author_email" not in data

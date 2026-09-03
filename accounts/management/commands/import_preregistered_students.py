@@ -11,9 +11,11 @@ import pandas as pd
 
 from accounts.domain.preregistered_student_import import (
     REQUIRED_COLUMNS,
+    STUDENT_EXTERNAL_GROUP_ID_OVERRIDES_BY_PERSONNEL,
     StudyGroupLookup,
     StudyGroupRef,
     build_preregistered_student_import_row,
+    resolve_external_group_id_for_student,
     resolve_study_group_for_student,
 )
 from accounts.models import PreRegisteredStudent
@@ -23,7 +25,6 @@ from teams.domain.study_group_import import (
     is_skipped_study_group_name,
     is_skipped_teaching_group_name,
     normalize_cell,
-    remap_external_group_id,
 )
 from teams.models import StudyGroup
 
@@ -228,12 +229,16 @@ class Command(BaseCommand):
     def _validate_external_group_ids_exist(
         self, df: pd.DataFrame, lookup: StudyGroupLookup
     ) -> None:
-        """Проверяет, что ID групп из файла есть в БД (после remap)."""
+        """Проверяет, что итоговые ID групп (remap + оверрайды) есть в БД."""
         needed_ids: set[str] = set()
-        for value in df["ID группы"].tolist():
-            remapped = remap_external_group_id(value)
-            if remapped:
-                needed_ids.add(remapped)
+        for _, row in df.iterrows():
+            resolved = resolve_external_group_id_for_student(
+                personnel_number=normalize_cell(row.get("ID_E человека")),
+                external_group_id=row.get("ID группы"),
+            )
+            if resolved:
+                needed_ids.add(resolved)
+        needed_ids.update(STUDENT_EXTERNAL_GROUP_ID_OVERRIDES_BY_PERSONNEL.values())
         missing_ids = sorted(needed_ids - set(lookup.by_external_id))
         if missing_ids:
             preview = ", ".join(missing_ids[:10])
