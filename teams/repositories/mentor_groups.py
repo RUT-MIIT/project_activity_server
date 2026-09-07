@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from django.db.models import Count, OuterRef, Prefetch, QuerySet, Subquery
+from django.db.models import Count, OuterRef, Prefetch, Q, QuerySet, Subquery
 from django.db.models.functions import Coalesce
 
 from accounts.models import PreRegisteredStudent
@@ -24,7 +24,7 @@ class MentorGroupsRepository:
     def _with_counts(
         self, queryset: QuerySet[StudyGroup], semester_id: int
     ) -> QuerySet[StudyGroup]:
-        """Добавляет счётчики студентов и команд в семестре."""
+        """Добавляет счётчики контингента, регистраций и команд в семестре."""
         teams_count_subquery = (
             TeamSemester.objects.filter(
                 team__home_study_group_id=OuterRef("pk"),
@@ -34,9 +34,38 @@ class MentorGroupsRepository:
             .annotate(count=Count("pk"))
             .values("count")
         )
+        assembled_teams_count_subquery = (
+            TeamSemester.objects.filter(
+                team__home_study_group_id=OuterRef("pk"),
+                semester_id=semester_id,
+                status=TeamSemester.Status.ASSEMBLED,
+            )
+            .values("team__home_study_group_id")
+            .annotate(count=Count("pk"))
+            .values("count")
+        )
+        students_in_teams_subquery = (
+            PreRegisteredStudent.objects.filter(
+                group_id=OuterRef("pk"),
+                user__team_semester_memberships__semester_id=semester_id,
+            )
+            .values("group_id")
+            .annotate(count=Count("pk", distinct=True))
+            .values("count")
+        )
         return queryset.annotate(
             students_count=Count("pre_registered_students", distinct=True),
+            registered_students_count=Count(
+                "pre_registered_students",
+                filter=Q(
+                    pre_registered_students__user_id__isnull=False,
+                    pre_registered_students__has_placeholder_user=False,
+                ),
+                distinct=True,
+            ),
             teams_count=Coalesce(Subquery(teams_count_subquery), 0),
+            assembled_teams_count=Coalesce(Subquery(assembled_teams_count_subquery), 0),
+            students_in_teams_count=Coalesce(Subquery(students_in_teams_subquery), 0),
         )
 
     def list_for_mentor(self, user_id: int, semester_id: int) -> QuerySet[StudyGroup]:

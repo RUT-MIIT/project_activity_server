@@ -445,6 +445,23 @@ class TestProjectApplicationSemesterAutoAssign:
             "project_level": "L1",
         }
 
+    def test_create_accepts_null_author_phone(self, statuses, make_user):
+        """POST /api/showcase/project-applications/ принимает author_phone=null."""
+        user = make_user(role_code="user", with_department=True)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        payload = self._base_payload()
+        payload["author_phone"] = None
+
+        response = client.post(
+            "/api/showcase/project-applications/", payload, format="json"
+        )
+
+        assert response.status_code == 201, response.data
+        app = ProjectApplication.objects.get(pk=response.data["id"])
+        assert app.author_phone == ""
+
     def test_sets_next_semester_from_settings_when_not_provided(
         self, statuses, make_user
     ):

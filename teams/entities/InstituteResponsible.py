@@ -100,7 +100,7 @@ class InstituteResponsibleViewSet(viewsets.ViewSet):
     @extend_schema(
         tags=["teams"],
         parameters=[_SEMESTER_PARAM, _INSTITUTE_PARAM],
-        summary="Группы института со счётчиками студентов и команд",
+        summary=("Группы института со счётчиками студентов, " "регистраций и команд"),
     )
     @action(detail=False, methods=["get"], url_path="groups-overview")
     def list_groups_overview(self, request: Request) -> Response:

@@ -166,7 +166,7 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     )
     author_email = serializers.EmailField(required=False, allow_blank=True)
     author_phone = serializers.CharField(
-        max_length=20, required=False, allow_blank=True
+        max_length=20, required=False, allow_blank=True, allow_null=True
     )
     author_role = serializers.CharField(
         max_length=100, required=False, allow_blank=True
@@ -248,7 +248,7 @@ class ProjectApplicationUpdateSerializer(serializers.Serializer):
     )
     author_email = serializers.EmailField(required=False)
     author_phone = serializers.CharField(
-        max_length=20, required=False, allow_blank=True
+        max_length=20, required=False, allow_blank=True, allow_null=True
     )
     author_role = serializers.CharField(
         max_length=100, required=False, allow_blank=True

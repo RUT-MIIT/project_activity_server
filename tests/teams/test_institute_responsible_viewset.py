@@ -140,12 +140,15 @@ class TestInstituteResponsibleViewSet:
         institute,
     ):
         from accounts.models import PreRegisteredStudent
-        from teams.models import Team, TeamSemester
+        from teams.models import Team, TeamSemester, TeamSemesterMember
 
         user = make_user(role_code="institute_validator", with_department=True)
         captain = make_user(role_code="student", email="overview-captain@example.com")
         captain.study_group = study_groups["active"]
         captain.save(update_fields=["study_group"])
+        member = make_user(role_code="student", email="overview-member@example.com")
+        member.study_group = study_groups["active"]
+        member.save(update_fields=["study_group"])
         api_client.force_authenticate(user=user)
 
         extra_group = StudyGroup.objects.create(
@@ -155,20 +158,77 @@ class TestInstituteResponsibleViewSet:
             institute=institute,
             is_end=False,
         )
-        for index in range(2):
-            PreRegisteredStudent.objects.create(
-                last_name=f"Фамилия{index}",
-                first_name=f"Имя{index}",
-                student_card=f"SC{index}",
-                snils=f"1234567890{index}",
-                personnel_number=f"PN{index}",
-                group=study_groups["active"],
-            )
-        team = Team.objects.create(
+        PreRegisteredStudent.objects.create(
+            last_name="Зарегистрированный",
+            first_name="Студент",
+            student_card="SC0",
+            snils="12345678900",
+            personnel_number="PN0",
+            group=study_groups["active"],
+            user=captain,
+        )
+        PreRegisteredStudent.objects.create(
+            last_name="ВКоманде",
+            first_name="Студент",
+            student_card="SC1",
+            snils="12345678901",
+            personnel_number="PN1",
+            group=study_groups["active"],
+            user=member,
+        )
+        PreRegisteredStudent.objects.create(
+            last_name="Незарегистрированный",
+            first_name="Студент",
+            student_card="SC2",
+            snils="12345678902",
+            personnel_number="PN2",
+            group=study_groups["active"],
+        )
+        PreRegisteredStudent.objects.create(
+            last_name="Плейсхолдер",
+            first_name="Студент",
+            student_card="SC3",
+            snils="12345678903",
+            personnel_number="PN3",
+            group=study_groups["active"],
+            user=make_user(
+                role_code="student", email="overview-placeholder@example.com"
+            ),
+            has_placeholder_user=True,
+        )
+        forming_captain = make_user(
+            role_code="student", email="overview-forming-captain@example.com"
+        )
+        assembled_team = Team.objects.create(
             name="Alpha",
             home_study_group=study_groups["active"],
         )
-        TeamSemester.objects.create(team=team, semester=semester, captain=captain)
+        forming_team = Team.objects.create(
+            name="Beta",
+            home_study_group=study_groups["active"],
+        )
+        assembled_ts = TeamSemester.objects.create(
+            team=assembled_team,
+            semester=semester,
+            captain=captain,
+            status=TeamSemester.Status.ASSEMBLED,
+        )
+        TeamSemester.objects.create(
+            team=forming_team,
+            semester=semester,
+            captain=forming_captain,
+            status=TeamSemester.Status.FORMING,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=assembled_ts,
+            user=captain,
+            role=TeamSemesterMember.Role.LEADER,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=assembled_ts,
+            user=member,
+            role=TeamSemesterMember.Role.MEMBER,
+        )
 
         response = api_client.get(
             f"{BASE_URL}groups-overview/?semester_id={semester.id}"
@@ -179,10 +239,16 @@ class TestInstituteResponsibleViewSet:
         assert set(by_id) == {study_groups["active"].id, extra_group.id}
         active_item = by_id[study_groups["active"].id]
         assert active_item["name"] == "Группа 1"
-        assert active_item["studentsCount"] == 2
-        assert active_item["teamsCount"] == 1
+        assert active_item["studentsCount"] == 4
+        assert active_item["registeredStudentsCount"] == 2
+        assert active_item["teamsCount"] == 2
+        assert active_item["assembledTeamsCount"] == 1
+        assert active_item["studentsInTeamsCount"] == 2
         assert by_id[extra_group.id]["studentsCount"] == 0
+        assert by_id[extra_group.id]["registeredStudentsCount"] == 0
         assert by_id[extra_group.id]["teamsCount"] == 0
+        assert by_id[extra_group.id]["assembledTeamsCount"] == 0
+        assert by_id[extra_group.id]["studentsInTeamsCount"] == 0
 
     def test_list_groups_overview_excludes_foreign_institute(
         self,
@@ -476,6 +542,61 @@ class TestInstituteResponsibleQueryPerformance:
             )
             for index in range(count)
         ]
+
+    def test_groups_overview_dto_serialization_has_no_extra_queries(
+        self,
+        roles,
+        make_user,
+        semester,
+        direction,
+        institute,
+        django_assert_num_queries,
+    ):
+        from teams.dto.mentor_groups import MentorGroupListDTO
+        from teams.repositories.mentor_groups import MentorGroupsRepository
+
+        self._create_groups(direction, institute, 8, prefix="overview-perf")
+        repository = MentorGroupsRepository()
+        loaded = list(repository.list_for_institutes([institute.code], semester.id))
+
+        with django_assert_num_queries(0):
+            payload = MentorGroupListDTO(loaded).to_list()
+
+        assert len(payload) == 8
+        assert all("assembledTeamsCount" in item for item in payload)
+        assert all("registeredStudentsCount" in item for item in payload)
+        assert all("studentsInTeamsCount" in item for item in payload)
+
+    def test_list_groups_overview_query_count_does_not_scale_with_groups(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        direction,
+        institute,
+    ):
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        self._create_groups(direction, institute, 3, prefix="overview-small")
+
+        with CaptureQueriesContext(connection) as small_ctx:
+            response = api_client.get(
+                f"{BASE_URL}groups-overview/?semester_id={semester.id}"
+            )
+        assert response.status_code == 200
+        small_count = len(small_ctx.captured_queries)
+
+        self._create_groups(direction, institute, 12, prefix="overview-large")
+
+        with CaptureQueriesContext(connection) as large_ctx:
+            response = api_client.get(
+                f"{BASE_URL}groups-overview/?semester_id={semester.id}"
+            )
+        assert response.status_code == 200
+        assert len(response.data) >= 15
+        assert len(large_ctx.captured_queries) == small_count
 
     def test_group_mentors_dto_serialization_has_no_extra_queries(
         self,

@@ -130,7 +130,7 @@ class InstituteResponsibleService:
         institute_code: str | None,
         semester_id_raw: str,
     ) -> list[dict[str, Any]]:
-        """Список активных групп института со счётчиками студентов и команд."""
+        """Список активных групп института со счётчиками контингента и команд."""
         semester_id, resolved_institute_code, _ = self._resolve_context(
             user, institute_code, semester_id_raw
         )

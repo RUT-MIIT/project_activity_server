@@ -15,14 +15,26 @@ class MentorGroupListItemDTO:
         self.id = group.id
         self.name = group.name
         self.students_count = int(group.students_count)
+        self.registered_students_count = int(
+            getattr(group, "registered_students_count", 0) or 0
+        )
         self.teams_count = int(group.teams_count)
+        self.assembled_teams_count = int(
+            getattr(group, "assembled_teams_count", 0) or 0
+        )
+        self.students_in_teams_count = int(
+            getattr(group, "students_in_teams_count", 0) or 0
+        )
 
     def to_dict(self) -> dict[str, Any]:
         return {
             "id": self.id,
             "name": self.name,
             "studentsCount": self.students_count,
+            "registeredStudentsCount": self.registered_students_count,
             "teamsCount": self.teams_count,
+            "assembledTeamsCount": self.assembled_teams_count,
+            "studentsInTeamsCount": self.students_in_teams_count,
         }
 
 

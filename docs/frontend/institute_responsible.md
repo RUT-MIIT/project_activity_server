@@ -93,7 +93,10 @@ GET /api/teams/institute-responsible/groups-overview/?semester_id=actual
     "id": 1,
     "name": "ИВТ-101",
     "studentsCount": 25,
-    "teamsCount": 3
+    "registeredStudentsCount": 18,
+    "teamsCount": 3,
+    "assembledTeamsCount": 2,
+    "studentsInTeamsCount": 15
   }
 ]
 ```
@@ -103,7 +106,10 @@ GET /api/teams/institute-responsible/groups-overview/?semester_id=actual
 | `id` | ID учебной группы |
 | `name` | Название группы |
 | `studentsCount` | Число студентов в контингенте группы |
+| `registeredStudentsCount` | Число студентов контингента с полной регистрацией (есть user, не placeholder) |
 | `teamsCount` | Число команд с `home_study_group` этой группы в выбранном семестре |
+| `assembledTeamsCount` | Число команд со статусом `assembled` (состав подтверждён) |
+| `studentsInTeamsCount` | Число студентов контингента, состоящих в команде в выбранном семестре |
 
 ### Ошибки
 

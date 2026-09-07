@@ -9,7 +9,14 @@ from rest_framework.test import APIClient
 
 from accounts.models import PreRegisteredStudent, Semester
 from teams.dto.mentor_groups import MentorGroupListDTO
-from teams.models import Direction, StudyGroup, StudyGroupSemester, Team, TeamSemester
+from teams.models import (
+    Direction,
+    StudyGroup,
+    StudyGroupSemester,
+    Team,
+    TeamSemester,
+    TeamSemesterMember,
+)
 from teams.repositories.mentor_groups import MentorGroupsRepository
 
 MY_GROUPS_URL = "/api/teams/study-groups/my-groups/"
@@ -154,20 +161,61 @@ class TestMentorGroupsViewSet:
         group = study_groups["first"]
         _enrollment_with_mentors(group, semester, mentor)
 
-        for index in range(3):
-            PreRegisteredStudent.objects.create(
-                last_name=f"Фамилия{index}",
-                first_name=f"Имя{index}",
-                student_card=f"SC{index}",
-                snils=f"1234567890{index}",
-                personnel_number=f"PN{index}",
-                group=group,
-            )
+        registered = make_user(
+            role_code="student", email="registered-in-group@example.com"
+        )
+        teammate = make_user(role_code="student", email="teammate-in-group@example.com")
+        PreRegisteredStudent.objects.create(
+            last_name="Зарегистрированный",
+            first_name="Студент",
+            student_card="SC0",
+            snils="12345678900",
+            personnel_number="PN0",
+            group=group,
+            user=registered,
+        )
+        PreRegisteredStudent.objects.create(
+            last_name="ВКоманде",
+            first_name="Студент",
+            student_card="SC1",
+            snils="12345678901",
+            personnel_number="PN1",
+            group=group,
+            user=teammate,
+        )
+        PreRegisteredStudent.objects.create(
+            last_name="БезРегистрации",
+            first_name="Студент",
+            student_card="SC2",
+            snils="12345678902",
+            personnel_number="PN2",
+            group=group,
+        )
 
         team_one = Team.objects.create(name="Alpha", home_study_group=group)
         team_two = Team.objects.create(name="Beta", home_study_group=group)
-        TeamSemester.objects.create(team=team_one, semester=semester, captain=mentor)
-        TeamSemester.objects.create(team=team_two, semester=semester, captain=mentor)
+        assembled_ts = TeamSemester.objects.create(
+            team=team_one,
+            semester=semester,
+            captain=registered,
+            status=TeamSemester.Status.ASSEMBLED,
+        )
+        TeamSemester.objects.create(
+            team=team_two,
+            semester=semester,
+            captain=mentor,
+            status=TeamSemester.Status.FORMING,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=assembled_ts,
+            user=registered,
+            role=TeamSemesterMember.Role.LEADER,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=assembled_ts,
+            user=teammate,
+            role=TeamSemesterMember.Role.MEMBER,
+        )
 
         other_group_team = Team.objects.create(
             name="Other", home_study_group=study_groups["second"]
@@ -183,7 +231,10 @@ class TestMentorGroupsViewSet:
         item = next(row for row in response.data if row["id"] == group.id)
         assert item["name"] == group.name
         assert item["studentsCount"] == 3
+        assert item["registeredStudentsCount"] == 2
         assert item["teamsCount"] == 2
+        assert item["assembledTeamsCount"] == 1
+        assert item["studentsInTeamsCount"] == 2
 
     def test_other_semester_assignment_not_listed(
         self,
@@ -299,6 +350,9 @@ class TestMentorGroupsQueryPerformance:
 
         assert len(payload) == 8
         assert all("teamsCount" in item for item in payload)
+        assert all("assembledTeamsCount" in item for item in payload)
+        assert all("registeredStudentsCount" in item for item in payload)
+        assert all("studentsInTeamsCount" in item for item in payload)
 
     def test_list_query_count_does_not_scale_with_groups(
         self,
