@@ -189,6 +189,26 @@ class TestValidateCreate:
         assert not result.is_valid
         assert "author_phone" in result.errors
 
+    def test_validate_create_phone_optional(self):
+        """Пустой или отсутствующий телефон автора допустим."""
+        for phone in (None, "", "   "):
+            dto = ProjectApplicationCreateDTO(
+                company="Acme",
+                title="Valid Title",
+                problem_holder="Носитель проблемы",
+                goal="Длинная цель проекта",
+                barrier="Длинный барьер проекта",
+                company_contacts="Контактные данные представителя",
+                existing_solutions="Существующие решения описаны подробно",
+                author_lastname="Иванов",
+                author_firstname="Иван",
+                author_email="user@example.com",
+                author_phone=phone,
+            )
+            result = ProjectApplicationDomain.validate_create(dto)
+            assert result.is_valid, result.errors
+            assert "author_phone" not in result.errors
+
     def test_validate_create_all_errors_collected(self):
         """Все ошибки валидации собираются в одном результате."""
         dto = ProjectApplicationCreateDTO(
@@ -256,6 +276,20 @@ class TestValidateUpdate:
         assert not result.is_valid
         # Проверяем наличие ошибок для пустых полей
         assert len(result.errors) >= 4
+
+    def test_validate_update_phone_optional(self):
+        """Пустой телефон при обновлении допустим."""
+        dto = ProjectApplicationUpdateDTO(author_phone="")
+        result = ProjectApplicationDomain.validate_update(dto)
+        assert result.is_valid
+        assert "author_phone" not in result.errors
+
+    def test_validate_update_phone_too_short(self):
+        """Короткий непустой телефон при обновлении вызывает ошибку."""
+        dto = ProjectApplicationUpdateDTO(author_phone="12345")
+        result = ProjectApplicationDomain.validate_update(dto)
+        assert not result.is_valid
+        assert "author_phone" in result.errors
 
 
 class TestCalculateInitialStatus:

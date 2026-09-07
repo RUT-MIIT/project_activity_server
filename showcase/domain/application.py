@@ -104,10 +104,11 @@ class ProjectApplicationDomain:
                     "Имя автора должно содержать минимум 2 символа",
                 )
 
-        if dto.author_phone is not None:
-            if not dto.author_phone or not dto.author_phone.strip():
-                result.add_error("author_phone", "Телефон автора обязателен")
-            elif len(dto.author_phone.strip()) < 10:
+        # Бизнес-правило: телефон автора необязателен.
+        # Если передан непустой — проверяем минимальную длину.
+        if dto.author_phone not in (None, ""):
+            phone = dto.author_phone.strip()
+            if phone and len(phone) < 10:
                 result.add_error(
                     "author_phone",
                     "Телефон автора должен содержать минимум 10 символов",
@@ -164,9 +165,15 @@ class ProjectApplicationDomain:
             if not dto.author_firstname or not dto.author_firstname.strip():
                 result.add_error("author_firstname", "Имя автора обязательно")
 
-        if dto.author_phone is not None:
-            if not dto.author_phone or not dto.author_phone.strip():
-                result.add_error("author_phone", "Телефон автора обязателен")
+        # Бизнес-правило: телефон автора необязателен.
+        # Если передан непустой — проверяем минимальную длину.
+        if dto.author_phone not in (None, ""):
+            phone = dto.author_phone.strip()
+            if phone and len(phone) < 10:
+                result.add_error(
+                    "author_phone",
+                    "Телефон автора должен содержать минимум 10 символов",
+                )
 
         return result
 

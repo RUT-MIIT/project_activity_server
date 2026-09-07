@@ -71,7 +71,7 @@ class TestSubmitApplication:
             "barrier",
             "author_lastname",
             "author_firstname",
-            "author_phone",
+            "author_phone",  # короткий непустой телефон по-прежнему невалиден
         ]:
             assert field in result.errors
 
