@@ -19,7 +19,7 @@ load_dotenv()
 SECRET_KEY = "django-insecure-fi%=($26*@4^71-g%(o0ed&6eej^ov4l1e*8r_mw#m=k#oi*)a"
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv("DEBUG", "false").lower() in ("true", "1", "yes")
 
 ALLOWED_HOSTS = ["*"]
 
