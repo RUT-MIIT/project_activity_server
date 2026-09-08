@@ -186,10 +186,10 @@ class TestMyStudyGroupViewSet:
         assert [item["last_name"] for item in members] == ["Иванов", "Петров"]
         assert members[0]["is_registered"] is True
         assert members[0]["user_id"] == registered.id
-        assert members[0]["email"] == "ivan@example.com"
+        assert "email" not in members[0]
         assert members[1]["is_registered"] is False
         assert members[1]["user_id"] is None
-        assert members[1]["email"] is None
+        assert "email" not in members[1]
         assert "team" not in members[0]
 
     def test_invalid_semester_id_returns_400(

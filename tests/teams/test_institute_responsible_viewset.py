@@ -2,15 +2,25 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 import pytest
 from rest_framework.test import APIClient
 
-from accounts.models import Department, Semester
-from showcase.models import Institute
+from accounts.models import Department, PreRegisteredStudent, Semester
+from showcase.models import Institute, InstituteSemesterSettings, ProjectApplication
 from teams.dto.institute_responsible import InstituteResponsibleGroupMentorsDTO
-from teams.models import Direction, StudyGroup, StudyGroupSemester
+from teams.models import (
+    Direction,
+    StudyGroup,
+    StudyGroupSemester,
+    Team,
+    TeamSemester,
+    TeamSemesterMember,
+)
 from teams.repositories.study_group_semester import StudyGroupSemesterRepository
 from teams.services.institute_responsible_service import InstituteResponsibleService
 from teams.services.study_group_service import StudyGroupService
@@ -139,9 +149,6 @@ class TestInstituteResponsibleViewSet:
         direction,
         institute,
     ):
-        from accounts.models import PreRegisteredStudent
-        from teams.models import Team, TeamSemester, TeamSemesterMember
-
         user = make_user(role_code="institute_validator", with_department=True)
         captain = make_user(role_code="student", email="overview-captain@example.com")
         captain.study_group = study_groups["active"]
@@ -688,3 +695,432 @@ class TestInstituteResponsibleQueryPerformance:
             ]
 
         assert len(payload) >= 6
+
+
+def _create_team_semester(
+    *,
+    group: StudyGroup,
+    semester: Semester,
+    captain,
+    name: str,
+    status: str = TeamSemester.Status.FORMING,
+    project: ProjectApplication | None = None,
+    members: list | None = None,
+) -> TeamSemester:
+    """Создаёт команду в семестре для тестов ответственного."""
+    team = Team.objects.create(name=name, home_study_group=group)
+    team_semester = TeamSemester.objects.create(
+        team=team,
+        semester=semester,
+        captain=captain,
+        status=status,
+        project_application=project,
+    )
+    TeamSemesterMember.objects.create(
+        team_semester=team_semester,
+        user=captain,
+        role=TeamSemesterMember.Role.LEADER,
+    )
+    for member in members or []:
+        TeamSemesterMember.objects.create(
+            team_semester=team_semester,
+            user=member,
+            role=TeamSemesterMember.Role.MEMBER,
+        )
+    return team_semester
+
+
+@pytest.mark.django_db
+class TestInstituteResponsibleTeamsAndStudents:
+    def test_list_teams_structure(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        study_groups,
+        statuses,
+    ):
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_groups["active"], semester, mentor)
+        captain = make_user(role_code="student", email="team-cap@example.com")
+        member = make_user(role_code="student", email="team-mem@example.com")
+        project = ProjectApplication.objects.create(
+            title="Проект А",
+            status=statuses["approved"],
+            semester=semester,
+        )
+        team_semester = _create_team_semester(
+            group=study_groups["active"],
+            semester=semester,
+            captain=captain,
+            name="Команда А",
+            status=TeamSemester.Status.ASSEMBLED,
+            project=project,
+            members=[member],
+        )
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        response = api_client.get(f"{BASE_URL}teams/?semester_id={semester.id}")
+
+        assert response.status_code == 200
+        assert len(response.data) == 1
+        item = response.data[0]
+        assert item["id"] == team_semester.id
+        assert item["name"] == "Команда А"
+        assert item["studyGroup"] == {
+            "id": study_groups["active"].id,
+            "name": "Группа 1",
+        }
+        assert item["status"] == "assembled"
+        assert item["membersCount"] == 2
+        assert item["project"] == {"id": project.id, "title": "Проект А"}
+        assert item["mentors"] == [
+            {"id": mentor.id, "fullName": mentor.get_full_name()}
+        ]
+
+    def test_retrieve_team_detail(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        study_groups,
+    ):
+        captain = make_user(role_code="student", email="detail-cap@example.com")
+        captain.last_name = "Капитанов"
+        captain.first_name = "Иван"
+        captain.save(update_fields=["last_name", "first_name"])
+        member = make_user(role_code="student", email="detail-mem@example.com")
+        team_semester = _create_team_semester(
+            group=study_groups["active"],
+            semester=semester,
+            captain=captain,
+            name="Детали",
+            members=[member],
+        )
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        response = api_client.get(
+            f"{BASE_URL}teams/{team_semester.id}/?semester_id={semester.id}"
+        )
+
+        assert response.status_code == 200
+        assert response.data["captain"]["userId"] == captain.id
+        assert "Капитанов" in response.data["captain"]["fullName"]
+        roles_by_user = {
+            item["userId"]: item["role"] for item in response.data["members"]
+        }
+        assert roles_by_user[captain.id] == "leader"
+        assert roles_by_user[member.id] == "member"
+
+    def test_retrieve_foreign_team_returns_404(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        study_groups,
+    ):
+        captain = make_user(role_code="student", email="foreign-cap@example.com")
+        team_semester = _create_team_semester(
+            group=study_groups["foreign"],
+            semester=semester,
+            captain=captain,
+            name="Чужая",
+        )
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        response = api_client.get(
+            f"{BASE_URL}teams/{team_semester.id}/?semester_id={semester.id}"
+        )
+
+        assert response.status_code == 404
+
+    def test_list_students_includes_unregistered(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        study_groups,
+        statuses,
+    ):
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_groups["active"], semester, mentor)
+        captain = make_user(role_code="student", email="stud-cap@example.com")
+        captain.study_group = study_groups["active"]
+        captain.save(update_fields=["study_group"])
+        project = ProjectApplication.objects.create(
+            title="СтудПроект",
+            status=statuses["approved"],
+            semester=semester,
+        )
+        _create_team_semester(
+            group=study_groups["active"],
+            semester=semester,
+            captain=captain,
+            name="СтудКоманда",
+            project=project,
+        )
+        PreRegisteredStudent.objects.create(
+            last_name="Зарег",
+            first_name="Студент",
+            student_card="SC-R",
+            snils="11111111111",
+            personnel_number="PN-R",
+            group=study_groups["active"],
+            user=captain,
+        )
+        PreRegisteredStudent.objects.create(
+            last_name="Незарег",
+            first_name="Студент",
+            student_card="SC-U",
+            snils="22222222222",
+            personnel_number="PN-U",
+            group=study_groups["active"],
+        )
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        response = api_client.get(f"{BASE_URL}students/?semester_id={semester.id}")
+
+        assert response.status_code == 200
+        by_name = {item["lastName"]: item for item in response.data}
+        registered = by_name["Зарег"]
+        assert registered["isRegistered"] is True
+        assert registered["teamName"] == "СтудКоманда"
+        assert registered["teamRole"] == "leader"
+        assert registered["project"] == {"id": project.id, "title": "СтудПроект"}
+        assert registered["mentors"][0]["id"] == mentor.id
+        unregistered = by_name["Незарег"]
+        assert unregistered["isRegistered"] is False
+        assert unregistered["teamName"] is None
+        assert unregistered["teamRole"] is None
+        assert unregistered["project"] is None
+
+    def test_list_teams_forbidden_for_student(
+        self, roles, make_user, api_client, semester
+    ):
+        user = make_user(role_code="student", with_department=True)
+        api_client.force_authenticate(user=user)
+        response = api_client.get(f"{BASE_URL}teams/?semester_id={semester.id}")
+        assert response.status_code == 403
+
+    def test_list_teams_missing_semester_returns_400(
+        self, roles, make_user, api_client
+    ):
+        user = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=user)
+        response = api_client.get(f"{BASE_URL}teams/")
+        assert response.status_code == 400
+
+
+@pytest.mark.django_db
+class TestInstituteResponsibleRegistrationSettings:
+    def test_get_registration_settings(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        institute,
+        other_institute,
+    ):
+        opens_at = timezone.now() - timedelta(hours=1)
+        InstituteSemesterSettings.objects.create(
+            institute=institute,
+            semester=semester,
+            registration_opens_at=opens_at,
+            closed_by_decision=False,
+        )
+        InstituteSemesterSettings.objects.create(
+            institute=other_institute,
+            semester=semester,
+            registration_opens_at=opens_at + timedelta(days=2),
+            closed_by_decision=False,
+        )
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        response = api_client.get(
+            f"{BASE_URL}registration-settings/?semester_id={semester.id}"
+        )
+
+        assert response.status_code == 200
+        current = response.data["current"]
+        assert current["instituteCode"] == institute.code
+        assert current["isOpen"] is True
+        assert current["status"] == "open"
+        assert current["closedByDecision"] is False
+        others = {
+            item["instituteCode"]: item for item in response.data["otherInstitutes"]
+        }
+        assert other_institute.code in others
+        assert others[other_institute.code]["registrationOpensAt"] is not None
+
+    def test_post_partial_update_preserves_other_field(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        institute,
+    ):
+        opens_at = timezone.now() - timedelta(days=1)
+        InstituteSemesterSettings.objects.create(
+            institute=institute,
+            semester=semester,
+            registration_opens_at=opens_at,
+            closed_by_decision=False,
+        )
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        response = api_client.post(
+            f"{BASE_URL}registration-settings/?semester_id={semester.id}",
+            {"closedByDecision": True},
+            format="json",
+        )
+
+        assert response.status_code == 200
+        assert response.data["current"]["closedByDecision"] is True
+        assert response.data["current"]["isOpen"] is False
+        assert response.data["current"]["status"] == "closed"
+        settings = InstituteSemesterSettings.objects.get(
+            institute=institute, semester=semester
+        )
+        assert settings.closed_by_decision is True
+        assert settings.registration_opens_at == opens_at
+
+    def test_closed_by_decision_overrides_open_date(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        institute,
+    ):
+        InstituteSemesterSettings.objects.create(
+            institute=institute,
+            semester=semester,
+            registration_opens_at=timezone.now() - timedelta(days=1),
+            closed_by_decision=True,
+        )
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        response = api_client.get(
+            f"{BASE_URL}registration-settings/?semester_id={semester.id}"
+        )
+
+        assert response.status_code == 200
+        assert response.data["current"]["isOpen"] is False
+
+    def test_post_empty_body_returns_400(
+        self, roles, make_user, api_client, semester, institute
+    ):
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+        response = api_client.post(
+            f"{BASE_URL}registration-settings/?semester_id={semester.id}",
+            {},
+            format="json",
+        )
+        assert response.status_code == 400
+
+
+@pytest.mark.django_db
+class TestInstituteResponsibleTeamsStudentsQueryPerformance:
+    def test_list_teams_query_count_does_not_scale(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        study_groups,
+    ):
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_groups["active"], semester, mentor)
+
+        for index in range(3):
+            captain = make_user(
+                role_code="student", email=f"perf-cap-small-{index}@example.com"
+            )
+            _create_team_semester(
+                group=study_groups["active"],
+                semester=semester,
+                captain=captain,
+                name=f"Small-{index}",
+            )
+
+        with CaptureQueriesContext(connection) as small_ctx:
+            response = api_client.get(f"{BASE_URL}teams/?semester_id={semester.id}")
+        assert response.status_code == 200
+        small_count = len(small_ctx.captured_queries)
+
+        for index in range(12):
+            captain = make_user(
+                role_code="student", email=f"perf-cap-large-{index}@example.com"
+            )
+            _create_team_semester(
+                group=study_groups["active"],
+                semester=semester,
+                captain=captain,
+                name=f"Large-{index}",
+            )
+
+        with CaptureQueriesContext(connection) as large_ctx:
+            response = api_client.get(f"{BASE_URL}teams/?semester_id={semester.id}")
+        assert response.status_code == 200
+        assert len(response.data) == 15
+        assert len(large_ctx.captured_queries) == small_count
+
+    def test_list_students_query_count_does_not_scale(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        study_groups,
+    ):
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_groups["active"], semester, mentor)
+
+        for index in range(3):
+            PreRegisteredStudent.objects.create(
+                last_name=f"Small{index}",
+                first_name="S",
+                student_card=f"SC-S{index}",
+                snils=f"1000000000{index}",
+                personnel_number=f"PN-S{index}",
+                group=study_groups["active"],
+            )
+
+        with CaptureQueriesContext(connection) as small_ctx:
+            response = api_client.get(f"{BASE_URL}students/?semester_id={semester.id}")
+        assert response.status_code == 200
+        small_count = len(small_ctx.captured_queries)
+
+        for index in range(12):
+            PreRegisteredStudent.objects.create(
+                last_name=f"Large{index}",
+                first_name="L",
+                student_card=f"SC-L{index}",
+                snils=f"2000000000{index}",
+                personnel_number=f"PN-L{index}",
+                group=study_groups["active"],
+            )
+
+        with CaptureQueriesContext(connection) as large_ctx:
+            response = api_client.get(f"{BASE_URL}students/?semester_id={semester.id}")
+        assert response.status_code == 200
+        assert len(response.data) == 15
+        assert len(large_ctx.captured_queries) == small_count

@@ -16,8 +16,13 @@ from teams.dto.institute_responsible import (
     InstituteResponsibleEmployeeDTO,
     InstituteResponsibleGroupDTO,
     InstituteResponsibleGroupMentorsDTO,
+    InstituteResponsibleRegistrationSettingsDTO,
+    InstituteResponsibleStudentDTO,
+    InstituteResponsibleTeamDetailDTO,
+    InstituteResponsibleTeamListItemDTO,
 )
 from teams.dto.mentor_groups import MentorGroupListDTO
+from teams.repositories.institute_responsible import InstituteResponsibleRepository
 from teams.repositories.mentor_groups import MentorGroupsRepository
 from teams.repositories.study_group_semester import StudyGroupSemesterRepository
 
@@ -30,6 +35,7 @@ class InstituteResponsibleService:
     def __init__(self) -> None:
         self.repository = StudyGroupSemesterRepository()
         self.groups_overview_repository = MentorGroupsRepository()
+        self.institute_repository = InstituteResponsibleRepository()
         self.domain = InstituteResponsibleDomain()
 
     def _check_access(self, user: User) -> None:
@@ -44,7 +50,7 @@ class InstituteResponsibleService:
         institute_code: str | None,
         semester_id_raw: str,
     ) -> tuple[int, str, list[str] | None]:
-        """Валидирует доступ и возвращает semester_id, institute_code, accessible_codes."""
+        """Валидирует доступ; возвращает semester_id, institute_code, codes."""
         self._check_access(user)
         self.domain.ensure_user_department(user)
 
@@ -222,4 +228,123 @@ class InstituteResponsibleService:
 
         return InstituteResponsibleAssignMentorDTO(
             group_id, semester_id, mentor_ids
+        ).to_dict()
+
+    def list_teams(
+        self,
+        user: User,
+        institute_code: str | None,
+        semester_id_raw: str,
+    ) -> list[dict[str, Any]]:
+        """Список команд института в семестре."""
+        semester_id, resolved_institute_code, _ = self._resolve_context(
+            user, institute_code, semester_id_raw
+        )
+        team_semesters = self.institute_repository.list_institute_team_semesters(
+            institute_code=resolved_institute_code,
+            semester_id=semester_id,
+        )
+        return [
+            InstituteResponsibleTeamListItemDTO(item).to_dict()
+            for item in team_semesters
+        ]
+
+    def get_team(
+        self,
+        user: User,
+        team_semester_id: int,
+        institute_code: str | None,
+        semester_id_raw: str,
+    ) -> dict[str, Any]:
+        """Подробности команды института в семестре."""
+        semester_id, resolved_institute_code, _ = self._resolve_context(
+            user, institute_code, semester_id_raw
+        )
+        team_semester = self.institute_repository.get_institute_team_semester_detail(
+            team_semester_id=team_semester_id,
+            institute_code=resolved_institute_code,
+            semester_id=semester_id,
+        )
+        if team_semester is None:
+            raise LookupError(f"Команда с id={team_semester_id} не найдена")
+        return InstituteResponsibleTeamDetailDTO(team_semester).to_dict()
+
+    def list_students(
+        self,
+        user: User,
+        institute_code: str | None,
+        semester_id_raw: str,
+    ) -> list[dict[str, Any]]:
+        """Список студентов (контингент) института в семестре."""
+        semester_id, resolved_institute_code, _ = self._resolve_context(
+            user, institute_code, semester_id_raw
+        )
+        students = self.institute_repository.list_institute_students(
+            institute_code=resolved_institute_code,
+            semester_id=semester_id,
+        )
+        return [
+            InstituteResponsibleStudentDTO(student).to_dict() for student in students
+        ]
+
+    def get_registration_settings(
+        self,
+        user: User,
+        institute_code: str | None,
+        semester_id_raw: str,
+    ) -> dict[str, Any]:
+        """Настройки регистрации текущего и других институтов."""
+        semester_id, resolved_institute_code, _ = self._resolve_context(
+            user, institute_code, semester_id_raw
+        )
+        return self._build_registration_settings_response(
+            resolved_institute_code, semester_id
+        )
+
+    def update_registration_settings(
+        self,
+        user: User,
+        institute_code: str | None,
+        semester_id_raw: str,
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Частичное обновление настроек регистрации своего института."""
+        semester_id, resolved_institute_code, _ = self._resolve_context(
+            user, institute_code, semester_id_raw
+        )
+        fields = self.domain.validate_settings_update_payload(payload)
+        with transaction.atomic():
+            self.institute_repository.update_settings(
+                institute_code=resolved_institute_code,
+                semester_id=semester_id,
+                fields=fields,
+            )
+        return self._build_registration_settings_response(
+            resolved_institute_code, semester_id
+        )
+
+    def _build_registration_settings_response(
+        self,
+        institute_code: str,
+        semester_id: int,
+    ) -> dict[str, Any]:
+        """Собирает ответ registration-settings без N+1."""
+        institutes = self.institute_repository.list_active_institutes()
+        current = next(
+            (item for item in institutes if item.code == institute_code),
+            None,
+        )
+        if current is None:
+            current = Institute.objects.filter(code=institute_code).first()
+            if current is None:
+                raise ValueError(f"Институт с кодом={institute_code} не найден")
+
+        settings_list = self.institute_repository.list_semester_settings(semester_id)
+        settings_by_code = {item.institute_id: item for item in settings_list}
+        others = [item for item in institutes if item.code != institute_code]
+        return InstituteResponsibleRegistrationSettingsDTO(
+            current_institute=current,
+            current_settings=settings_by_code.get(institute_code),
+            other_institutes=others,
+            settings_by_code=settings_by_code,
         ).to_dict()

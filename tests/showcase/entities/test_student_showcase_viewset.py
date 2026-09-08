@@ -1,13 +1,17 @@
 """Тесты API студенческой витрины проектов."""
 
+from datetime import timedelta
+
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 import pytest
 from rest_framework.test import APIClient
 
 from accounts.models import ACTIVE_SEMESTER_SETTING_CODE, Semester, Settings
 from showcase.models import (
     ApplicationInvolvedDepartment,
+    InstituteSemesterSettings,
     ProjectApplication,
     ProjectTrack,
     ProjectTrackApplication,
@@ -162,7 +166,14 @@ def _create_assembled_team(
 
 @pytest.fixture
 def showcase_setup(
-    roles, make_user, semester, study_group, other_group, statuses, departments
+    roles,
+    make_user,
+    semester,
+    study_group,
+    other_group,
+    statuses,
+    departments,
+    institute,
 ):
     admin = make_user(role_code="admin")
     captain = make_user(role_code="student", email="cap@example.com")
@@ -174,6 +185,13 @@ def showcase_setup(
     other_student = make_user(role_code="student", email="other@example.com")
     other_student.study_group = other_group
     other_student.save(update_fields=["study_group"])
+
+    InstituteSemesterSettings.objects.create(
+        institute=institute,
+        semester=semester,
+        registration_opens_at=timezone.now() - timedelta(days=1),
+        closed_by_decision=False,
+    )
 
     tag = Tag.objects.create(name="AI", category="Tech")
     app1 = _approved_app(
@@ -249,6 +267,7 @@ def showcase_setup(
         "app3": app3,
         "app_foreign": app_foreign,
         "tag": tag,
+        "institute": institute,
     }
 
 
@@ -619,3 +638,28 @@ class TestStudentShowcaseEnroll:
         )
         assert response.status_code == 400
         assert "пределах" in response.data["error"]
+
+    def test_enroll_rejected_when_registration_closed(self, api_client, showcase_setup):
+        InstituteSemesterSettings.objects.filter(
+            institute=showcase_setup["institute"],
+            semester=showcase_setup["semester"],
+        ).update(closed_by_decision=True)
+
+        _create_assembled_team(
+            group=showcase_setup["group"],
+            semester=showcase_setup["semester"],
+            track=showcase_setup["track1"],
+            captain=showcase_setup["captain"],
+            name="ClosedReg",
+            members=[showcase_setup["member"]],
+        )
+        api_client.force_authenticate(user=showcase_setup["captain"])
+        detail = api_client.get(f"{BASE}/projects/{showcase_setup['app1'].id}/")
+        assert detail.status_code == 200
+        assert detail.data["can_enroll"] is False
+
+        response = api_client.post(
+            f"{BASE}/projects/{showcase_setup['app1'].id}/enroll/"
+        )
+        assert response.status_code == 400
+        assert "закрыта" in response.data["error"]

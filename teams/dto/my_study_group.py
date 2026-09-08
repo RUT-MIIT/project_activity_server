@@ -47,7 +47,6 @@ class StudyGroupMemberDTO:
         self.middle_name = pre_registered.middle_name
         self.is_registered = pre_registered.is_registered
         self.user_id = student.id if student is not None else None
-        self.email = student.email if student is not None else None
         self.include_team = include_team
         self.team = self._team_snapshot(student) if include_team else None
 
@@ -75,7 +74,6 @@ class StudyGroupMemberDTO:
             "middle_name": self.middle_name,
             "is_registered": self.is_registered,
             "user_id": self.user_id,
-            "email": self.email,
         }
         if self.include_team:
             payload["team"] = self.team

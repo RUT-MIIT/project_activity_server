@@ -74,6 +74,14 @@ class StudentShowcaseDomain:
         if enrolled_count >= max_teams:
             raise ValueError("На проект уже записано максимальное число команд")
 
+    @staticmethod
+    def ensure_institute_registration_open(*, is_open: bool) -> None:
+        """Запрещает запись, если окно регистрации института закрыто."""
+        if not is_open:
+            raise ValueError(
+                "Запись на проекты закрыта для вашего института в этом семестре"
+            )
+
     @classmethod
     def can_enroll(
         cls,
@@ -88,6 +96,7 @@ class StudentShowcaseDomain:
         max_teams: int,
         project_track_id: int | None,
         application_track_id: int | None,
+        registration_open: bool = True,
     ) -> bool:
         """True, если капитан может записать команду на проект (для UI)."""
         if not is_captain:
@@ -103,5 +112,7 @@ class StudentShowcaseDomain:
         if not (min_team_members <= members_count <= max_team_members):
             return False
         if enrolled_count >= max_teams:
+            return False
+        if not registration_open:
             return False
         return True

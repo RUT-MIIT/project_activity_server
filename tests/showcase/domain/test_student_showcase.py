@@ -148,10 +148,31 @@ class _FakeTeamSemester:
             },
             False,
         ),
+        (
+            {
+                "is_captain": True,
+                "status": TeamSemester.Status.ASSEMBLED,
+                "has_project": False,
+                "members_count": 3,
+                "min_team_members": 2,
+                "max_team_members": 5,
+                "enrolled_count": 0,
+                "max_teams": 2,
+                "project_track_id": 1,
+                "application_track_id": 1,
+                "registration_open": False,
+            },
+            False,
+        ),
     ],
 )
 def test_can_enroll(kwargs, expected):
     assert StudentShowcaseDomain.can_enroll(**kwargs) is expected
+
+
+def test_ensure_institute_registration_open_rejects_closed():
+    with pytest.raises(ValueError, match="закрыта"):
+        StudentShowcaseDomain.ensure_institute_registration_open(is_open=False)
 
 
 def test_ensure_team_assembled_rejects_forming():

@@ -355,3 +355,158 @@ GET /api/showcase/project-tracks/groups/?semester_id=actual&institute_code=…
 ```
 
 Тот endpoint заточен под **распределение проектов** (поле `assignedProjectsCount`). Для экрана **назначения наставников** используйте `/api/teams/institute-responsible/`.
+
+---
+
+## 7. Команды института
+
+```http
+GET /api/teams/institute-responsible/teams/?semester_id=actual
+```
+
+Список команд института в выбранном семестре (`TeamSemester`). Идентификатор в ответе — ID семестровой записи команды.
+
+### Ответ `200`
+
+```json
+[
+  {
+    "id": 10,
+    "name": "Команда Альфа",
+    "studyGroup": { "id": 1, "name": "ИВТ-101" },
+    "mentors": [
+      { "id": 42, "fullName": "Иванов Иван Иванович" }
+    ],
+    "status": "assembled",
+    "membersCount": 5,
+    "project": { "id": 7, "title": "Название проекта" }
+  }
+]
+```
+
+| Поле | Описание |
+|------|----------|
+| `id` | ID `TeamSemester` |
+| `name` | Название команды |
+| `studyGroup` | Домашняя учебная группа |
+| `mentors` | Наставники группы в семестре |
+| `status` | `forming` \| `assembled` |
+| `membersCount` | Число участников |
+| `project` | Выбранный проект или `null` |
+
+---
+
+## 8. Детали команды
+
+```http
+GET /api/teams/institute-responsible/teams/{id}/?semester_id=actual
+```
+
+Подробности команды: капитан, участники, проект, наставники. `404`, если команда не из института / не в семестре.
+
+### Ответ `200`
+
+```json
+{
+  "id": 10,
+  "name": "Команда Альфа",
+  "studyGroup": { "id": 1, "name": "ИВТ-101" },
+  "mentors": [{ "id": 42, "fullName": "Иванов Иван Иванович" }],
+  "status": "assembled",
+  "membersCount": 5,
+  "project": { "id": 7, "title": "Название проекта" },
+  "captain": { "userId": 100, "fullName": "Петров Пётр" },
+  "members": [
+    { "userId": 100, "fullName": "Петров Пётр", "role": "leader" },
+    { "userId": 101, "fullName": "Сидоров Сидор", "role": "member" }
+  ]
+}
+```
+
+---
+
+## 9. Студенты института
+
+```http
+GET /api/teams/institute-responsible/students/?semester_id=actual
+```
+
+Весь контингент активных групп института (`PreRegisteredStudent`), включая незарегистрированных.
+
+### Ответ `200`
+
+```json
+[
+  {
+    "id": 55,
+    "lastName": "Иванов",
+    "firstName": "Иван",
+    "middleName": "Иванович",
+    "isRegistered": true,
+    "studyGroup": { "id": 1, "name": "ИВТ-101" },
+    "mentors": [{ "id": 42, "fullName": "Иванов Иван Иванович" }],
+    "teamName": "Команда Альфа",
+    "teamRole": "leader",
+    "project": { "id": 7, "title": "Название проекта" }
+  }
+]
+```
+
+| Поле | Описание |
+|------|----------|
+| `isRegistered` | Полная регистрация (есть user, не placeholder) |
+| `teamName` / `teamRole` | Команда и роль в семестре или `null` |
+| `project` | Проект команды или `null` |
+
+---
+
+## 10. Настройки регистрации институтов
+
+Модель `InstituteSemesterSettings`: дата открытия записи на проекты и флаг «закрыта решением».
+
+**Статус открыта**, если:
+- `closedByDecision = false`, и
+- `registrationOpensAt` задан, и
+- текущее время ≥ `registrationOpensAt`.
+
+Иначе — **закрыта**. Закрытая регистрация блокирует студенческую запись команды на проект.
+
+### GET
+
+```http
+GET /api/teams/institute-responsible/registration-settings/?semester_id=actual
+```
+
+```json
+{
+  "current": {
+    "instituteCode": "INST-1",
+    "instituteName": "Institute 1",
+    "registrationOpensAt": "2026-09-01T10:00:00+03:00",
+    "closedByDecision": false,
+    "isOpen": true,
+    "status": "open"
+  },
+  "otherInstitutes": [
+    {
+      "instituteCode": "OTHER",
+      "instituteName": "Other Institute",
+      "registrationOpensAt": null
+    }
+  ]
+}
+```
+
+### POST (частичный upsert)
+
+```http
+POST /api/teams/institute-responsible/registration-settings/?semester_id=actual
+Content-Type: application/json
+
+{
+  "registrationOpensAt": "2026-09-10T12:00:00+03:00",
+  "closedByDecision": false
+}
+```
+
+Поле, которое не передано, не меняется. Пустое тело — `400`. Ответ — тот же формат, что у GET.

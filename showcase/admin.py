@@ -6,6 +6,7 @@ from .models import (
     ApplicationStatus,
     DepartmentPlan,
     Institute,
+    InstituteSemesterSettings,
     ProjectApplication,
     ProjectApplicationComment,
     ProjectApplicationStatusLog,
@@ -198,6 +199,21 @@ class DepartmentPlanAdmin(admin.ModelAdmin):
     ordering = ("semester", "department")
     verbose_name = "План подразделения"
     verbose_name_plural = "Планы подразделений"
+
+
+@admin.register(InstituteSemesterSettings)
+class InstituteSemesterSettingsAdmin(admin.ModelAdmin):
+    list_display = (
+        "institute",
+        "semester",
+        "registration_opens_at",
+        "closed_by_decision",
+    )
+    list_filter = ("semester", "closed_by_decision", "institute")
+    search_fields = ("institute__code", "institute__name", "semester__name")
+    ordering = ("semester", "institute")
+    verbose_name = "Настройки института в семестре"
+    verbose_name_plural = "Настройки институтов в семестрах"
 
 
 class ProjectTrackGroupInline(admin.TabularInline):

@@ -2,8 +2,14 @@
 
 from __future__ import annotations
 
+from datetime import datetime
+from typing import Any
+
+from django.utils import timezone
+
 from accounts.models import Department, User
 from showcase.domain.project_track import ProjectTrackDomain
+from showcase.models import InstituteSemesterSettings
 from teams.domain.institute_access import (
     MANAGEMENT_ROLES,
     get_department_ids_for_institute_codes,
@@ -74,3 +80,65 @@ class InstituteResponsibleDomain:
             user.department = department
         except Department.DoesNotExist:
             pass
+
+    @staticmethod
+    def is_registration_open(
+        settings: InstituteSemesterSettings | None,
+        *,
+        now: datetime | None = None,
+    ) -> bool:
+        """True, если запись на проекты института открыта."""
+        if settings is None:
+            return False
+        if settings.closed_by_decision:
+            return False
+        if settings.registration_opens_at is None:
+            return False
+        current = now if now is not None else timezone.now()
+        return current >= settings.registration_opens_at
+
+    @staticmethod
+    def registration_status(
+        settings: InstituteSemesterSettings | None,
+        *,
+        now: datetime | None = None,
+    ) -> str:
+        """Строковый статус регистрации: open / closed."""
+        if InstituteResponsibleDomain.is_registration_open(settings, now=now):
+            return "open"
+        return "closed"
+
+    @staticmethod
+    def validate_settings_update_payload(
+        payload: dict[str, Any],
+    ) -> dict[str, Any]:
+        """Проверяет частичный update настроек; возвращает поля для записи.
+
+        Raises:
+            ValueError: пустое тело или некорректные типы.
+        """
+        if not payload:
+            raise ValueError("Не передано ни одного параметра для изменения")
+
+        allowed = {"registrationOpensAt", "closedByDecision"}
+        unknown = set(payload.keys()) - allowed
+        if unknown:
+            raise ValueError("Неизвестные поля: " + ", ".join(sorted(unknown)))
+
+        fields: dict[str, Any] = {}
+        if "registrationOpensAt" in payload:
+            value = payload["registrationOpensAt"]
+            if value is not None and not isinstance(value, datetime):
+                raise ValueError(
+                    "registrationOpensAt должен быть датой/временем или null"
+                )
+            fields["registration_opens_at"] = value
+        if "closedByDecision" in payload:
+            value = payload["closedByDecision"]
+            if not isinstance(value, bool):
+                raise ValueError("closedByDecision должен быть boolean")
+            fields["closed_by_decision"] = value
+
+        if not fields:
+            raise ValueError("Не передано ни одного параметра для изменения")
+        return fields

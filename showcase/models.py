@@ -490,6 +490,46 @@ class DepartmentPlan(models.Model):
         return f"{self.department} — {self.semester}: план {self.plan}"
 
 
+class InstituteSemesterSettings(models.Model):
+    """Параметры института в семестре (окно записи на проекты и т.п.)."""
+
+    institute = models.ForeignKey(
+        Institute,
+        on_delete=models.CASCADE,
+        related_name="semester_settings",
+        verbose_name="Институт",
+    )
+    semester = models.ForeignKey(
+        "accounts.Semester",
+        on_delete=models.CASCADE,
+        related_name="institute_settings",
+        verbose_name="Семестр",
+    )
+    registration_opens_at = models.DateTimeField(
+        null=True,
+        blank=True,
+        verbose_name="Дата/время открытия записи на проект",
+    )
+    closed_by_decision = models.BooleanField(
+        default=False,
+        verbose_name="Закрыта решением",
+    )
+
+    class Meta:
+        verbose_name = "Настройки института в семестре"
+        verbose_name_plural = "Настройки институтов в семестрах"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["institute", "semester"],
+                name="unique_institute_semester_settings",
+            ),
+        ]
+        ordering = ["semester", "institute"]
+
+    def __str__(self) -> str:
+        return f"{self.institute} — {self.semester}"
+
+
 class ProjectTrack(models.Model):
     """Проектный трек — контейнер для назначения групп и заявок в рамках семестра."""
 

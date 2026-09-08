@@ -39,6 +39,13 @@ class AssignMentorSerializer(serializers.Serializer):
     mentorId = serializers.IntegerField(min_value=1)
 
 
+class UpdateRegistrationSettingsSerializer(serializers.Serializer):
+    """Частичное обновление настроек регистрации института."""
+
+    registrationOpensAt = serializers.DateTimeField(required=False, allow_null=True)
+    closedByDecision = serializers.BooleanField(required=False)
+
+
 class InstituteResponsiblePermission(BasePermission):
     """Доступ для institute_validator, admin и cpds."""
 
@@ -249,6 +256,134 @@ class InstituteResponsibleViewSet(viewsets.ViewSet):
                 semester_id_raw,
             )
             return Response(result)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
+        parameters=[_SEMESTER_PARAM, _INSTITUTE_PARAM],
+        summary="Команды института в семестре",
+    )
+    @action(detail=False, methods=["get"], url_path="teams")
+    def list_teams(self, request: Request) -> Response:
+        """GET /api/teams/institute-responsible/teams/."""
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = InstituteResponsibleService()
+            items = service.list_teams(
+                request.user,
+                self._parse_institute_code(request),
+                semester_id_raw,
+            )
+            return Response(items)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
+        parameters=[_SEMESTER_PARAM, _INSTITUTE_PARAM],
+        summary="Детали команды института",
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path=r"teams/(?P<team_semester_id>\d+)",
+    )
+    def retrieve_team(self, request: Request, team_semester_id: int) -> Response:
+        """GET /api/teams/institute-responsible/teams/{id}/."""
+        team_semester_id = int(team_semester_id)
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = InstituteResponsibleService()
+            item = service.get_team(
+                request.user,
+                team_semester_id,
+                self._parse_institute_code(request),
+                semester_id_raw,
+            )
+            return Response(item)
+        except LookupError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
+        parameters=[_SEMESTER_PARAM, _INSTITUTE_PARAM],
+        summary="Студенты института (контингент) в семестре",
+    )
+    @action(detail=False, methods=["get"], url_path="students")
+    def list_students(self, request: Request) -> Response:
+        """GET /api/teams/institute-responsible/students/."""
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = InstituteResponsibleService()
+            items = service.list_students(
+                request.user,
+                self._parse_institute_code(request),
+                semester_id_raw,
+            )
+            return Response(items)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
+        parameters=[_SEMESTER_PARAM, _INSTITUTE_PARAM],
+        request=UpdateRegistrationSettingsSerializer,
+        summary="Настройки регистрации институтов в семестре",
+    )
+    @action(
+        detail=False,
+        methods=["get", "post"],
+        url_path="registration-settings",
+    )
+    def registration_settings(self, request: Request) -> Response:
+        """GET/POST /api/teams/institute-responsible/registration-settings/."""
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        service = InstituteResponsibleService()
+        try:
+            if request.method == "GET":
+                data = service.get_registration_settings(
+                    request.user,
+                    self._parse_institute_code(request),
+                    semester_id_raw,
+                )
+                return Response(data)
+
+            serializer = UpdateRegistrationSettingsSerializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+            data = service.update_registration_settings(
+                request.user,
+                self._parse_institute_code(request),
+                semester_id_raw,
+                serializer.validated_data,
+            )
+            return Response(data)
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as exc:

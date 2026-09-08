@@ -15,6 +15,8 @@ from showcase.dto.student_showcase import (
     StudentShowcaseTrackDTO,
 )
 from showcase.repositories.student_showcase import StudentShowcaseRepository
+from teams.domain.institute_responsible import InstituteResponsibleDomain
+from teams.repositories.institute_responsible import InstituteResponsibleRepository
 
 if TYPE_CHECKING:
     from accounts.models import User as UserType
@@ -26,10 +28,26 @@ class StudentShowcaseService:
     def __init__(self) -> None:
         self.repository = StudentShowcaseRepository()
         self.domain = StudentShowcaseDomain()
+        self.institute_repository = InstituteResponsibleRepository()
+        self.institute_domain = InstituteResponsibleDomain()
 
     def _resolve_semester_id(self, semester_id_raw: str | None) -> int:
         """Резолвит semester_id; по умолчанию actual."""
         return Semester.resolve_list_semester_id(semester_id_raw or "actual")
+
+    def _is_institute_registration_open(self, user: UserType, semester_id: int) -> bool:
+        """Открыта ли запись на проекты для института группы студента."""
+        study_group = getattr(user, "study_group", None)
+        institute_code = None
+        if study_group is not None:
+            institute_code = getattr(study_group, "institute_id", None)
+        if not institute_code:
+            return False
+        settings = self.institute_repository.get_settings(
+            institute_code=institute_code,
+            semester_id=semester_id,
+        )
+        return self.institute_domain.is_registration_open(settings)
 
     def list_tracks(
         self, user: UserType, semester_id_raw: str | None = None
@@ -99,6 +117,7 @@ class StudentShowcaseService:
             user_id=user.id, semester_id=semester_id
         )
         can_enroll = False
+        registration_open = self._is_institute_registration_open(user, semester_id)
         if team_semester is not None:
             members_count = len(list(team_semester.members.all()))
             can_enroll = self.domain.can_enroll(
@@ -112,6 +131,7 @@ class StudentShowcaseService:
                 max_teams=application.recommended_teams_count,
                 project_track_id=team_semester.project_track_id,
                 application_track_id=track_id,
+                registration_open=registration_open,
             )
 
         return StudentShowcaseProjectDetailDTO(
@@ -131,6 +151,9 @@ class StudentShowcaseService:
         """Записывает команду капитана на проект."""
         self.domain.ensure_student_with_group(user)
         semester_id = self._resolve_semester_id(semester_id_raw)
+        self.domain.ensure_institute_registration_open(
+            is_open=self._is_institute_registration_open(user, semester_id)
+        )
 
         team_semester = self.repository.get_user_team_semester_for_update(
             user_id=user.id, semester_id=semester_id
