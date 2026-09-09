@@ -114,9 +114,11 @@ class TestMyStudyGroupViewSet:
         assert response.data["id"] == study_group.id
         assert response.data["name"] == "АМБ-211"
         assert response.data["mentors"] == []
-        assert response.data["members"] == []
-        assert response.data["students_count"] == 0
-        assert response.data["registered_students_count"] == 0
+        assert response.data["students_count"] == 1
+        assert response.data["registered_students_count"] == 1
+        assert len(response.data["members"]) == 1
+        assert response.data["members"][0]["user_id"] == user.id
+        assert response.data["members"][0]["is_registered"] is True
 
     def test_student_with_mentor_and_members(
         self,
@@ -180,17 +182,19 @@ class TestMyStudyGroupViewSet:
                 "academic_title": "доцент",
             }
         ]
-        assert response.data["students_count"] == 2
-        assert response.data["registered_students_count"] == 1
+        assert response.data["students_count"] == 3
+        assert response.data["registered_students_count"] == 2
         members = response.data["members"]
-        assert [item["last_name"] for item in members] == ["Иванов", "Петров"]
-        assert members[0]["is_registered"] is True
-        assert members[0]["user_id"] == registered.id
-        assert "email" not in members[0]
-        assert members[1]["is_registered"] is False
-        assert members[1]["user_id"] is None
-        assert "email" not in members[1]
-        assert "team" not in members[0]
+        by_name = {item["last_name"]: item for item in members}
+        assert set(by_name) == {"Иванов", "Петров", current.last_name}
+        assert by_name["Иванов"]["is_registered"] is True
+        assert by_name["Иванов"]["user_id"] == registered.id
+        assert "email" not in by_name["Иванов"]
+        assert by_name["Петров"]["is_registered"] is False
+        assert by_name["Петров"]["user_id"] is None
+        assert by_name[current.last_name]["user_id"] == current.id
+        assert by_name[current.last_name]["is_registered"] is True
+        assert "team" not in by_name["Иванов"]
 
     def test_invalid_semester_id_returns_400(
         self,
@@ -258,13 +262,15 @@ class TestMyStudyGroupViewSet:
         response = api_client.get(MY_GROUP_URL, {"semester_id": "actual"})
 
         assert response.status_code == 200
-        members = response.data["members"]
-        assert members[0]["team"] == {
+        members = {item["last_name"]: item for item in response.data["members"]}
+        assert members["Иванов"]["team"] == {
             "id": team.id,
             "name": "Команда Альфа",
             "role": "leader",
         }
-        assert members[1]["team"] is None
+        assert members["Петров"]["team"] is None
+        assert members[current.last_name]["team"] is None
+        assert members[current.last_name]["user_id"] == current.id
 
 
 @pytest.mark.django_db
@@ -321,9 +327,10 @@ class TestMyStudyGroupService:
             )
 
         group = StudyGroupRepository().get_my_group_detail(study_group.id)
+        members = StudyGroupRepository().list_group_contingent(study_group.id)
 
         with django_assert_num_queries(0):
-            data = MyStudyGroupDTO(group).to_dict()
+            data = MyStudyGroupDTO(group, members).to_dict()
 
         assert data["mentors"][0]["id"] == mentor.id
         assert data["students_count"] == 5
@@ -364,9 +371,14 @@ class TestMyStudyGroupService:
         group = StudyGroupRepository().get_my_group_detail(
             study_group.id, semester_id=semester.pk
         )
+        members = StudyGroupRepository().list_group_contingent(
+            study_group.id, semester_id=semester.pk
+        )
 
         with django_assert_num_queries(0):
-            data = MyStudyGroupDTO(group, include_team=True).to_dict()
+            data = MyStudyGroupDTO(
+                group, members, include_team=True, semester_id=semester.pk
+            ).to_dict()
 
         assert data["members"][0]["team"]["id"] == team.id
         assert data["members"][0]["team"]["name"] == "Alpha"

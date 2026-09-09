@@ -250,6 +250,63 @@ class TestMentorGroupDetailViewSet:
         assert team_item["status"] == TeamSemester.Status.FORMING
         assert team_item["membersCount"] == 2
 
+    def test_includes_direct_student_without_preregistration(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+        semester: Semester,
+    ) -> None:
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_group, semester, mentor)
+
+        direct = make_user(
+            role_code="student",
+            email="direct@example.com",
+        )
+        direct.last_name = "Прямой"
+        direct.first_name = "Студент"
+        direct.middle_name = "Тестович"
+        direct.study_group = study_group
+        direct.save(
+            update_fields=["last_name", "first_name", "middle_name", "study_group"]
+        )
+
+        team = Team.objects.create(name="DirectTeam", home_study_group=study_group)
+        team_semester = TeamSemester.objects.create(
+            team=team,
+            semester=semester,
+            captain=direct,
+            status=TeamSemester.Status.FORMING,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=team_semester,
+            user=direct,
+            semester=semester,
+            role=TeamSemesterMember.Role.LEADER,
+        )
+
+        api_client.force_authenticate(user=mentor)
+        response = api_client.get(
+            f"{_detail_url(study_group.id)}?semester_id={semester.id}"
+        )
+
+        assert response.status_code == 200
+        assert len(response.data["students"]) == 1
+        student = response.data["students"][0]
+        assert student["id"] == direct.id
+        assert student["lastName"] == "Прямой"
+        assert student["firstName"] == "Студент"
+        assert student["middleName"] == "Тестович"
+        assert student["isRegistered"] is True
+        assert student["userId"] == direct.id
+        assert student["team"] == {
+            "id": team_semester.id,
+            "name": "DirectTeam",
+            "role": TeamSemesterMember.Role.LEADER,
+        }
+
 
 @pytest.mark.django_db
 class TestMentorGroupDetailQueryPerformance:
@@ -377,3 +434,79 @@ class TestMentorGroupDetailQueryPerformance:
         large_count = len(large_ctx.captured_queries)
 
         assert large_count == small_count
+
+    def test_mixed_contingent_detail_query_count_stable(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        direction,
+        institute,
+    ) -> None:
+        """N+1 не растёт при смеси предрегистрации и прямых студентов."""
+        mentor = make_user(role_code="mentor", with_department=True)
+        api_client.force_authenticate(user=mentor)
+
+        def seed(group: StudyGroup, pr_count: int, direct_count: int) -> None:
+            _enrollment_with_mentors(group, semester, mentor)
+            for index in range(pr_count):
+                PreRegisteredStudent.objects.create(
+                    last_name=f"PR{group.code}{index}",
+                    first_name="A",
+                    student_card=f"{group.code}P{index}",
+                    snils=f"{group.id:04d}{index:07d}",
+                    personnel_number=f"{group.code}P{index}",
+                    group=group,
+                )
+            for index in range(direct_count):
+                user = make_user(
+                    role_code="student",
+                    email=f"d-{group.code}-{index}@example.com",
+                )
+                user.study_group = group
+                user.save(update_fields=["study_group"])
+                team = Team.objects.create(
+                    name=f"T-{group.code}-{index}", home_study_group=group
+                )
+                team_semester = TeamSemester.objects.create(
+                    team=team, semester=semester, captain=user
+                )
+                TeamSemesterMember.objects.create(
+                    team_semester=team_semester,
+                    user=user,
+                    semester=semester,
+                    role=TeamSemesterMember.Role.LEADER,
+                )
+
+        small = StudyGroup.objects.create(
+            name="mix-small",
+            code="ms",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        seed(small, pr_count=2, direct_count=2)
+        with CaptureQueriesContext(connection) as small_ctx:
+            response = api_client.get(
+                f"{_detail_url(small.id)}?semester_id={semester.id}"
+            )
+        assert response.status_code == 200
+        assert len(response.data["students"]) == 4
+        small_count = len(small_ctx.captured_queries)
+
+        large = StudyGroup.objects.create(
+            name="mix-large",
+            code="ml",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
+        seed(large, pr_count=10, direct_count=8)
+        with CaptureQueriesContext(connection) as large_ctx:
+            response = api_client.get(
+                f"{_detail_url(large.id)}?semester_id={semester.id}"
+            )
+        assert response.status_code == 200
+        assert len(response.data["students"]) == 18
+        assert len(large_ctx.captured_queries) == small_count

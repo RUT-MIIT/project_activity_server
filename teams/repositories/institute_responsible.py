@@ -7,9 +7,10 @@ from typing import Any
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Prefetch
 
-from accounts.models import PreRegisteredStudent
 from showcase.models import Institute, InstituteSemesterSettings
+from teams.domain.contingent_student import ContingentStudent
 from teams.models import StudyGroupSemester, TeamSemester, TeamSemesterMember
+from teams.repositories.contingent_student import ContingentStudentRepository
 
 User = get_user_model()
 
@@ -101,33 +102,12 @@ class InstituteResponsibleRepository:
         *,
         institute_code: str,
         semester_id: int,
-    ) -> list[PreRegisteredStudent]:
-        """Контингент института с командой/проектом и наставниками группы."""
-        membership_qs = TeamSemesterMember.objects.filter(
-            semester_id=semester_id
-        ).select_related(
-            "team_semester__team",
-            "team_semester__project_application",
-        )
-        return list(
-            PreRegisteredStudent.objects.filter(
-                group__institute_id=institute_code,
-                group__is_end=False,
-            )
-            .select_related("user", "group")
-            .prefetch_related(
-                Prefetch(
-                    "user__team_semester_memberships",
-                    queryset=membership_qs,
-                    to_attr="_team_membership_for_semester",
-                ),
-                Prefetch(
-                    "group__semester_enrollments",
-                    queryset=self._semester_enrollment_qs(semester_id),
-                    to_attr="_semester_enrollments_for_semester",
-                ),
-            )
-            .order_by("group__name", "last_name", "first_name", "id")
+    ) -> list[ContingentStudent]:
+        """Контингент института: предрегистрация и прямые студенты."""
+        return ContingentStudentRepository().list_for_institute(
+            institute_code=institute_code,
+            semester_id=semester_id,
+            enrollment_qs=self._semester_enrollment_qs(semester_id),
         )
 
     def list_active_institutes(self) -> list[Institute]:

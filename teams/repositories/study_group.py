@@ -1,10 +1,23 @@
 """Репозиторий для учебных групп."""
 
 from django.contrib.auth import get_user_model
-from django.db.models import Count, Prefetch, QuerySet
+from django.db.models import (
+    Count,
+    Exists,
+    F,
+    IntegerField,
+    OuterRef,
+    Prefetch,
+    Q,
+    QuerySet,
+    Subquery,
+)
+from django.db.models.functions import Coalesce
 
 from accounts.models import PreRegisteredStudent
-from teams.models import StudyGroup, StudyGroupSemester, TeamSemesterMember
+from teams.domain.contingent_student import ContingentStudent
+from teams.models import StudyGroup, StudyGroupSemester
+from teams.repositories.contingent_student import ContingentStudentRepository
 
 User = get_user_model()
 
@@ -12,37 +25,64 @@ User = get_user_model()
 class StudyGroupRepository:
     """Доступ к данным StudyGroup."""
 
-    def get_all(self) -> QuerySet[StudyGroup]:
-        return (
-            StudyGroup.objects.select_related("direction", "institute")
-            .annotate(students_count=Count("pre_registered_students", distinct=True))
-            .all()
+    def __init__(self) -> None:
+        self._contingent_repository = ContingentStudentRepository()
+
+    def _with_students_count(
+        self, queryset: QuerySet[StudyGroup]
+    ) -> QuerySet[StudyGroup]:
+        """Добавляет students_count с учётом прямых студентов."""
+        direct_students_subquery = (
+            User.objects.filter(
+                study_group_id=OuterRef("pk"),
+                role_id="student",
+                is_active=True,
+                is_placeholder=False,
+            )
+            .annotate(
+                _linked=Exists(
+                    PreRegisteredStudent.objects.filter(
+                        group_id=OuterRef("study_group_id"),
+                        user_id=OuterRef("pk"),
+                    )
+                )
+            )
+            .filter(_linked=False)
+            .values("study_group_id")
+            .annotate(count=Count("pk"))
+            .values("count")
+        )
+        return queryset.annotate(
+            _pr_students_count=Count(
+                "pre_registered_students",
+                filter=Q(pre_registered_students__role_id="student"),
+                distinct=True,
+            ),
+            _direct_students_count=Coalesce(
+                Subquery(
+                    direct_students_subquery[:1],
+                    output_field=IntegerField(),
+                ),
+                0,
+            ),
+        ).annotate(
+            students_count=F("_pr_students_count") + F("_direct_students_count"),
         )
 
+    def get_all(self) -> QuerySet[StudyGroup]:
+        return self._with_students_count(
+            StudyGroup.objects.select_related("direction", "institute")
+        ).all()
+
     def get_by_id(self, group_id: int) -> StudyGroup:
-        return (
+        return self._with_students_count(
             StudyGroup.objects.select_related("direction", "institute", "mentor")
-            .annotate(students_count=Count("pre_registered_students", distinct=True))
-            .get(pk=group_id)
-        )
+        ).get(pk=group_id)
 
     def get_my_group_detail(
         self, group_id: int, semester_id: int | None = None
     ) -> StudyGroup:
-        """Группа с наставником и контингентом без N+1."""
-        students_qs = PreRegisteredStudent.objects.select_related("user").order_by(
-            "last_name", "first_name"
-        )
-        if semester_id is not None:
-            students_qs = students_qs.prefetch_related(
-                Prefetch(
-                    "user__team_semester_memberships",
-                    queryset=TeamSemesterMember.objects.filter(
-                        semester_id=semester_id
-                    ).select_related("team_semester__team"),
-                    to_attr="_team_membership_for_semester",
-                )
-            )
+        """Группа с наставником без N+1 (контингент — отдельно через list_group_contingent)."""
         group_qs = StudyGroup.objects.select_related(
             "direction",
             "institute",
@@ -64,6 +104,10 @@ class StudyGroupRepository:
                     to_attr="_semester_enrollments_for_semester",
                 )
             )
-        return group_qs.prefetch_related(
-            Prefetch("pre_registered_students", queryset=students_qs)
-        ).get(pk=group_id)
+        return group_qs.get(pk=group_id)
+
+    def list_group_contingent(
+        self, group_id: int, semester_id: int | None = None
+    ) -> list[ContingentStudent]:
+        """Контингент группы: предрегистрация и прямые студенты."""
+        return self._contingent_repository.list_for_group(group_id, semester_id)

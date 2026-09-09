@@ -70,6 +70,12 @@ class StudyGroupService:
         group = self.repository.get_my_group_detail(
             user.study_group_id, semester_id=semester_id
         )
+        members = self.repository.list_group_contingent(
+            user.study_group_id, semester_id=semester_id
+        )
         return MyStudyGroupDTO(
-            group, include_team=semester_id is not None, semester_id=semester_id
+            group,
+            members,
+            include_team=semester_id is not None,
+            semester_id=semester_id,
         ).to_dict()

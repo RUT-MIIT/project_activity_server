@@ -4,7 +4,8 @@ from __future__ import annotations
 
 from typing import Any
 
-from accounts.models import PreRegisteredStudent, User
+from accounts.models import User
+from teams.domain.contingent_student import ContingentStudent
 from teams.models import StudyGroup, TeamSemester, TeamSemesterMember
 
 
@@ -51,15 +52,14 @@ class MentorGroupListDTO:
 class MentorGroupStudentDTO:
     """Студент контингента для деталей группы наставника."""
 
-    def __init__(self, pre_registered: PreRegisteredStudent) -> None:
-        student = pre_registered.user
-        self.id = pre_registered.id
-        self.last_name = pre_registered.last_name
-        self.first_name = pre_registered.first_name
-        self.middle_name = pre_registered.middle_name
-        self.is_registered = pre_registered.is_registered
-        self.user_id = student.id if student is not None else None
-        self.team = self._team_snapshot(student)
+    def __init__(self, student: ContingentStudent) -> None:
+        self.id = student.id
+        self.last_name = student.last_name
+        self.first_name = student.first_name
+        self.middle_name = student.middle_name
+        self.is_registered = student.is_registered
+        self.user_id = student.user_id
+        self.team = self._team_snapshot(student.user)
 
     @staticmethod
     def _team_snapshot(student: User | None) -> dict[str, Any] | None:
@@ -113,7 +113,7 @@ class MentorGroupDetailDTO:
     def __init__(
         self,
         group: StudyGroup,
-        students: list[PreRegisteredStudent],
+        students: list[ContingentStudent],
         teams: list[TeamSemester],
     ) -> None:
         self.id = group.id

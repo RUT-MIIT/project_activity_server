@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from accounts.models import PreRegisteredStudent, User
+from accounts.models import User
 from showcase.models import Institute, InstituteSemesterSettings, ProjectApplication
+from teams.domain.contingent_student import ContingentStudent
 from teams.domain.institute_responsible import InstituteResponsibleDomain
 from teams.domain.team_lobby import TeamLobbyDomain
 from teams.models import StudyGroup, TeamSemester, TeamSemesterMember
@@ -193,14 +194,14 @@ class InstituteResponsibleTeamDetailDTO:
 class InstituteResponsibleStudentDTO:
     """Студент контингента института для списка ответственного."""
 
-    def __init__(self, pre_registered: PreRegisteredStudent) -> None:
-        group = pre_registered.group
-        student = pre_registered.user
-        self.id = pre_registered.id
-        self.last_name = pre_registered.last_name
-        self.first_name = pre_registered.first_name
-        self.middle_name = pre_registered.middle_name
-        self.is_registered = pre_registered.is_registered
+    def __init__(self, student: ContingentStudent) -> None:
+        group = student.group
+        self.id = student.id
+        self.last_name = student.last_name
+        self.first_name = student.first_name
+        self.middle_name = student.middle_name
+        self.is_registered = student.is_registered
+        self.user_id = student.user_id
         self.study_group = (
             {"id": group.id, "name": group.name} if group is not None else None
         )
@@ -208,7 +209,7 @@ class InstituteResponsibleStudentDTO:
         self.team_name: str | None = None
         self.team_role: str | None = None
         self.project: dict[str, Any] | None = None
-        self._fill_team(student)
+        self._fill_team(student.user)
 
     def _fill_team(self, student: User | None) -> None:
         if student is None:
@@ -230,6 +231,7 @@ class InstituteResponsibleStudentDTO:
             "firstName": self.first_name,
             "middleName": self.middle_name,
             "isRegistered": self.is_registered,
+            "userId": self.user_id,
             "studyGroup": self.study_group,
             "mentors": self.mentors,
             "teamName": self.team_name,

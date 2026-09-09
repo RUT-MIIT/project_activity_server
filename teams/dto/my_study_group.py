@@ -2,7 +2,8 @@
 
 from typing import Any
 
-from accounts.models import PreRegisteredStudent, User
+from accounts.models import User
+from teams.domain.contingent_student import ContingentStudent
 from teams.models import StudyGroup, TeamSemesterMember
 
 
@@ -37,18 +38,17 @@ class StudyGroupMemberDTO:
 
     def __init__(
         self,
-        pre_registered: PreRegisteredStudent,
+        student: ContingentStudent,
         include_team: bool = False,
     ):
-        student = pre_registered.user
-        self.id = pre_registered.id
-        self.last_name = pre_registered.last_name
-        self.first_name = pre_registered.first_name
-        self.middle_name = pre_registered.middle_name
-        self.is_registered = pre_registered.is_registered
-        self.user_id = student.id if student is not None else None
+        self.id = student.id
+        self.last_name = student.last_name
+        self.first_name = student.first_name
+        self.middle_name = student.middle_name
+        self.is_registered = student.is_registered
+        self.user_id = student.user_id
         self.include_team = include_team
-        self.team = self._team_snapshot(student) if include_team else None
+        self.team = self._team_snapshot(student.user) if include_team else None
 
     @staticmethod
     def _team_snapshot(student: User | None) -> dict[str, Any] | None:
@@ -86,12 +86,12 @@ class MyStudyGroupDTO:
     def __init__(
         self,
         group: StudyGroup,
+        members: list[ContingentStudent],
         include_team: bool = False,
         semester_id: int | None = None,
     ):
-        members = [
-            StudyGroupMemberDTO(item, include_team=include_team)
-            for item in group.pre_registered_students.all()
+        member_dtos = [
+            StudyGroupMemberDTO(item, include_team=include_team) for item in members
         ]
         self.id = group.id
         self.name = group.name
@@ -114,10 +114,10 @@ class MyStudyGroupDTO:
         self.mentors = [
             StudyGroupMentorDTO(mentor).to_dict() for mentor in mentor_users
         ]
-        self.members = [member.to_dict() for member in members]
-        self.students_count = len(members)
+        self.members = [member.to_dict() for member in member_dtos]
+        self.students_count = len(member_dtos)
         self.registered_students_count = sum(
-            1 for member in members if member.is_registered
+            1 for member in member_dtos if member.is_registered
         )
 
     @staticmethod

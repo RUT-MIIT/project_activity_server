@@ -431,7 +431,8 @@ GET /api/teams/institute-responsible/teams/{id}/?semester_id=actual
 GET /api/teams/institute-responsible/students/?semester_id=actual
 ```
 
-Весь контингент активных групп института (`PreRegisteredStudent`), включая незарегистрированных.
+Весь контингент активных групп института: предрегистрация (`PreRegisteredStudent`)
+и напрямую созданные студенты (`User` с `study_group`, без записи предрегистрации).
 
 ### Ответ `200`
 
@@ -443,6 +444,7 @@ GET /api/teams/institute-responsible/students/?semester_id=actual
     "firstName": "Иван",
     "middleName": "Иванович",
     "isRegistered": true,
+    "userId": 100,
     "studyGroup": { "id": 1, "name": "ИВТ-101" },
     "mentors": [{ "id": 42, "fullName": "Иванов Иван Иванович" }],
     "teamName": "Команда Альфа",
@@ -454,6 +456,8 @@ GET /api/teams/institute-responsible/students/?semester_id=actual
 
 | Поле | Описание |
 |------|----------|
+| `id` | ID предрегистрации; для студента без предрегистрации совпадает с `userId` |
+| `userId` | ID пользователя или `null` (незарегистрированный контингент) |
 | `isRegistered` | Полная регистрация (есть user, не placeholder) |
 | `teamName` / `teamRole` | Команда и роль в семестре или `null` |
 | `project` | Проект команды или `null` |

@@ -902,6 +902,55 @@ class TestInstituteResponsibleTeamsAndStudents:
         assert unregistered["teamRole"] is None
         assert unregistered["project"] is None
 
+    def test_list_students_includes_direct_without_preregistration(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        study_groups,
+        statuses,
+    ):
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_groups["active"], semester, mentor)
+        direct = make_user(
+            role_code="student",
+            email="direct-stud@example.com",
+        )
+        direct.last_name = "Прямой"
+        direct.first_name = "Студент"
+        direct.study_group = study_groups["active"]
+        direct.save(update_fields=["last_name", "first_name", "study_group"])
+        project = ProjectApplication.objects.create(
+            title="ПрямойПроект",
+            status=statuses["approved"],
+            semester=semester,
+        )
+        _create_team_semester(
+            group=study_groups["active"],
+            semester=semester,
+            captain=direct,
+            name="ПрямаяКоманда",
+            project=project,
+        )
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        response = api_client.get(f"{BASE_URL}students/?semester_id={semester.id}")
+
+        assert response.status_code == 200
+        by_name = {item["lastName"]: item for item in response.data}
+        assert "Прямой" in by_name
+        student = by_name["Прямой"]
+        assert student["id"] == direct.id
+        assert student["userId"] == direct.id
+        assert student["isRegistered"] is True
+        assert student["studyGroup"]["id"] == study_groups["active"].id
+        assert student["teamName"] == "ПрямаяКоманда"
+        assert student["teamRole"] == "leader"
+        assert student["project"] == {"id": project.id, "title": "ПрямойПроект"}
+        assert student["mentors"][0]["id"] == mentor.id
+
     def test_list_teams_forbidden_for_student(
         self, roles, make_user, api_client, semester
     ):
