@@ -542,10 +542,9 @@ class TestStudentShowcaseEnroll:
         assert response.status_code == 400
         assert "максимальное число команд" in response.data["error"]
 
-    def test_enroll_rejected_project_not_in_team_track(
-        self, api_client, showcase_setup
-    ):
-        _create_assembled_team(
+    def test_enroll_from_other_group_track_sets_track(self, api_client, showcase_setup):
+        """Команда с track1 может записаться на проект track2 той же группы."""
+        ts = _create_assembled_team(
             group=showcase_setup["group"],
             semester=showcase_setup["semester"],
             track=showcase_setup["track1"],
@@ -554,9 +553,47 @@ class TestStudentShowcaseEnroll:
             members=[showcase_setup["member"]],
         )
         api_client.force_authenticate(user=showcase_setup["captain"])
-        # app3 в track2, команда в track1
         response = api_client.post(
             f"{BASE}/projects/{showcase_setup['app3'].id}/enroll/"
+        )
+        assert response.status_code == 200
+        ts.refresh_from_db()
+        assert ts.project_application_id == showcase_setup["app3"].id
+        assert ts.project_track_id == showcase_setup["track2"].id
+
+    def test_enroll_without_team_track_sets_track(self, api_client, showcase_setup):
+        """Команда без трека при enroll получает трек выбранного проекта."""
+        ts = _create_assembled_team(
+            group=showcase_setup["group"],
+            semester=showcase_setup["semester"],
+            track=None,
+            captain=showcase_setup["captain"],
+            name="NoTrack",
+            members=[showcase_setup["member"]],
+        )
+        assert ts.project_track_id is None
+        api_client.force_authenticate(user=showcase_setup["captain"])
+        response = api_client.post(
+            f"{BASE}/projects/{showcase_setup['app1'].id}/enroll/"
+        )
+        assert response.status_code == 200
+        ts.refresh_from_db()
+        assert ts.project_application_id == showcase_setup["app1"].id
+        assert ts.project_track_id == showcase_setup["track1"].id
+
+    def test_enroll_rejected_foreign_group_project(self, api_client, showcase_setup):
+        """Проект чужой группы по-прежнему недоступен."""
+        _create_assembled_team(
+            group=showcase_setup["group"],
+            semester=showcase_setup["semester"],
+            track=None,
+            captain=showcase_setup["captain"],
+            name="Alpha",
+            members=[showcase_setup["member"]],
+        )
+        api_client.force_authenticate(user=showcase_setup["captain"])
+        response = api_client.post(
+            f"{BASE}/projects/{showcase_setup['app_foreign'].id}/enroll/"
         )
         assert response.status_code == 400
 

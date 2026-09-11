@@ -550,7 +550,7 @@ class TestMyTeamViewSet:
             format="json",
         )
         assert inv.status_code == 400
-        assert "трека" in inv.data["error"].lower()
+        assert "трек" in inv.data["error"].lower()
 
     def test_invite_placeholder_rejected(self, api_client, my_team_setup):
         """Placeholder-пользователя пригласить нельзя."""

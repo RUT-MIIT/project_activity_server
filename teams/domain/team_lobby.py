@@ -55,13 +55,14 @@ class TeamLobbyDomain:
     def can_create_team(
         *,
         has_team: bool,
-        teams_count: int,
-        recommended_teams_count: int,
+        teams_count: int = 0,
+        recommended_teams_count: int = 0,
     ) -> bool:
-        """True, если студент без команды и есть свободный слот."""
-        if has_team:
-            return False
-        return teams_count < recommended_teams_count
+        """True, если студент без команды.
+
+        Проверка слотов трека (recommendedTeamsCount) временно отключена.
+        """
+        return not has_team
 
     @staticmethod
     def ensure_team_forming(team_semester: TeamSemester) -> None:
@@ -135,9 +136,9 @@ class TeamLobbyDomain:
         invitee_group_id: int | None,
         allowed_group_ids: set[int],
     ) -> None:
-        """Проверяет, что приглашаемый из группы проектного трека команды."""
+        """Проверяет, что приглашаемый из группы треков учебной группы капитана."""
         if invitee_group_id is None or invitee_group_id not in allowed_group_ids:
-            raise ValueError("Студент должен быть из группы вашего проектного трека")
+            raise ValueError("Студент должен быть из группы ваших проектных треков")
 
     @staticmethod
     def ensure_invitee_registered(*, is_registered: bool) -> None:

@@ -524,28 +524,22 @@ class MentorTeamService:
 
         self.showcase_domain.ensure_team_assembled(team_semester)
 
-        if team_semester.project_track_id is None:
-            raise ValueError("У команды не указан проектный трек")
-
-        link = self.showcase_repository.get_project_track_link(
+        accessible = self.showcase_repository.get_accessible_project(
             project_id=project_id,
-            track_id=team_semester.project_track_id,
+            group_id=group_id,
             semester_id=semester_id,
         )
-        if link is None:
+        if accessible is None:
             raise ValueError(
-                "Проект не найден в треке команды или недоступен для записи"
+                "Проект не найден среди треков группы или недоступен для записи"
             )
-
-        application = link.project_application
-        self.showcase_domain.ensure_project_in_team_track(
-            team_semester, link.project_track_id
-        )
+        application, track_id = accessible
 
         previous_application = team_semester.project_application
         if (
             previous_application is not None
             and previous_application.id == application.id
+            and team_semester.project_track_id == track_id
         ):
             return StudentShowcaseEnrollResultDTO(team_semester).to_dict()
 
@@ -557,7 +551,7 @@ class MentorTeamService:
 
         enrolled = self.showcase_repository.count_enrolled_teams_for_update(
             semester_id=semester_id,
-            track_id=link.project_track_id,
+            track_id=track_id,
             application_id=application.id,
             exclude_team_semester_id=team_semester.id,
         )
@@ -580,5 +574,6 @@ class MentorTeamService:
             application=application,
             actor_id=user.id,
             log_text=log_text,
+            project_track_id=track_id,
         )
         return StudentShowcaseEnrollResultDTO(team_semester).to_dict()

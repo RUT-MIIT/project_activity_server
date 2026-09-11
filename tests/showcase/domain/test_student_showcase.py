@@ -101,7 +101,7 @@ class _FakeTeamSemester:
                 "project_track_id": None,
                 "application_track_id": 1,
             },
-            False,
+            True,
         ),
         (
             {
@@ -116,7 +116,7 @@ class _FakeTeamSemester:
                 "project_track_id": 1,
                 "application_track_id": 2,
             },
-            False,
+            True,
         ),
         (
             {
@@ -193,18 +193,14 @@ def test_ensure_no_project_yet():
         )
 
 
-def test_ensure_project_in_team_track_requires_track():
-    with pytest.raises(ValueError, match="не указан проектный трек"):
-        StudentShowcaseDomain.ensure_project_in_team_track(
-            _FakeTeamSemester(project_track_id=None), 1
-        )
-
-
-def test_ensure_project_in_team_track_mismatch():
-    with pytest.raises(ValueError, match="не входит в трек"):
-        StudentShowcaseDomain.ensure_project_in_team_track(
-            _FakeTeamSemester(project_track_id=1), 2
-        )
+def test_ensure_project_in_team_track_allows_null_and_mismatch():
+    """Трек при enroll проставляется отдельно — доменная проверка no-op."""
+    StudentShowcaseDomain.ensure_project_in_team_track(
+        _FakeTeamSemester(project_track_id=None), 1
+    )
+    StudentShowcaseDomain.ensure_project_in_team_track(
+        _FakeTeamSemester(project_track_id=1), 2
+    )
 
 
 def test_ensure_members_fit_project():

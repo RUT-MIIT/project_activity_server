@@ -222,10 +222,15 @@ class StudentShowcaseRepository:
         application: ProjectApplication,
         actor_id: int,
         log_text: str | None = None,
+        project_track_id: int | None = None,
     ) -> TeamSemester:
-        """Привязывает проект к команде и пишет лог."""
+        """Привязывает проект (и опционально трек) к команде и пишет лог."""
         team_semester.project_application = application
-        team_semester.save(update_fields=["project_application", "updated_at"])
+        update_fields = ["project_application", "updated_at"]
+        if project_track_id is not None:
+            team_semester.project_track_id = project_track_id
+            update_fields.insert(1, "project_track")
+        team_semester.save(update_fields=update_fields)
         title = application.title or f"#{application.pk}"
         TeamEventLog.objects.create(
             team_id=team_semester.team_id,

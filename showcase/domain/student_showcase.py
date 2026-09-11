@@ -43,11 +43,12 @@ class StudentShowcaseDomain:
     def ensure_project_in_team_track(
         team_semester: TeamSemester, track_id: int
     ) -> None:
-        """Проект должен принадлежать треку команды."""
-        if team_semester.project_track_id is None:
-            raise ValueError("У команды не указан проектный трек")
-        if team_semester.project_track_id != track_id:
-            raise ValueError("Проект не входит в трек вашей команды")
+        """Совместимость с прежним API: трек проставляется при enroll.
+
+        Проверка «проект ∈ трек команды» больше не требуется: команда может
+        быть без трека или сменить трек при записи на проект.
+        """
+        _ = (team_semester, track_id)
 
     @staticmethod
     def ensure_members_fit_project(
@@ -126,15 +127,14 @@ class StudentShowcaseDomain:
         registration_open: bool = True,
     ) -> bool:
         """True, если капитан может записать команду на проект (для UI)."""
+        _ = project_track_id
         if not is_captain:
             return False
         if status != TeamSemester.Status.ASSEMBLED:
             return False
         if has_project:
             return False
-        if project_track_id is None or application_track_id is None:
-            return False
-        if project_track_id != application_track_id:
+        if application_track_id is None:
             return False
         if not (min_team_members <= members_count <= max_team_members):
             return False

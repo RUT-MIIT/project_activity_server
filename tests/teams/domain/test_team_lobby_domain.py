@@ -20,14 +20,14 @@ class TestTeamLobbyDomainTrackScope:
         )
 
     def test_ensure_invitee_in_track_scope_rejects_outside(self):
-        with pytest.raises(ValueError, match="проектного трека"):
+        with pytest.raises(ValueError, match="проектных треков"):
             TeamLobbyDomain.ensure_invitee_in_track_scope(
                 invitee_group_id=9,
                 allowed_group_ids={1, 3, 5},
             )
 
     def test_ensure_invitee_in_track_scope_rejects_none(self):
-        with pytest.raises(ValueError, match="проектного трека"):
+        with pytest.raises(ValueError, match="проектных треков"):
             TeamLobbyDomain.ensure_invitee_in_track_scope(
                 invitee_group_id=None,
                 allowed_group_ids={1},

@@ -281,7 +281,7 @@ class TestTeamLobbyViewSet:
         assert lobby.data["myTeam"]["id"] == own.data["id"]
 
     def test_create_team_without_track(self, api_client, lobby_setup):
-        """При нескольких треках без track_id создание запрещено."""
+        """При нескольких треках без track_id команда создаётся без трека."""
         captain = lobby_setup["student"]
         api_client.force_authenticate(user=captain)
         create = api_client.post(
@@ -289,13 +289,17 @@ class TestTeamLobbyViewSet:
             {"name": "No Track Team"},
             format="json",
         )
-        assert create.status_code == 400
-        assert "трек" in create.data["error"].lower()
+        assert create.status_code == 201
+        team_semester = TeamSemester.objects.get(pk=create.data["id"])
+        assert team_semester.project_track_id is None
+        # оба трека: min=2, max=5 → effective 2/5
+        assert create.data["minTeamMembers"] == 2
+        assert create.data["maxTeamMembers"] == 5
 
-    def test_teams_count_includes_other_groups_of_track(
+    def test_teams_count_informative_slots_not_blocking(
         self, api_client, lobby_setup, direction, institute
     ):
-        """teamsCount/canCreateTeam учитывают команды других групп того же трека."""
+        """teamsCount информативен; canCreateTeam не смотрит слоты трека."""
         track = lobby_setup["track1"]
         track.recommended_teams_count = 2
         track.save(update_fields=["recommended_teams_count"])
@@ -330,11 +334,7 @@ class TestTeamLobbyViewSet:
         assert lobby.status_code == 200
         track_payload = next(t for t in lobby.data["tracks"] if t["id"] == track.id)
         assert track_payload["teamsCount"] == 2
-        assert track_payload["canCreateTeam"] is False
-        # список команд в лобби остаётся только своей группы
-        assert (
-            all(t["id"] for t in track_payload["teams"]) or track_payload["teams"] == []
-        )
+        assert track_payload["canCreateTeam"] is True
         assert track_payload["teams"] == []
 
         create = api_client.post(
@@ -342,7 +342,7 @@ class TestTeamLobbyViewSet:
             {"track_id": track.id, "name": "Overflow"},
             format="json",
         )
-        assert create.status_code == 400
+        assert create.status_code == 201
 
     def test_create_team_auto_assigns_single_track(self, api_client, lobby_setup):
         """Если группе доступен один трек — он проставляется без track_id в body."""
@@ -408,7 +408,8 @@ class TestTeamLobbyViewSet:
         # Состав растёт, число SQL-запросов не должно расти пропорционально
         assert queries_large <= queries_small + 1
 
-    def test_cannot_create_when_slots_full(self, api_client, lobby_setup):
+    def test_can_create_when_track_slots_full(self, api_client, lobby_setup):
+        """Слоты трека временно не блокируют создание команды."""
         track = lobby_setup["track1"]
         role = lobby_setup["student"].role
         group = lobby_setup["group"]
@@ -444,7 +445,7 @@ class TestTeamLobbyViewSet:
             {"track_id": track.id, "name": "Overflow"},
             format="json",
         )
-        assert response.status_code == 400
+        assert response.status_code == 201
 
     def test_accept_invitation_marks_others_obsolete(self, api_client, lobby_setup):
         captain = lobby_setup["student"]

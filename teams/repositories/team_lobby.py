@@ -218,6 +218,26 @@ class TeamLobbyRepository:
             )
         ) - {None}
 
+    def list_group_ids_for_group_tracks(
+        self, *, group_id: int, semester_id: int
+    ) -> set[int]:
+        """ID групп всех треков, доступных данной учебной группе в семестре."""
+        track_ids = list(
+            ProjectTrack.objects.filter(
+                semester_id=semester_id,
+                group_links__study_group_id=group_id,
+            )
+            .distinct()
+            .values_list("id", flat=True)
+        )
+        if not track_ids:
+            return {group_id}
+        return set(
+            ProjectTrack.objects.filter(pk__in=track_ids).values_list(
+                "group_links__study_group_id", flat=True
+            )
+        ) - {None}
+
     def count_teams_by_track(
         self, *, track_ids: list[int], semester_id: int
     ) -> dict[int, int]:

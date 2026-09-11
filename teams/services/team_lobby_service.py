@@ -160,18 +160,10 @@ class TeamLobbyService:
         teams_payload = [_lobby_team_item(ts) for ts in team_semesters]
 
         track_dtos: list[dict] = []
-        any_can_create = False
+        can_create = self.domain.can_create_team(has_team=has_team)
         for track in tracks:
             teams_for_track = by_track.get(track.id, [])
             teams_count = teams_count_by_track.get(track.id, 0)
-            recommended = int(getattr(track, "recommended_teams_count", 0) or 0)
-            can_create = self.domain.can_create_team(
-                has_team=has_team,
-                teams_count=teams_count,
-                recommended_teams_count=recommended,
-            )
-            if can_create:
-                any_can_create = True
             track_teams_payload = [_lobby_team_item(ts) for ts in teams_for_track]
             track_dtos.append(
                 LobbyTrackDTO(
@@ -201,7 +193,7 @@ class TeamLobbyService:
         return LobbyReadDTO(
             semester_id=semester_id,
             my_team=my_team_payload,
-            can_create_team=any_can_create,
+            can_create_team=can_create,
             join_requests=join_requests,
             invitations=invitations,
             teams=teams_payload,
@@ -240,23 +232,12 @@ class TeamLobbyService:
             if len(available_tracks) == 1:
                 track_id = available_tracks[0].id
 
-        track_id = self.domain.ensure_track_selected(track_id)
-        track = self.repository.get_track_for_group(
-            track_id=track_id, group_id=group_id, semester_id=semester_id
-        )
-        if track is None:
-            raise ValueError("Проектный трек не найден для вашей группы")
-
-        teams_count = self.repository.count_teams_by_track(
-            track_ids=[track_id], semester_id=semester_id
-        ).get(track_id, 0)
-        recommended = int(getattr(track, "recommended_teams_count", 0) or 0)
-        if not self.domain.can_create_team(
-            has_team=False,
-            teams_count=teams_count,
-            recommended_teams_count=recommended,
-        ):
-            raise ValueError("Нет свободных слотов для создания команды в треке")
+        if track_id is not None:
+            track = self.repository.get_track_for_group(
+                track_id=track_id, group_id=group_id, semester_id=semester_id
+            )
+            if track is None:
+                raise ValueError("Проектный трек не найден для вашей группы")
 
         team_semester = self.repository.create_team_with_semester(
             name=name,
@@ -551,19 +532,17 @@ class TeamLobbyService:
         is_registered = bool(invitee.is_active) and not bool(invitee.is_placeholder)
         self.domain.ensure_invitee_registered(is_registered=is_registered)
 
-        if team_semester.project_track_id is not None:
-            allowed_group_ids = self.repository.list_track_group_ids(
-                track_id=team_semester.project_track_id
-            )
-            self.domain.ensure_invitee_in_track_scope(
-                invitee_group_id=invitee.study_group_id,
-                allowed_group_ids=allowed_group_ids,
-            )
-        else:
-            home_group_id = team_semester.team.home_study_group_id
-            if home_group_id is None:
-                raise ValueError("У команды не указана учебная группа")
-            self.domain.ensure_same_study_group(invitee, home_group_id)
+        home_group_id = team_semester.team.home_study_group_id or user.study_group_id
+        if home_group_id is None:
+            raise ValueError("У команды не указана учебная группа")
+        allowed_group_ids = self.repository.list_group_ids_for_group_tracks(
+            group_id=home_group_id,
+            semester_id=team_semester.semester_id,
+        )
+        self.domain.ensure_invitee_in_track_scope(
+            invitee_group_id=invitee.study_group_id,
+            allowed_group_ids=allowed_group_ids,
+        )
 
         if self.repository.user_has_team_in_semester(
             user_id=invitee.id, semester_id=team_semester.semester_id
@@ -609,7 +588,7 @@ class TeamLobbyService:
         limit: int | None = None,
         semester_id_raw: str | None = None,
     ) -> dict:
-        """Поиск кандидатов для приглашения по куску ФИО в рамках трека."""
+        """Поиск кандидатов для приглашения по куску ФИО в рамках треков группы."""
         team_semester = self._get_captain_team(user, semester_id_raw)
         self.domain.ensure_team_forming(team_semester)
         tokens = self.domain.parse_name_query(query)
@@ -621,16 +600,15 @@ class TeamLobbyService:
             raise ValueError("Параметр limit должен быть не меньше 1")
         resolved_limit = min(resolved_limit, self.MAX_INVITE_CANDIDATES_LIMIT)
 
+        home_group_id = team_semester.team.home_study_group_id or user.study_group_id
+        if home_group_id is None:
+            raise ValueError("У команды не указана учебная группа")
+        group_ids = self.repository.list_group_ids_for_group_tracks(
+            group_id=home_group_id,
+            semester_id=team_semester.semester_id,
+        )
+        scope = "group_tracks"
         track_id = team_semester.project_track_id
-        if track_id is not None:
-            group_ids = self.repository.list_track_group_ids(track_id=track_id)
-            scope = "track"
-        else:
-            home_group_id = team_semester.team.home_study_group_id
-            if home_group_id is None:
-                raise ValueError("У команды не указана учебная группа")
-            group_ids = {home_group_id}
-            scope = "group"
 
         candidates = self.contingent_repository.search_for_groups(
             group_ids=group_ids,

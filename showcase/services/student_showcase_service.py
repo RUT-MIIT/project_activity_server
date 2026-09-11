@@ -165,21 +165,17 @@ class StudentShowcaseService:
         self.domain.ensure_team_assembled(team_semester)
         self.domain.ensure_no_project_yet(team_semester)
 
-        if team_semester.project_track_id is None:
-            raise ValueError("У команды не указан проектный трек")
-
-        link = self.repository.get_project_track_link(
+        group_id = user.study_group_id
+        accessible = self.repository.get_accessible_project(
             project_id=project_id,
-            track_id=team_semester.project_track_id,
+            group_id=group_id,
             semester_id=semester_id,
         )
-        if link is None:
+        if accessible is None:
             raise ValueError(
-                "Проект не найден в треке вашей команды или недоступен для записи"
+                "Проект не найден среди треков вашей группы или недоступен для записи"
             )
-
-        application = link.project_application
-        self.domain.ensure_project_in_team_track(team_semester, link.project_track_id)
+        application, track_id = accessible
 
         members_count = len(list(team_semester.members.all()))
         self.domain.ensure_members_fit_project(
@@ -189,7 +185,7 @@ class StudentShowcaseService:
 
         enrolled = self.repository.count_enrolled_teams_for_update(
             semester_id=semester_id,
-            track_id=link.project_track_id,
+            track_id=track_id,
             application_id=application.id,
         )
         self.domain.ensure_enrollment_slot_available(
@@ -201,5 +197,6 @@ class StudentShowcaseService:
             team_semester=team_semester,
             application=application,
             actor_id=user.id,
+            project_track_id=track_id,
         )
         return StudentShowcaseEnrollResultDTO(team_semester).to_dict()

@@ -203,7 +203,7 @@ class TestInviteCandidatesViewSet:
             {"q": "Ива"},
         )
         assert response.status_code == 200
-        assert response.data["scope"] == "track"
+        assert response.data["scope"] == "group_tracks"
         assert response.data["trackId"] == invite_setup["track"].id
         by_user = {
             item["user_id"]: item
@@ -307,6 +307,84 @@ class TestInviteCandidatesViewSet:
         assert invite_setup["same_group"].id in upper_ids
         assert invite_setup["same_group"].id in lower_ids
         assert invite_setup["other_group"].id in lower_ids
+
+    def test_search_and_invite_from_other_track_of_group(
+        self, api_client, invite_setup, make_user, statuses, departments
+    ):
+        """Студент группы другого трека той же «пачки» треков капитана находится и приглашается."""
+        admin = make_user(role_code="admin")
+        group_c = StudyGroup.objects.create(
+            name="GC",
+            code="gc",
+            direction=invite_setup["group_a"].direction,
+            institute=invite_setup["group_a"].institute,
+        )
+        other_track_student = make_user(role_code="student", email="track2@example.com")
+        other_track_student.last_name = "ИвановTrack2"
+        other_track_student.first_name = "Сидор"
+        other_track_student.study_group = group_c
+        other_track_student.save(
+            update_fields=["last_name", "first_name", "study_group"]
+        )
+
+        app2 = ProjectApplication.objects.create(
+            title="P2",
+            company="ООО",
+            author_lastname="И",
+            author_firstname="И",
+            author_email="p2@example.com",
+            semester=invite_setup["semester"],
+            status=statuses["approved"],
+            goal="Длинная цель проекта больше пятидесяти символов для валидации",
+            problem_holder="Носитель",
+            barrier="Длинный барьер больше пятидесяти символов для валидации",
+            recommended_teams_count=5,
+        )
+        ApplicationInvolvedDepartment.objects.create(
+            application=app2, department=departments["child"]
+        )
+        track2 = ProjectTrack.objects.create(
+            name="Трек 2",
+            department=departments["child"],
+            semester=invite_setup["semester"],
+            author=admin,
+            min_team_members=2,
+            max_team_members=5,
+            recommended_teams_count=5,
+        )
+        # Капитанская группа A на обоих треках; group_c — только на track2
+        ProjectTrackGroup.objects.create(
+            project_track=track2, study_group=invite_setup["group_a"]
+        )
+        ProjectTrackGroup.objects.create(project_track=track2, study_group=group_c)
+        ProjectTrackApplication.objects.create(
+            project_track=track2, project_application=app2
+        )
+
+        api_client.force_authenticate(user=invite_setup["captain"])
+        search = api_client.get(
+            "/api/teams/my-team/invite-candidates/",
+            {"q": "ИвановTrack"},
+        )
+        assert search.status_code == 200
+        assert search.data["scope"] == "group_tracks"
+        found_ids = {r["user_id"] for r in search.data["results"]}
+        assert other_track_student.id in found_ids
+        assert invite_setup["outside_track"].id not in found_ids
+
+        invite = api_client.post(
+            "/api/teams/my-team/invitations/",
+            {"user_id": other_track_student.id, "role": "member"},
+            format="json",
+        )
+        assert invite.status_code == 201
+
+        outside = api_client.post(
+            "/api/teams/my-team/invitations/",
+            {"user_id": invite_setup["outside_track"].id, "role": "member"},
+            format="json",
+        )
+        assert outside.status_code == 400
 
     def test_search_no_n_plus_one(self, api_client, invite_setup, roles):
         """Число SQL не растёт с числом кандидатов, в т.ч. уже состоящих в команде."""
