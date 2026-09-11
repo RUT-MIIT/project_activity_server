@@ -116,6 +116,7 @@ STUDY_GROUP_OVERRIDES_BY_EXTERNAL_ID: dict[str, StudyGroupFieldOverride] = {
 # Студенты с исходным ID привязываются к целевой группе; исходная не создаётся.
 EXTERNAL_GROUP_ID_REMAP: dict[str, str] = {
     "193902": "193901",  # ТСТ-442 → ТСТ-441
+    "193908": "193904",  # ТСТ-342 → ТСТ-341
 }
 
 

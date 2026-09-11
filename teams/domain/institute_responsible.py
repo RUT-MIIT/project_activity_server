@@ -82,6 +82,20 @@ class InstituteResponsibleDomain:
             pass
 
     @staticmethod
+    def is_registration_opened_by_schedule(
+        settings: InstituteSemesterSettings | None,
+        *,
+        now: datetime | None = None,
+    ) -> bool:
+        """True, если дата открытия записи наступила (без учёта closed_by_decision)."""
+        if settings is None:
+            return False
+        if settings.registration_opens_at is None:
+            return False
+        current = now if now is not None else timezone.now()
+        return current >= settings.registration_opens_at
+
+    @staticmethod
     def is_registration_open(
         settings: InstituteSemesterSettings | None,
         *,
@@ -92,10 +106,9 @@ class InstituteResponsibleDomain:
             return False
         if settings.closed_by_decision:
             return False
-        if settings.registration_opens_at is None:
-            return False
-        current = now if now is not None else timezone.now()
-        return current >= settings.registration_opens_at
+        return InstituteResponsibleDomain.is_registration_opened_by_schedule(
+            settings, now=now
+        )
 
     @staticmethod
     def registration_status(

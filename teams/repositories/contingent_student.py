@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from django.contrib.auth import get_user_model
-from django.db.models import Prefetch
+from django.db.models import Prefetch, Q
 
 from accounts.models import PreRegisteredStudent
 from teams.domain.contingent_student import ContingentStudent, merge_contingent_students
@@ -24,6 +24,45 @@ class ContingentStudentRepository:
                 "team_semester__project_application",
             )
         return qs.select_related("team_semester__team")
+
+    @staticmethod
+    def _case_variants(token: str) -> set[str]:
+        """Варианты регистра токена для поиска (SQLite LIKE неfoldит кириллицу)."""
+        if not token:
+            return set()
+        first = token[0]
+        rest = token[1:]
+        swapped = (first.lower() if first.isupper() else first.upper()) + rest
+        titled = first.upper() + rest.lower()
+        return {
+            token,
+            token.lower(),
+            token.upper(),
+            token.capitalize(),
+            token.title(),
+            token.casefold(),
+            swapped,
+            titled,
+        }
+
+    @classmethod
+    def _name_token_filter(cls, tokens: list[str]) -> Q:
+        """AND по токенам: каждый токен ищет в любом из полей ФИО.
+
+        Для каждого токена OR по вариантам регистра: в PostgreSQL хватает
+        icontains, в SQLite LIKE/icontains для кириллицы регистрозависим.
+        """
+        combined = Q()
+        for token in tokens:
+            token_q = Q()
+            for variant in cls._case_variants(token):
+                token_q |= (
+                    Q(last_name__icontains=variant)
+                    | Q(first_name__icontains=variant)
+                    | Q(middle_name__icontains=variant)
+                )
+            combined &= token_q
+        return combined
 
     def list_for_group(
         self,
@@ -71,6 +110,62 @@ class ContingentStudentRepository:
             )
         )
         return merge_contingent_students(pre_registered, direct_users)
+
+    def search_for_groups(
+        self,
+        *,
+        group_ids: set[int],
+        semester_id: int,
+        tokens: list[str],
+        limit: int,
+    ) -> list[ContingentStudent]:
+        """Поиск студентов групп по кускам ФИО (предрегистрация + User)."""
+        if not group_ids or not tokens or limit <= 0:
+            return []
+
+        name_filter = self._name_token_filter(tokens)
+        membership_qs = self._membership_qs(semester_id)
+
+        pre_base = PreRegisteredStudent.objects.filter(
+            group_id__in=group_ids,
+            role_id="student",
+        ).filter(name_filter)
+        linked_user_ids = list(
+            pre_base.exclude(user_id__isnull=True).values_list("user_id", flat=True)
+        )
+        pre_registered = list(
+            pre_base.select_related("user", "group")
+            .prefetch_related(
+                Prefetch(
+                    "user__team_semester_memberships",
+                    queryset=membership_qs,
+                    to_attr="_team_membership_for_semester",
+                )
+            )
+            .order_by("last_name", "first_name", "id")[:limit]
+        )
+
+        direct_users = list(
+            User.objects.filter(
+                study_group_id__in=group_ids,
+                role_id="student",
+                is_active=True,
+                is_placeholder=False,
+            )
+            .filter(name_filter)
+            .exclude(id__in=linked_user_ids)
+            .select_related("study_group")
+            .prefetch_related(
+                Prefetch(
+                    "team_semester_memberships",
+                    queryset=membership_qs,
+                    to_attr="_team_membership_for_semester",
+                )
+            )
+            .order_by("last_name", "first_name", "id")[:limit]
+        )
+
+        return merge_contingent_students(pre_registered, direct_users)[:limit]
 
     def list_for_institute(
         self,

@@ -607,6 +607,13 @@ class ProjectTrackGroup(models.Model):
         verbose_name_plural = "Группы в проектных треках"
         unique_together = [("project_track", "study_group")]
         ordering = ["project_track", "study_group__name"]
+        indexes = [
+            # Витрина: треки группы (unique_together — в обратном порядке колонок).
+            models.Index(
+                fields=["study_group", "project_track"],
+                name="ptg_group_track_idx",
+            ),
+        ]
 
     def __str__(self) -> str:
         return f"{self.project_track} — {self.study_group}"

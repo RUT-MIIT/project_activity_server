@@ -138,6 +138,21 @@ class StudyGroupViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
         return Response(data)
 
+    @action(detail=False, methods=["get"], url_path="registration-settings")
+    def registration_settings(self, request: Request) -> Response:
+        """GET /api/teams/study-groups/registration-settings/ — окно записи для наставника."""
+        service = MentorGroupsService()
+        try:
+            data = service.get_registration_settings(
+                request.user,
+                semester_id_raw=request.query_params.get("semester_id"),
+            )
+        except PermissionError as e:
+            return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
+        except ValueError as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return Response(data)
+
     @action(detail=True, methods=["get"], url_path="mentor-detail")
     def mentor_detail(self, request: Request, pk: int | None = None) -> Response:
         """GET /api/teams/study-groups/{id}/mentor-detail/ — детали группы наставника."""
@@ -172,6 +187,4 @@ class StudyGroupViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({"error": str(e)}, status=status.HTTP_404_NOT_FOUND)
         except ValueError as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
-        response = Response(data)
-        response["Cache-Control"] = "private, max-age=30"
-        return response
+        return Response(data)

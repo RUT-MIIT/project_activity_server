@@ -9,7 +9,9 @@ from accounts.models import Department, Semester
 from teams.domain.study_group import StudyGroupDomain
 from teams.dto.my_study_group import MyStudyGroupDTO
 from teams.models import StudyGroup
+from teams.repositories.institute_responsible import InstituteResponsibleRepository
 from teams.repositories.study_group import StudyGroupRepository
+from teams.repositories.team_lobby import TeamLobbyRepository
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -23,6 +25,8 @@ class StudyGroupService:
     def __init__(self):
         self.repository = StudyGroupRepository()
         self.domain = StudyGroupDomain()
+        self.team_lobby_repository = TeamLobbyRepository()
+        self.institute_repository = InstituteResponsibleRepository()
 
     def list_study_groups(
         self, user: User, is_end: bool | None = None
@@ -73,9 +77,30 @@ class StudyGroupService:
         members = self.repository.list_group_contingent(
             user.study_group_id, semester_id=semester_id
         )
+
+        my_team = None
+        registration_settings = None
+        include_semester_context = semester_id is not None
+        if include_semester_context and semester_id is not None:
+            my_team = self.team_lobby_repository.get_user_team_semester_snapshot(
+                user_id=user.id,
+                semester_id=semester_id,
+            )
+            institute_code = (
+                getattr(group.institute, "code", None) or group.institute_id
+            )
+            registration_settings = self.institute_repository.get_settings(
+                institute_code=institute_code,
+                semester_id=semester_id,
+            )
+
         return MyStudyGroupDTO(
             group,
             members,
             include_team=semester_id is not None,
             semester_id=semester_id,
+            viewer_id=user.id,
+            my_team=my_team,
+            registration_settings=registration_settings,
+            include_semester_context=include_semester_context,
         ).to_dict()

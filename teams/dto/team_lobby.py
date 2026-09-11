@@ -329,3 +329,68 @@ class MyTeamReadDTO:
                 }
             )
         return payload
+
+
+class InviteCandidateDTO:
+    """Кандидат на приглашение в команду."""
+
+    def __init__(
+        self,
+        *,
+        contingent_id: int,
+        user_id: int | None,
+        last_name: str,
+        first_name: str,
+        middle_name: str,
+        group,
+        is_registered: bool,
+        in_team: bool,
+        team: dict[str, Any] | None,
+        has_pending_invitation: bool,
+        can_invite: bool,
+    ) -> None:
+        self.id = contingent_id
+        self.user_id = user_id
+        parts = [last_name, first_name, middle_name]
+        self.full_name = " ".join(part for part in parts if part).strip()
+        self.group = {"id": group.id, "name": group.name} if group is not None else None
+        self.is_registered = is_registered
+        self.in_team = in_team
+        self.team = team
+        self.has_pending_invitation = has_pending_invitation
+        self.can_invite = can_invite
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "user_id": self.user_id,
+            "full_name": self.full_name,
+            "group": self.group,
+            "isRegistered": self.is_registered,
+            "inTeam": self.in_team,
+            "team": self.team,
+            "hasPendingInvitation": self.has_pending_invitation,
+            "canInvite": self.can_invite,
+        }
+
+
+class InviteCandidatesReadDTO:
+    """Ответ GET /my-team/invite-candidates/."""
+
+    def __init__(
+        self,
+        *,
+        track_id: int | None,
+        scope: str,
+        results: list[dict[str, Any]],
+    ) -> None:
+        self.track_id = track_id
+        self.scope = scope
+        self.results = results
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "trackId": self.track_id,
+            "scope": self.scope,
+            "results": self.results,
+        }

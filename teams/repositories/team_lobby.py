@@ -85,7 +85,7 @@ class TeamLobbyRepository:
                 semester_id=semester_id,
                 members__user_id=user_id,
             )
-            .select_related("team", "captain", "project_track")
+            .select_related("team", "captain", "project_track", "project_application")
             .prefetch_related(
                 Prefetch(
                     "members",
@@ -104,6 +104,28 @@ class TeamLobbyRepository:
                     queryset=TeamInvitation.objects.filter(
                         status=TeamInvitation.Status.PENDING
                     ).select_related("user", "invited_by"),
+                ),
+            )
+            .distinct()
+            .first()
+        )
+
+    def get_user_team_semester_snapshot(
+        self, *, user_id: int, semester_id: int
+    ) -> TeamSemester | None:
+        """Команда пользователя с составом и проектом (без заявок/приглашений)."""
+        return (
+            TeamSemester.objects.filter(
+                semester_id=semester_id,
+                members__user_id=user_id,
+            )
+            .select_related("team", "captain", "project_application")
+            .prefetch_related(
+                Prefetch(
+                    "members",
+                    queryset=TeamSemesterMember.objects.select_related("user").order_by(
+                        "role", "joined_at"
+                    ),
                 ),
             )
             .distinct()
@@ -181,12 +203,50 @@ class TeamLobbyRepository:
     def count_group_teams_in_track(
         self, *, group_id: int, track_id: int, semester_id: int
     ) -> int:
-        """Число команд группы в треке в семестре."""
+        """Число команд группы в треке в семестре (legacy / совместимость)."""
         return TeamSemester.objects.filter(
             semester_id=semester_id,
             project_track_id=track_id,
             team__home_study_group_id=group_id,
         ).count()
+
+    def list_track_group_ids(self, *, track_id: int) -> set[int]:
+        """ID учебных групп, привязанных к проектному треку."""
+        return set(
+            ProjectTrack.objects.filter(pk=track_id).values_list(
+                "group_links__study_group_id", flat=True
+            )
+        ) - {None}
+
+    def count_teams_by_track(
+        self, *, track_ids: list[int], semester_id: int
+    ) -> dict[int, int]:
+        """Число команд по трекам в семестре (все группы трека)."""
+        if not track_ids:
+            return {}
+        rows = (
+            TeamSemester.objects.filter(
+                semester_id=semester_id,
+                project_track_id__in=track_ids,
+            )
+            .values("project_track_id")
+            .annotate(cnt=Count("id"))
+        )
+        return {row["project_track_id"]: row["cnt"] for row in rows}
+
+    def map_pending_invitation_user_ids(
+        self, *, team_semester_id: int, user_ids: list[int]
+    ) -> set[int]:
+        """Множество user_id с pending-приглашением в данную команду."""
+        if not user_ids:
+            return set()
+        return set(
+            TeamInvitation.objects.filter(
+                team_semester_id=team_semester_id,
+                user_id__in=user_ids,
+                status=TeamInvitation.Status.PENDING,
+            ).values_list("user_id", flat=True)
+        )
 
     def user_has_team_in_semester(self, *, user_id: int, semester_id: int) -> bool:
         """True, если студент уже в команде в семестре."""

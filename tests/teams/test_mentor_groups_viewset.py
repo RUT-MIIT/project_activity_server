@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 import pytest
 from rest_framework.test import APIClient
 
-from accounts.models import PreRegisteredStudent, Semester
+from accounts.models import Department, PreRegisteredStudent, Semester
+from showcase.models import Institute, InstituteSemesterSettings
 from teams.dto.mentor_groups import MentorGroupListDTO
 from teams.models import (
     Direction,
@@ -20,6 +24,7 @@ from teams.models import (
 from teams.repositories.mentor_groups import MentorGroupsRepository
 
 MY_GROUPS_URL = "/api/teams/study-groups/my-groups/"
+REGISTRATION_URL = "/api/teams/study-groups/registration-settings/"
 
 
 def _enrollment_with_mentors(
@@ -385,3 +390,118 @@ class TestMentorGroupsQueryPerformance:
         large_count = len(large_ctx.captured_queries)
 
         assert large_count == small_count
+
+
+@pytest.mark.django_db
+class TestMentorRegistrationSettingsViewSet:
+    def test_unauthenticated_returns_401(self, api_client: APIClient, semester) -> None:
+        response = api_client.get(f"{REGISTRATION_URL}?semester_id={semester.id}")
+        assert response.status_code == 401
+
+    def test_missing_semester_id_returns_400(
+        self, api_client: APIClient, roles, make_user
+    ) -> None:
+        mentor = make_user(role_code="mentor", with_department=True)
+        api_client.force_authenticate(user=mentor)
+
+        response = api_client.get(REGISTRATION_URL)
+
+        assert response.status_code == 400
+        assert "semester_id" in response.data["error"]
+
+    def test_non_mentor_returns_403(
+        self, api_client: APIClient, roles, make_user, semester
+    ) -> None:
+        student = make_user(role_code="student")
+        api_client.force_authenticate(user=student)
+
+        response = api_client.get(f"{REGISTRATION_URL}?semester_id={semester.id}")
+
+        assert response.status_code == 403
+        assert "наставников" in response.data["error"]
+
+    def test_mentor_gets_registration_settings(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        semester,
+        study_groups,
+    ) -> None:
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_groups["first"], semester, mentor)
+        settings = InstituteSemesterSettings.objects.create(
+            institute=study_groups["first"].institute,
+            semester=semester,
+            registration_opens_at=timezone.now() - timedelta(days=1),
+            closed_by_decision=False,
+        )
+        api_client.force_authenticate(user=mentor)
+
+        response = api_client.get(f"{REGISTRATION_URL}?semester_id={semester.id}")
+
+        assert response.status_code == 200
+        assert response.data == {
+            "is_open": True,
+            "opens_at": settings.registration_opens_at.isoformat(),
+            "closed_by_decision": False,
+        }
+
+    def test_mentor_without_settings_gets_closed(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        semester,
+        study_groups,
+    ) -> None:
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_groups["first"], semester, mentor)
+        api_client.force_authenticate(user=mentor)
+
+        response = api_client.get(f"{REGISTRATION_URL}?semester_id={semester.id}")
+
+        assert response.status_code == 200
+        assert response.data == {
+            "is_open": False,
+            "opens_at": None,
+            "closed_by_decision": False,
+        }
+
+    def test_mentor_with_groups_in_different_institutes_returns_400(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        semester,
+        direction,
+        institute,
+    ) -> None:
+        other_dept = Department.objects.create(name="Other Parent", short_name="OP2")
+        other_institute = Institute.objects.create(
+            code="INST-2",
+            name="Institute 2",
+            position=2,
+            department=other_dept,
+        )
+        group_a = StudyGroup.objects.create(
+            name="A",
+            code="A-1",
+            direction=direction,
+            institute=institute,
+        )
+        group_b = StudyGroup.objects.create(
+            name="B",
+            code="B-1",
+            direction=direction,
+            institute=other_institute,
+        )
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(group_a, semester, mentor)
+        _enrollment_with_mentors(group_b, semester, mentor)
+        api_client.force_authenticate(user=mentor)
+
+        response = api_client.get(f"{REGISTRATION_URL}?semester_id={semester.id}")
+
+        assert response.status_code == 400
+        assert "разных институтов" in response.data["error"]

@@ -50,6 +50,11 @@ urlpatterns = [
         name="my-team-invite",
     ),
     path(
+        "my-team/invite-candidates/",
+        MyTeamViewSet.as_view({"get": "invite_candidates"}),
+        name="my-team-invite-candidates",
+    ),
+    path(
         "my-team/join-requests/<int:join_request_id>/approve/",
         MyTeamViewSet.as_view({"post": "approve_join_request"}),
         name="my-team-approve-join",
@@ -104,5 +109,10 @@ urlpatterns = [
         "study-groups/<int:group_id>/teams/<int:team_semester_id>/members/<int:user_id>/",
         MentorTeamViewSet.as_view({"delete": "remove_member"}),
         name="mentor-team-remove-member",
+    ),
+    path(
+        "study-groups/<int:group_id>/teams/<int:team_semester_id>/enroll-project/",
+        MentorTeamViewSet.as_view({"post": "enroll_project"}),
+        name="mentor-team-enroll-project",
     ),
 ] + router.urls

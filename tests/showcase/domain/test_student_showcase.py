@@ -175,6 +175,10 @@ def test_ensure_institute_registration_open_rejects_closed():
         StudentShowcaseDomain.ensure_institute_registration_open(is_open=False)
 
 
+def test_ensure_institute_registration_open_allows_open():
+    StudentShowcaseDomain.ensure_institute_registration_open(is_open=True)
+
+
 def test_ensure_team_assembled_rejects_forming():
     with pytest.raises(ValueError, match="подтверждения состава"):
         StudentShowcaseDomain.ensure_team_assembled(

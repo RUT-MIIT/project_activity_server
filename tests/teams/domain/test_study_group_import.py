@@ -84,6 +84,11 @@ class TestStudyGroupIdImportDomain:
         assert remap_external_group_id("193902.0") == "193901"
         assert remap_external_group_id(193901) == "193901"
 
+    def test_remap_external_group_id_tst_342_to_341(self) -> None:
+        assert remap_external_group_id(193908) == "193904"
+        assert remap_external_group_id("193908.0") == "193904"
+        assert remap_external_group_id(193904) == "193904"
+
     def test_normalize_external_group_id(self) -> None:
         assert normalize_external_group_id(149820.0) == "149820"
         assert normalize_external_group_id("") == ""

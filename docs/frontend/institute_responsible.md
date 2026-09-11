@@ -332,6 +332,19 @@ GET /api/teams/study-groups/my/?semester_id=actual
 
 Если передан `semester_id`, наставники возвращаются в массиве `mentors` из назначения ответственного (`StudyGroupSemester`). Без `semester_id` — fallback на legacy-поле `StudyGroup.mentor` (один элемент в `mentors`, если заполнено).
 
+При `semester_id` дополнительно отдаются:
+
+| Поле | Описание |
+|------|----------|
+| `my_team` | Команда текущего студента в семестре или `null` |
+| `my_team.status` | `forming` \| `assembled` |
+| `my_team.is_captain` | Капитан ли текущий пользователь |
+| `my_team.has_project` / `my_team.project` | Выбран ли проект |
+| `my_team.members` | Состав команды (`id`, `full_name`, `role`) |
+| `registration.is_open` | Открыта ли запись института на проекты |
+| `registration.opens_at` | Дата/время открытия (ISO) или `null` |
+| `registration.closed_by_decision` | Закрыта решением |
+
 После назначения наставников ответственным студент увидит их в карточке группы при том же `semester_id`.
 
 ---

@@ -336,6 +336,7 @@ class TeamSemester(models.Model):
             models.Index(
                 fields=["semester", "project_track", "project_application"],
                 name="team_sem_enroll_lookup_idx",
+                condition=models.Q(project_application__isnull=False),
             ),
         ]
 

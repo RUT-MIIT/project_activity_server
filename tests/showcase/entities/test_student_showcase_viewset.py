@@ -292,7 +292,6 @@ class TestStudentShowcaseList:
         api_client.force_authenticate(user=showcase_setup["captain"])
         response = api_client.get(f"{BASE}/")
         assert response.status_code == 200
-        assert response["Cache-Control"] == "private, max-age=30"
         tracks = {t["id"]: t for t in response.data}
         assert showcase_setup["track1"].id in tracks
         assert showcase_setup["track2"].id in tracks
@@ -375,7 +374,6 @@ class TestStudentShowcaseDetail:
         app = showcase_setup["app1"]
         response = api_client.get(f"{BASE}/projects/{app.id}/")
         assert response.status_code == 200
-        assert response["Cache-Control"] == "private, max-age=30"
         data = response.data
         assert data["title"] == "A1"
         assert data["company"] == "ООО Заказчик"
@@ -651,6 +649,37 @@ class TestStudentShowcaseEnroll:
             track=showcase_setup["track1"],
             captain=showcase_setup["captain"],
             name="ClosedReg",
+            members=[showcase_setup["member"]],
+        )
+        api_client.force_authenticate(user=showcase_setup["captain"])
+        detail = api_client.get(f"{BASE}/projects/{showcase_setup['app1'].id}/")
+        assert detail.status_code == 200
+        assert detail.data["can_enroll"] is False
+
+        response = api_client.post(
+            f"{BASE}/projects/{showcase_setup['app1'].id}/enroll/"
+        )
+        assert response.status_code == 400
+        assert "закрыта" in response.data["error"]
+
+    def test_enroll_rejected_when_registration_not_yet_open(
+        self, api_client, showcase_setup
+    ):
+        """Окно ещё не началось — запись недоступна капитану с assembled."""
+        InstituteSemesterSettings.objects.filter(
+            institute=showcase_setup["institute"],
+            semester=showcase_setup["semester"],
+        ).update(
+            closed_by_decision=False,
+            registration_opens_at=timezone.now() + timedelta(days=7),
+        )
+
+        _create_assembled_team(
+            group=showcase_setup["group"],
+            semester=showcase_setup["semester"],
+            track=showcase_setup["track1"],
+            captain=showcase_setup["captain"],
+            name="NotYetOpen",
             members=[showcase_setup["member"]],
         )
         api_client.force_authenticate(user=showcase_setup["captain"])

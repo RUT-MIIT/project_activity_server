@@ -46,3 +46,16 @@ class MentorGroupsDomain:
         """Проверяет доступ к группе для списка и деталей."""
         if not MentorGroupsDomain.has_group_access(user, group, is_mentor):
             raise PermissionError("Нет доступа к этой учебной группе")
+
+    @staticmethod
+    def resolve_mentor_institute_code(institute_codes: list[str]) -> str:
+        """Институт наставника для настроек регистрации; один код обязателен."""
+        if not institute_codes:
+            raise PermissionError("Доступ только для наставников в выбранном семестре")
+        unique_codes = list(dict.fromkeys(institute_codes))
+        if len(unique_codes) > 1:
+            raise ValueError(
+                "Наставник назначен на группы разных институтов: "
+                "уточните институт через ответственного"
+            )
+        return unique_codes[0]

@@ -71,6 +71,8 @@ def _approved_app(*, semester, statuses, departments, title="Проект"):
         problem_holder="Носитель",
         barrier="Длинный барьер больше пятидесяти символов для валидации",
         recommended_teams_count=3,
+        min_team_members=1,
+        max_team_members=5,
     )
     ApplicationInvolvedDepartment.objects.create(
         application=app, department=departments["child"]
@@ -870,6 +872,286 @@ class TestMentorTeamProjectEnrollmentBlock:
             f"?semester_id={setup['semester'].id}"
         )
         assert response.status_code == 409
+
+
+@pytest.mark.django_db
+class TestMentorTeamEnrollProject:
+    def _open_registration(
+        self, institute, semester: Semester, *, closed: bool = False
+    ):
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from showcase.models import InstituteSemesterSettings
+
+        return InstituteSemesterSettings.objects.create(
+            institute=institute,
+            semester=semester,
+            registration_opens_at=timezone.now() - timedelta(days=1),
+            closed_by_decision=closed,
+        )
+
+    def test_enroll_success(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        institute,
+    ) -> None:
+        setup = mentor_team_setup
+        self._open_registration(institute, setup["semester"])
+        team_semester = setup["team_semester"]
+        team_semester.status = TeamSemester.Status.ASSEMBLED
+        team_semester.save(update_fields=["status"])
+
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, team_semester.id, 'enroll-project/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"projectId": setup["app"].id},
+            format="json",
+        )
+        assert response.status_code == 200
+        assert response.data["teamSemesterId"] == team_semester.id
+        assert response.data["projectId"] == setup["app"].id
+        assert response.data["projectTitle"] == setup["app"].title
+
+        team_semester.refresh_from_db()
+        assert team_semester.project_application_id == setup["app"].id
+        from teams.models import TeamEventLog
+
+        assert TeamEventLog.objects.filter(
+            team_semester=team_semester,
+            text__contains="Наставник записал команду на проект",
+        ).exists()
+
+    def test_enroll_when_closed_by_decision_but_opens_at_passed(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        institute,
+    ) -> None:
+        setup = mentor_team_setup
+        self._open_registration(institute, setup["semester"], closed=True)
+        team_semester = setup["team_semester"]
+        team_semester.status = TeamSemester.Status.ASSEMBLED
+        team_semester.save(update_fields=["status"])
+
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, team_semester.id, 'enroll-project/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"projectId": setup["app"].id},
+            format="json",
+        )
+        assert response.status_code == 200
+        team_semester.refresh_from_db()
+        assert team_semester.project_application_id == setup["app"].id
+
+    def test_enroll_rewrite_project(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        institute,
+        departments,
+        statuses,
+    ) -> None:
+        setup = mentor_team_setup
+        self._open_registration(institute, setup["semester"])
+        team_semester = setup["team_semester"]
+        team_semester.status = TeamSemester.Status.ASSEMBLED
+        team_semester.project_application = setup["app"]
+        team_semester.save(update_fields=["status", "project_application"])
+
+        app2 = _approved_app(
+            semester=setup["semester"],
+            statuses=statuses,
+            departments=departments,
+            title="Другой проект",
+        )
+        ProjectTrackApplication.objects.create(
+            project_track=setup["track"],
+            project_application=app2,
+        )
+
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, team_semester.id, 'enroll-project/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"projectId": app2.id},
+            format="json",
+        )
+        assert response.status_code == 200
+        assert response.data["projectId"] == app2.id
+        team_semester.refresh_from_db()
+        assert team_semester.project_application_id == app2.id
+
+        from teams.models import TeamEventLog
+
+        assert TeamEventLog.objects.filter(
+            team_semester=team_semester,
+            text__contains="Наставник сменил проект команды",
+        ).exists()
+
+    def test_enroll_rejected_when_forming(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        institute,
+    ) -> None:
+        setup = mentor_team_setup
+        self._open_registration(institute, setup["semester"])
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, setup['team_semester'].id, 'enroll-project/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"projectId": setup["app"].id},
+            format="json",
+        )
+        assert response.status_code == 400
+        assert "подтверждения состава" in response.data["error"]
+
+    def test_enroll_rejected_when_no_slots(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        institute,
+        make_user,
+    ) -> None:
+        setup = mentor_team_setup
+        self._open_registration(institute, setup["semester"])
+        app = setup["app"]
+        app.recommended_teams_count = 1
+        app.save(update_fields=["recommended_teams_count"])
+
+        other_captain = make_user(role_code="student", email="othercap@example.com")
+        other_captain.study_group = setup["study_group"]
+        other_captain.save(update_fields=["study_group"])
+        other_team = Team.objects.create(
+            name="Beta", home_study_group=setup["study_group"]
+        )
+        other_ts = TeamSemester.objects.create(
+            team=other_team,
+            semester=setup["semester"],
+            project_track=setup["track"],
+            captain=other_captain,
+            status=TeamSemester.Status.ASSEMBLED,
+            project_application=app,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=other_ts,
+            user=other_captain,
+            semester=setup["semester"],
+            role=TeamSemesterMember.Role.LEADER,
+        )
+
+        team_semester = setup["team_semester"]
+        team_semester.status = TeamSemester.Status.ASSEMBLED
+        team_semester.save(update_fields=["status"])
+
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, team_semester.id, 'enroll-project/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"projectId": app.id},
+            format="json",
+        )
+        assert response.status_code == 400
+        assert "максимальное" in response.data["error"].lower()
+
+    def test_enroll_rejected_wrong_track_project(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        institute,
+        departments,
+        statuses,
+        make_user,
+    ) -> None:
+        setup = mentor_team_setup
+        self._open_registration(institute, setup["semester"])
+        foreign_app = _approved_app(
+            semester=setup["semester"],
+            statuses=statuses,
+            departments=departments,
+            title="Чужой",
+        )
+        author = make_user(role_code="mentor", email="author2@example.com")
+        _track(
+            semester=setup["semester"],
+            department=departments["child"],
+            author=author,
+            group=setup["study_group"],
+            applications=[foreign_app],
+        )
+
+        team_semester = setup["team_semester"]
+        team_semester.status = TeamSemester.Status.ASSEMBLED
+        team_semester.save(update_fields=["status"])
+
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, team_semester.id, 'enroll-project/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"projectId": foreign_app.id},
+            format="json",
+        )
+        assert response.status_code == 400
+        assert "треке" in response.data["error"].lower()
+
+    def test_enroll_forbidden_for_non_mentor(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        institute,
+    ) -> None:
+        setup = mentor_team_setup
+        self._open_registration(institute, setup["semester"])
+        team_semester = setup["team_semester"]
+        team_semester.status = TeamSemester.Status.ASSEMBLED
+        team_semester.save(update_fields=["status"])
+
+        api_client.force_authenticate(user=setup["captain"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, team_semester.id, 'enroll-project/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"projectId": setup["app"].id},
+            format="json",
+        )
+        assert response.status_code == 403
+
+    def test_enroll_rejected_before_opens_at(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        institute,
+    ) -> None:
+        from datetime import timedelta
+
+        from django.utils import timezone
+
+        from showcase.models import InstituteSemesterSettings
+
+        setup = mentor_team_setup
+        InstituteSemesterSettings.objects.create(
+            institute=institute,
+            semester=setup["semester"],
+            registration_opens_at=timezone.now() + timedelta(days=7),
+            closed_by_decision=False,
+        )
+        team_semester = setup["team_semester"]
+        team_semester.status = TeamSemester.Status.ASSEMBLED
+        team_semester.save(update_fields=["status"])
+
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, team_semester.id, 'enroll-project/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"projectId": setup["app"].id},
+            format="json",
+        )
+        assert response.status_code == 400
+        assert "ещё не открыта" in response.data["error"].lower()
 
 
 @pytest.mark.django_db

@@ -123,6 +123,56 @@ class TeamLobbyDomain:
             raise ValueError("Студент должен быть из вашей учебной группы")
 
     @staticmethod
+    def ensure_track_selected(track_id: int | None) -> int:
+        """Требует выбранный проектный трек; возвращает track_id."""
+        if track_id is None:
+            raise ValueError("Выберите проектный трек для команды")
+        return track_id
+
+    @staticmethod
+    def ensure_invitee_in_track_scope(
+        *,
+        invitee_group_id: int | None,
+        allowed_group_ids: set[int],
+    ) -> None:
+        """Проверяет, что приглашаемый из группы проектного трека команды."""
+        if invitee_group_id is None or invitee_group_id not in allowed_group_ids:
+            raise ValueError("Студент должен быть из группы вашего проектного трека")
+
+    @staticmethod
+    def ensure_invitee_registered(*, is_registered: bool) -> None:
+        """Приглашать можно только зарегистрированного в системе студента."""
+        if not is_registered:
+            raise ValueError("Студент не зарегистрирован в системе: пригласить нельзя")
+
+    @staticmethod
+    def can_invite_candidate(
+        *,
+        is_registered: bool,
+        in_team: bool,
+        has_pending_invitation: bool,
+        is_self: bool,
+    ) -> bool:
+        """True, если кандидата можно пригласить в команду."""
+        return (
+            is_registered and not in_team and not has_pending_invitation and not is_self
+        )
+
+    @staticmethod
+    def parse_name_query(raw: str, *, min_length: int = 2) -> list[str]:
+        """Разбивает поисковую строку ФИО на токены; иначе ValueError."""
+        tokens = [part for part in (raw or "").split() if part]
+        if not tokens:
+            raise ValueError(
+                f"Укажите не менее {min_length} символов для поиска по ФИО"
+            )
+        if any(len(token) < min_length for token in tokens):
+            raise ValueError(
+                f"Каждый фрагмент ФИО должен содержать не менее {min_length} символов"
+            )
+        return tokens
+
+    @staticmethod
     def ensure_join_request_pending(join_request: TeamJoinRequest) -> None:
         """Заявка должна быть в статусе pending."""
         if join_request.status != TeamJoinRequest.Status.PENDING:

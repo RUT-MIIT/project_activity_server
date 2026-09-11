@@ -48,6 +48,7 @@ class StudentShowcaseRepository:
                 semester_id=semester_id,
                 project_track_id__in=track_ids,
                 project_application_id__in=application_ids,
+                project_application_id__isnull=False,
             )
             .values("project_track_id", "project_application_id")
             .annotate(enrolled=Count("id"))
@@ -57,7 +58,6 @@ class StudentShowcaseRepository:
                 row["enrolled"]
             )
             for row in rows
-            if row["project_application_id"] is not None
         }
 
     def get_accessible_project(
@@ -100,6 +100,7 @@ class StudentShowcaseRepository:
             semester_id=semester_id,
             project_track_id=track_id,
             project_application_id=application_id,
+            project_application_id__isnull=False,
         ).count()
 
     def get_user_team_semester_for_update(
@@ -172,20 +173,47 @@ class StudentShowcaseRepository:
             .first()
         )
 
+    def get_team_semester_for_update(
+        self, *, team_semester_id: int
+    ) -> TeamSemester | None:
+        """Команда семестра с блокировкой строки и составом."""
+        try:
+            team_semester = (
+                TeamSemester.objects.select_for_update()
+                .select_related(
+                    "team", "captain", "project_track", "project_application"
+                )
+                .get(pk=team_semester_id)
+            )
+        except TeamSemester.DoesNotExist:
+            return None
+
+        members = list(
+            TeamSemesterMember.objects.filter(
+                team_semester_id=team_semester.id
+            ).select_related("user")
+        )
+        team_semester._prefetched_objects_cache = {"members": members}  # noqa: SLF001
+        return team_semester
+
     def count_enrolled_teams_for_update(
         self,
         *,
         semester_id: int,
         track_id: int,
         application_id: int,
+        exclude_team_semester_id: int | None = None,
     ) -> int:
         """Счётчик записанных команд с блокировкой строк TeamSemester проекта."""
         qs = TeamSemester.objects.filter(
             semester_id=semester_id,
             project_track_id=track_id,
             project_application_id=application_id,
-        ).select_for_update()
-        return qs.count()
+            project_application_id__isnull=False,
+        )
+        if exclude_team_semester_id is not None:
+            qs = qs.exclude(pk=exclude_team_semester_id)
+        return qs.select_for_update().count()
 
     def enroll_team(
         self,
@@ -193,6 +221,7 @@ class StudentShowcaseRepository:
         team_semester: TeamSemester,
         application: ProjectApplication,
         actor_id: int,
+        log_text: str | None = None,
     ) -> TeamSemester:
         """Привязывает проект к команде и пишет лог."""
         team_semester.project_application = application
@@ -202,6 +231,6 @@ class StudentShowcaseRepository:
             team_id=team_semester.team_id,
             team_semester_id=team_semester.id,
             user_id=actor_id,
-            text=f"Команда записана на проект «{title}»",
+            text=log_text or f"Команда записана на проект «{title}»",
         )
         return team_semester

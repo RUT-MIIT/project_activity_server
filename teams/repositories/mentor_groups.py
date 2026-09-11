@@ -182,6 +182,19 @@ class MentorGroupsRepository:
             mentors__id=user_id,
         ).exists()
 
+    def list_mentor_institute_codes(self, user_id: int, semester_id: int) -> list[str]:
+        """Уникальные коды институтов групп, где пользователь — наставник в семестре."""
+        return list(
+            StudyGroup.objects.filter(
+                is_end=False,
+                semester_enrollments__semester_id=semester_id,
+                semester_enrollments__mentors__id=user_id,
+            )
+            .order_by("institute_id")
+            .values_list("institute_id", flat=True)
+            .distinct()
+        )
+
     def get_group_header(self, group_id: int) -> StudyGroup | None:
         """Возвращает заголовок группы (id, name) или None."""
         return (

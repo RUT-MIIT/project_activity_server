@@ -495,3 +495,80 @@ class TestMyTeamViewSet:
         assert len(large.data["joinRequests"]) == 8
         assert len(ctx_large.captured_queries) <= small_q + 1
         assert len(ctx_large.captured_queries) <= 15
+
+    def test_invite_student_from_other_group_of_track(
+        self, api_client, my_team_setup, direction, institute
+    ):
+        """Приглашение студента другой группы того же трека проходит."""
+        track = my_team_setup["track"]
+        other_group = StudyGroup.objects.create(
+            name="G2",
+            code="g2",
+            direction=direction,
+            institute=institute,
+        )
+        ProjectTrackGroup.objects.create(project_track=track, study_group=other_group)
+        invitee = User.objects.create_user(
+            email="cross@example.com",
+            password="pass",
+            first_name="Cross",
+            last_name="Group",
+            role=my_team_setup["captain"].role,
+            study_group=other_group,
+        )
+        api_client.force_authenticate(user=my_team_setup["captain"])
+        inv = api_client.post(
+            "/api/teams/my-team/invitations/",
+            {"user_id": invitee.id, "role": "member"},
+            format="json",
+        )
+        assert inv.status_code == 201
+        assert inv.data["user"]["id"] == invitee.id
+
+    def test_invite_student_outside_track_rejected(
+        self, api_client, my_team_setup, direction, institute
+    ):
+        """Студент группы вне трека не приглашается."""
+        outside = StudyGroup.objects.create(
+            name="OUT",
+            code="out",
+            direction=direction,
+            institute=institute,
+        )
+        invitee = User.objects.create_user(
+            email="outside@example.com",
+            password="pass",
+            first_name="Out",
+            last_name="Side",
+            role=my_team_setup["captain"].role,
+            study_group=outside,
+        )
+        api_client.force_authenticate(user=my_team_setup["captain"])
+        inv = api_client.post(
+            "/api/teams/my-team/invitations/",
+            {"user_id": invitee.id, "role": "member"},
+            format="json",
+        )
+        assert inv.status_code == 400
+        assert "трека" in inv.data["error"].lower()
+
+    def test_invite_placeholder_rejected(self, api_client, my_team_setup):
+        """Placeholder-пользователя пригласить нельзя."""
+        placeholder = User.objects.create_user(
+            email="placeholder@preregistered.internal",
+            password="pass",
+            first_name="Place",
+            last_name="Holder",
+            role=my_team_setup["captain"].role,
+            study_group=my_team_setup["group"],
+            is_active=False,
+            is_placeholder=True,
+        )
+        api_client.force_authenticate(user=my_team_setup["captain"])
+        inv = api_client.post(
+            "/api/teams/my-team/invitations/",
+            {"user_id": placeholder.id, "role": "member"},
+            format="json",
+        )
+        assert inv.status_code == 400
+        assert "не зарегистрирован" in inv.data["error"].lower()

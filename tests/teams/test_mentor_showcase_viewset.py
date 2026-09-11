@@ -338,7 +338,6 @@ class TestMentorShowcaseViewSet:
         )
 
         assert response.status_code == 200
-        assert response["Cache-Control"] == "private, max-age=30"
         tracks = {t["id"]: t for t in response.data}
         assert mentor_showcase_setup["track1"].id in tracks
         assert mentor_showcase_setup["track2"].id in tracks

@@ -51,7 +51,7 @@ class ApproveJoinRequestSerializer(serializers.Serializer):
 
 
 class CreateInvitationSerializer(serializers.Serializer):
-    """Приглашение одногруппника."""
+    """Приглашение студента из групп проектного трека."""
 
     user_id = serializers.IntegerField(min_value=1)
     role = serializers.ChoiceField(
@@ -258,6 +258,54 @@ class MyTeamViewSet(viewsets.ViewSet):
                 request.query_params.get("semester_id"),
             )
             return Response(result)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams-my-team"],
+        parameters=[
+            _SEMESTER_PARAM,
+            OpenApiParameter(
+                name="q",
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.QUERY,
+                required=True,
+                description="Кусок ФИО (минимум 2 символа в каждом токене)",
+            ),
+            OpenApiParameter(
+                name="limit",
+                type=OpenApiTypes.INT,
+                location=OpenApiParameter.QUERY,
+                required=False,
+                description="Лимит результатов (по умолчанию 20, максимум 50)",
+            ),
+        ],
+        summary="Поиск кандидатов для приглашения в команду",
+    )
+    def invite_candidates(self, request: Request) -> Response:
+        """GET /api/teams/my-team/invite-candidates/?q=..."""
+        query = request.query_params.get("q", "")
+        limit_raw = request.query_params.get("limit")
+        limit: int | None = None
+        if limit_raw is not None and str(limit_raw).strip() != "":
+            try:
+                limit = int(limit_raw)
+            except (TypeError, ValueError):
+                return Response(
+                    {"error": "Параметр limit должен быть целым числом"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+        try:
+            service = TeamLobbyService()
+            data = service.search_invite_candidates(
+                request.user,
+                query=query,
+                limit=limit,
+                semester_id_raw=request.query_params.get("semester_id"),
+            )
+            return Response(data)
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as exc:

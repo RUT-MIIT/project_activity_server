@@ -3,8 +3,11 @@
 from typing import Any
 
 from accounts.models import User
+from showcase.models import InstituteSemesterSettings, ProjectApplication
 from teams.domain.contingent_student import ContingentStudent
-from teams.models import StudyGroup, TeamSemesterMember
+from teams.domain.institute_responsible import InstituteResponsibleDomain
+from teams.domain.team_lobby import TeamLobbyDomain
+from teams.models import StudyGroup, TeamSemester, TeamSemesterMember
 
 
 class StudyGroupMentorDTO:
@@ -80,6 +83,73 @@ class StudyGroupMemberDTO:
         return payload
 
 
+class MyStudyGroupTeamMemberDTO:
+    """Участник команды текущего студента."""
+
+    def __init__(self, member: TeamSemesterMember) -> None:
+        self.id = member.user_id
+        self.full_name = TeamLobbyDomain.user_display_name(member.user)
+        self.role = member.role
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "full_name": self.full_name,
+            "role": self.role,
+        }
+
+
+class MyStudyGroupTeamDTO:
+    """Снимок команды текущего студента в семестре."""
+
+    def __init__(self, team_semester: TeamSemester, *, viewer_id: int) -> None:
+        project: ProjectApplication | None = team_semester.project_application
+        members = list(team_semester.members.all())
+        self.id = team_semester.id
+        self.name = team_semester.team.name
+        self.status = team_semester.status
+        self.is_captain = team_semester.captain_id == viewer_id
+        self.has_project = project is not None
+        self.project = (
+            {"id": project.id, "title": project.title} if project is not None else None
+        )
+        self.members = [MyStudyGroupTeamMemberDTO(m).to_dict() for m in members]
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "id": self.id,
+            "name": self.name,
+            "status": self.status,
+            "is_captain": self.is_captain,
+            "has_project": self.has_project,
+            "project": self.project,
+            "members": self.members,
+        }
+
+
+class MyStudyGroupRegistrationDTO:
+    """Окно записи института на проекты в семестре."""
+
+    def __init__(self, settings: InstituteSemesterSettings | None) -> None:
+        is_open = InstituteResponsibleDomain.is_registration_open(settings)
+        self.is_open = is_open
+        self.opens_at = (
+            settings.registration_opens_at.isoformat()
+            if settings and settings.registration_opens_at
+            else None
+        )
+        self.closed_by_decision = (
+            settings.closed_by_decision if settings is not None else False
+        )
+
+    def to_dict(self) -> dict[str, Any]:
+        return {
+            "is_open": self.is_open,
+            "opens_at": self.opens_at,
+            "closed_by_decision": self.closed_by_decision,
+        }
+
+
 class MyStudyGroupDTO:
     """Полные данные учебной группы для текущего студента."""
 
@@ -89,6 +159,11 @@ class MyStudyGroupDTO:
         members: list[ContingentStudent],
         include_team: bool = False,
         semester_id: int | None = None,
+        *,
+        viewer_id: int | None = None,
+        my_team: TeamSemester | None = None,
+        registration_settings: InstituteSemesterSettings | None = None,
+        include_semester_context: bool = False,
     ):
         member_dtos = [
             StudyGroupMemberDTO(item, include_team=include_team) for item in members
@@ -119,6 +194,17 @@ class MyStudyGroupDTO:
         self.registered_students_count = sum(
             1 for member in member_dtos if member.is_registered
         )
+        self.include_semester_context = include_semester_context
+        self.my_team: dict[str, Any] | None = None
+        self.registration: dict[str, Any] | None = None
+        if include_semester_context:
+            if my_team is not None and viewer_id is not None:
+                self.my_team = MyStudyGroupTeamDTO(
+                    my_team, viewer_id=viewer_id
+                ).to_dict()
+            self.registration = MyStudyGroupRegistrationDTO(
+                registration_settings
+            ).to_dict()
 
     @staticmethod
     def _resolve_mentors(group: StudyGroup, semester_id: int | None) -> list[User]:
@@ -133,7 +219,7 @@ class MyStudyGroupDTO:
         return []
 
     def to_dict(self) -> dict[str, Any]:
-        return {
+        payload: dict[str, Any] = {
             "id": self.id,
             "name": self.name,
             "code": self.code,
@@ -149,3 +235,7 @@ class MyStudyGroupDTO:
             "registered_students_count": self.registered_students_count,
             "members": self.members,
         }
+        if self.include_semester_context:
+            payload["my_team"] = self.my_team
+            payload["registration"] = self.registration
+        return payload

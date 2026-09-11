@@ -2,8 +2,12 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import Any
 
+from django.db import connection
+from django.test.utils import CaptureQueriesContext
+from django.utils import timezone
 import pytest
 from rest_framework.test import APIClient
 
@@ -13,12 +17,33 @@ from accounts.models import (
     Semester,
     Settings,
 )
+from showcase.models import InstituteSemesterSettings, ProjectApplication
 from teams.dto.my_study_group import MyStudyGroupDTO
 from teams.models import Direction, StudyGroup, Team, TeamSemester, TeamSemesterMember
+from teams.repositories.institute_responsible import InstituteResponsibleRepository
 from teams.repositories.study_group import StudyGroupRepository
+from teams.repositories.team_lobby import TeamLobbyRepository
 from teams.services.study_group_service import StudyGroupService
 
 MY_GROUP_URL = "/api/teams/study-groups/my/"
+
+
+def _activate_semester() -> Semester:
+    semester = Semester.objects.create(code="s1", name="S1", position=1)
+    Settings.objects.update_or_create(
+        code=ACTIVE_SEMESTER_SETTING_CODE,
+        defaults={"value": semester.code, "description": ""},
+    )
+    return semester
+
+
+def _open_registration(institute, semester: Semester) -> InstituteSemesterSettings:
+    return InstituteSemesterSettings.objects.create(
+        institute=institute,
+        semester=semester,
+        registration_opens_at=timezone.now() - timedelta(days=1),
+        closed_by_decision=False,
+    )
 
 
 @pytest.fixture
@@ -219,11 +244,8 @@ class TestMyStudyGroupViewSet:
         make_user,
         study_group: StudyGroup,
     ) -> None:
-        semester = Semester.objects.create(code="s1", name="S1", position=1)
-        Settings.objects.update_or_create(
-            code=ACTIVE_SEMESTER_SETTING_CODE,
-            defaults={"value": semester.code, "description": ""},
-        )
+        semester = _activate_semester()
+        _open_registration(study_group.institute, semester)
         registered = make_user(role_code="student", email="ivan@example.com")
         registered.study_group = study_group
         registered.save(update_fields=["study_group"])
@@ -271,6 +293,98 @@ class TestMyStudyGroupViewSet:
         assert members["Петров"]["team"] is None
         assert members[current.last_name]["team"] is None
         assert members[current.last_name]["user_id"] == current.id
+        assert response.data["my_team"] is None
+        assert response.data["registration"]["is_open"] is True
+        assert response.data["registration"]["opens_at"] is not None
+        assert response.data["registration"]["closed_by_decision"] is False
+
+    def test_semester_id_returns_my_team_and_registration(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+        statuses,
+    ) -> None:
+        semester = _activate_semester()
+        settings = _open_registration(study_group.institute, semester)
+        captain = make_user(role_code="student", email="cap@example.com")
+        captain.last_name = "Капитанов"
+        captain.first_name = "Кап"
+        captain.study_group = study_group
+        captain.save()
+        member = make_user(role_code="student", email="mem@example.com")
+        member.last_name = "Участников"
+        member.first_name = "Уч"
+        member.study_group = study_group
+        member.save()
+
+        project = ProjectApplication.objects.create(
+            title="Проект Альфа",
+            status=statuses["approved"],
+            semester=semester,
+        )
+        team = Team.objects.create(name="Моя команда", home_study_group=study_group)
+        team_semester = TeamSemester.objects.create(
+            team=team,
+            semester=semester,
+            captain=captain,
+            status=TeamSemester.Status.ASSEMBLED,
+            project_application=project,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=team_semester,
+            user=captain,
+            role=TeamSemesterMember.Role.LEADER,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=team_semester,
+            user=member,
+            role=TeamSemesterMember.Role.MEMBER,
+        )
+
+        api_client.force_authenticate(user=captain)
+        response = api_client.get(MY_GROUP_URL, {"semester_id": "actual"})
+
+        assert response.status_code == 200
+        my_team = response.data["my_team"]
+        assert my_team["id"] == team_semester.id
+        assert my_team["name"] == "Моя команда"
+        assert my_team["status"] == TeamSemester.Status.ASSEMBLED
+        assert my_team["is_captain"] is True
+        assert my_team["has_project"] is True
+        assert my_team["project"] == {"id": project.id, "title": "Проект Альфа"}
+        assert {m["id"] for m in my_team["members"]} == {captain.id, member.id}
+        assert response.data["registration"] == {
+            "is_open": True,
+            "opens_at": settings.registration_opens_at.isoformat(),
+            "closed_by_decision": False,
+        }
+
+        api_client.force_authenticate(user=member)
+        member_response = api_client.get(MY_GROUP_URL, {"semester_id": "actual"})
+        assert member_response.status_code == 200
+        assert member_response.data["my_team"]["is_captain"] is False
+        assert member_response.data["my_team"]["has_project"] is True
+
+    def test_without_semester_id_omits_my_team_and_registration(
+        self,
+        api_client: APIClient,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+    ) -> None:
+        user = make_user(role_code="student", email="me@example.com")
+        user.study_group = study_group
+        user.save(update_fields=["study_group"])
+        api_client.force_authenticate(user=user)
+
+        response = api_client.get(MY_GROUP_URL)
+
+        assert response.status_code == 200
+        assert "my_team" not in response.data
+        assert "registration" not in response.data
+        assert "team" not in response.data["members"][0]
 
 
 @pytest.mark.django_db
@@ -344,12 +458,22 @@ class TestMyStudyGroupService:
         make_user,
         study_group: StudyGroup,
         django_assert_num_queries,
+        statuses,
     ) -> None:
         semester = Semester.objects.create(code="s1", name="S1", position=1)
+        settings = _open_registration(study_group.institute, semester)
         registered = make_user(role_code="student", email="st1@example.com")
+        project = ProjectApplication.objects.create(
+            title="P1",
+            status=statuses["approved"],
+            semester=semester,
+        )
         team = Team.objects.create(name="Alpha")
         team_semester = TeamSemester.objects.create(
-            team=team, semester=semester, captain=registered
+            team=team,
+            semester=semester,
+            captain=registered,
+            project_application=project,
         )
         TeamSemesterMember.objects.create(
             team_semester=team_semester,
@@ -374,12 +498,85 @@ class TestMyStudyGroupService:
         members = StudyGroupRepository().list_group_contingent(
             study_group.id, semester_id=semester.pk
         )
+        my_team = TeamLobbyRepository().get_user_team_semester_snapshot(
+            user_id=registered.id, semester_id=semester.pk
+        )
+        registration_settings = InstituteResponsibleRepository().get_settings(
+            institute_code=study_group.institute_id,
+            semester_id=semester.pk,
+        )
 
         with django_assert_num_queries(0):
             data = MyStudyGroupDTO(
-                group, members, include_team=True, semester_id=semester.pk
+                group,
+                members,
+                include_team=True,
+                semester_id=semester.pk,
+                viewer_id=registered.id,
+                my_team=my_team,
+                registration_settings=registration_settings,
+                include_semester_context=True,
             ).to_dict()
 
         assert data["members"][0]["team"]["id"] == team.id
         assert data["members"][0]["team"]["name"] == "Alpha"
         assert all("team" in item for item in data["members"])
+        assert data["my_team"]["id"] == team_semester.id
+        assert data["my_team"]["is_captain"] is True
+        assert data["my_team"]["has_project"] is True
+        assert data["my_team"]["project"]["id"] == project.id
+        assert data["registration"]["is_open"] is True
+        assert (
+            data["registration"]["opens_at"]
+            == settings.registration_opens_at.isoformat()
+        )
+
+    def test_get_my_study_group_query_count_stable_with_more_team_members(
+        self,
+        roles,
+        make_user,
+        study_group: StudyGroup,
+    ) -> None:
+        """Число SQL не растёт с числом участников команды."""
+        semester = _activate_semester()
+        _open_registration(study_group.institute, semester)
+        captain = make_user(role_code="student", email="cap@example.com")
+        captain.study_group = study_group
+        captain.save(update_fields=["study_group"])
+
+        team = Team.objects.create(name="T1", home_study_group=study_group)
+        team_semester = TeamSemester.objects.create(
+            team=team,
+            semester=semester,
+            captain=captain,
+            status=TeamSemester.Status.FORMING,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=team_semester,
+            user=captain,
+            role=TeamSemesterMember.Role.LEADER,
+        )
+
+        service = StudyGroupService()
+        with CaptureQueriesContext(connection) as ctx_small:
+            baseline = service.get_my_study_group(captain, semester_id_raw="actual")
+        assert baseline["my_team"] is not None
+        queries_small = len(ctx_small.captured_queries)
+
+        for index in range(4):
+            member = make_user(role_code="student", email=f"extra{index}@example.com")
+            member.study_group = study_group
+            member.save(update_fields=["study_group"])
+            TeamSemesterMember.objects.create(
+                team_semester=team_semester,
+                user=member,
+                role=TeamSemesterMember.Role.MEMBER,
+            )
+
+        with CaptureQueriesContext(connection) as ctx_large:
+            enlarged = service.get_my_study_group(captain, semester_id_raw="actual")
+        queries_large = len(ctx_large.captured_queries)
+
+        assert len(enlarged["my_team"]["members"]) == 5
+        assert enlarged["registration"]["is_open"] is True
+        assert queries_large <= queries_small

@@ -43,9 +43,7 @@ class StudentShowcaseViewSet(viewsets.ViewSet):
                 request.user,
                 request.query_params.get("semester_id"),
             )
-            response = Response(data)
-            response["Cache-Control"] = "private, max-age=30"
-            return response
+            return Response(data)
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as exc:
@@ -70,9 +68,7 @@ class StudentShowcaseViewSet(viewsets.ViewSet):
                 int(project_id),
                 request.query_params.get("semester_id"),
             )
-            response = Response(data)
-            response["Cache-Control"] = "private, max-age=30"
-            return response
+            return Response(data)
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_404_NOT_FOUND)
         except PermissionError as exc:

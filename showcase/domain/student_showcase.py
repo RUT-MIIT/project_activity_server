@@ -82,6 +82,33 @@ class StudentShowcaseDomain:
                 "Запись на проекты закрыта для вашего института в этом семестре"
             )
 
+    @staticmethod
+    def ensure_mentor_registration_schedule_open(
+        *, is_opened_by_schedule: bool
+    ) -> None:
+        """Для наставника: дата открытия должна наступить.
+
+        closed_by_decision не блокирует запись наставником.
+        """
+        if not is_opened_by_schedule:
+            raise ValueError(
+                "Запись на проекты ещё не открыта для института в этом семестре"
+            )
+
+    @staticmethod
+    def build_mentor_enroll_log_text(
+        *,
+        application_title: str,
+        previous_title: str | None,
+    ) -> str:
+        """Текст события лога при записи/смене проекта наставником."""
+        if previous_title is not None:
+            return (
+                f"Наставник сменил проект команды с «{previous_title}» "
+                f"на «{application_title}»"
+            )
+        return f"Наставник записал команду на проект «{application_title}»"
+
     @classmethod
     def can_enroll(
         cls,

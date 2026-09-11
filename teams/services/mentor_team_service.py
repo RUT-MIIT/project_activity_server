@@ -10,11 +10,16 @@ from django.db import transaction
 from accounts.models import Semester
 from accounts.repositories.preregistered_student import PreRegisteredStudentRepository
 from accounts.services.placeholder_user_service import PlaceholderUserService
+from showcase.domain.student_showcase import StudentShowcaseDomain
+from showcase.dto.student_showcase import StudentShowcaseEnrollResultDTO
+from showcase.repositories.student_showcase import StudentShowcaseRepository
+from teams.domain.institute_responsible import InstituteResponsibleDomain
 from teams.domain.mentor_groups import MentorGroupsDomain
 from teams.domain.mentor_team import MentorTeamDomain
 from teams.domain.team_lobby import TeamLobbyDomain
 from teams.dto.mentor_team import MentorTeamDetailDTO
 from teams.models import StudyGroup, TeamSemester, TeamSemesterMember
+from teams.repositories.institute_responsible import InstituteResponsibleRepository
 from teams.repositories.mentor_groups import MentorGroupsRepository
 from teams.repositories.mentor_team import MentorTeamRepository
 
@@ -32,6 +37,10 @@ class MentorTeamService:
         self.groups_domain = MentorGroupsDomain()
         self.domain = MentorTeamDomain()
         self.lobby_domain = TeamLobbyDomain()
+        self.showcase_domain = StudentShowcaseDomain()
+        self.showcase_repository = StudentShowcaseRepository()
+        self.institute_repository = InstituteResponsibleRepository()
+        self.institute_domain = InstituteResponsibleDomain()
 
     def _to_detail(self, team_semester: TeamSemester) -> dict[str, Any]:
         """Сериализует карточку команды."""
@@ -473,3 +482,103 @@ class MentorTeamService:
             "membersCount": 0,
             "members": [],
         }
+
+    @transaction.atomic
+    def enroll_project(
+        self,
+        user: User,
+        *,
+        group_id: int,
+        team_semester_id: int,
+        project_id: int,
+        semester_id_raw: str | None,
+    ) -> dict[str, Any]:
+        """Записывает команду на проект (с перезаписью и ослабленным окном регистрации)."""
+        semester_id, team_semester = self._authorize_and_load(
+            user,
+            group_id=group_id,
+            team_semester_id=team_semester_id,
+            semester_id_raw=semester_id_raw,
+            check_project_enrollment=False,
+        )
+        group = self.groups_repository.get_group_header(group_id)
+        institute_code = getattr(group, "institute_id", None) if group else None
+        settings = None
+        if institute_code:
+            settings = self.institute_repository.get_settings(
+                institute_code=institute_code,
+                semester_id=semester_id,
+            )
+        self.showcase_domain.ensure_mentor_registration_schedule_open(
+            is_opened_by_schedule=self.institute_domain.is_registration_opened_by_schedule(
+                settings
+            )
+        )
+
+        locked = self.showcase_repository.get_team_semester_for_update(
+            team_semester_id=team_semester.id
+        )
+        if locked is None:
+            raise LookupError("Команда не найдена")
+        team_semester = locked
+
+        self.showcase_domain.ensure_team_assembled(team_semester)
+
+        if team_semester.project_track_id is None:
+            raise ValueError("У команды не указан проектный трек")
+
+        link = self.showcase_repository.get_project_track_link(
+            project_id=project_id,
+            track_id=team_semester.project_track_id,
+            semester_id=semester_id,
+        )
+        if link is None:
+            raise ValueError(
+                "Проект не найден в треке команды или недоступен для записи"
+            )
+
+        application = link.project_application
+        self.showcase_domain.ensure_project_in_team_track(
+            team_semester, link.project_track_id
+        )
+
+        previous_application = team_semester.project_application
+        if (
+            previous_application is not None
+            and previous_application.id == application.id
+        ):
+            return StudentShowcaseEnrollResultDTO(team_semester).to_dict()
+
+        members_count = len(list(team_semester.members.all()))
+        self.showcase_domain.ensure_members_fit_project(
+            members_count=members_count,
+            application=application,
+        )
+
+        enrolled = self.showcase_repository.count_enrolled_teams_for_update(
+            semester_id=semester_id,
+            track_id=link.project_track_id,
+            application_id=application.id,
+            exclude_team_semester_id=team_semester.id,
+        )
+        self.showcase_domain.ensure_enrollment_slot_available(
+            enrolled_count=enrolled,
+            max_teams=application.recommended_teams_count,
+        )
+
+        new_title = application.title or f"#{application.pk}"
+        previous_title = None
+        if previous_application is not None:
+            previous_title = previous_application.title or f"#{previous_application.pk}"
+        log_text = self.showcase_domain.build_mentor_enroll_log_text(
+            application_title=new_title,
+            previous_title=previous_title,
+        )
+
+        team_semester = self.showcase_repository.enroll_team(
+            team_semester=team_semester,
+            application=application,
+            actor_id=user.id,
+            log_text=log_text,
+        )
+        return StudentShowcaseEnrollResultDTO(team_semester).to_dict()

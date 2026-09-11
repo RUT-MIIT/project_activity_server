@@ -47,6 +47,12 @@ class MentorTeamAddMemberSerializer(serializers.Serializer):
         return attrs
 
 
+class MentorTeamEnrollProjectSerializer(serializers.Serializer):
+    """Тело POST записи команды на проект."""
+
+    projectId = serializers.IntegerField(min_value=1)
+
+
 class MentorTeamViewSet(viewsets.ViewSet):
     """API наставника для управления командой группы в семестре."""
 
@@ -254,6 +260,29 @@ class MentorTeamViewSet(viewsets.ViewSet):
                 group_id=group_id,
                 team_semester_id=team_semester_id,
                 member_user_id=user_id,
+                semester_id_raw=self._semester_id_raw(request),
+            )
+            return Response(data)
+
+        return self._handle_errors(action)
+
+    def enroll_project(
+        self,
+        request: Request,
+        group_id: int,
+        team_semester_id: int,
+    ) -> Response:
+        """POST .../enroll-project/ — записать команду на проект."""
+        serializer = MentorTeamEnrollProjectSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        service = MentorTeamService()
+
+        def action() -> Response:
+            data = service.enroll_project(
+                request.user,
+                group_id=group_id,
+                team_semester_id=team_semester_id,
+                project_id=serializer.validated_data["projectId"],
                 semester_id_raw=self._semester_id_raw(request),
             )
             return Response(data)
