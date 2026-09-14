@@ -28,7 +28,7 @@ class MentorTeamRepository:
                 semester_id=semester_id,
                 team__home_study_group_id=group_id,
             )
-            .select_related("team", "captain", "project_track")
+            .select_related("team", "captain", "project_track", "project_application")
             .prefetch_related(
                 Prefetch(
                     "members",
@@ -78,7 +78,7 @@ class MentorTeamRepository:
         """Перезагружает команду с составом."""
         return (
             TeamSemester.objects.filter(pk=team_semester_id)
-            .select_related("team", "captain", "project_track")
+            .select_related("team", "captain", "project_track", "project_application")
             .prefetch_related(
                 Prefetch(
                     "members",

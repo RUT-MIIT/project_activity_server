@@ -217,6 +217,7 @@ class TestMentorTeamCreate:
         assert response.data["name"] == "Gamma"
         assert response.data["status"] == TeamSemester.Status.FORMING
         assert response.data["membersCount"] == 1
+        assert response.data["project"] is None
         leader = response.data["members"][0]
         assert leader["userId"] == captain.id
         assert leader["role"] == TeamSemesterMember.Role.LEADER
@@ -419,6 +420,7 @@ class TestMentorTeamRetrieve:
             "name": "Alpha",
             "status": TeamSemester.Status.FORMING,
             "membersCount": 2,
+            "project": None,
             "members": [
                 {
                     "userId": setup["captain"].id,
@@ -433,6 +435,26 @@ class TestMentorTeamRetrieve:
                     "isPlaceholder": False,
                 },
             ],
+        }
+
+    def test_retrieve_includes_selected_project(
+        self, api_client: APIClient, mentor_team_setup: dict[str, Any]
+    ) -> None:
+        setup = mentor_team_setup
+        team_semester = setup["team_semester"]
+        team_semester.project_application = setup["app"]
+        team_semester.save(update_fields=["project_application"])
+
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.get(
+            f"{_team_url(setup['study_group'].id, team_semester.id)}"
+            f"?semester_id={setup['semester'].id}"
+        )
+
+        assert response.status_code == 200
+        assert response.data["project"] == {
+            "id": setup["app"].id,
+            "title": setup["app"].title,
         }
 
     def test_unauthenticated_returns_401(
@@ -528,6 +550,7 @@ class TestMentorTeamRetrieveQueryPerformance:
             team=team,
             semester=semester,
             project_track=track,
+            project_application=app,
             captain=mentor,
             status=TeamSemester.Status.FORMING,
         )
@@ -556,6 +579,7 @@ class TestMentorTeamRetrieveQueryPerformance:
             payload = MentorTeamDetailDTO(loaded).to_dict()
 
         assert payload["membersCount"] == 12
+        assert payload["project"] == {"id": app.id, "title": app.title}
 
     def test_retrieve_query_count_does_not_scale_with_members(
         self,
@@ -596,6 +620,7 @@ class TestMentorTeamRetrieveQueryPerformance:
                 team=team,
                 semester=semester,
                 project_track=track,
+                project_application=app,
                 captain=captain,
                 status=TeamSemester.Status.FORMING,
             )
@@ -825,7 +850,6 @@ class TestMentorTeamProjectEnrollmentBlock:
             ("patch", "/captain/", {"captainId": 1}),
             ("post", "/confirm-composition/", None),
             ("post", "/unconfirm-composition/", None),
-            ("post", "/members/", {"userId": 1}),
             ("delete", "/members/1/", None),
         ],
     )
@@ -856,6 +880,36 @@ class TestMentorTeamProjectEnrollmentBlock:
 
         assert response.status_code == 409
         assert "проект" in response.data["error"].lower()
+
+    def test_add_member_allowed_when_project_selected(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        make_user,
+    ) -> None:
+        setup = mentor_team_setup
+        team_semester = setup["team_semester"]
+        team_semester.project_application = setup["app"]
+        team_semester.save(update_fields=["project_application"])
+
+        newcomer = make_user(role_code="student", email="enrolled-add@example.com")
+        newcomer.study_group = setup["study_group"]
+        newcomer.save(update_fields=["study_group"])
+
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, team_semester.id, '/members/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"userId": newcomer.id},
+            format="json",
+        )
+        assert response.status_code == 200
+        assert response.data["membersCount"] == 3
+        assert response.data["project"] == {
+            "id": setup["app"].id,
+            "title": setup["app"].title,
+        }
+        assert any(item["userId"] == newcomer.id for item in response.data["members"])
 
     def test_delete_enrolled_team_returns_409(
         self, api_client: APIClient, mentor_team_setup: dict[str, Any]

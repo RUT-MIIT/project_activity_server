@@ -204,8 +204,13 @@ class MentorGroupsRepository:
         )
 
     def list_students(self, group_id: int, semester_id: int) -> list[ContingentStudent]:
-        """Контингент группы: предрегистрация и прямые студенты (без N+1)."""
-        return self._contingent_repository.list_for_group(group_id, semester_id)
+        """Контингент группы: предрегистрация и прямые студенты (без N+1).
+
+        Подгружает проект команды через select_related в Prefetch.
+        """
+        return self._contingent_repository.list_for_group(
+            group_id, semester_id, with_project=True
+        )
 
     def list_teams(self, group_id: int, semester_id: int) -> list[TeamSemester]:
         """Команды группы в семестре с числом участников (без N+1)."""

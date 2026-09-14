@@ -18,7 +18,7 @@ from showcase.models import (
     ProjectTrackGroup,
 )
 from showcase.services.project_track_service import ProjectTrackService
-from teams.models import Direction, StudyGroup
+from teams.models import Direction, StudyGroup, Team, TeamSemester
 
 
 @pytest.fixture
@@ -363,6 +363,29 @@ class TestProjectTrackService:
         service = ProjectTrackService()
         service.delete_track(user, track_data["track"].id)
         assert not ProjectTrack.objects.filter(pk=track_data["track"].id).exists()
+
+    def test_delete_track_blocked_when_teams_linked(
+        self, roles, make_user, track_data, semester
+    ):
+        """Нельзя удалить трек, если к нему привязаны TeamSemester."""
+        captain = make_user(role_code="student", email="captain-del@test.com")
+        team = Team.objects.create(
+            name="Команда трека",
+            home_study_group=track_data["own_group"],
+        )
+        TeamSemester.objects.create(
+            team=team,
+            semester=semester,
+            project_track=track_data["track"],
+            captain=captain,
+            status=TeamSemester.Status.ASSEMBLED,
+        )
+
+        user = make_user(role_code="admin")
+        service = ProjectTrackService()
+        with pytest.raises(ValueError, match="Нельзя удалить трек"):
+            service.delete_track(user, track_data["track"].id)
+        assert ProjectTrack.objects.filter(pk=track_data["track"].id).exists()
 
     def test_add_groups_to_track(
         self, roles, make_user, institute, semester, direction, track_data

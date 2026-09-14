@@ -95,6 +95,14 @@ def test_resolve_token_from_cli() -> None:
     assert resolve_token("https://pd.emiit.ru", cli_token="cli-token") == "cli-token"
 
 
+def test_resolve_token_strips_bearer_prefix() -> None:
+    """Токен из Authorization: Bearer … нормализуется до JWT."""
+    assert (
+        resolve_token("https://pd.emiit.ru", cli_token="Bearer eyJ.test.sig")
+        == "eyJ.test.sig"
+    )
+
+
 def test_resolve_token_missing_credentials() -> None:
     """Ошибка, если не заданы ни токен, ни учётные данные."""
     with (

@@ -38,7 +38,7 @@ class MentorGroupsService:
         group_id: int,
         semester_id_raw: str | None,
     ) -> dict[str, Any]:
-        """Детали группы: студенты контингента и команды в семестре."""
+        """Детали группы: студенты (с проектом), команды и окно регистрации."""
         semester_id = Semester.resolve_list_semester_id(semester_id_raw)
         group = self.repository.get_group_header(group_id)
         self.domain.ensure_group_exists(group)
@@ -47,7 +47,16 @@ class MentorGroupsService:
         self.domain.ensure_group_access(user, group, is_mentor)
         students = self.repository.list_students(group_id, semester_id)
         teams = self.repository.list_teams(group_id, semester_id)
-        return MentorGroupDetailDTO(group, students, teams).to_dict()
+        registration_settings = self.institute_repository.get_settings(
+            institute_code=group.institute_id,
+            semester_id=semester_id,
+        )
+        return MentorGroupDetailDTO(
+            group,
+            students,
+            teams,
+            registration_settings=registration_settings,
+        ).to_dict()
 
     def get_registration_settings(
         self, user: User, semester_id_raw: str | None

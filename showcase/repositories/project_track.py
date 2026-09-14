@@ -14,7 +14,7 @@ from showcase.models import (
     ProjectTrackGroup,
 )
 from teams.domain.institute_access import get_department_ids_for_institute_codes
-from teams.models import StudyGroup
+from teams.models import StudyGroup, TeamSemester
 
 
 class ProjectTrackRepository:
@@ -138,6 +138,10 @@ class ProjectTrackRepository:
     def delete(self, track: ProjectTrack) -> None:
         """Удаляет трек."""
         track.delete()
+
+    def count_team_semesters(self, track_id: int) -> int:
+        """Число команд семестра, привязанных к треку."""
+        return TeamSemester.objects.filter(project_track_id=track_id).count()
 
     def get_existing_group_ids(self, track_id: int, group_ids: list[int]) -> set[int]:
         """Возвращает id групп, уже привязанных к треку."""

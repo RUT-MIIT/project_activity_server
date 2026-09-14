@@ -224,3 +224,10 @@ class TestProjectTrackDomain:
         )
         assert ok is False
         assert error
+
+    def test_ensure_can_delete_allows_when_no_teams(self):
+        ProjectTrackDomain.ensure_can_delete(linked_team_semesters_count=0)
+
+    def test_ensure_can_delete_rejects_when_teams_linked(self):
+        with pytest.raises(ValueError, match="Нельзя удалить трек"):
+            ProjectTrackDomain.ensure_can_delete(linked_team_semesters_count=1)

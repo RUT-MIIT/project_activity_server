@@ -4,8 +4,19 @@ from __future__ import annotations
 
 from typing import Any
 
+from showcase.models import ProjectApplication
 from teams.domain.team_lobby import TeamLobbyDomain
 from teams.models import TeamSemester, TeamSemesterMember
+
+
+def _project_snapshot(application: ProjectApplication | None) -> dict[str, Any] | None:
+    """Краткое представление выбранного проекта команды."""
+    if application is None:
+        return None
+    return {
+        "id": application.id,
+        "title": application.title or "",
+    }
 
 
 class MentorTeamMemberDTO:
@@ -37,6 +48,7 @@ class MentorTeamDetailDTO:
         self.status = team_semester.status
         self.members_count = len(members)
         self.members = [MentorTeamMemberDTO(member) for member in members]
+        self.project = _project_snapshot(team_semester.project_application)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -44,5 +56,6 @@ class MentorTeamDetailDTO:
             "name": self.name,
             "status": self.status,
             "membersCount": self.members_count,
+            "project": self.project,
             "members": [member.to_dict() for member in self.members],
         }

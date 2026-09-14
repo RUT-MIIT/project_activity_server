@@ -22,7 +22,11 @@ class MentorTeamDomain:
 
     @staticmethod
     def ensure_not_enrolled_in_project(team_semester: TeamSemester) -> None:
-        """Запрещает изменения, если команда записана на проект."""
+        """Запрещает мутации состава/команды, если команда записана на проект.
+
+        Исключение: добавление участников наставником допускается и при
+        выбранном проекте (см. MentorTeamService.add_member).
+        """
         if team_semester.project_application_id is not None:
             raise TeamEnrolledInProjectError("Сначала отпишите команду от проекта")
 

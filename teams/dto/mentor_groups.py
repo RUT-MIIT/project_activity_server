@@ -5,8 +5,20 @@ from __future__ import annotations
 from typing import Any
 
 from accounts.models import User
+from showcase.models import InstituteSemesterSettings, ProjectApplication
 from teams.domain.contingent_student import ContingentStudent
+from teams.dto.my_study_group import MyStudyGroupRegistrationDTO
 from teams.models import StudyGroup, TeamSemester, TeamSemesterMember
+
+
+def _project_snapshot(application: ProjectApplication | None) -> dict[str, Any] | None:
+    """Краткое представление выбранного проекта команды."""
+    if application is None:
+        return None
+    return {
+        "id": application.id,
+        "title": application.title or "",
+    }
 
 
 class MentorGroupListItemDTO:
@@ -59,23 +71,25 @@ class MentorGroupStudentDTO:
         self.middle_name = student.middle_name
         self.is_registered = student.is_registered
         self.user_id = student.user_id
-        self.team = self._team_snapshot(student.user)
+        self.team: dict[str, Any] | None = None
+        self.project: dict[str, Any] | None = None
+        self._fill_team_and_project(student.user)
 
-    @staticmethod
-    def _team_snapshot(student: User | None) -> dict[str, Any] | None:
+    def _fill_team_and_project(self, student: User | None) -> None:
         if student is None:
-            return None
+            return
         memberships: list[TeamSemesterMember] = getattr(
             student, "_team_membership_for_semester", []
         )
         if not memberships:
-            return None
+            return
         membership = memberships[0]
-        return {
+        self.team = {
             "id": membership.team_semester_id,
             "name": membership.team_semester.team.name,
             "role": membership.role,
         }
+        self.project = _project_snapshot(membership.team_semester.project_application)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -86,6 +100,7 @@ class MentorGroupStudentDTO:
             "isRegistered": self.is_registered,
             "userId": self.user_id,
             "team": self.team,
+            "project": self.project,
         }
 
 
@@ -115,11 +130,13 @@ class MentorGroupDetailDTO:
         group: StudyGroup,
         students: list[ContingentStudent],
         teams: list[TeamSemester],
+        registration_settings: InstituteSemesterSettings | None = None,
     ) -> None:
         self.id = group.id
         self.name = group.name
         self.students = [MentorGroupStudentDTO(student) for student in students]
         self.teams = [MentorGroupTeamDTO(team) for team in teams]
+        self.registration = MyStudyGroupRegistrationDTO(registration_settings).to_dict()
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -127,4 +144,5 @@ class MentorGroupDetailDTO:
             "name": self.name,
             "students": [student.to_dict() for student in self.students],
             "teams": [team.to_dict() for team in self.teams],
+            "registration": self.registration,
         }

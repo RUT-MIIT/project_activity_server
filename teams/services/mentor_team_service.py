@@ -318,12 +318,17 @@ class MentorTeamService:
         user_id: int | None = None,
         pre_registered_student_id: int | None = None,
     ) -> dict[str, Any]:
-        """Добавляет зарегистрированного или незарегистрированного студента."""
+        """Добавляет зарегистрированного или незарегистрированного студента.
+
+        Разрешено и после записи команды на проект: наставник может добрать
+        участников без отписки от проекта.
+        """
         semester_id, team_semester = self._authorize_and_load(
             user,
             group_id=group_id,
             team_semester_id=team_semester_id,
             semester_id_raw=semester_id_raw,
+            check_project_enrollment=False,
         )
         if (user_id is None) == (pre_registered_student_id is None):
             raise ValueError("Укажите userId или preRegisteredStudentId")

@@ -12,7 +12,7 @@ from showcase.models import (
     ProjectTrackApplication,
     ProjectTrackGroup,
 )
-from teams.models import Direction, StudyGroup
+from teams.models import Direction, StudyGroup, Team, TeamSemester
 
 
 @pytest.fixture
@@ -265,6 +265,33 @@ class TestProjectTrackViewSet:
         )
         assert response.status_code == 204
         assert not ProjectTrack.objects.filter(pk=track_setup["track"].id).exists()
+
+    def test_destroy_track_returns_400_when_teams_linked(
+        self, roles, make_user, track_setup, semester
+    ):
+        """DELETE трека с привязанными командами → 400, не 500."""
+        captain = make_user(role_code="student", email="captain-track-del@test.com")
+        team = Team.objects.create(
+            name="Команда на треке",
+            home_study_group=track_setup["own_group"],
+        )
+        TeamSemester.objects.create(
+            team=team,
+            semester=semester,
+            project_track=track_setup["track"],
+            captain=captain,
+            status=TeamSemester.Status.ASSEMBLED,
+        )
+
+        user = make_user(role_code="admin")
+        client = APIClient()
+        client.force_authenticate(user=user)
+        response = client.delete(
+            f"/api/showcase/project-tracks/{track_setup['track'].id}/"
+        )
+        assert response.status_code == 400
+        assert "Нельзя удалить трек" in response.data["error"]
+        assert ProjectTrack.objects.filter(pk=track_setup["track"].id).exists()
 
     def test_add_groups(self, roles, make_user, institute, direction, track_setup):
         group = StudyGroup.objects.create(

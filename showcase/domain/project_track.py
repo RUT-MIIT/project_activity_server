@@ -201,3 +201,14 @@ class ProjectTrackDomain:
             return False, error
 
         return True, ""
+
+    @staticmethod
+    def ensure_can_delete(*, linked_team_semesters_count: int) -> None:
+        """Запрещает удаление трека, если к нему привязаны команды."""
+        if linked_team_semesters_count <= 0:
+            return
+        raise ValueError(
+            "Нельзя удалить трек: к нему привязаны команды "
+            f"({linked_team_semesters_count}). "
+            "Сначала снимите запись команд с проектов этого трека."
+        )

@@ -54,13 +54,21 @@ def obtain_token(base_url: str, email: str, password: str) -> str:
     return str(token)
 
 
+def _normalize_access_token(token: str) -> str:
+    """Убирает префикс Bearer, если токен скопирован из заголовка Authorization."""
+    value = token.strip()
+    if value.lower().startswith("bearer "):
+        return value[7:].strip()
+    return value
+
+
 def resolve_token(base_url: str, cli_token: str | None = None) -> str:
-    """Возвращает Bearer token из CLI, env или login."""
+    """Возвращает JWT access token из CLI, env или login (без префикса Bearer)."""
     if cli_token:
-        return cli_token
+        return _normalize_access_token(cli_token)
     env_token = os.environ.get(ENV_API_TOKEN)
     if env_token:
-        return env_token
+        return _normalize_access_token(env_token)
     email = os.environ.get(ENV_EMAIL)
     password = os.environ.get(ENV_PASSWORD)
     if email and password:

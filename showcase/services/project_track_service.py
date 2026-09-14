@@ -288,6 +288,9 @@ class ProjectTrackService:
     def delete_track(self, user: User, track_id: int) -> None:
         """Удаляет проектный трек."""
         track = self._get_track_with_access(user, track_id)
+        self.domain.ensure_can_delete(
+            linked_team_semesters_count=self.repository.count_team_semesters(track.pk)
+        )
         self.repository.delete(track)
 
     @transaction.atomic

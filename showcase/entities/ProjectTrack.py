@@ -265,7 +265,14 @@ class ProjectTrackViewSet(viewsets.ViewSet):
             service.delete_track(request.user, pk)
             return Response(status=status.HTTP_204_NO_CONTENT)
         except ValueError as exc:
-            return Response({"error": str(exc)}, status=status.HTTP_404_NOT_FOUND)
+            message = str(exc)
+            # «не найден» — 404; запрет удаления из‑за привязанных команд — 400
+            http_status = (
+                status.HTTP_404_NOT_FOUND
+                if message.startswith("Проектный трек с id=")
+                else status.HTTP_400_BAD_REQUEST
+            )
+            return Response({"error": message}, status=http_status)
         except PermissionError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
 
