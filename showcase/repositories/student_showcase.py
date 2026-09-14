@@ -119,8 +119,10 @@ class StudentShowcaseRepository:
             return None
 
         try:
+            # of=("self",): на PostgreSQL FOR UPDATE нельзя на nullable стороне OUTER JOIN
+            # (captain / project_track / project_application — nullable FK).
             team_semester = (
-                TeamSemester.objects.select_for_update()
+                TeamSemester.objects.select_for_update(of=("self",))
                 .select_related(
                     "team", "captain", "project_track", "project_application"
                 )
@@ -179,7 +181,7 @@ class StudentShowcaseRepository:
         """Команда семестра с блокировкой строки и составом."""
         try:
             team_semester = (
-                TeamSemester.objects.select_for_update()
+                TeamSemester.objects.select_for_update(of=("self",))
                 .select_related(
                     "team", "captain", "project_track", "project_application"
                 )
