@@ -1,8 +1,57 @@
 """Тесты доменных правил лобби команд."""
 
+from types import SimpleNamespace
+
 import pytest
 
+from showcase.constants import DEFAULT_MAX_TEAM_MEMBERS, DEFAULT_MIN_TEAM_MEMBERS
 from teams.domain.team_lobby import TeamLobbyDomain
+
+
+def _fake_track(*, min_team_members: int, max_team_members: int) -> SimpleNamespace:
+    return SimpleNamespace(
+        min_team_members=min_team_members,
+        max_team_members=max_team_members,
+    )
+
+
+class TestResolveMemberLimits:
+    def test_single_group_track(self):
+        track = _fake_track(min_team_members=3, max_team_members=6)
+        assert TeamLobbyDomain.resolve_member_limits(None, group_tracks=[track]) == (
+            3,
+            6,
+        )
+
+    def test_multiple_group_tracks_soft_union(self):
+        tracks = [
+            _fake_track(min_team_members=5, max_team_members=7),
+            _fake_track(min_team_members=4, max_team_members=10),
+        ]
+        assert TeamLobbyDomain.resolve_member_limits(None, group_tracks=tracks) == (
+            4,
+            10,
+        )
+
+    def test_team_track_overrides_group_tracks(self):
+        team_track = _fake_track(min_team_members=2, max_team_members=5)
+        group_tracks = [
+            _fake_track(min_team_members=5, max_team_members=7),
+            _fake_track(min_team_members=4, max_team_members=10),
+        ]
+        assert TeamLobbyDomain.resolve_member_limits(
+            team_track, group_tracks=group_tracks
+        ) == (2, 5)
+
+    def test_empty_group_tracks_defaults(self):
+        assert TeamLobbyDomain.resolve_member_limits(None, group_tracks=[]) == (
+            DEFAULT_MIN_TEAM_MEMBERS,
+            DEFAULT_MAX_TEAM_MEMBERS,
+        )
+        assert TeamLobbyDomain.resolve_member_limits(None, group_tracks=None) == (
+            DEFAULT_MIN_TEAM_MEMBERS,
+            DEFAULT_MAX_TEAM_MEMBERS,
+        )
 
 
 class TestTeamLobbyDomainTrackScope:

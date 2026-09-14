@@ -30,16 +30,15 @@ class TeamLobbyDomain:
 
         Приоритет:
         1) трек команды;
-        2) effective по трекам группы: max(min), min(max);
-        3) дефолты, если треков нет или пересечение пустое.
+        2) effective по трекам группы: min(min), max(max);
+        3) дефолты, если треков нет.
         """
         if team_track is not None:
             return team_track.min_team_members, team_track.max_team_members
         if group_tracks:
-            min_members = max(track.min_team_members for track in group_tracks)
-            max_members = min(track.max_team_members for track in group_tracks)
-            if min_members <= max_members:
-                return min_members, max_members
+            min_members = min(track.min_team_members for track in group_tracks)
+            max_members = max(track.max_team_members for track in group_tracks)
+            return min_members, max_members
         return DEFAULT_MIN_TEAM_MEMBERS, DEFAULT_MAX_TEAM_MEMBERS
 
     @staticmethod

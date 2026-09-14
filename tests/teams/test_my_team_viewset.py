@@ -423,7 +423,7 @@ class TestMyTeamViewSet:
     def test_limits_default_when_group_has_multiple_tracks(
         self, api_client, my_team_setup, departments
     ):
-        """Без трека у команды и >1 трека у группы → effective max(min)/min(max)."""
+        """Без трека у команды и >1 трека у группы → effective min(min)/max(max)."""
         ts = my_team_setup["team_semester"]
         track = my_team_setup["track"]
         track.min_team_members = 5
@@ -448,7 +448,7 @@ class TestMyTeamViewSet:
         api_client.force_authenticate(user=my_team_setup["captain"])
         response = api_client.get("/api/teams/my-team/")
         assert response.status_code == 200
-        assert response.data["minTeamMembers"] == 5
+        assert response.data["minTeamMembers"] == 4
         assert response.data["maxTeamMembers"] == 7
 
     def test_my_team_no_n_plus_one(self, api_client, my_team_setup):
