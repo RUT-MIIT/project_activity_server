@@ -90,6 +90,8 @@ class TestTeamSemesterViewSet:
         )
         assert add_resp.status_code == 201
         member_id = add_resp.data["id"]
+        assert "email" not in add_resp.data["user"]
+        assert add_resp.data["user"]["full_name"]
 
         del_resp = api_client.delete(
             f"/api/teams/team-semesters/{team_semester.id}/members/{member_id}/"
@@ -119,6 +121,34 @@ class TestTeamSemesterViewSet:
         api_client.force_authenticate(user=user)
         response = api_client.get("/api/teams/team-semesters/my/")
         assert response.status_code == 400
+
+    def test_list_does_not_expose_member_emails(
+        self, api_client, roles, make_user, study_group, semester
+    ):
+        captain = make_user(role_code="student", email="secret@example.com")
+        member_user = make_user(role_code="student", email="also-secret@example.com")
+        team = Team.objects.create(name="Alpha", home_study_group=study_group)
+        team_semester = TeamSemester.objects.create(
+            team=team, semester=semester, captain=captain
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=team_semester,
+            user=captain,
+            role=TeamSemesterMember.Role.LEADER,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=team_semester,
+            user=member_user,
+            role=TeamSemesterMember.Role.MEMBER,
+        )
+        api_client.force_authenticate(user=captain)
+
+        response = api_client.get(f"/api/teams/team-semesters/{team_semester.id}/")
+        assert response.status_code == 200
+        item = response.data
+        assert "email" not in item["captain"]
+        for member in item["members"]:
+            assert "email" not in member["user"]
 
     def test_my_returns_user_team_semester(
         self, api_client, roles, make_user, study_group, semester

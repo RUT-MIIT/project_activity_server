@@ -9,13 +9,13 @@ User = get_user_model()
 
 
 class TeamMemberUserSerializer(serializers.ModelSerializer):
-    """Краткое представление пользователя в составе команды."""
+    """Краткое представление пользователя в составе команды (без email)."""
 
     full_name = serializers.CharField(source="get_full_name", read_only=True)
 
     class Meta:
         model = User
-        fields = ("id", "email", "full_name")
+        fields = ("id", "full_name")
 
 
 class TeamSerializer(serializers.ModelSerializer):
