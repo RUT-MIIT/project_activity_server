@@ -1,5 +1,6 @@
 """ViewSet API ответственного по институтам."""
 
+from django.http import HttpResponse
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiParameter, extend_schema
 from rest_framework import serializers, status, viewsets
@@ -10,6 +11,8 @@ from rest_framework.response import Response
 
 from teams.domain.institute_access import MANAGEMENT_ROLES
 from teams.services.institute_responsible_service import InstituteResponsibleService
+
+_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 _SEMESTER_PARAM = OpenApiParameter(
     name="semester_id",
@@ -342,6 +345,35 @@ class InstituteResponsibleViewSet(viewsets.ViewSet):
                 semester_id_raw,
             )
             return Response(items)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
+        parameters=[_SEMESTER_PARAM, _INSTITUTE_PARAM],
+        summary="Excel-выгрузка студентов института в семестре",
+        responses={200: OpenApiTypes.BINARY},
+    )
+    @action(detail=False, methods=["get"], url_path="students/export")
+    def export_students(self, request: Request) -> HttpResponse | Response:
+        """GET /api/teams/institute-responsible/students/export/."""
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = InstituteResponsibleService()
+            content, filename = service.export_students(
+                request.user,
+                self._parse_institute_code(request),
+                semester_id_raw,
+            )
+            response = HttpResponse(content, content_type=_XLSX_CONTENT_TYPE)
+            response["Content-Disposition"] = f'attachment; filename="{filename}"'
+            return response
         except ValueError as exc:
             return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as exc:

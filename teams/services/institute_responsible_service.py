@@ -11,6 +11,7 @@ from accounts.models import Semester
 from showcase.models import Institute
 from teams.domain.institute_access import get_accessible_institute_codes
 from teams.domain.institute_responsible import InstituteResponsibleDomain
+from teams.domain.institute_students_excel import build_students_xlsx
 from teams.dto.institute_responsible import (
     InstituteResponsibleAssignMentorDTO,
     InstituteResponsibleEmployeeDTO,
@@ -286,6 +287,27 @@ class InstituteResponsibleService:
         return [
             InstituteResponsibleStudentDTO(student).to_dict() for student in students
         ]
+
+    def export_students(
+        self,
+        user: User,
+        institute_code: str | None,
+        semester_id_raw: str,
+    ) -> tuple[bytes, str]:
+        """Выгрузка контингента института в Excel для выбранного семестра."""
+        semester_id, resolved_institute_code, _ = self._resolve_context(
+            user, institute_code, semester_id_raw
+        )
+        students = self.institute_repository.list_institute_students(
+            institute_code=resolved_institute_code,
+            semester_id=semester_id,
+        )
+        payload = [
+            InstituteResponsibleStudentDTO(student).to_dict() for student in students
+        ]
+        content = build_students_xlsx(payload)
+        filename = f"students_{resolved_institute_code}_{semester_id}.xlsx"
+        return content, filename
 
     def get_registration_settings(
         self,

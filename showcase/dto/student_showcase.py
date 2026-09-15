@@ -85,6 +85,7 @@ class StudentShowcaseProjectDetailDTO:
         self.id = application.id
         self.title = application.title or ""
         self.company = application.company
+        self.problem_holder = application.problem_holder or ""
         self.goal = application.goal
         self.barrier = application.barrier
         self.existing_solutions = application.existing_solutions
@@ -107,6 +108,7 @@ class StudentShowcaseProjectDetailDTO:
             "id": self.id,
             "title": self.title,
             "company": self.company,
+            "problem_holder": self.problem_holder,
             "goal": self.goal,
             "barrier": self.barrier,
             "existing_solutions": self.existing_solutions,

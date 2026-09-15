@@ -477,6 +477,44 @@ GET /api/teams/institute-responsible/students/?semester_id=actual
 
 ---
 
+## 9.1. Excel-выгрузка студентов института
+
+```http
+GET /api/teams/institute-responsible/students/export/?semester_id=actual
+```
+
+Тот же контингент, что и в `GET /students/`, в файле `.xlsx`.
+
+Query-параметры: `semester_id` (обязателен), `institute_code` (по тем же правилам, что у остальных эндпоинтов).
+
+### Ответ `200`
+
+Бинарный файл Excel:
+
+- `Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- `Content-Disposition: attachment; filename="students_<institute_code>_<semester_id>.xlsx"`
+
+Колонки листа «Студенты»:
+
+| Колонка | Содержимое |
+|---------|------------|
+| Студент | ФИО (`Фамилия Имя Отчество`) |
+| Группа | Название учебной группы |
+| Наставник | ФИО наставников группы в семестре через `"; "` |
+| Команда | Название команды или пусто |
+| Роль | `Капитан` / `Участник` или пусто |
+| Проект | Название проекта команды или пусто |
+
+### Ошибки
+
+| Код | Когда |
+|-----|--------|
+| `401` | Нет авторизации |
+| `403` | Недостаточно прав |
+| `400` | Не передан / некорректный `semester_id` |
+
+---
+
 ## 10. Настройки регистрации институтов
 
 Модель `InstituteSemesterSettings`: дата открытия записи на проекты и флаг «закрыта решением».

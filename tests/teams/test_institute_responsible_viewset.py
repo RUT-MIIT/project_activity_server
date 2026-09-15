@@ -3,10 +3,12 @@
 from __future__ import annotations
 
 from datetime import timedelta
+from io import BytesIO
 
 from django.db import connection
 from django.test.utils import CaptureQueriesContext
 from django.utils import timezone
+from openpyxl import load_workbook
 import pytest
 from rest_framework.test import APIClient
 
@@ -26,6 +28,7 @@ from teams.services.institute_responsible_service import InstituteResponsibleSer
 from teams.services.study_group_service import StudyGroupService
 
 BASE_URL = "/api/teams/institute-responsible/"
+_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 def _enrollment_with_mentors(
@@ -950,6 +953,113 @@ class TestInstituteResponsibleTeamsAndStudents:
         assert student["teamRole"] == "leader"
         assert student["project"] == {"id": project.id, "title": "ПрямойПроект"}
         assert student["mentors"][0]["id"] == mentor.id
+
+    def test_export_students_returns_xlsx(
+        self,
+        roles,
+        make_user,
+        api_client,
+        semester,
+        study_groups,
+        institute,
+        statuses,
+    ):
+        mentor = make_user(role_code="mentor", with_department=True)
+        _enrollment_with_mentors(study_groups["active"], semester, mentor)
+        captain = make_user(role_code="student", email="export-cap@example.com")
+        captain.last_name = "Зарег"
+        captain.first_name = "Студент"
+        captain.middle_name = "Тестович"
+        captain.study_group = study_groups["active"]
+        captain.save(
+            update_fields=["last_name", "first_name", "middle_name", "study_group"]
+        )
+        project = ProjectApplication.objects.create(
+            title="СтудПроект",
+            status=statuses["approved"],
+            semester=semester,
+        )
+        _create_team_semester(
+            group=study_groups["active"],
+            semester=semester,
+            captain=captain,
+            name="СтудКоманда",
+            project=project,
+        )
+        PreRegisteredStudent.objects.create(
+            last_name="Зарег",
+            first_name="Студент",
+            middle_name="Тестович",
+            student_card="SC-EX-R",
+            snils="33333333333",
+            personnel_number="PN-EX-R",
+            group=study_groups["active"],
+            user=captain,
+        )
+        PreRegisteredStudent.objects.create(
+            last_name="Незарег",
+            first_name="Студент",
+            student_card="SC-EX-U",
+            snils="44444444444",
+            personnel_number="PN-EX-U",
+            group=study_groups["active"],
+        )
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+
+        response = api_client.get(
+            f"{BASE_URL}students/export/?semester_id={semester.id}"
+        )
+
+        assert response.status_code == 200
+        assert response["Content-Type"] == _XLSX_CONTENT_TYPE
+        assert (
+            response["Content-Disposition"]
+            == f'attachment; filename="students_{institute.code}_{semester.id}.xlsx"'
+        )
+
+        workbook = load_workbook(filename=BytesIO(response.content))
+        sheet = workbook.active
+        rows = list(sheet.iter_rows(values_only=True))
+        assert rows[0] == (
+            "Студент",
+            "Группа",
+            "Наставник",
+            "Команда",
+            "Роль",
+            "Проект",
+        )
+        by_student = {row[0]: row for row in rows[1:]}
+        registered = by_student["Зарег Студент Тестович"]
+        assert registered[1] == study_groups["active"].name
+        assert registered[2] == mentor.get_full_name()
+        assert registered[3] == "СтудКоманда"
+        assert registered[4] == "Капитан"
+        assert registered[5] == "СтудПроект"
+        unregistered = by_student["Незарег Студент"]
+        assert unregistered[1] == study_groups["active"].name
+        assert unregistered[2] == mentor.get_full_name()
+        assert unregistered[3] in (None, "")
+        assert unregistered[4] in (None, "")
+        assert unregistered[5] in (None, "")
+
+    def test_export_students_missing_semester_returns_400(
+        self, roles, make_user, api_client
+    ):
+        validator = make_user(role_code="institute_validator", with_department=True)
+        api_client.force_authenticate(user=validator)
+        response = api_client.get(f"{BASE_URL}students/export/")
+        assert response.status_code == 400
+
+    def test_export_students_forbidden_for_student(
+        self, roles, make_user, api_client, semester
+    ):
+        user = make_user(role_code="student", with_department=True)
+        api_client.force_authenticate(user=user)
+        response = api_client.get(
+            f"{BASE_URL}students/export/?semester_id={semester.id}"
+        )
+        assert response.status_code == 403
 
     def test_list_teams_forbidden_for_student(
         self, roles, make_user, api_client, semester

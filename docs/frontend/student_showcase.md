@@ -87,6 +87,7 @@ GET /api/showcase/student-showcase/projects/{projectId}/?semester_id=actual
   "id": 10,
   "title": "Название проекта",
   "company": "ООО Заказчик",
+  "problem_holder": "Носитель проблемы",
   "goal": "Цель",
   "barrier": "Барьер",
   "existing_solutions": "Существующие решения",
@@ -110,6 +111,7 @@ GET /api/showcase/student-showcase/projects/{projectId}/?semester_id=actual
 | Поле | Описание |
 |------|----------|
 | `company` | Организация-заказчик |
+| `problem_holder` | Носитель проблемы |
 | `stakeholders` | Заинтересованные стороны |
 | `project_level` | Направление / уровень проекта |
 | `track_id` | Трек, к которому привязан проект |
@@ -192,7 +194,7 @@ Body не нужен. Проект берётся из URL.
 
 1. **Список витрины** — `GET /` → аккордеон/табы по трекам, карточки проектов.
 2. **Карточка** — показать `title`, `company`, слоты `enrolledTeamsCount / maxTeams`, min/max участников, теги.
-3. **Детали** — `GET /projects/{id}/` → поля goal / barrier / existing_solutions / context / stakeholders / project_level.
+3. **Детали** — `GET /projects/{id}/` → поля problem_holder / goal / barrier / existing_solutions / context / stakeholders / project_level.
 4. **Кнопка «Записаться»**:
    - показывать активной только если `can_enroll === true`;
    - иначе disabled + подсказка (не капитан / состав не подтверждён / уже записаны / регистрация закрыта / нет мест / проект чужой группы).

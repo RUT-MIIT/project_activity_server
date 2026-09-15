@@ -377,6 +377,7 @@ class TestStudentShowcaseDetail:
         data = response.data
         assert data["title"] == "A1"
         assert data["company"] == "ООО Заказчик"
+        assert data["problem_holder"] == "Носитель"
         assert data["goal"] == "Цель проекта для витрины"
         assert data["barrier"] == "Барьер проекта для витрины"
         assert data["existing_solutions"] == "Существующие решения"
