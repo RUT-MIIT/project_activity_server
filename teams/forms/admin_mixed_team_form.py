@@ -39,7 +39,10 @@ def _bind_autocomplete(
     widget_cls = AutocompleteSelectMultiple if multiple else AutocompleteSelect
     widget = widget_cls(db_field, admin_site)
     widget.is_required = field.required
+    # После замены виджета нужно снова привязать ModelChoiceIterator,
+    # иначе AutocompleteSelect.optgroups падает: list без атрибута field.
     field.widget = widget
+    field.widget.choices = field.choices
 
 
 class AdminMixedTeamCreateForm(forms.ModelForm):
