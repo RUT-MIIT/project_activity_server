@@ -156,7 +156,8 @@ class AdminMixedTeamCreateAdmin(admin.ModelAdmin):
                 "description": (
                     "Создаёт команду в семестре с участниками из любых учебных групп "
                     "и институтов. Проверка «группы должны быть в одном треке» "
-                    "намеренно отключена — для смешанных команд."
+                    "намеренно отключена — для смешанных команд. "
+                    "Во всех полях выбора доступен поиск (начните вводить текст)."
                 ),
                 "fields": (
                     "name",
@@ -172,6 +173,18 @@ class AdminMixedTeamCreateAdmin(admin.ModelAdmin):
             },
         ),
     )
+
+    def get_form(self, request, obj=None, change=False, **kwargs):
+        """Прокидывает admin_site в форму для AutocompleteSelect."""
+        form_class = super().get_form(request, obj, change=change, **kwargs)
+        admin_site = self.admin_site
+
+        class FormWithAutocomplete(form_class):
+            def __init__(self, *args, **form_kwargs):
+                form_kwargs.setdefault("admin_site", admin_site)
+                super().__init__(*args, **form_kwargs)
+
+        return FormWithAutocomplete
 
     def get_queryset(self, request):
         return Team.objects.none()

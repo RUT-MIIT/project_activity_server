@@ -36,7 +36,15 @@ class UserAdmin(BaseUserAdmin):
         "is_staff",
     )
     list_filter = ("role", "is_staff", "is_active", "department")
-    search_fields = ("email", "first_name", "last_name", "middle_name", "phone")
+    search_fields = (
+        "email",
+        "first_name",
+        "last_name",
+        "middle_name",
+        "phone",
+        "study_group__name",
+        "study_group__code",
+    )
     ordering = ("id",)
     readonly_fields = ("date_joined",)
     fieldsets = (

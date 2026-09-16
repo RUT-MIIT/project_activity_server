@@ -3,7 +3,8 @@
 from __future__ import annotations
 
 from django import forms
-from django.contrib.admin.widgets import FilteredSelectMultiple
+from django.contrib import admin as django_admin
+from django.contrib.admin.widgets import AutocompleteSelect, AutocompleteSelectMultiple
 from django.contrib.auth import get_user_model
 
 from accounts.models import Semester
@@ -12,33 +13,12 @@ from teams.domain.admin_mixed_team import AdminMixedTeamDomain
 from teams.models import (
     AdminMixedTeamCreate,
     StudyGroup,
+    Team,
     TeamSemester,
     TeamSemesterMember,
 )
 
 User = get_user_model()
-
-
-def _student_queryset():
-    """Активные зарегистрированные студенты с группой для подписей."""
-    return (
-        User.objects.filter(
-            role__code="student",
-            is_active=True,
-            is_placeholder=False,
-        )
-        .select_related("study_group", "role")
-        .order_by("last_name", "first_name", "email")
-    )
-
-
-def _mentor_queryset():
-    """Пользователи с ролью наставника."""
-    return (
-        User.objects.filter(role__code="mentor", is_active=True)
-        .select_related("role")
-        .order_by("last_name", "first_name", "email")
-    )
 
 
 def _user_label(user: User) -> str:
@@ -48,56 +28,65 @@ def _user_label(user: User) -> str:
     return f"{full_name} · {group_name} · {user.email}"
 
 
+def _bind_autocomplete(
+    field: forms.Field,
+    *,
+    db_field,
+    admin_site: django_admin.AdminSite,
+    multiple: bool = False,
+) -> None:
+    """Подключает AJAX-поиск Django admin (Select2) к полю формы."""
+    widget_cls = AutocompleteSelectMultiple if multiple else AutocompleteSelect
+    widget = widget_cls(db_field, admin_site)
+    widget.is_required = field.required
+    field.widget = widget
+
+
 class AdminMixedTeamCreateForm(forms.ModelForm):
     """Единая форма: название, семестр, трек, капитан, участники из любых групп."""
 
     semester = forms.ModelChoiceField(
-        queryset=Semester.objects.all().order_by("-position", "code"),
+        queryset=Semester.objects.all(),
         label="Семестр",
-        help_text="Семестр, в котором создаётся команда.",
+        help_text="Начните вводить код или название семестра.",
     )
     home_study_group = forms.ModelChoiceField(
-        queryset=StudyGroup.objects.filter(is_end=False)
-        .select_related("institute")
-        .order_by("institute__code", "name"),
+        queryset=StudyGroup.objects.filter(is_end=False),
         required=False,
         label="Домашняя учебная группа",
-        help_text="Если пусто — берётся группа капитана.",
+        help_text="Поиск по названию/коду. Если пусто — берётся группа капитана.",
     )
     project_track = forms.ModelChoiceField(
-        queryset=ProjectTrack.objects.select_related("semester").order_by(
-            "-semester__position", "name"
-        ),
+        queryset=ProjectTrack.objects.all(),
         required=False,
         label="Проектный трек",
-        help_text="Можно указать трек даже если не все группы к нему привязаны.",
+        help_text="Поиск по названию трека. Привязка групп к треку не требуется.",
     )
     project_application = forms.ModelChoiceField(
-        queryset=ProjectApplication.objects.select_related("semester").order_by("-id"),
+        queryset=ProjectApplication.objects.all(),
         required=False,
         label="Проектная заявка",
-        help_text="Опционально: сразу записать команду на проект.",
+        help_text="Поиск по названию заявки. Опционально.",
     )
     captain = forms.ModelChoiceField(
-        queryset=_student_queryset(),
+        queryset=User.objects.all(),
         label="Капитан",
-        help_text="Студент-капитан; будет добавлен в состав с ролью leader.",
+        help_text="Поиск по ФИО/email/группе. Должен быть зарегистрированным студентом.",
     )
     members = forms.ModelMultipleChoiceField(
-        queryset=_student_queryset(),
+        queryset=User.objects.all(),
         required=False,
         label="Участники",
         help_text=(
-            "Студенты из любых институтов и групп. Капитана можно не дублировать — "
-            "он добавится автоматически."
+            "Поиск и множественный выбор студентов из любых институтов. "
+            "Капитан добавится автоматически, если не выбран."
         ),
-        widget=FilteredSelectMultiple("студенты", is_stacked=False),
     )
     mentor = forms.ModelChoiceField(
-        queryset=_mentor_queryset(),
+        queryset=User.objects.filter(role__code="mentor"),
         required=False,
         label="Наставник команды",
-        help_text="Один наставник на TeamSemester (роль mentor).",
+        help_text="Поиск наставника (роль mentor).",
     )
     status = forms.ChoiceField(
         choices=TeamSemester.Status.choices,
@@ -117,23 +106,52 @@ class AdminMixedTeamCreateForm(forms.ModelForm):
             ),
         }
 
-    class Media:
-        css = {"all": ("admin/css/widgets.css",)}
-        js = (
-            "admin/js/core.js",
-            "admin/js/vendor/jquery/jquery.min.js",
-            "admin/js/jquery.init.js",
-            "admin/js/SelectBox.js",
-            "admin/js/SelectFilter2.js",
+    def __init__(self, *args, admin_site=None, **kwargs) -> None:
+        super().__init__(*args, **kwargs)
+        site = admin_site or django_admin.site
+        self.domain = AdminMixedTeamDomain()
+
+        _bind_autocomplete(
+            self.fields["semester"],
+            db_field=TeamSemester._meta.get_field("semester"),
+            admin_site=site,
+        )
+        _bind_autocomplete(
+            self.fields["home_study_group"],
+            db_field=Team._meta.get_field("home_study_group"),
+            admin_site=site,
+        )
+        _bind_autocomplete(
+            self.fields["project_track"],
+            db_field=TeamSemester._meta.get_field("project_track"),
+            admin_site=site,
+        )
+        _bind_autocomplete(
+            self.fields["project_application"],
+            db_field=TeamSemester._meta.get_field("project_application"),
+            admin_site=site,
+        )
+        _bind_autocomplete(
+            self.fields["captain"],
+            db_field=TeamSemester._meta.get_field("captain"),
+            admin_site=site,
+        )
+        _bind_autocomplete(
+            self.fields["members"],
+            db_field=TeamSemesterMember._meta.get_field("user"),
+            admin_site=site,
+            multiple=True,
+        )
+        _bind_autocomplete(
+            self.fields["mentor"],
+            db_field=TeamSemester._meta.get_field("mentor"),
+            admin_site=site,
         )
 
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
         self.fields["captain"].label_from_instance = _user_label
         self.fields["members"].label_from_instance = _user_label
         self.fields["mentor"].label_from_instance = _user_label
         self.fields["name"].widget.attrs.setdefault("size", 60)
-        self.domain = AdminMixedTeamDomain()
 
     def clean(self):
         cleaned = super().clean()
