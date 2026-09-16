@@ -2,6 +2,7 @@ from django.contrib import admin, messages
 from django.http import HttpResponseRedirect
 from django.urls import reverse
 
+from teams.domain.team_semester_mentors import sync_team_semester_primary_mentor
 from teams.forms.admin_mixed_team_form import AdminMixedTeamCreateForm
 from teams.models import (
     AdminMixedTeamCreate,
@@ -120,10 +121,19 @@ class TeamSemesterInline(admin.TabularInline):
     autocomplete_fields = (
         "semester",
         "captain",
-        "mentor",
         "project_application",
         "project_track",
     )
+    readonly_fields = ("mentor",)
+    fields = (
+        "semester",
+        "project_track",
+        "project_application",
+        "status",
+        "captain",
+        "mentor",
+    )
+    show_change_link = True
 
 
 class TeamSemesterMemberInline(admin.TabularInline):
@@ -166,7 +176,7 @@ class AdminMixedTeamCreateAdmin(admin.ModelAdmin):
                     "project_track",
                     "project_application",
                     "status",
-                    "mentor",
+                    "mentors",
                     "captain",
                     "members",
                 ),
@@ -221,7 +231,7 @@ class AdminMixedTeamCreateAdmin(admin.ModelAdmin):
             home_study_group=form.cleaned_data.get("home_study_group"),
             project_track=form.cleaned_data.get("project_track"),
             project_application=form.cleaned_data.get("project_application"),
-            mentor=form.cleaned_data.get("mentor"),
+            mentors=list(form.cleaned_data.get("mentors") or []),
             status=form.cleaned_data["status"],
         )
         # ModelAdmin ожидает сохранённый obj с pk для response_add.
@@ -261,7 +271,7 @@ class TeamSemesterAdmin(admin.ModelAdmin):
         "project_track",
         "status",
         "captain",
-        "mentor",
+        "mentors_display",
         "project_application",
     )
     list_filter = ("semester", "status", "project_track")
@@ -270,16 +280,44 @@ class TeamSemesterAdmin(admin.ModelAdmin):
         "captain__email",
         "captain__last_name",
         "mentor__email",
+        "mentors__email",
+        "mentors__last_name",
     )
     autocomplete_fields = (
         "team",
         "semester",
         "captain",
-        "mentor",
+        "mentors",
         "project_application",
         "project_track",
     )
+    fields = (
+        "team",
+        "semester",
+        "project_track",
+        "project_application",
+        "status",
+        "captain",
+        "mentors",
+        "mentor",
+        "created_at",
+        "updated_at",
+    )
+    readonly_fields = ("mentor", "created_at", "updated_at")
     inlines = [TeamSemesterMemberInline]
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).prefetch_related("mentors")
+
+    @admin.display(description="Наставники")
+    def mentors_display(self, obj: TeamSemester) -> str:
+        emails = [user.email for user in obj.mentors.all()]
+        return ", ".join(emails) if emails else "—"
+
+    def save_related(self, request, form, formsets, change):
+        """После сохранения M2M синхронизирует основной FK mentor."""
+        super().save_related(request, form, formsets, change)
+        sync_team_semester_primary_mentor(form.instance)
 
 
 @admin.register(TeamSemesterMember)

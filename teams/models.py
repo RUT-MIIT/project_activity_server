@@ -304,8 +304,17 @@ class TeamSemester(models.Model):
         null=True,
         blank=True,
         related_name="mentored_team_semesters",
-        verbose_name="Наставник",
+        verbose_name="Наставник (основной)",
         limit_choices_to={"role__code": "mentor"},
+        help_text="Денормализация для API: первый из списка наставников.",
+    )
+    mentors = models.ManyToManyField(
+        settings.AUTH_USER_MODEL,
+        related_name="mentored_team_semesters_m2m",
+        blank=True,
+        verbose_name="Наставники",
+        limit_choices_to={"role__code": "mentor"},
+        help_text="Несколько наставников команды в семестре.",
     )
     captain = models.ForeignKey(
         settings.AUTH_USER_MODEL,

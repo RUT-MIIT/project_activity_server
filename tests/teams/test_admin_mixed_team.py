@@ -168,6 +168,9 @@ class TestAdminMixedTeamService:
         assert result.team_semester.project_track_id == setup["track"].id
         assert result.team_semester.captain_id == setup["captain"].id
         assert result.team_semester.mentor_id == setup["mentor"].id
+        assert set(result.team_semester.mentors.values_list("id", flat=True)) == {
+            setup["mentor"].id
+        }
 
         members = list(
             TeamSemesterMember.objects.filter(
@@ -191,6 +194,26 @@ class TestAdminMixedTeamService:
             team_id=result.team.id,
             text__contains="собрана вручную в admin",
         ).exists()
+
+    def test_assigns_multiple_mentors(self, mixed_setup, make_user):
+        setup = mixed_setup
+        mentor2 = make_user(role_code="mentor", email="sheshel@example.com")
+        mentor2.last_name = "Шешель"
+        mentor2.first_name = "Артем"
+        mentor2.save(update_fields=["last_name", "first_name"])
+
+        result = AdminMixedTeamService().create_mixed_team(
+            name="Компас ЮВА",
+            semester=setup["semester"],
+            captain=setup["captain"],
+            members=setup["members"],
+            mentors=[setup["mentor"], mentor2],
+            status=TeamSemester.Status.ASSEMBLED,
+        )
+
+        mentor_ids = set(result.team_semester.mentors.values_list("id", flat=True))
+        assert mentor_ids == {setup["mentor"].id, mentor2.id}
+        assert result.team_semester.mentor_id == min(setup["mentor"].id, mentor2.id)
 
     def test_rejects_student_already_in_team(self, mixed_setup):
         setup = mixed_setup

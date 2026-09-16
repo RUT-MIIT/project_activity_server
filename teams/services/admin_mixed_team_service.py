@@ -11,6 +11,7 @@ from django.db import transaction
 from accounts.models import Semester
 from showcase.models import ProjectApplication, ProjectTrack
 from teams.domain.admin_mixed_team import AdminMixedTeamDomain
+from teams.domain.team_semester_mentors import TeamSemesterMentorsDomain
 from teams.models import StudyGroup, Team, TeamSemester, TeamSemesterMember
 from teams.repositories.team_lobby import TeamLobbyRepository
 
@@ -45,6 +46,7 @@ class AdminMixedTeamService:
         home_study_group: StudyGroup | None = None,
         project_track: ProjectTrack | None = None,
         project_application: ProjectApplication | None = None,
+        mentors: Sequence[User] | None = None,
         mentor: User | None = None,
         status: str = TeamSemester.Status.ASSEMBLED,
     ) -> AdminMixedTeamCreateResult:
@@ -97,10 +99,11 @@ class AdminMixedTeamService:
             )
             raise ValueError(f"Уже состоят в команде в этом семестре: {busy_names}")
 
-        if mentor is not None:
-            mentor_role = mentor.role.code if mentor.role else None
-            if mentor_role != "mentor":
-                raise ValueError("Наставник должен иметь роль mentor")
+        mentor_list = list(mentors or [])
+        if mentor is not None and all(m.id != mentor.id for m in mentor_list):
+            mentor_list.append(mentor)
+        TeamSemesterMentorsDomain.ensure_mentor_roles(mentor_list)
+        primary_mentor = TeamSemesterMentorsDomain.resolve_primary_mentor(mentor_list)
 
         team = Team.objects.create(
             name=cleaned_name,
@@ -111,10 +114,12 @@ class AdminMixedTeamService:
             semester=semester,
             project_track=project_track,
             project_application=project_application,
-            mentor=mentor,
+            mentor=primary_mentor,
             captain=captain,
             status=status,
         )
+        if mentor_list:
+            team_semester.mentors.set(mentor_list)
 
         for user in ordered_users:
             role = self.domain.resolve_member_role(
@@ -149,7 +154,7 @@ class AdminMixedTeamService:
                 "project_track",
                 "project_application",
             )
-            .prefetch_related("members__user")
+            .prefetch_related("members__user", "mentors")
             .get(pk=team_semester.pk)
         )
         return AdminMixedTeamCreateResult(

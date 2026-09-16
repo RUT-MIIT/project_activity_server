@@ -10,6 +10,7 @@ from django.contrib.auth import get_user_model
 from accounts.models import Semester
 from showcase.models import ProjectApplication, ProjectTrack
 from teams.domain.admin_mixed_team import AdminMixedTeamDomain
+from teams.domain.team_semester_mentors import TeamSemesterMentorsDomain
 from teams.models import (
     AdminMixedTeamCreate,
     StudyGroup,
@@ -85,11 +86,11 @@ class AdminMixedTeamCreateForm(forms.ModelForm):
             "Капитан добавится автоматически, если не выбран."
         ),
     )
-    mentor = forms.ModelChoiceField(
+    mentors = forms.ModelMultipleChoiceField(
         queryset=User.objects.filter(role__code="mentor"),
         required=False,
-        label="Наставник команды",
-        help_text="Поиск наставника (роль mentor).",
+        label="Наставники команды",
+        help_text="Поиск и выбор нескольких наставников (роль mentor).",
     )
     status = forms.ChoiceField(
         choices=TeamSemester.Status.choices,
@@ -146,14 +147,15 @@ class AdminMixedTeamCreateForm(forms.ModelForm):
             multiple=True,
         )
         _bind_autocomplete(
-            self.fields["mentor"],
-            db_field=TeamSemester._meta.get_field("mentor"),
+            self.fields["mentors"],
+            db_field=TeamSemester._meta.get_field("mentors"),
             admin_site=site,
+            multiple=True,
         )
 
         self.fields["captain"].label_from_instance = _user_label
         self.fields["members"].label_from_instance = _user_label
-        self.fields["mentor"].label_from_instance = _user_label
+        self.fields["mentors"].label_from_instance = _user_label
         self.fields["name"].widget.attrs.setdefault("size", 60)
 
     def clean(self):
@@ -163,7 +165,7 @@ class AdminMixedTeamCreateForm(forms.ModelForm):
         semester = cleaned.get("semester")
         project_track = cleaned.get("project_track")
         project_application = cleaned.get("project_application")
-        mentor = cleaned.get("mentor")
+        mentors = list(cleaned.get("mentors") or [])
         status = cleaned.get("status")
         home_study_group = cleaned.get("home_study_group")
         name = cleaned.get("name")
@@ -208,10 +210,7 @@ class AdminMixedTeamCreateForm(forms.ModelForm):
             if project_track is not None and project_track.semester_id != semester.id:
                 raise ValueError("Проектный трек относится к другому семестру")
 
-            if mentor is not None:
-                mentor_role = mentor.role.code if mentor.role else None
-                if mentor_role != "mentor":
-                    raise ValueError("Наставник должен иметь роль mentor")
+            TeamSemesterMentorsDomain.ensure_mentor_roles(mentors)
 
             busy = set(
                 TeamSemesterMember.objects.filter(
