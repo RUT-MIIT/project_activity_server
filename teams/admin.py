@@ -1,6 +1,10 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.http import HttpResponseRedirect
+from django.urls import reverse
 
+from teams.forms.admin_mixed_team_form import AdminMixedTeamCreateForm
 from teams.models import (
+    AdminMixedTeamCreate,
     Direction,
     StudyGroup,
     StudyGroupProjectTeacher,
@@ -11,6 +15,10 @@ from teams.models import (
     TeamJoinRequest,
     TeamSemester,
     TeamSemesterMember,
+)
+from teams.services.admin_mixed_team_service import (
+    AdminMixedTeamCreateResult,
+    AdminMixedTeamService,
 )
 
 
@@ -132,6 +140,103 @@ class TeamAdmin(admin.ModelAdmin):
     list_filter = ("created_at",)
     autocomplete_fields = ("home_study_group",)
     inlines = [TeamSemesterInline]
+
+
+@admin.register(AdminMixedTeamCreate)
+class AdminMixedTeamCreateAdmin(admin.ModelAdmin):
+    """Единый интерфейс: команда из студентов разных групп/институтов."""
+
+    form = AdminMixedTeamCreateForm
+    _create_result: AdminMixedTeamCreateResult | None = None
+
+    fieldsets = (
+        (
+            None,
+            {
+                "description": (
+                    "Создаёт команду в семестре с участниками из любых учебных групп "
+                    "и институтов. Проверка «группы должны быть в одном треке» "
+                    "намеренно отключена — для смешанных команд."
+                ),
+                "fields": (
+                    "name",
+                    "semester",
+                    "home_study_group",
+                    "project_track",
+                    "project_application",
+                    "status",
+                    "mentor",
+                    "captain",
+                    "members",
+                ),
+            },
+        ),
+    )
+
+    def get_queryset(self, request):
+        return Team.objects.none()
+
+    def has_module_permission(self, request):
+        return request.user.is_staff and (
+            request.user.is_superuser or request.user.has_perm("teams.add_team")
+        )
+
+    def has_add_permission(self, request):
+        return self.has_module_permission(request)
+
+    def has_change_permission(self, request, obj=None):
+        return False
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def has_view_permission(self, request, obj=None):
+        return self.has_module_permission(request)
+
+    def changelist_view(self, request, extra_context=None):
+        return HttpResponseRedirect(reverse("admin:teams_adminmixedteamcreate_add"))
+
+    def save_model(self, request, obj, form, change):
+        if change:
+            return
+        self._create_result = AdminMixedTeamService().create_mixed_team(
+            name=form.cleaned_data["name"],
+            semester=form.cleaned_data["semester"],
+            captain=form.cleaned_data["captain"],
+            members=list(form.cleaned_data.get("members") or []),
+            actor_id=request.user.id,
+            home_study_group=form.cleaned_data.get("home_study_group"),
+            project_track=form.cleaned_data.get("project_track"),
+            project_application=form.cleaned_data.get("project_application"),
+            mentor=form.cleaned_data.get("mentor"),
+            status=form.cleaned_data["status"],
+        )
+        # ModelAdmin ожидает сохранённый obj с pk для response_add.
+        obj.pk = self._create_result.team.pk
+        obj.id = self._create_result.team.id
+        obj.name = self._create_result.team.name
+
+    def response_add(self, request, obj, post_url_continue=None):
+        result = self._create_result
+        self._create_result = None
+        if result is None:
+            return super().response_add(request, obj, post_url_continue)
+
+        self.message_user(
+            request,
+            (
+                f"Команда «{result.team.name}» создана "
+                f"({result.members_count} участников). "
+                f"TeamSemester id={result.team_semester.id}."
+            ),
+            level=messages.SUCCESS,
+        )
+        return HttpResponseRedirect(
+            reverse(
+                "admin:teams_teamsemester_change",
+                args=[result.team_semester.pk],
+            )
+        )
 
 
 @admin.register(TeamSemester)

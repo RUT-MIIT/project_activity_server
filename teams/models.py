@@ -254,6 +254,15 @@ class Team(models.Model):
         return self.name
 
 
+class AdminMixedTeamCreate(Team):
+    """Proxy-модель для admin: сборка команды из любых групп/институтов."""
+
+    class Meta:
+        proxy = True
+        verbose_name = "Сборка смешанной команды"
+        verbose_name_plural = "Сборка смешанной команды"
+
+
 class TeamSemester(models.Model):
     """Участие команды в конкретном семестре: проект, наставник, капитан."""
 
