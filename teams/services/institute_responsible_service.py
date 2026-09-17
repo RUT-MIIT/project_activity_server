@@ -8,10 +8,14 @@ from django.contrib.auth import get_user_model
 from django.db import transaction
 
 from accounts.models import Semester
-from showcase.models import Institute
+from showcase.models import Institute, ProjectApplication
+from teams.domain.contingent_student import ContingentStudent
 from teams.domain.institute_access import get_accessible_institute_codes
 from teams.domain.institute_responsible import InstituteResponsibleDomain
-from teams.domain.institute_students_excel import build_students_xlsx
+from teams.domain.institute_students_excel import (
+    build_students_xlsx,
+    format_author_full_name,
+)
 from teams.dto.institute_responsible import (
     InstituteResponsibleAssignMentorDTO,
     InstituteResponsibleEmployeeDTO,
@@ -23,6 +27,7 @@ from teams.dto.institute_responsible import (
     InstituteResponsibleTeamListItemDTO,
 )
 from teams.dto.mentor_groups import MentorGroupListDTO
+from teams.models import TeamSemesterMember
 from teams.repositories.institute_responsible import InstituteResponsibleRepository
 from teams.repositories.mentor_groups import MentorGroupsRepository
 from teams.repositories.study_group_semester import StudyGroupSemesterRepository
@@ -288,6 +293,38 @@ class InstituteResponsibleService:
             InstituteResponsibleStudentDTO(student).to_dict() for student in students
         ]
 
+    @staticmethod
+    def _project_application_for_contingent(
+        student: ContingentStudent,
+    ) -> ProjectApplication | None:
+        """Заявка выбранного проекта команды студента контингента, если есть."""
+        user = student.user
+        if user is None:
+            return None
+        memberships: list[TeamSemesterMember] = getattr(
+            user, "_team_membership_for_semester", []
+        )
+        if not memberships:
+            return None
+        return memberships[0].team_semester.project_application
+
+    def _student_dict_for_excel(self, student: ContingentStudent) -> dict[str, Any]:
+        """DTO студента с полями заявки только для Excel (JSON API не затрагивает)."""
+        data = InstituteResponsibleStudentDTO(student).to_dict()
+        application = self._project_application_for_contingent(student)
+        if application is None:
+            return data
+        project = dict(data.get("project") or {})
+        project["company"] = application.company or ""
+        project["companyContacts"] = application.company_contacts or ""
+        project["authorFullName"] = format_author_full_name(
+            last_name=application.author_lastname,
+            first_name=application.author_firstname,
+            middle_name=application.author_middlename,
+        )
+        data["project"] = project
+        return data
+
     def export_students(
         self,
         user: User,
@@ -302,9 +339,7 @@ class InstituteResponsibleService:
             institute_code=resolved_institute_code,
             semester_id=semester_id,
         )
-        payload = [
-            InstituteResponsibleStudentDTO(student).to_dict() for student in students
-        ]
+        payload = [self._student_dict_for_excel(student) for student in students]
         content = build_students_xlsx(payload)
         filename = f"students_{resolved_institute_code}_{semester_id}.xlsx"
         return content, filename

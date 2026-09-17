@@ -14,6 +14,9 @@ HEADERS: tuple[str, ...] = (
     "Команда",
     "Роль",
     "Проект",
+    "Заказчик",
+    "Контакты заказчика",
+    "Автор заявки",
 )
 
 _ROLE_LABELS: dict[str, str] = {
@@ -29,6 +32,17 @@ def format_student_full_name(student: dict[str, Any]) -> str:
         student.get("firstName") or "",
         student.get("middleName") or "",
     ]
+    return " ".join(part for part in parts if part).strip()
+
+
+def format_author_full_name(
+    *,
+    last_name: str | None = None,
+    first_name: str | None = None,
+    middle_name: str | None = None,
+) -> str:
+    """Собирает ФИО автора заявки из полей author_* (пустые части пропускаются)."""
+    parts = [last_name or "", first_name or "", middle_name or ""]
     return " ".join(part for part in parts if part).strip()
 
 
@@ -52,7 +66,7 @@ def format_role(role: str | None) -> str:
 
 
 def student_dict_to_row(student: dict[str, Any]) -> tuple[str, ...]:
-    """Преобразует словарь студента (как в JSON API) в строку Excel."""
+    """Преобразует словарь студента (export-payload) в строку Excel."""
     study_group = student.get("studyGroup") or {}
     project = student.get("project") or {}
     return (
@@ -62,6 +76,9 @@ def student_dict_to_row(student: dict[str, Any]) -> tuple[str, ...]:
         student.get("teamName") or "",
         format_role(student.get("teamRole")),
         project.get("title") or "",
+        project.get("company") or "",
+        project.get("companyContacts") or "",
+        project.get("authorFullName") or "",
     )
 
 

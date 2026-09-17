@@ -978,6 +978,11 @@ class TestInstituteResponsibleTeamsAndStudents:
             title="СтудПроект",
             status=statuses["approved"],
             semester=semester,
+            company="ООО Заказчик",
+            company_contacts="ivan@customer.ru, +79990001122",
+            author_lastname="Автор",
+            author_firstname="Заявки",
+            author_middlename="Тестович",
         )
         _create_team_semester(
             group=study_groups["active"],
@@ -1028,6 +1033,9 @@ class TestInstituteResponsibleTeamsAndStudents:
             "Команда",
             "Роль",
             "Проект",
+            "Заказчик",
+            "Контакты заказчика",
+            "Автор заявки",
         )
         by_student = {row[0]: row for row in rows[1:]}
         registered = by_student["Зарег Студент Тестович"]
@@ -1036,12 +1044,18 @@ class TestInstituteResponsibleTeamsAndStudents:
         assert registered[3] == "СтудКоманда"
         assert registered[4] == "Капитан"
         assert registered[5] == "СтудПроект"
+        assert registered[6] == "ООО Заказчик"
+        assert registered[7] == "ivan@customer.ru, +79990001122"
+        assert registered[8] == "Автор Заявки Тестович"
         unregistered = by_student["Незарег Студент"]
         assert unregistered[1] == study_groups["active"].name
         assert unregistered[2] == mentor.get_full_name()
         assert unregistered[3] in (None, "")
         assert unregistered[4] in (None, "")
         assert unregistered[5] in (None, "")
+        assert unregistered[6] in (None, "")
+        assert unregistered[7] in (None, "")
+        assert unregistered[8] in (None, "")
 
     def test_export_students_missing_semester_returns_400(
         self, roles, make_user, api_client
