@@ -93,7 +93,23 @@ class User(AbstractBaseUser, PermissionsMixin):
     objects = UserManager()
 
     def __str__(self):
-        return f"{self.email} ({self.role})"
+        short_name = self.get_short_name()
+        role_label = self.role.name if self.role_id and self.role else "—"
+        return f"{short_name} ({self.email}, {role_label})"
+
+    def get_short_name(self) -> str:
+        """Возвращает короткое имя вида «Фамилия И.О.»."""
+        initials = ""
+        if self.first_name:
+            initials += f"{self.first_name[0]}."
+        middle_name = getattr(self, "middle_name", "") or ""
+        if middle_name:
+            initials += f"{middle_name[0]}."
+        if self.last_name and initials:
+            return f"{self.last_name} {initials}"
+        if self.last_name:
+            return self.last_name
+        return initials or self.email
 
     def get_full_name(self):
         parts = [self.last_name, self.first_name, getattr(self, "middle_name", "")]
