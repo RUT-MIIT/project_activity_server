@@ -167,6 +167,58 @@ class ContingentStudentRepository:
 
         return merge_contingent_students(pre_registered, direct_users)[:limit]
 
+    def list_for_groups(
+        self,
+        group_ids: set[int] | list[int],
+        semester_id: int,
+        *,
+        with_project: bool = False,
+    ) -> list[ContingentStudent]:
+        """Контингент нескольких групп одним батчем (без N+1)."""
+        ids = set(group_ids)
+        if not ids:
+            return []
+
+        pre_qs = PreRegisteredStudent.objects.filter(
+            group_id__in=ids,
+            role_id="student",
+        ).select_related("user", "group")
+        user_qs = User.objects.filter(
+            study_group_id__in=ids,
+            role_id="student",
+            is_active=True,
+            is_placeholder=False,
+        ).select_related("study_group")
+
+        membership_qs = self._membership_qs(semester_id, with_project=with_project)
+        pre_qs = pre_qs.prefetch_related(
+            Prefetch(
+                "user__team_semester_memberships",
+                queryset=membership_qs,
+                to_attr="_team_membership_for_semester",
+            )
+        )
+        user_qs = user_qs.prefetch_related(
+            Prefetch(
+                "team_semester_memberships",
+                queryset=membership_qs,
+                to_attr="_team_membership_for_semester",
+            )
+        )
+
+        pre_registered = list(
+            pre_qs.order_by("group_id", "last_name", "first_name", "id")
+        )
+        linked_user_ids = [
+            item.user_id for item in pre_registered if item.user_id is not None
+        ]
+        direct_users = list(
+            user_qs.exclude(id__in=linked_user_ids).order_by(
+                "study_group_id", "last_name", "first_name", "id"
+            )
+        )
+        return merge_contingent_students(pre_registered, direct_users)
+
     def list_for_institute(
         self,
         *,

@@ -94,8 +94,17 @@ class User(AbstractBaseUser, PermissionsMixin):
 
     def __str__(self):
         short_name = self.get_short_name()
-        role_label = self.role.name if self.role_id and self.role else "—"
-        return f"{short_name} ({self.email}, {role_label})"
+        return f"{short_name} ({self.email}, {self._admin_context_label()})"
+
+    def _admin_context_label(self) -> str:
+        """Для студента — название группы, иначе — название роли."""
+        if self.role_id and self.role and self.role.code == "student":
+            if self.study_group_id and self.study_group:
+                return self.study_group.name
+            return self.role.name
+        if self.role_id and self.role:
+            return self.role.name
+        return "—"
 
     def get_short_name(self) -> str:
         """Возвращает короткое имя вида «Фамилия И.О.»."""

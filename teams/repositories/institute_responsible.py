@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import defaultdict
 from typing import Any
 
 from django.contrib.auth import get_user_model
@@ -9,14 +10,25 @@ from django.db.models import Count, Prefetch
 
 from showcase.models import Institute, InstituteSemesterSettings
 from teams.domain.contingent_student import ContingentStudent
-from teams.models import StudyGroupSemester, TeamSemester, TeamSemesterMember
+from teams.domain.institute_access import get_department_ids_by_institute_code
+from teams.models import (
+    StudyGroup,
+    StudyGroupSemester,
+    TeamSemester,
+    TeamSemesterMember,
+)
 from teams.repositories.contingent_student import ContingentStudentRepository
+from teams.repositories.mentor_groups import MentorGroupsRepository
 
 User = get_user_model()
 
 
 class InstituteResponsibleRepository:
     """Выборки команд, студентов и настроек регистрации института."""
+
+    def __init__(self) -> None:
+        self._mentor_groups_repository = MentorGroupsRepository()
+        self._contingent_repository = ContingentStudentRepository()
 
     def _mentors_only_qs(self):
         """QuerySet наставников с полями для ФИО."""
@@ -29,6 +41,156 @@ class InstituteResponsibleRepository:
         return StudyGroupSemester.objects.filter(
             semester_id=semester_id
         ).prefetch_related(Prefetch("mentors", queryset=self._mentors_only_qs()))
+
+    def list_active_institute_codes(self) -> list[str]:
+        """Коды всех активных институтов."""
+        return list(
+            Institute.objects.filter(is_active=True)
+            .order_by("position", "code")
+            .values_list("code", flat=True)
+        )
+
+    def build_department_institute_map(
+        self, institute_codes: list[str]
+    ) -> dict[int, dict[str, str]]:
+        """Карта department_id → {id: code, name} для институтов."""
+        if not institute_codes:
+            return {}
+        by_code = get_department_ids_by_institute_code(institute_codes)
+        institutes = {
+            item.code: item
+            for item in Institute.objects.filter(
+                code__in=institute_codes, is_active=True
+            ).only("code", "name")
+        }
+        result: dict[int, dict[str, str]] = {}
+        for code, department_ids in by_code.items():
+            institute = institutes.get(code)
+            if institute is None:
+                continue
+            snapshot = {"id": institute.code, "name": institute.name}
+            for department_id in department_ids:
+                result[department_id] = snapshot
+        return result
+
+    def list_mentors_by_departments(
+        self, department_ids: set[int]
+    ) -> list[User]:
+        """Пользователи с ролью mentor в указанных подразделениях."""
+        if not department_ids:
+            return []
+        return list(
+            User.objects.filter(
+                department_id__in=department_ids,
+                role__code="mentor",
+            )
+            .select_related("role")
+            .only(
+                "id",
+                "last_name",
+                "first_name",
+                "middle_name",
+                "email",
+                "department_id",
+                "role_id",
+            )
+            .order_by("last_name", "first_name", "id")
+        )
+
+    def get_mentor_by_id(self, mentor_id: int) -> User | None:
+        """Наставник по id или None."""
+        return (
+            User.objects.filter(pk=mentor_id, role__code="mentor")
+            .select_related("role")
+            .only(
+                "id",
+                "last_name",
+                "first_name",
+                "middle_name",
+                "email",
+                "department_id",
+                "role_id",
+            )
+            .first()
+        )
+
+    def list_mentor_group_links(
+        self, *, mentor_ids: list[int], semester_id: int
+    ) -> dict[int, list[int]]:
+        """mentor_id → упорядоченный список group_id назначений в семестре."""
+        if not mentor_ids:
+            return {}
+        rows = (
+            StudyGroupSemester.objects.filter(
+                semester_id=semester_id,
+                mentors__id__in=mentor_ids,
+                study_group__is_end=False,
+            )
+            .order_by("study_group__name", "study_group_id")
+            .values_list("mentors__id", "study_group_id")
+        )
+        result: dict[int, list[int]] = defaultdict(list)
+        seen: dict[int, set[int]] = defaultdict(set)
+        for mentor_id, group_id in rows:
+            if group_id in seen[mentor_id]:
+                continue
+            seen[mentor_id].add(group_id)
+            result[mentor_id].append(group_id)
+        return dict(result)
+
+    def list_groups_with_counts(
+        self, group_ids: set[int] | list[int], semester_id: int
+    ) -> list[StudyGroup]:
+        """Группы со счётчиками студентов и команд в семестре."""
+        ids = set(group_ids)
+        if not ids:
+            return []
+        return list(
+            self._mentor_groups_repository._with_counts(
+                StudyGroup.objects.filter(id__in=ids).only(
+                    "id", "name", "course_number", "institute_id"
+                ),
+                semester_id,
+            ).order_by("name")
+        )
+
+    def list_students_for_groups(
+        self, group_ids: set[int] | list[int], semester_id: int
+    ) -> list[ContingentStudent]:
+        """Контингент групп с проектом команды (батч)."""
+        return self._contingent_repository.list_for_groups(
+            group_ids, semester_id, with_project=True
+        )
+
+    def list_team_semesters_for_groups(
+        self, group_ids: set[int] | list[int], semester_id: int
+    ) -> list[TeamSemester]:
+        """Команды групп в семестре с участниками и проектом (без N+1)."""
+        ids = set(group_ids)
+        if not ids:
+            return []
+        return list(
+            TeamSemester.objects.filter(
+                semester_id=semester_id,
+                team__home_study_group_id__in=ids,
+            )
+            .select_related(
+                "team",
+                "team__home_study_group",
+                "project_application",
+            )
+            .annotate(members_count=Count("members", distinct=True))
+            .prefetch_related(
+                Prefetch(
+                    "members",
+                    queryset=TeamSemesterMember.objects.select_related(
+                        "user",
+                        "user__study_group",
+                    ).order_by("role", "joined_at", "id"),
+                )
+            )
+            .order_by("team__home_study_group_id", "team__name", "id")
+        )
 
     def list_institute_team_semesters(
         self,
