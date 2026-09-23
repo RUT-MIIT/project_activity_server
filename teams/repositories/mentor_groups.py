@@ -170,7 +170,7 @@ class MentorGroupsRepository:
             StudyGroup.objects.filter(
                 institute_id__in=institute_codes,
                 is_end=False,
-            ).only("id", "name"),
+            ).only("id", "name", "course_number", "institute_id"),
             semester_id,
         ).order_by("name")
 
@@ -196,10 +196,10 @@ class MentorGroupsRepository:
         )
 
     def get_group_header(self, group_id: int) -> StudyGroup | None:
-        """Возвращает заголовок группы (id, name) или None."""
+        """Возвращает заголовок группы (id, name, курс, институт) или None."""
         return (
             StudyGroup.objects.filter(pk=group_id)
-            .only("id", "name", "is_end", "institute_id")
+            .only("id", "name", "is_end", "institute_id", "course_number")
             .first()
         )
 

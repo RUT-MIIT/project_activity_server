@@ -157,15 +157,18 @@ class InstituteResponsibleRepository:
     def list_students_for_groups(
         self, group_ids: set[int] | list[int], semester_id: int
     ) -> list[ContingentStudent]:
-        """Контингент групп с проектом команды (батч)."""
+        """Контингент групп с проектом команды и наставниками группы (батч)."""
         return self._contingent_repository.list_for_groups(
-            group_ids, semester_id, with_project=True
+            group_ids,
+            semester_id,
+            with_project=True,
+            enrollment_qs=self._semester_enrollment_qs(semester_id),
         )
 
     def list_team_semesters_for_groups(
         self, group_ids: set[int] | list[int], semester_id: int
     ) -> list[TeamSemester]:
-        """Команды групп в семестре с участниками и проектом (без N+1)."""
+        """Команды групп в семестре с участниками, проектом и наставниками (без N+1)."""
         ids = set(group_ids)
         if not ids:
             return []
@@ -178,6 +181,7 @@ class InstituteResponsibleRepository:
                 "team",
                 "team__home_study_group",
                 "project_application",
+                "mentor",
             )
             .annotate(members_count=Count("members", distinct=True))
             .prefetch_related(
@@ -187,10 +191,56 @@ class InstituteResponsibleRepository:
                         "user",
                         "user__study_group",
                     ).order_by("role", "joined_at", "id"),
-                )
+                ),
+                Prefetch("mentors", queryset=self._mentors_only_qs()),
             )
             .order_by("team__home_study_group_id", "team__name", "id")
         )
+
+    def list_team_semesters_for_projects(
+        self,
+        *,
+        project_ids: list[int] | set[int],
+        semester_id: int,
+    ) -> dict[int, list[TeamSemester]]:
+        """Команды по заявкам в семестре: project_id → [TeamSemester] без N+1."""
+        ids = set(project_ids)
+        if not ids:
+            return {}
+
+        mentors_qs = User.objects.only(
+            "id", "last_name", "first_name", "middle_name", "email"
+        ).order_by("id")
+        team_semesters = list(
+            TeamSemester.objects.filter(
+                semester_id=semester_id,
+                project_application_id__in=ids,
+            )
+            .select_related(
+                "team",
+                "team__home_study_group",
+                "team__home_study_group__institute",
+                "mentor",
+                "project_application",
+            )
+            .prefetch_related(
+                Prefetch(
+                    "members",
+                    queryset=TeamSemesterMember.objects.select_related(
+                        "user",
+                        "user__study_group",
+                        "user__study_group__institute",
+                    ).order_by("role", "joined_at", "id"),
+                ),
+                Prefetch("mentors", queryset=mentors_qs),
+            )
+            .order_by("project_application_id", "team__name", "id")
+        )
+
+        result: dict[int, list[TeamSemester]] = defaultdict(list)
+        for team_semester in team_semesters:
+            result[team_semester.project_application_id].append(team_semester)
+        return dict(result)
 
     def list_institute_team_semesters(
         self,

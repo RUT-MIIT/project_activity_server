@@ -173,8 +173,14 @@ class ContingentStudentRepository:
         semester_id: int,
         *,
         with_project: bool = False,
+        enrollment_qs=None,
     ) -> list[ContingentStudent]:
-        """Контингент нескольких групп одним батчем (без N+1)."""
+        """Контингент нескольких групп одним батчем (без N+1).
+
+        При передаче ``enrollment_qs`` дополнительно prefetch'ит
+        ``StudyGroupSemester`` семестра с наставниками на группу
+        (``_semester_enrollments_for_semester``).
+        """
         ids = set(group_ids)
         if not ids:
             return []
@@ -191,20 +197,37 @@ class ContingentStudentRepository:
         ).select_related("study_group")
 
         membership_qs = self._membership_qs(semester_id, with_project=with_project)
-        pre_qs = pre_qs.prefetch_related(
+        pre_prefetches = [
             Prefetch(
                 "user__team_semester_memberships",
                 queryset=membership_qs,
                 to_attr="_team_membership_for_semester",
             )
-        )
-        user_qs = user_qs.prefetch_related(
+        ]
+        user_prefetches = [
             Prefetch(
                 "team_semester_memberships",
                 queryset=membership_qs,
                 to_attr="_team_membership_for_semester",
             )
-        )
+        ]
+        if enrollment_qs is not None:
+            pre_prefetches.append(
+                Prefetch(
+                    "group__semester_enrollments",
+                    queryset=enrollment_qs,
+                    to_attr="_semester_enrollments_for_semester",
+                )
+            )
+            user_prefetches.append(
+                Prefetch(
+                    "study_group__semester_enrollments",
+                    queryset=enrollment_qs,
+                    to_attr="_semester_enrollments_for_semester",
+                )
+            )
+        pre_qs = pre_qs.prefetch_related(*pre_prefetches)
+        user_qs = user_qs.prefetch_related(*user_prefetches)
 
         pre_registered = list(
             pre_qs.order_by("group_id", "last_name", "first_name", "id")

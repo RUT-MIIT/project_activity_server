@@ -29,10 +29,22 @@ from teams.dto.institute_responsible import (
     InstituteResponsibleTeamDetailDTO,
     InstituteResponsibleTeamListItemDTO,
 )
+from showcase.domain.project import ProjectDomain
+from showcase.domain.project_institute import resolve_application_institute
+from showcase.repositories.project import ProjectRepository
 from teams.dto.institute_responsible_mentors_stats import (
     MentorsStatsDetailDTO,
     MentorsStatsListItemDTO,
 )
+from teams.dto.institute_responsible_groups_stats import (
+    GroupsStatsDetailDTO,
+    GroupsStatsListItemDTO,
+)
+from teams.dto.institute_responsible_projects_stats import (
+    ProjectsStatsDetailDTO,
+    ProjectsStatsListItemDTO,
+)
+from teams.dto.institute_responsible_students_stats import StudentsStatsStudentDTO
 from teams.dto.mentor_groups import MentorGroupListDTO
 from teams.models import TeamSemester, TeamSemesterMember
 from teams.repositories.institute_responsible import InstituteResponsibleRepository
@@ -312,6 +324,206 @@ class InstituteResponsibleService:
             teams_by_group=teams_by_group,
             institute_by_code=institute_by_code,
         ).to_dict()
+
+    def list_projects_stats(
+        self,
+        user: User,
+        semester_id_raw: str,
+    ) -> list[dict[str, Any]]:
+        """Список одобренных проектов семестра с краткими командами."""
+        (
+            semester_id,
+            _,
+            _,
+            department_institute_map,
+        ) = self._resolve_mentors_stats_context(user, semester_id_raw)
+
+        institute_codes = ProjectDomain.get_institute_codes_for_user(user)
+        applications = list(
+            ProjectRepository().filter_projects_queryset(institute_codes, semester_id)
+        )
+        project_ids = [application.id for application in applications]
+        teams_by_project = self.institute_repository.list_team_semesters_for_projects(
+            project_ids=project_ids,
+            semester_id=semester_id,
+        )
+
+        result: list[dict[str, Any]] = []
+        for application in applications:
+            institute = resolve_application_institute(
+                application, department_institute_map
+            )
+            result.append(
+                ProjectsStatsListItemDTO(
+                    application,
+                    institute=institute,
+                    teams=teams_by_project.get(application.id, []),
+                ).to_dict()
+            )
+        return result
+
+    def get_project_stats_detail(
+        self,
+        user: User,
+        project_id: int,
+        semester_id_raw: str,
+    ) -> dict[str, Any]:
+        """Детальная карточка проекта с командами, участниками и наставниками."""
+        (
+            semester_id,
+            _,
+            _,
+            department_institute_map,
+        ) = self._resolve_mentors_stats_context(user, semester_id_raw)
+
+        institute_codes = ProjectDomain.get_institute_codes_for_user(user)
+        application = (
+            ProjectRepository()
+            .filter_projects_queryset(institute_codes, semester_id)
+            .filter(pk=project_id)
+            .first()
+        )
+        if application is None:
+            raise LookupError(f"Проект с id={project_id} не найден")
+
+        teams_by_project = self.institute_repository.list_team_semesters_for_projects(
+            project_ids=[application.id],
+            semester_id=semester_id,
+        )
+        teams = teams_by_project.get(application.id, [])
+        institute = resolve_application_institute(
+            application, department_institute_map
+        )
+        institute_by_code = self._institute_by_code_from_dept_map(
+            department_institute_map
+        )
+        return ProjectsStatsDetailDTO(
+            application,
+            institute=institute,
+            teams=teams,
+            institute_by_code=institute_by_code,
+        ).to_dict()
+
+    def list_groups_stats(
+        self,
+        user: User,
+        semester_id_raw: str,
+    ) -> list[dict[str, Any]]:
+        """Список активных учебных групп по доступным институтам в семестре."""
+        (
+            semester_id,
+            institute_codes,
+            _,
+            department_institute_map,
+        ) = self._resolve_mentors_stats_context(user, semester_id_raw)
+
+        groups = list(
+            self.groups_overview_repository.list_for_institutes(
+                institute_codes, semester_id
+            )
+        )
+        group_ids = [group.id for group in groups]
+        team_semesters = self.institute_repository.list_team_semesters_for_groups(
+            group_ids, semester_id
+        )
+        teams_by_group: dict[int, list[TeamSemester]] = {}
+        for team_semester in team_semesters:
+            home_group = team_semester.team.home_study_group
+            if home_group is None:
+                continue
+            teams_by_group.setdefault(home_group.id, []).append(team_semester)
+
+        institute_by_code = self._institute_by_code_from_dept_map(
+            department_institute_map
+        )
+        empty_institute = {"id": "", "name": ""}
+        result: list[dict[str, Any]] = []
+        for group in groups:
+            code = group.institute_id or ""
+            institute = institute_by_code.get(
+                code, {"id": code, "name": ""} if code else empty_institute
+            )
+            result.append(
+                GroupsStatsListItemDTO(
+                    group,
+                    institute=institute,
+                    teams=teams_by_group.get(group.id, []),
+                ).to_dict()
+            )
+        return result
+
+    def get_group_stats_detail(
+        self,
+        user: User,
+        group_id: int,
+        semester_id_raw: str,
+    ) -> dict[str, Any]:
+        """Детальная карточка учебной группы со студентами и командами."""
+        (
+            semester_id,
+            institute_codes,
+            _,
+            department_institute_map,
+        ) = self._resolve_mentors_stats_context(user, semester_id_raw)
+
+        group = self.groups_overview_repository.get_group_header(group_id)
+        accessible_codes = set(institute_codes)
+        if (
+            group is None
+            or group.is_end
+            or (group.institute_id or "") not in accessible_codes
+        ):
+            raise LookupError(f"Группа с id={group_id} не найдена")
+
+        institute_by_code = self._institute_by_code_from_dept_map(
+            department_institute_map
+        )
+        code = group.institute_id or ""
+        institute = institute_by_code.get(code, {"id": code, "name": ""})
+
+        students = self.institute_repository.list_students_for_groups(
+            {group.id}, semester_id
+        )
+        teams = self.institute_repository.list_team_semesters_for_groups(
+            {group.id}, semester_id
+        )
+        return GroupsStatsDetailDTO(
+            group,
+            institute=institute,
+            students=students,
+            teams=teams,
+            institute_by_code=institute_by_code,
+        ).to_dict()
+
+    def list_students_stats(
+        self,
+        user: User,
+        semester_id_raw: str,
+    ) -> list[dict[str, Any]]:
+        """Список студентов контингента по доступным институтам в семестре."""
+        (
+            semester_id,
+            institute_codes,
+            _,
+            department_institute_map,
+        ) = self._resolve_mentors_stats_context(user, semester_id_raw)
+
+        groups = list(
+            self.groups_overview_repository.list_for_institutes(
+                institute_codes, semester_id
+            )
+        )
+        group_ids = [group.id for group in groups]
+        students = self.institute_repository.list_students_for_groups(
+            group_ids, semester_id
+        )
+        institute_by_code = self._institute_by_code_from_dept_map(
+            department_institute_map
+        )
+        return [
+            StudentsStatsStudentDTO(student, institute_by_code).to_dict()
+            for student in students
+        ]
 
     def list_group_mentors(
         self,

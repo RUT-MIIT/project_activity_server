@@ -136,6 +136,134 @@ class InstituteResponsibleViewSet(viewsets.ViewSet):
 
     @extend_schema(
         tags=["teams"],
+        parameters=[_SEMESTER_PARAM],
+        summary="Статистика проектов по доступным институтам",
+    )
+    @action(detail=False, methods=["get"], url_path="projects")
+    def list_projects_stats(self, request: Request) -> Response:
+        """GET /api/teams/institute-responsible/projects/."""
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = InstituteResponsibleService()
+            items = service.list_projects_stats(request.user, semester_id_raw)
+            return Response(items)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
+        parameters=[_SEMESTER_PARAM],
+        summary="Детальная статистика проекта",
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path=r"projects/(?P<project_id>\d+)",
+    )
+    def retrieve_project_stats(self, request: Request, project_id: int) -> Response:
+        """GET /api/teams/institute-responsible/projects/{id}/."""
+        project_id = int(project_id)
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = InstituteResponsibleService()
+            item = service.get_project_stats_detail(
+                request.user, project_id, semester_id_raw
+            )
+            return Response(item)
+        except LookupError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
+        parameters=[_SEMESTER_PARAM],
+        summary="Статистика учебных групп по доступным институтам",
+    )
+    @action(detail=False, methods=["get"], url_path="groups-stats")
+    def list_groups_stats(self, request: Request) -> Response:
+        """GET /api/teams/institute-responsible/groups-stats/."""
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = InstituteResponsibleService()
+            items = service.list_groups_stats(request.user, semester_id_raw)
+            return Response(items)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
+        parameters=[_SEMESTER_PARAM],
+        summary="Детальная статистика учебной группы",
+    )
+    @action(
+        detail=False,
+        methods=["get"],
+        url_path=r"groups-stats/(?P<group_id>\d+)",
+    )
+    def retrieve_group_stats(self, request: Request, group_id: int) -> Response:
+        """GET /api/teams/institute-responsible/groups-stats/{id}/."""
+        group_id = int(group_id)
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = InstituteResponsibleService()
+            item = service.get_group_stats_detail(
+                request.user, group_id, semester_id_raw
+            )
+            return Response(item)
+        except LookupError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_404_NOT_FOUND)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
+        parameters=[_SEMESTER_PARAM],
+        summary="Статистика студентов по доступным институтам (дашборд)",
+    )
+    @action(detail=False, methods=["get"], url_path="students-stats")
+    def list_students_stats(self, request: Request) -> Response:
+        """GET /api/teams/institute-responsible/students-stats/."""
+        semester_id_raw = request.query_params.get("semester_id")
+        error_response = self._validate_semester_param(semester_id_raw)
+        if error_response is not None:
+            return error_response
+
+        try:
+            service = InstituteResponsibleService()
+            items = service.list_students_stats(request.user, semester_id_raw)
+            return Response(items)
+        except ValueError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_400_BAD_REQUEST)
+        except PermissionError as exc:
+            return Response({"error": str(exc)}, status=status.HTTP_403_FORBIDDEN)
+
+    @extend_schema(
+        tags=["teams"],
         parameters=[_SEMESTER_PARAM, _INSTITUTE_PARAM],
         summary="Активные группы института",
     )
