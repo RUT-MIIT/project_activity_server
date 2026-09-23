@@ -37,27 +37,22 @@ class StudentShowcaseRepository:
         self,
         *,
         semester_id: int,
-        track_ids: list[int],
         application_ids: list[int],
-    ) -> dict[tuple[int, int], int]:
-        """Карта (track_id, application_id) → число записанных команд."""
-        if not track_ids or not application_ids:
+    ) -> dict[int, int]:
+        """Карта application_id → число записанных команд (по всем трекам)."""
+        if not application_ids:
             return {}
         rows = (
             TeamSemester.objects.filter(
                 semester_id=semester_id,
-                project_track_id__in=track_ids,
                 project_application_id__in=application_ids,
                 project_application_id__isnull=False,
             )
-            .values("project_track_id", "project_application_id")
+            .values("project_application_id")
             .annotate(enrolled=Count("id"))
         )
         return {
-            (row["project_track_id"], row["project_application_id"]): int(
-                row["enrolled"]
-            )
-            for row in rows
+            int(row["project_application_id"]): int(row["enrolled"]) for row in rows
         }
 
     def get_accessible_project(
@@ -92,13 +87,11 @@ class StudentShowcaseRepository:
         self,
         *,
         semester_id: int,
-        track_id: int,
         application_id: int,
     ) -> int:
-        """Число команд, записанных на проект в треке/семестре."""
+        """Число команд, записанных на заявку в семестре (все треки)."""
         return TeamSemester.objects.filter(
             semester_id=semester_id,
-            project_track_id=track_id,
             project_application_id=application_id,
             project_application_id__isnull=False,
         ).count()
@@ -202,14 +195,12 @@ class StudentShowcaseRepository:
         self,
         *,
         semester_id: int,
-        track_id: int,
         application_id: int,
         exclude_team_semester_id: int | None = None,
     ) -> int:
-        """Счётчик записанных команд с блокировкой строк TeamSemester проекта."""
+        """Счётчик записанных команд заявки с блокировкой строк TeamSemester."""
         qs = TeamSemester.objects.filter(
             semester_id=semester_id,
-            project_track_id=track_id,
             project_application_id=application_id,
             project_application_id__isnull=False,
         )

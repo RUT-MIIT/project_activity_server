@@ -730,3 +730,57 @@ class TestStudentShowcaseEnroll:
         )
         assert response.status_code == 400
         assert "закрыта" in response.data["error"]
+
+    def test_enroll_quota_is_global_across_tracks(
+        self, api_client, showcase_setup, make_user
+    ):
+        """Квота rec действует на заявку целиком, а не отдельно по треку."""
+        app = showcase_setup["app2"]  # recommended_teams_count=1
+        ProjectTrackApplication.objects.get_or_create(
+            project_track=showcase_setup["track2"],
+            project_application=app,
+        )
+
+        other_cap = make_user(role_code="student", email="xtrack-cap@example.com")
+        other_cap.study_group = showcase_setup["group"]
+        other_cap.save(update_fields=["study_group"])
+        other_mem = make_user(role_code="student", email="xtrack-mem@example.com")
+        other_mem.study_group = showcase_setup["group"]
+        other_mem.save(update_fields=["study_group"])
+
+        first = _create_assembled_team(
+            group=showcase_setup["group"],
+            semester=showcase_setup["semester"],
+            track=showcase_setup["track1"],
+            captain=other_cap,
+            name="FirstTrack1",
+            members=[other_mem],
+        )
+        first.project_application = app
+        first.save(update_fields=["project_application"])
+
+        _create_assembled_team(
+            group=showcase_setup["group"],
+            semester=showcase_setup["semester"],
+            track=showcase_setup["track2"],
+            captain=showcase_setup["captain"],
+            name="SecondTrack2",
+            members=[showcase_setup["member"]],
+        )
+
+        api_client.force_authenticate(user=showcase_setup["captain"])
+        list_resp = api_client.get(f"{BASE}/")
+        assert list_resp.status_code == 200
+        for track in list_resp.data:
+            for project in track["projects"]:
+                if project["id"] == app.id:
+                    assert project["enrolledTeamsCount"] == 1
+
+        detail = api_client.get(f"{BASE}/projects/{app.id}/")
+        assert detail.status_code == 200
+        assert detail.data["enrolled_teams_count"] == 1
+        assert detail.data["can_enroll"] is False
+
+        response = api_client.post(f"{BASE}/projects/{app.id}/enroll/")
+        assert response.status_code == 400
+        assert "максимальное число команд" in response.data["error"]

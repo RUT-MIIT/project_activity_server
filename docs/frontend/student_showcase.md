@@ -54,8 +54,8 @@ GET /api/showcase/student-showcase/?semester_id=actual
 
 | Поле | Описание |
 |------|----------|
-| `maxTeams` | Максимум команд на проект |
-| `enrolledTeamsCount` | Сколько команд уже записалось |
+| `maxTeams` | Максимум команд на проект (`recommended_teams_count` заявки) |
+| `enrolledTeamsCount` | Сколько команд уже записалось на заявку **по всем трекам** |
 | `minTeamMembers` / `maxTeamMembers` | Лимиты размера команды для проекта |
 | `isContinuing` | Продолжающийся проект |
 | `isCompetitiveSelection` | В проекте есть конкурсный отбор |
@@ -126,6 +126,8 @@ GET /api/showcase/student-showcase/projects/{projectId}/?semester_id=actual
 - число участников в `[minTeamMembers, maxTeamMembers]` проекта;
 - есть свободный слот на проект (`enrolled_teams_count < recommended_teams_count`).
 
+`enrolled_teams_count` считается **по заявке целиком** (все команды с этой `project_application` в семестре), а не отдельно в рамках текущего трека. Если заявка входит в несколько треков, слоты общие.
+
 ### Ошибки
 
 | Код | Когда |
@@ -146,7 +148,7 @@ Body не нужен. Проект берётся из URL.
 Правила записи (все обязательны):
 - выбирает только **капитан**;
 - статус команды — `assembled` (состав подтверждён);
-- на проект ещё есть места (`enrolled_teams_count < recommended_teams_count`);
+- на проект ещё есть места (`enrolled_teams_count < recommended_teams_count`; счётчик глобальный по заявке, см. выше);
 - у команды ещё **не выбран** проект;
 - регистрация института на проекты в семестре **открыта**;
 - проект из треков учебной группы капитана (не обязательно совпадает с текущим `project_track` команды).

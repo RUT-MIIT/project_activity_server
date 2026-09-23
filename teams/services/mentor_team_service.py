@@ -556,7 +556,6 @@ class MentorTeamService:
 
         enrolled = self.showcase_repository.count_enrolled_teams_for_update(
             semester_id=semester_id,
-            track_id=track_id,
             application_id=application.id,
             exclude_team_semester_id=team_semester.id,
         )

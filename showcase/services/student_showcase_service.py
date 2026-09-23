@@ -62,7 +62,6 @@ class StudentShowcaseService:
         tracks = self.repository.list_group_tracks_with_projects(
             group_id=group_id, semester_id=semester_id
         )
-        track_ids = [track.id for track in tracks]
         application_ids: list[int] = []
         for track in tracks:
             for link in track.application_links.all():
@@ -70,7 +69,6 @@ class StudentShowcaseService:
 
         enrolled_map = self.repository.map_enrolled_teams_counts(
             semester_id=semester_id,
-            track_ids=track_ids,
             application_ids=application_ids,
         )
 
@@ -79,7 +77,7 @@ class StudentShowcaseService:
             projects: list[dict] = []
             for link in track.application_links.all():
                 application = link.project_application
-                enrolled = enrolled_map.get((track.id, application.id), 0)
+                enrolled = enrolled_map.get(application.id, 0)
                 projects.append(
                     StudentShowcaseProjectListItemDTO(
                         application, enrolled_teams_count=enrolled
@@ -109,7 +107,6 @@ class StudentShowcaseService:
         application, track_id = accessible
         enrolled = self.repository.count_enrolled_teams(
             semester_id=semester_id,
-            track_id=track_id,
             application_id=application.id,
         )
 
@@ -185,7 +182,6 @@ class StudentShowcaseService:
 
         enrolled = self.repository.count_enrolled_teams_for_update(
             semester_id=semester_id,
-            track_id=track_id,
             application_id=application.id,
         )
         self.domain.ensure_enrollment_slot_available(

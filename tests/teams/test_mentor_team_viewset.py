@@ -1121,9 +1121,18 @@ class TestMentorTeamEnrollProject:
         departments,
         statuses,
         make_user,
+        direction,
     ) -> None:
+        """Проект чужой группы недоступен для записи наставником."""
         setup = mentor_team_setup
         self._open_registration(institute, setup["semester"])
+        foreign_group = StudyGroup.objects.create(
+            name="Чужая",
+            code="FOREIGN-101",
+            direction=direction,
+            institute=institute,
+            is_end=False,
+        )
         foreign_app = _approved_app(
             semester=setup["semester"],
             statuses=statuses,
@@ -1135,7 +1144,7 @@ class TestMentorTeamEnrollProject:
             semester=setup["semester"],
             department=departments["child"],
             author=author,
-            group=setup["study_group"],
+            group=foreign_group,
             applications=[foreign_app],
         )
 
@@ -1151,7 +1160,7 @@ class TestMentorTeamEnrollProject:
             format="json",
         )
         assert response.status_code == 400
-        assert "треке" in response.data["error"].lower()
+        assert "трек" in response.data["error"].lower()
 
     def test_enroll_forbidden_for_non_mentor(
         self,
@@ -1207,9 +1216,103 @@ class TestMentorTeamEnrollProject:
         assert response.status_code == 400
         assert "ещё не открыта" in response.data["error"].lower()
 
+    def test_enroll_quota_global_across_tracks(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        institute,
+        departments,
+        make_user,
+    ) -> None:
+        """Наставник не обходит глобальную квоту через другой трек."""
+        setup = mentor_team_setup
+        self._open_registration(institute, setup["semester"])
+        app = setup["app"]
+        app.recommended_teams_count = 1
+        app.save(update_fields=["recommended_teams_count"])
 
-@pytest.mark.django_db
-class TestPlaceholderUserRegistration:
+        track_b = ProjectTrack.objects.create(
+            name="Трек B",
+            department=departments["child"],
+            semester=setup["semester"],
+            author=setup["mentor"],
+            min_team_members=1,
+            max_team_members=5,
+            recommended_teams_count=1,
+        )
+        ProjectTrackGroup.objects.create(
+            project_track=track_b, study_group=setup["study_group"]
+        )
+        ProjectTrackApplication.objects.create(
+            project_track=track_b, project_application=app
+        )
+
+        other_captain = make_user(
+            role_code="student", email="mentor-xtrack-cap@example.com"
+        )
+        other_captain.study_group = setup["study_group"]
+        other_captain.save(update_fields=["study_group"])
+        other_team = Team.objects.create(
+            name="Occupied", home_study_group=setup["study_group"]
+        )
+        other_ts = TeamSemester.objects.create(
+            team=other_team,
+            semester=setup["semester"],
+            project_track=setup["track"],
+            captain=other_captain,
+            status=TeamSemester.Status.ASSEMBLED,
+            project_application=app,
+        )
+        TeamSemesterMember.objects.create(
+            team_semester=other_ts,
+            user=other_captain,
+            semester=setup["semester"],
+            role=TeamSemesterMember.Role.LEADER,
+        )
+
+        team_semester = setup["team_semester"]
+        team_semester.status = TeamSemester.Status.ASSEMBLED
+        team_semester.project_track = track_b
+        team_semester.save(update_fields=["status", "project_track"])
+
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, team_semester.id, 'enroll-project/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"projectId": app.id},
+            format="json",
+        )
+        assert response.status_code == 400
+        assert "максимальное" in response.data["error"].lower()
+
+    def test_enroll_same_project_idempotent_when_quota_full(
+        self,
+        api_client: APIClient,
+        mentor_team_setup: dict[str, Any],
+        institute,
+    ) -> None:
+        """Повторный enroll на тот же проект не падает по квоте."""
+        setup = mentor_team_setup
+        self._open_registration(institute, setup["semester"])
+        app = setup["app"]
+        app.recommended_teams_count = 1
+        app.save(update_fields=["recommended_teams_count"])
+
+        team_semester = setup["team_semester"]
+        team_semester.status = TeamSemester.Status.ASSEMBLED
+        team_semester.project_application = app
+        team_semester.save(update_fields=["status", "project_application"])
+
+        api_client.force_authenticate(user=setup["mentor"])
+        response = api_client.post(
+            f"{_team_url(setup['study_group'].id, team_semester.id, 'enroll-project/')}"
+            f"?semester_id={setup['semester'].id}",
+            {"projectId": app.id},
+            format="json",
+        )
+        assert response.status_code == 200
+        assert response.data["projectId"] == app.id
+
     def test_register_updates_placeholder_user(
         self,
         roles: dict[str, Any],
