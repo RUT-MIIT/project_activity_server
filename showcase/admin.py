@@ -1,4 +1,10 @@
-from django.contrib import admin
+from django.contrib import admin, messages
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
+
+from showcase.domain.track_composer_comment_excel import (
+    build_track_composer_comment_xlsx,
+)
 
 from .models import (
     ApplicationInvolvedDepartment,
@@ -15,6 +21,8 @@ from .models import (
     ProjectTrackGroup,
     Tag,
 )
+
+_XLSX_CONTENT_TYPE = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 
 @admin.register(ApplicationStatus)
@@ -87,6 +95,8 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
         verbose_name = "Причастное подразделение"
         verbose_name_plural = "Причастные подразделения"
 
+    actions = ("export_track_composer_comments",)
+
     list_display = (
         "title",
         "print_number",
@@ -121,6 +131,44 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
     readonly_fields = ("creation_date",)
     filter_horizontal = ("target_institutes", "tags")
     inlines = [ApplicationInvolvedUserInline, ApplicationInvolvedDepartmentInline]
+
+    @admin.action(description="Выгрузить комментарии составителю трека (Excel)")
+    def export_track_composer_comments(self, request, queryset):
+        """Выгружает выбранные заявки в xlsx с двумя листами по заполненности комментария."""
+        changelist_url = reverse("admin:showcase_projectapplication_changelist")
+        if not queryset.exists():
+            self.message_user(
+                request,
+                "Не выбрано ни одной заявки для выгрузки.",
+                level=messages.ERROR,
+            )
+            return HttpResponseRedirect(changelist_url)
+
+        semester_ids = set(queryset.values_list("semester_id", flat=True))
+        if len(semester_ids) != 1:
+            self.message_user(
+                request,
+                "Выберите заявки одного семестра. Смешанные семестры выгружать нельзя.",
+                level=messages.ERROR,
+            )
+            return HttpResponseRedirect(changelist_url)
+
+        applications = list(
+            queryset.select_related(
+                "author",
+                "author__department",
+                "author__department__parent",
+                "semester",
+            )
+        )
+        payload = build_track_composer_comment_xlsx(applications)
+        semester = applications[0].semester
+        semester_part = semester.code if semester is not None else "no-semester"
+        filename = f"track_composer_comments_{semester_part}.xlsx"
+
+        response = HttpResponse(payload, content_type=_XLSX_CONTENT_TYPE)
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        return response
 
     fieldsets = (
         (
