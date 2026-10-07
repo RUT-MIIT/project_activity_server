@@ -381,6 +381,7 @@ class Settings(models.Model):
 
 ACTIVE_SEMESTER_SETTING_CODE = "active_semester_code"
 NEXT_SEMESTER_SETTING_CODE = "next_semester_code"
+ADMIN_EMAIL_SETTING_CODE = "admin_email"
 
 
 class Semester(models.Model):

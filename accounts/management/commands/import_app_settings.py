@@ -17,7 +17,7 @@ class Command(BaseCommand):
         "Импорт настроек (Settings) из CSV: колонки code, description, value. "
         "По умолчанию: accounts/data/app_settings.csv. "
         "Типичные ключи: active_semester_code, next_semester_code (код семестра), "
-        "active_academic_year_code (код учебного года)."
+        "active_academic_year_code (код учебного года), admin_email."
     )
 
     def add_arguments(self, parser):

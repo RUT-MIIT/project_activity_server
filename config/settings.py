@@ -239,6 +239,7 @@ if EMAIL_BACKEND.endswith("smtp.EmailBackend"):
 SERVER_EMAIL = os.getenv("EMAIL_HOST_USER", "no-reply@example.com")
 DEFAULT_FROM_EMAIL = os.getenv("EMAIL_HOST_USER", "no-reply@example.com")
 FRONT_END = os.environ.get("FRONT_END", "http://localhost:3000")
+# Запасной адрес, если в Settings нет непустого admin_email.
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "")
 # Путь к карточке заявки на фронте; {id} — подставляется id заявки
 FRONT_END_APPLICATION_PATH = os.environ.get(

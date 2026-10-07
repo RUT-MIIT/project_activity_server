@@ -478,6 +478,56 @@ class TestPreRegisteredStudentMismatch:
         assert "У меня другая группа" in mail.outbox[0].body
         assert "Иванов" in mail.outbox[0].body
 
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_report_mismatch_prefers_settings_over_env(
+        self,
+        api_client: APIClient,
+        pre_registered_student: PreRegisteredStudent,
+        settings,
+    ) -> None:
+        settings.ADMIN_EMAIL = "env@example.com"
+        Settings.objects.update_or_create(
+            code="admin_email",
+            defaults={"value": "settings@example.com", "description": ""},
+        )
+
+        response = api_client.post(
+            MISMATCH_URL,
+            {
+                "id": pre_registered_student.pk,
+                "comment": "Группа не совпадает",
+            },
+            format="json",
+        )
+
+        assert response.status_code == 200
+        assert mail.outbox[0].to == ["settings@example.com"]
+
+    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    def test_report_mismatch_falls_back_to_env_when_settings_empty(
+        self,
+        api_client: APIClient,
+        pre_registered_student: PreRegisteredStudent,
+        settings,
+    ) -> None:
+        settings.ADMIN_EMAIL = "env@example.com"
+        Settings.objects.update_or_create(
+            code="admin_email",
+            defaults={"value": "   ", "description": ""},
+        )
+
+        response = api_client.post(
+            MISMATCH_URL,
+            {
+                "id": pre_registered_student.pk,
+                "comment": "Группа не совпадает",
+            },
+            format="json",
+        )
+
+        assert response.status_code == 200
+        assert mail.outbox[0].to == ["env@example.com"]
+
     def test_report_mismatch_without_admin_email(
         self,
         api_client: APIClient,

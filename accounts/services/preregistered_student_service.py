@@ -17,7 +17,7 @@ from accounts.domain.preregistered_student_import import (
     last_names_match,
     normalize_snils,
 )
-from accounts.models import PreRegisteredStudent
+from accounts.models import ADMIN_EMAIL_SETTING_CODE, PreRegisteredStudent, Settings
 from accounts.repositories.preregistered_student import PreRegisteredStudentRepository
 from accounts.serializers import UserSerializer
 from showcase.models import Institute
@@ -201,9 +201,9 @@ class PreRegisteredStudentService:
         Отправляет администратору письмо о расхождении данных.
 
         Raises:
-            ValueError: если предрегистрация не найдена или не настроен ADMIN_EMAIL.
+            ValueError: если предрегистрация не найдена или не задан email администратора.
         """
-        admin_email = (getattr(settings, "ADMIN_EMAIL", "") or "").strip()
+        admin_email = self._resolve_admin_email()
         if not admin_email:
             raise ValueError("ADMIN_EMAIL не настроен")
 
@@ -232,6 +232,24 @@ class PreRegisteredStudentService:
             recipient_list=[admin_email],
             fail_silently=False,
         )
+
+    @staticmethod
+    def _resolve_admin_email() -> str:
+        """
+        Возвращает email администратора.
+
+        Сначала читает настройку ``admin_email`` из модели Settings.
+        Если значение пустое, берёт ``ADMIN_EMAIL`` из окружения.
+        """
+        stored = (
+            Settings.objects.filter(code=ADMIN_EMAIL_SETTING_CODE)
+            .values_list("value", flat=True)
+            .first()
+        )
+        email = (stored or "").strip()
+        if email:
+            return email
+        return (getattr(settings, "ADMIN_EMAIL", "") or "").strip()
 
     @staticmethod
     def _send_registration_email(
