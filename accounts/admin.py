@@ -36,6 +36,7 @@ class UserAdmin(BaseUserAdmin):
         "is_staff",
     )
     list_filter = ("role", "is_staff", "is_active", "department")
+    autocomplete_fields = ("department",)
     search_fields = (
         "email",
         "first_name",
@@ -204,6 +205,7 @@ class DepartmentAdmin(admin.ModelAdmin):
         "can_save_project_applications",
     )
     search_fields = ("name", "short_name")
+    ordering = ("name", "pk")
     list_filter = ("parent", "can_save_project_applications")
 
 
