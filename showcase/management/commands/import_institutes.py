@@ -4,6 +4,7 @@ from django.core.management.base import BaseCommand, CommandError
 from django.db import transaction
 import pandas as pd
 
+from accounts.models import Department
 from showcase.models import Institute
 
 REQUIRED_COLUMNS = ("code", "name", "position")
@@ -12,14 +13,14 @@ REQUIRED_COLUMNS = ("code", "name", "position")
 class Command(BaseCommand):
     help = (
         "Идемпотентный импорт справочника институтов из CSV. "
-        "По умолчанию: showcase/management/commands/institutes.csv"
+        "По умолчанию: showcase/management/commands/institutes_miit.csv"
     )
 
     def add_arguments(self, parser):
         parser.add_argument(
             "--file",
             type=str,
-            default="institutes.csv",
+            default="institutes_miit.csv",
             help="Путь к CSV файлу с данными институтов",
         )
         parser.add_argument(
@@ -40,14 +41,14 @@ class Command(BaseCommand):
                 "В CSV отсутствуют обязательные колонки: " + ", ".join(sorted(missing))
             )
 
-        if options["clear"]:
-            deleted, _ = Institute.objects.all().delete()
-            self.stdout.write(f"Удалено институтов: {deleted}")
-
         created_count = 0
         updated_count = 0
 
         with transaction.atomic():
+            if options["clear"]:
+                deleted, _ = Institute.objects.all().delete()
+                self.stdout.write(f"Удалено институтов: {deleted}")
+
             for line_no, row in enumerate(df.itertuples(index=False), start=2):
                 code = str(row.code).strip()
                 name = str(row.name).strip()
@@ -56,14 +57,17 @@ class Command(BaseCommand):
                 if not code or not name:
                     raise CommandError(f"Строка {line_no}: пустые code или name")
 
-                _, created = Institute.objects.update_or_create(
-                    code=code,
-                    defaults={
-                        "name": name,
-                        "position": position,
-                        "is_active": True,
-                    },
-                )
+                defaults = {"name": name, "position": position, "is_active": True}
+                department_name = getattr(row, "department_name", None)
+                if pd.notna(department_name):
+                    try:
+                        defaults["department"] = Department.objects.get(name=department_name)
+                    except (Department.DoesNotExist, Department.MultipleObjectsReturned) as exc:
+                        raise CommandError(
+                            f"Строка {line_no}: нет однозначного подразделения «{department_name}». "
+                            "Сначала запустите import_departments."
+                        ) from exc
+                _, created = Institute.objects.update_or_create(code=code, defaults=defaults)
                 if created:
                     created_count += 1
                 else:
