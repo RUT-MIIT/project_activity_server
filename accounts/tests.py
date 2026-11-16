@@ -6,6 +6,8 @@ from django.test import TestCase, override_settings
 from django.utils.encoding import force_bytes
 from django.utils.http import urlsafe_base64_encode
 from rest_framework.test import APIClient
+from rest_framework_simplejwt.backends import TokenBackend
+from rest_framework_simplejwt.tokens import AccessToken
 
 from showcase.models import Institute
 
@@ -103,6 +105,26 @@ class AccountsApiTests(TestCase):
         self.assertIn("user", response.data)
         # В user должен присутствовать institute_code
         self.assertIn("institute_code", response.data["user"])
+
+    def test_rotated_signing_key_rejects_old_access_token(self):
+        login = self.client.post(
+            "/api/accounts/login/",
+            {"email": self.user.email, "password": self.user_password},
+            format="json",
+        )
+        self.assertEqual(login.status_code, 200)
+
+        current_token = login.data["access"]
+        old_backend = TokenBackend(
+            algorithm="HS256", signing_key=settings.SECRET_KEY + "-previous"
+        )
+        old_token = old_backend.encode(AccessToken(current_token).payload)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {current_token}")
+        self.assertEqual(self.client.get("/api/accounts/user/").status_code, 200)
+
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {old_token}")
+        self.assertEqual(self.client.get("/api/accounts/user/").status_code, 401)
 
     def test_user_me_requires_auth_and_returns_profile(self):
         """Без токена возвращается 401, с токеном — профиль текущего пользователя."""

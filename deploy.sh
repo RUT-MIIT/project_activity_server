@@ -72,16 +72,20 @@ fi
 pip install -r requirements.txt
 log_info "Зависимости установлены"
 
-# 3. Создание .env файла
-log_info "Создание .env файла..."
+# 3. Создание .env файла только при первой установке
 ENV_FILE="$PROJECT_DIR/.env"
 
 if [ -f "$ENV_FILE" ]; then
-    log_warn ".env файл уже существует, создаем резервную копию..."
-    cp "$ENV_FILE" "${ENV_FILE}.backup.$(date +%Y%m%d_%H%M%S)"
-fi
-
-cat > "$ENV_FILE" << EOF
+    log_info "Существующий .env сохранен"
+    if ! python -c 'import os, sys; from dotenv import dotenv_values; key = os.environ.get("SECRET_KEY") or dotenv_values(sys.argv[1]).get("SECRET_KEY"); sys.exit(0 if key and key.strip() else 1)' "$ENV_FILE"; then
+        log_error "SECRET_KEY не задан в окружении или .env"
+        exit 1
+    fi
+else
+    NEW_SECRET_KEY="$(python -c 'import secrets; print(secrets.token_urlsafe(48))')"
+    (
+        umask 077
+        cat > "$ENV_FILE" << EOF
 # Настройки базы данных PostgreSQL
 DB_ENGINE=django.db.backends.postgresql
 DB_NAME=pd
@@ -91,7 +95,7 @@ DB_HOST=localhost
 DB_PORT=5432
 
 # Настройки Django
-SECRET_KEY=django-insecure-fi%=(\$26*@4^71-g%(o0ed&6eej^ov4l1e*8r_mw#m=k#oi*)a
+SECRET_KEY=$NEW_SECRET_KEY
 DEBUG=False
 ALLOWED_HOSTS=*
 
@@ -101,8 +105,12 @@ EMAIL_BACKEND=django.core.mail.backends.filebased.EmailBackend
 # Frontend URL
 FRONT_END=http://localhost:3000
 EOF
+    )
+    unset NEW_SECRET_KEY
+    log_info "Новый .env создан с уникальным SECRET_KEY"
+fi
 
-log_info ".env файл создан"
+chmod 600 "$ENV_FILE"
 
 # 4. Создание пользователя и базы данных PostgreSQL
 log_info "Создание пользователя и базы данных PostgreSQL..."
