@@ -1,0 +1,13 @@
+[Unit]
+Description=Project Activity Quickdraw WebSocket
+After=network.target
+
+[Service]
+User=nnd
+Group=nnd
+WorkingDirectory=/srv/project_activity_server
+ExecStart=/srv/project_activity_server/venv/bin/uvicorn config.asgi:application --host 127.0.0.1 --port 8001 --no-access-log --log-level warning --ws websockets --ws-max-size 524288
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

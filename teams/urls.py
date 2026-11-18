@@ -5,6 +5,7 @@ from teams.entities.Direction import DirectionViewSet
 from teams.entities.InstituteResponsible import InstituteResponsibleViewSet
 from teams.entities.MentorTeam import MentorTeamViewSet
 from teams.entities.StudyGroup import StudyGroupViewSet
+from teams.entities.TeamBoard import TeamBoardView
 from teams.entities.TeamLobby import MyTeamViewSet, TeamLobbyViewSet
 from teams.views import TeamSemesterViewSet, TeamViewSet
 
@@ -29,6 +30,7 @@ my_team = MyTeamViewSet.as_view(
 
 urlpatterns = [
     path("my-team/", my_team, name="my-team-root"),
+    path("my-team/board/", TeamBoardView.as_view(), name="my-team-board"),
     path(
         "my-team/event-log/",
         MyTeamViewSet.as_view({"get": "event_log"}),

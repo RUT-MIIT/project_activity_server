@@ -362,6 +362,13 @@ class TeamSemester(models.Model):
         return f"{self.team} — {self.semester}"
 
 
+class TeamBoard(models.Model):
+    team = models.OneToOneField(
+        TeamSemester, on_delete=models.CASCADE, related_name="board"
+    )
+    snapshot = models.JSONField()
+
+
 class TeamSemesterMember(models.Model):
     """Участник команды в конкретном семестре."""
 

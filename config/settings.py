@@ -78,6 +78,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
+
+BOARD_ALLOWED_ORIGINS = [
+    value.strip()
+    for value in os.getenv("BOARD_ALLOWED_ORIGINS", "").split(",")
+    if value.strip()
+]
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {"hosts": [os.getenv("BOARD_REDIS_URL", "redis://127.0.0.1:6379/0")]},
+    }
+}
 
 
 # Database
