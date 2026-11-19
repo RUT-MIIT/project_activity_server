@@ -367,6 +367,7 @@ class TeamBoard(models.Model):
         TeamSemester, on_delete=models.CASCADE, related_name="board"
     )
     snapshot = models.JSONField()
+    revision = models.PositiveBigIntegerField(default=0)
 
 
 class TeamSemesterMember(models.Model):

@@ -9,11 +9,9 @@ from rest_framework.utils.json import loads
 from rest_framework.views import APIView
 
 from accounts.models import Semester
-from teams.board import load_board_snapshot
-from teams.models import TeamBoard, TeamSemester
+from teams.board import MAX_BOARD_BODY, load_board_snapshot, save_board_snapshot
+from teams.models import TeamSemester
 from teams.permissions import StudentWithStudyGroupPermission
-
-MAX_BOARD_BODY = 8 * 1024 * 1024
 
 
 class TeamBoardView(APIView):
@@ -57,7 +55,4 @@ class TeamBoardView(APIView):
         snapshot = data.get("snapshot") if isinstance(data, dict) else None
         if not isinstance(snapshot, dict):
             raise ParseError("snapshot must be a JSON object.")
-        TeamBoard.objects.update_or_create(
-            team_id=team_id, defaults={"snapshot": snapshot}
-        )
-        return Response({"snapshot": snapshot})
+        return Response({"snapshot": save_board_snapshot(team_id, snapshot)})

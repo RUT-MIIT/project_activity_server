@@ -88,7 +88,15 @@ BOARD_ALLOWED_ORIGINS = [
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels_redis.core.RedisChannelLayer",
-        "CONFIG": {"hosts": [os.getenv("BOARD_REDIS_URL", "redis://127.0.0.1:6379/0")]},
+        "CONFIG": {
+            "hosts": [
+                {
+                    "address": os.getenv("BOARD_REDIS_URL", "redis://127.0.0.1:6379/0"),
+                    # Channels waits up to 5 seconds for a message on an idle queue.
+                    "socket_timeout": 15,
+                }
+            ],
+        },
     }
 }
 

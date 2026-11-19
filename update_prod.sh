@@ -3,7 +3,7 @@
 #   ./update_prod.sh
 #   ./update_prod.sh main
 #
-# Шаги: git pull → pip install → migrate → collectstatic → restart gunicorn (systemd).
+# Шаги: git pull → pip install → migrate → collectstatic → перезапуск сервисов.
 #
 # Переменные в .env (опционально):
 #   GUNICORN_SERVICE=project_activity_server   — имя systemd unit (по умолчанию)
@@ -108,7 +108,19 @@ if [[ "$USER" != "nnd" ]]; then
 fi
 
 log_info "Директория проекта: ${PROJECT_DIR}"
-log_info "Systemd unit: ${GUNICORN_SERVICE}"
+
+SERVICES=("${GUNICORN_SERVICE}")
+BOARD_SERVICE="$(read_env_value BOARD_SERVICE || true)"
+if [[ -n "$BOARD_SERVICE" ]]; then
+  if [[ "$(systemctl show --property=LoadState --value "$BOARD_SERVICE")" != "loaded" ]]; then
+    log_error "Сервис доски ${BOARD_SERVICE} не найден"
+    exit 1
+  fi
+  SERVICES+=("$BOARD_SERVICE")
+elif [[ "$(systemctl show --property=LoadState --value quickdraw-board.service)" == "loaded" ]]; then
+  SERVICES+=("quickdraw-board.service")
+fi
+log_info "Systemd units: ${SERVICES[*]}"
 
 if ! command -v git &>/dev/null; then
   log_error "git не найден"
@@ -139,17 +151,18 @@ python manage.py migrate --noinput
 log_info "Сбор статических файлов..."
 python manage.py collectstatic --noinput
 
-log_info "Перезапуск gunicorn: sudo systemctl restart ${GUNICORN_SERVICE}"
-sudo systemctl restart "${GUNICORN_SERVICE}"
+log_info "Перезапуск сервисов: ${SERVICES[*]}"
+sudo systemctl restart "${SERVICES[@]}"
 
 sleep 2
-if sudo systemctl is-active --quiet "${GUNICORN_SERVICE}"; then
-  log_info "Сервис ${GUNICORN_SERVICE} запущен"
-else
-  log_error "Сервис не активен. Логи: sudo journalctl -u ${GUNICORN_SERVICE} -n 50 --no-pager"
-  exit 1
-fi
+for service in "${SERVICES[@]}"; do
+  if sudo systemctl is-active --quiet "$service"; then
+    log_info "Сервис ${service} запущен"
+  else
+    log_error "Сервис ${service} не активен. Логи: sudo journalctl -u ${service} -n 50 --no-pager"
+    exit 1
+  fi
+done
 
 log_info "Обновление завершено."
-log_info "Статус: sudo systemctl status ${GUNICORN_SERVICE}"
-log_info "Логи:   sudo journalctl -u ${GUNICORN_SERVICE} -f"
+log_info "Статус: sudo systemctl status ${SERVICES[*]}"
