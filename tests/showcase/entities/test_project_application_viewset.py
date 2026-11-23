@@ -462,6 +462,45 @@ class TestProjectApplicationSemesterAutoAssign:
         app = ProjectApplication.objects.get(pk=response.data["id"])
         assert app.author_phone == ""
 
+    @pytest.mark.parametrize(
+        ("with_department", "department_field", "expected_department"),
+        [
+            (True, {}, "child"),
+            (True, {"main_department_id": None}, "child"),
+            (True, {"main_department_id": "parent"}, "parent"),
+            (False, {}, None),
+        ],
+    )
+    def test_sets_main_department_on_create(
+        self,
+        statuses,
+        make_user,
+        departments,
+        with_department,
+        department_field,
+        expected_department,
+    ):
+        user = make_user(role_code="user", with_department=with_department)
+        client = APIClient()
+        client.force_authenticate(user=user)
+
+        payload = {**self._base_payload(), **department_field}
+        department_key = payload.get("main_department_id")
+        if department_key is not None:
+            payload["main_department_id"] = departments[department_key].id
+        expected_id = (
+            departments[expected_department].id if expected_department else None
+        )
+
+        response = client.post(
+            "/api/showcase/project-applications/", payload, format="json"
+        )
+
+        assert response.status_code == 201, response.data
+        assert response.data["main_department_id"] == expected_id
+        app = ProjectApplication.objects.get(pk=response.data["id"])
+        assert app.main_department_id == expected_id
+
     def test_sets_next_semester_from_settings_when_not_provided(
         self, statuses, make_user
     ):

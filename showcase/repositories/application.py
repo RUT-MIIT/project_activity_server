@@ -29,7 +29,7 @@ class ProjectApplicationRepository:
     def create(
         self,
         dto: ProjectApplicationCreateDTO,
-        author: User,
+        author: User | None,
         status_code: str,
         is_external: bool = False,
     ) -> ProjectApplication:
@@ -98,7 +98,7 @@ class ProjectApplicationRepository:
             main_department=(
                 Department.objects.get(pk=dto.main_department_id)
                 if dto.main_department_id
-                else None
+                else getattr(author, "department", None)
             ),
             status=status,
             application_year=current_year,
