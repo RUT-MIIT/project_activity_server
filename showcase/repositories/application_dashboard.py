@@ -113,10 +113,8 @@ class ApplicationDashboardRepository:
             .prefetch_related("target_institutes", "involved_departments")
         )
 
-        if filters.application_type == "external":
-            queryset = queryset.filter(is_internal_customer=False)
-        elif filters.application_type == "internal":
-            queryset = queryset.filter(is_internal_customer=True)
+        if filters.application_type != "all":
+            queryset = queryset.filter(customer_type=filters.application_type)
 
         if filters.department_id is not None:
             dept_ids = self.domain.resolve_department_subtree_ids(filters.department_id)
@@ -230,7 +228,7 @@ class ApplicationDashboardRepository:
         queryset: QuerySet[ProjectApplication],
         dimension_map: dict[str, set[int]],
     ) -> dict[str, dict[str, int | float]]:
-        """Считает долю внешних заявок (is_internal_customer=False) по каждому измерению."""
+        """Считает долю external и representative по каждому измерению."""
         result: dict[str, dict[str, int | float]] = {
             key: {"external_count": 0, "percent": 0.0} for key in dimension_map
         }
@@ -241,9 +239,9 @@ class ApplicationDashboardRepository:
         if not all_app_ids:
             return result
 
-        internal_customer_by_app = dict(
+        customer_type_by_app = dict(
             queryset.filter(id__in=all_app_ids).values_list(
-                "id", "is_internal_customer"
+                "id", "customer_type"
             )
         )
 
@@ -252,7 +250,7 @@ class ApplicationDashboardRepository:
             external_count = sum(
                 1
                 for app_id in app_ids
-                if not internal_customer_by_app.get(app_id, False)
+                if customer_type_by_app.get(app_id) in {"external", "representative"}
             )
             percent = round((external_count / total) * 100, 1) if total else 0.0
             result[key] = {"external_count": external_count, "percent": percent}
@@ -740,15 +738,17 @@ class ApplicationDashboardRepository:
     def get_application_type_distribution(
         self, queryset: QuerySet[ProjectApplication]
     ) -> dict:
-        """Доли внутренних/внешних заявок по полю is_internal_customer."""
+        """Доли заявок по трём типам заказчика."""
         aggregates = queryset.aggregate(
             total=Count("id"),
-            external_count=Count("id", filter=Q(is_internal_customer=False)),
-            internal_count=Count("id", filter=Q(is_internal_customer=True)),
+            external_count=Count("id", filter=Q(customer_type="external")),
+            internal_count=Count("id", filter=Q(customer_type="internal")),
+            representative_count=Count("id", filter=Q(customer_type="representative")),
         )
         total = aggregates["total"]
         external_count = aggregates["external_count"]
         internal_count = aggregates["internal_count"]
+        representative_count = aggregates["representative_count"]
 
         external_pct = round((external_count / total) * 100, 1) if total else 0.0
         internal_pct = round((internal_count / total) * 100, 1) if total else 0.0
@@ -756,7 +756,7 @@ class ApplicationDashboardRepository:
         return {
             "id": "application_type_distribution",
             "title": "Доли заявок по типу",
-            "subtitle": "Внутренние vs внешние",
+            "subtitle": "Тип заказчика",
             "type": "pie",
             "segments": [
                 {
@@ -765,6 +765,13 @@ class ApplicationDashboardRepository:
                     "count": internal_count,
                     "percent": internal_pct,
                     "color": "blue",
+                },
+                {
+                    "group": "representative",
+                    "label": "Через представителя",
+                    "count": representative_count,
+                    "percent": round((representative_count / total) * 100, 1) if total else 0.0,
+                    "color": "orange",
                 },
                 {
                     "group": "external",
@@ -912,6 +919,7 @@ class ApplicationDashboardRepository:
                 {
                     "application_number": app.print_number or f"#{app.pk}",
                     "application_kind": app.application_kind,
+                    "customer_type": app.customer_type,
                     "case_description": app.case_description,
                     "days": days,
                     "institute_code": department_obj,

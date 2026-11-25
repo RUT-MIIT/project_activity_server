@@ -782,6 +782,7 @@ class TestInstituteResponsibleTeamsAndStudents:
             "id": project.id,
             "title": "Проект А",
             "applicationKind": "project",
+            "customerType": "external",
             "caseDescription": "",
         }
         assert item["mentors"] == [
@@ -906,6 +907,7 @@ class TestInstituteResponsibleTeamsAndStudents:
             "id": project.id,
             "title": "СтудПроект",
             "applicationKind": "project",
+            "customerType": "external",
             "caseDescription": "",
         }
         assert registered["mentors"][0]["id"] == mentor.id
@@ -965,6 +967,7 @@ class TestInstituteResponsibleTeamsAndStudents:
             "id": project.id,
             "title": "ПрямойПроект",
             "applicationKind": "project",
+            "customerType": "external",
             "caseDescription": "",
         }
         assert student["mentors"][0]["id"] == mentor.id

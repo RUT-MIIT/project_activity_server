@@ -123,6 +123,7 @@ class ProjectApplicationListSerializer(serializers.ModelSerializer):
             "id",
             "title",
             "application_kind",
+            "customer_type",
             "case_description",
             "company",
             "creation_date",
@@ -136,6 +137,14 @@ class ProjectApplicationListSerializer(serializers.ModelSerializer):
             "author_email",
         ]
         read_only_fields = fields
+
+
+def validate_customer_type_compatibility(attrs):
+    if "customer_type" in attrs and "is_internal_customer" in attrs:
+        if (attrs["customer_type"] == "internal") != attrs["is_internal_customer"]:
+            raise serializers.ValidationError(
+                {"customer_type": "Тип заказчика не соответствует is_internal_customer."}
+            )
 
 
 class ProjectApplicationCreateSerializer(serializers.Serializer):
@@ -213,6 +222,7 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     needs_consultation = serializers.BooleanField(required=False)
     main_department_id = serializers.IntegerField(required=False, allow_null=True)
     is_internal_customer = serializers.BooleanField(required=False)
+    customer_type = serializers.ChoiceField(choices=ProjectApplication.CustomerType.choices, required=False)
     semester_id = serializers.IntegerField(required=False, allow_null=True)
     is_continuing = serializers.BooleanField(required=False)
     track_composer_comment = serializers.CharField(required=False, allow_blank=True)
@@ -228,6 +238,7 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
 
     def validate(self, attrs: dict) -> dict:
         """Проверяет обязательность полей формы и границы размера команды."""
+        validate_customer_type_compatibility(attrs)
         kind = attrs.get("application_kind", ProjectApplication.Kind.PROJECT)
         if kind == ProjectApplication.Kind.PROJECT:
             errors = {
@@ -306,6 +317,7 @@ class ProjectApplicationUpdateSerializer(serializers.Serializer):
     needs_consultation = serializers.BooleanField(required=False)
     main_department_id = serializers.IntegerField(required=False, allow_null=True)
     is_internal_customer = serializers.BooleanField(required=False)
+    customer_type = serializers.ChoiceField(choices=ProjectApplication.CustomerType.choices, required=False)
     semester_id = serializers.IntegerField(required=False, allow_null=True)
     is_continuing = serializers.BooleanField(required=False)
     track_composer_comment = serializers.CharField(required=False, allow_blank=True)
@@ -315,6 +327,7 @@ class ProjectApplicationUpdateSerializer(serializers.Serializer):
 
     def validate(self, attrs: dict) -> dict:
         """Проверяет согласованность min/max, если оба переданы."""
+        validate_customer_type_compatibility(attrs)
         min_members = attrs.get("min_team_members")
         max_members = attrs.get("max_team_members")
         both_provided = min_members is not None and max_members is not None

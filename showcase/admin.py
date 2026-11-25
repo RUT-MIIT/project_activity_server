@@ -134,7 +134,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
         "creation_date",
         "project_level",
         "needs_consultation",
-        "is_internal_customer",
+        "customer_type",
         "is_continuing",
         "is_competitive_selection",
         "semester",
@@ -227,7 +227,7 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
             {
                 "fields": (
                     "company",
-                    "is_internal_customer",
+                    "customer_type",
                     "is_continuing",
                     "is_competitive_selection",
                     "track_composer_comment",

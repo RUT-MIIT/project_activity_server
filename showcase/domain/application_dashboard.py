@@ -66,7 +66,7 @@ RATING_CHART_SERIES_COLORS: dict[str, str] = {
 INSTITUTE_LEVEL_CATEGORY_KEY = "from_institute"
 INSTITUTE_LEVEL_CATEGORY_LABEL = "От института"
 
-VALID_APPLICATION_TYPES: frozenset[str] = frozenset({"all", "external", "internal"})
+VALID_APPLICATION_TYPES: frozenset[str] = frozenset({"all", "external", "internal", "representative"})
 
 
 @dataclass(frozen=True)
@@ -124,7 +124,7 @@ class ApplicationDashboardDomain:
         value = (raw or "all").strip().lower()
         if value not in VALID_APPLICATION_TYPES:
             raise ValueError(
-                "application_type должен быть одним из: all, external, internal"
+                "application_type должен быть одним из: all, external, internal, representative"
             )
         return value
 

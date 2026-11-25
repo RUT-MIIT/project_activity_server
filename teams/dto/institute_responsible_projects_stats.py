@@ -23,7 +23,7 @@ def _empty_institute() -> dict[str, str]:
 
 def _project_type(application: ProjectApplication) -> str:
     """Тип проекта для stats API: internal / external."""
-    return "internal" if application.is_internal_customer else "external"
+    return application.customer_type
 
 
 def _author_dict(application: ProjectApplication) -> dict[str, Any]:
@@ -164,6 +164,7 @@ class ProjectsStatsListItemDTO:
         self.id = application.id
         self.name = application.title or ""
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.type = _project_type(application)
         self.customer = application.company or ""
@@ -176,6 +177,7 @@ class ProjectsStatsListItemDTO:
             "id": self.id,
             "name": self.name,
             "applicationKind": self.application_kind,
+            "customerType": self.customer_type,
             "caseDescription": self.case_description,
             "type": self.type,
             "customer": self.customer,
@@ -199,6 +201,7 @@ class ProjectsStatsDetailDTO:
         self.id = application.id
         self.name = application.title or ""
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.type = _project_type(application)
         self.customer = application.company or ""
@@ -221,6 +224,7 @@ class ProjectsStatsDetailDTO:
             "id": self.id,
             "name": self.name,
             "applicationKind": self.application_kind,
+            "customerType": self.customer_type,
             "caseDescription": self.case_description,
             "type": self.type,
             "customer": self.customer,

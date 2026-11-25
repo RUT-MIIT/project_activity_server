@@ -456,6 +456,7 @@ class TestMentorTeamRetrieve:
             "id": setup["app"].id,
             "title": setup["app"].title,
             "applicationKind": "project",
+            "customerType": "external",
             "caseDescription": "",
         }
 
@@ -585,6 +586,7 @@ class TestMentorTeamRetrieveQueryPerformance:
             "id": app.id,
             "title": app.title,
             "applicationKind": "project",
+            "customerType": "external",
             "caseDescription": "",
         }
 
@@ -916,6 +918,7 @@ class TestMentorTeamProjectEnrollmentBlock:
             "id": setup["app"].id,
             "title": setup["app"].title,
             "applicationKind": "project",
+            "customerType": "external",
             "caseDescription": "",
         }
         assert any(item["userId"] == newcomer.id for item in response.data["members"])

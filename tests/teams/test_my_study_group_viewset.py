@@ -357,6 +357,7 @@ class TestMyStudyGroupViewSet:
             "id": project.id,
             "title": "Проект Альфа",
             "applicationKind": "project",
+            "customerType": "external",
             "caseDescription": "",
         }
         assert {m["id"] for m in my_team["members"]} == {captain.id, member.id}

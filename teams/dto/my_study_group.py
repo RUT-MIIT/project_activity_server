@@ -115,6 +115,7 @@ class MyStudyGroupTeamDTO:
                 "id": project.id,
                 "title": project.title,
                 "applicationKind": project.application_kind,
+                "customerType": project.customer_type,
                 "caseDescription": project.case_description,
             }
             if project is not None

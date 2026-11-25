@@ -14,6 +14,7 @@ class ProjectListDTO:
         self.id = application.id
         self.title = application.title or ""
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.company = application.company
         self.author_name = (
@@ -101,6 +102,7 @@ class ProjectListDTO:
             "id": self.id,
             "title": self.title,
             "application_kind": self.application_kind,
+            "customer_type": self.customer_type,
             "case_description": self.case_description,
             "company": self.company,
             "author_name": self.author_name,

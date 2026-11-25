@@ -28,6 +28,7 @@ class StudentShowcaseProjectListItemDTO:
         self.id = application.id
         self.title = application.title or ""
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.company = application.company
         self.max_teams = application.recommended_teams_count
@@ -44,6 +45,7 @@ class StudentShowcaseProjectListItemDTO:
             "id": self.id,
             "title": self.title,
             "applicationKind": self.application_kind,
+            "customerType": self.customer_type,
             "caseDescription": self.case_description,
             "company": self.company,
             "maxTeams": self.max_teams,
@@ -89,6 +91,7 @@ class StudentShowcaseProjectDetailDTO:
         self.id = application.id
         self.title = application.title or ""
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.company = application.company
         self.problem_holder = application.problem_holder or ""
@@ -114,6 +117,7 @@ class StudentShowcaseProjectDetailDTO:
             "id": self.id,
             "title": self.title,
             "application_kind": self.application_kind,
+            "customer_type": self.customer_type,
             "case_description": self.case_description,
             "company": self.company,
             "problem_holder": self.problem_holder,
@@ -144,6 +148,7 @@ class StudentShowcaseEnrollResultDTO:
         self.project_id = application.id if application else None
         self.project_title = (application.title or "") if application else ""
         self.application_kind = application.application_kind if application else None
+        self.customer_type = application.customer_type if application else None
         self.case_description = application.case_description if application else ""
 
     def to_dict(self) -> dict[str, Any]:
@@ -153,5 +158,6 @@ class StudentShowcaseEnrollResultDTO:
             "projectId": self.project_id,
             "projectTitle": self.project_title,
             "applicationKind": self.application_kind,
+            "customerType": self.customer_type,
             "caseDescription": self.case_description,
         }

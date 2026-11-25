@@ -107,7 +107,7 @@ class ProjectApplicationRepository:
             year_sequence_number=next_number,
             print_number=print_number,
             is_external=is_external,
-            is_internal_customer=dto.is_internal_customer,
+            customer_type=dto.customer_type,
             semester=semester,
             is_continuing=dto.is_continuing,
             track_composer_comment=dto.track_composer_comment,

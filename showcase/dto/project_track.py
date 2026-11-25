@@ -123,6 +123,7 @@ class ProjectTrackApplicationItemDTO:
         self.id = application.id
         self.title = application.title or ""
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.print_number = application.print_number or ""
         self.teams_count = application.recommended_teams_count
@@ -135,6 +136,7 @@ class ProjectTrackApplicationItemDTO:
             "id": self.id,
             "title": self.title,
             "applicationKind": self.application_kind,
+            "customerType": self.customer_type,
             "caseDescription": self.case_description,
             "print_number": self.print_number,
             "teamsCount": self.teams_count,
@@ -282,6 +284,7 @@ class ProjectTrackGroupProjectDTO:
         self.id = application.id
         self.title = application.title or ""
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.print_number = application.print_number or ""
         self.author_name = (
@@ -294,6 +297,7 @@ class ProjectTrackGroupProjectDTO:
             "id": self.id,
             "title": self.title,
             "application_kind": self.application_kind,
+            "customer_type": self.customer_type,
             "case_description": self.case_description,
             "print_number": self.print_number,
             "author_name": self.author_name,
@@ -334,6 +338,7 @@ class ProjectTrackProjectListDTO:
         self.id = application.id
         self.title = application.title or ""
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.print_number = application.print_number or ""
         self.author_name = (
@@ -352,6 +357,7 @@ class ProjectTrackProjectListDTO:
             "id": self.id,
             "title": self.title,
             "application_kind": self.application_kind,
+            "customer_type": self.customer_type,
             "case_description": self.case_description,
             "print_number": self.print_number,
             "author_name": self.author_name,
@@ -394,6 +400,7 @@ class ProjectTrackProjectDetailDTO:
         self.id = application.id
         self.title = application.title or ""
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.print_number = application.print_number or ""
         self.author_name = (
@@ -412,6 +419,7 @@ class ProjectTrackProjectDetailDTO:
             "id": self.id,
             "title": self.title,
             "application_kind": self.application_kind,
+            "customer_type": self.customer_type,
             "case_description": self.case_description,
             "print_number": self.print_number,
             "author_name": self.author_name,

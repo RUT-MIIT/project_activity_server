@@ -99,6 +99,7 @@ class ProjectApplicationCreateDTO:
         tags: Optional[list[int]] = None,
         main_department_id: Optional[int] = None,
         is_internal_customer: Optional[bool] = None,
+        customer_type: Optional[str] = None,
         semester_id: Optional[int] = None,
         is_continuing: Optional[bool] = None,
         track_composer_comment: Optional[str] = None,
@@ -138,9 +139,8 @@ class ProjectApplicationCreateDTO:
             needs_consultation if needs_consultation is not None else False
         )
         self.main_department_id = main_department_id
-        self.is_internal_customer = (
-            is_internal_customer if is_internal_customer is not None else False
-        )
+        self.customer_type = customer_type or ("internal" if is_internal_customer else "external")
+        self.is_internal_customer = self.customer_type == "internal"
         self.semester_id = semester_id
         self.is_continuing = is_continuing if is_continuing is not None else False
         self.track_composer_comment = track_composer_comment or ""
@@ -184,6 +184,7 @@ class ProjectApplicationCreateDTO:
             "needs_consultation": self.needs_consultation,
             "main_department_id": self.main_department_id,
             "is_internal_customer": self.is_internal_customer,
+            "customer_type": self.customer_type,
             "semester_id": self.semester_id,
             "is_continuing": self.is_continuing,
             "track_composer_comment": self.track_composer_comment,
@@ -223,6 +224,7 @@ class ProjectApplicationUpdateDTO:
         tags: Optional[list[int]] = None,
         main_department_id: Optional[int] = None,
         is_internal_customer: Optional[bool] = None,
+        customer_type: Optional[str] = None,
         semester_id: Optional[int] = None,
         is_continuing: Optional[bool] = None,
         track_composer_comment: Optional[str] = None,
@@ -259,7 +261,9 @@ class ProjectApplicationUpdateDTO:
         self.additional_materials = additional_materials
         self.needs_consultation = needs_consultation
         self.main_department_id = main_department_id
-        self.is_internal_customer = is_internal_customer
+        self.customer_type = customer_type if customer_type is not None else (
+            None if is_internal_customer is None else ("internal" if is_internal_customer else "external")
+        )
         self.semester_id = semester_id
         self.is_continuing = is_continuing
         self.track_composer_comment = track_composer_comment
@@ -288,6 +292,7 @@ class ProjectApplicationReadDTO:
         self.id = application.id
         self.title = application.title
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.company = application.company
         self.creation_date = application.creation_date
@@ -467,6 +472,7 @@ class ProjectApplicationReadDTO:
             "id": self.id,
             "title": self.title,
             "application_kind": self.application_kind,
+            "customer_type": self.customer_type,
             "case_description": self.case_description,
             "company": self.company,
             "creation_date": self.creation_date.isoformat(),
@@ -523,6 +529,7 @@ class ProjectApplicationListDTO:
         self.id = application.id
         self.title = application.title
         self.application_kind = application.application_kind
+        self.customer_type = application.customer_type
         self.case_description = application.case_description
         self.company = application.company
         self.creation_date = application.creation_date
@@ -580,6 +587,7 @@ class ProjectApplicationListDTO:
             "id": self.id,
             "title": self.title,
             "application_kind": self.application_kind,
+            "customer_type": self.customer_type,
             "case_description": self.case_description,
             "company": self.company,
             "creation_date": self.creation_date.isoformat(),

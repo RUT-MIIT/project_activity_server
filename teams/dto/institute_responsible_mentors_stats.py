@@ -21,6 +21,7 @@ def _project_name_snapshot(
         "id": application.id,
         "name": application.title or "",
         "applicationKind": application.application_kind,
+        "customerType": application.customer_type,
         "caseDescription": application.case_description,
     }
 

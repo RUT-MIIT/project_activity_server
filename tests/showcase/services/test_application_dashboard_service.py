@@ -830,7 +830,7 @@ class TestApplicationDashboardService:
     def test_application_type_distribution_pie_segments(
         self, statuses, semester, departments, make_user
     ):
-        """pie chart по внутренним/внешним заявкам содержит 2 сегмента."""
+        """Диаграмма содержит все три типа заказчика."""
         _create_app(
             semester=semester,
             status=statuses["created"],
@@ -857,10 +857,11 @@ class TestApplicationDashboardService:
 
         widget = data["application_type_distribution"]
         assert widget["type"] == "pie"
-        assert len(widget["segments"]) == 2
+        assert len(widget["segments"]) == 3
         segments = {s["group"]: s for s in widget["segments"]}
         assert segments["internal"]["count"] == 1
         assert segments["external"]["count"] == 1
+        assert segments["representative"]["count"] == 0
 
     def test_oldest_in_progress_no_n_plus_one_queries(
         self, statuses, semester, departments, make_user

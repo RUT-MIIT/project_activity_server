@@ -48,6 +48,7 @@ class UserRepository:
                     "id",
                     "title",
                     "application_kind",
+                    "customer_type",
                     "case_description",
                     "author_id",
                     "status_id",

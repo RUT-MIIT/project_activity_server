@@ -58,7 +58,7 @@ class ApplicationDashboardViewSet(viewsets.ViewSet):
                 type=OpenApiTypes.STR,
                 required=False,
                 location=OpenApiParameter.QUERY,
-                description="all | external | internal",
+                description="all | external | internal | representative",
             ),
             OpenApiParameter(
                 name="days",

@@ -51,6 +51,7 @@ class UserListDTO:
                     "id": project.id,
                     "title": project.title or "",
                     "application_kind": project.application_kind,
+                    "customer_type": project.customer_type,
                     "case_description": project.case_description,
                     "status": (
                         {

@@ -206,6 +206,7 @@ class TestStudentsStatsList:
             "id": project.id,
             "name": "Проект А",
             "applicationKind": "project",
+            "customerType": "external",
             "caseDescription": "",
         }
         assert with_team["mentors"] == [

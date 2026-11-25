@@ -93,6 +93,11 @@ class ProjectApplication(models.Model):
         PROJECT = "project", "Проектная заявка"
         CASE = "case", "Заявка-кейс"
 
+    class CustomerType(models.TextChoices):
+        INTERNAL = "internal", "Внутренний"
+        REPRESENTATIVE = "representative", "Через представителя"
+        EXTERNAL = "external", "Внешний"
+
     # Базовые поля
     creation_date = models.DateTimeField(
         auto_now_add=True, verbose_name="Дата создания"
@@ -213,9 +218,18 @@ class ProjectApplication(models.Model):
         default=False, verbose_name="Нужна консультация"
     )
     is_external = models.BooleanField(default=False, verbose_name="Внешняя заявка")
-    is_internal_customer = models.BooleanField(
-        default=False, verbose_name="Внутренний заказчик"
+    customer_type = models.CharField(
+        max_length=14, choices=CustomerType.choices, default=CustomerType.EXTERNAL,
+        verbose_name="Тип заказчика",
     )
+
+    @property
+    def is_internal_customer(self):
+        return self.customer_type == self.CustomerType.INTERNAL
+
+    @is_internal_customer.setter
+    def is_internal_customer(self, value):
+        self.customer_type = self.CustomerType.INTERNAL if value else self.CustomerType.EXTERNAL
     has_unseen_changes = models.BooleanField(
         default=False,
         verbose_name="Есть изменения с последнего просмотра автором",

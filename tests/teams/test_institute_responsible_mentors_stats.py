@@ -363,6 +363,7 @@ class TestMentorsStatsDetail:
             "id": project.id,
             "name": "Проект Б",
             "applicationKind": "project",
+            "customerType": "external",
             "caseDescription": "",
         }
         assert team["membersCount"] == 2
