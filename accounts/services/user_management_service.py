@@ -10,6 +10,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from accounts.domain.user_management import UserManagementDomain
 from accounts.models import Department, Role
 from accounts.repositories.user import UserRepository
+from teams.domain.institute_access import get_role_code
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -82,7 +83,7 @@ class UserManagementService:
         fields_set: set[str],
     ) -> User:
         """Частичное обновление пользователя."""
-        can_update, error = self.domain.can_update_users(actor)
+        can_update, error = self.domain.can_update_users(actor, allow_institute=True)
         if not can_update:
             raise PermissionError(error)
 
@@ -127,6 +128,11 @@ class UserManagementService:
 
         if "phone" in fields_set:
             update_fields.append("phone")
+
+        if not actor.is_staff and get_role_code(actor) == "institute_validator":
+            self.domain.validate_institute_update(
+                actor, target, role, department, fields_set
+            )
 
         if not update_fields:
             return target

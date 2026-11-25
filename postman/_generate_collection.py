@@ -358,8 +358,12 @@ accounts_folder = folder(
                     "PATCH",
                     "/api/accounts/users/{{userId}}/",
                     description=(
-                        "Только admin/cpds. Поля: role (код), department_id, email, phone.\n"
-                        "Нельзя назначить role=admin. institute_validator → 403."
+                        "admin/cpds/staff: role (код), department_id, email, phone; "
+                        "нельзя назначить admin.\n"
+                        "institute_validator: только role и department_id для пользователей "
+                        "своего института; новое подразделение — того же института. "
+                        "Нельзя изменять admin/cpds/institute_validator/staff или "
+                        "назначать роли admin, cpds, institute_validator."
                     ),
                     body='{\n  "role": "department_validator",\n  "department_id": {{departmentId}}\n}',
                 ),

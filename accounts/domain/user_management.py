@@ -5,6 +5,8 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from accounts.models import Department, Role, User
+from accounts.utils import get_department_subtree_ids
+from showcase.models import Institute
 from teams.domain.institute_access import (
     get_department_ids_for_institute_codes,
     get_role_code,
@@ -17,6 +19,7 @@ if TYPE_CHECKING:
 LIST_ROLES = frozenset({"admin", "cpds", "institute_validator"})
 WRITE_ROLES = frozenset({"admin", "cpds"})
 ADMIN_ROLE_CODE = "admin"
+INSTITUTE_PROTECTED_ROLES = frozenset({"admin", "cpds", "institute_validator"})
 
 
 class UserManagementDomain:
@@ -38,7 +41,9 @@ class UserManagementDomain:
         return False, "Недостаточно прав для просмотра пользователей"
 
     @staticmethod
-    def can_update_users(user: User) -> tuple[bool, str]:
+    def can_update_users(
+        user: User, *, allow_institute: bool = False
+    ) -> tuple[bool, str]:
         """Проверяет, может ли пользователь изменять пользователей."""
         if not user or not user.is_authenticated:
             return False, "Требуется авторизация"
@@ -47,10 +52,49 @@ class UserManagementDomain:
             return True, ""
 
         role_code = get_role_code(user)
-        if role_code in WRITE_ROLES:
+        if role_code in WRITE_ROLES or (
+            allow_institute and role_code == "institute_validator"
+        ):
             return True, ""
 
         return False, "Недостаточно прав для изменения пользователей"
+
+    @staticmethod
+    def validate_institute_update(
+        actor: User,
+        target: User,
+        role: Role | None,
+        department: Department | None,
+        fields_set: set[str],
+    ) -> None:
+        """Проверяет ограничения записи ответственного института."""
+        if fields_set - {"role", "department_id"}:
+            raise PermissionError("Недостаточно прав для изменения этих полей")
+        if target.is_staff or get_role_code(target) in INSTITUTE_PROTECTED_ROLES:
+            raise PermissionError("Нельзя изменять привилегированного пользователя")
+        if role is not None and role.code in INSTITUTE_PROTECTED_ROLES:
+            raise PermissionError("Нельзя назначить привилегированную роль")
+
+        destination_id = (
+            (department.pk if department else None)
+            if "department_id" in fields_set
+            else target.department_id
+        )
+        if not target.department_id or not destination_id:
+            raise PermissionError("Подразделение пользователя недоступно")
+
+        codes = get_user_institute_codes(actor)
+        institutes = Institute.objects.filter(
+            code__in=codes, is_active=True, department__isnull=False
+        )
+        for institute in institutes:
+            department_ids = get_department_subtree_ids(institute.department_id)
+            if (
+                target.department_id in department_ids
+                and destination_id in department_ids
+            ):
+                return
+        raise PermissionError("Подразделение пользователя недоступно")
 
     @staticmethod
     def get_department_ids_filter(user: User) -> set[int] | None:
@@ -94,7 +138,7 @@ class UserManagementDomain:
 
         effective_role = role if "role" in update_fields else target.role
         effective_department = (
-            department if "department" in update_fields else target.department
+            department if "department_id" in update_fields else target.department
         )
 
         if effective_role and effective_role.requires_department:

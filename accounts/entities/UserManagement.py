@@ -36,6 +36,12 @@ _INCLUDE_PROJECTS = OpenApiParameter(
         tags=["accounts"],
         request=UserUpdateSerializer,
         summary="Обновить пользователя",
+        description=(
+            "admin/cpds/staff: существующие права на role, department_id, email и phone. "
+            "institute_validator: только role и department_id у незащищённых "
+            "пользователей своего института; новое подразделение должно относиться "
+            "к тому же институту. Роли admin, cpds и institute_validator защищены."
+        ),
     ),
 )
 class UserManagementViewSet(viewsets.ViewSet):

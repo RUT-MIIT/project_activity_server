@@ -157,7 +157,7 @@ class ProjectManagementPermission(BasePermission):
 
 
 class UserManagementPermission(BasePermission):
-    """Просмотр пользователей — admin/cpds/institute_validator; запись — admin/cpds."""
+    """Просмотр и ограниченное обновление пользователей по роли."""
 
     message = "Недостаточно прав для управления пользователями"
 
@@ -176,5 +176,7 @@ class UserManagementPermission(BasePermission):
         if action in self.LIST_ACTIONS:
             return UserManagementDomain.can_list_users(user)[0]
         if action in self.WRITE_ACTIONS:
-            return UserManagementDomain.can_update_users(user)[0]
+            return UserManagementDomain.can_update_users(
+                user, allow_institute=action == "partial_update"
+            )[0]
         return False
