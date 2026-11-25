@@ -163,6 +163,8 @@ class ProjectsStatsListItemDTO:
     ) -> None:
         self.id = application.id
         self.name = application.title or ""
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.type = _project_type(application)
         self.customer = application.company or ""
         self.institute = institute
@@ -173,6 +175,8 @@ class ProjectsStatsListItemDTO:
         return {
             "id": self.id,
             "name": self.name,
+            "applicationKind": self.application_kind,
+            "caseDescription": self.case_description,
             "type": self.type,
             "customer": self.customer,
             "institute": self.institute,
@@ -194,6 +198,8 @@ class ProjectsStatsDetailDTO:
     ) -> None:
         self.id = application.id
         self.name = application.title or ""
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.type = _project_type(application)
         self.customer = application.company or ""
         self.institute = institute
@@ -214,6 +220,8 @@ class ProjectsStatsDetailDTO:
         return {
             "id": self.id,
             "name": self.name,
+            "applicationKind": self.application_kind,
+            "caseDescription": self.case_description,
             "type": self.type,
             "customer": self.customer,
             "institute": self.institute,

@@ -1,7 +1,9 @@
+from django import forms
 from django.contrib import admin, messages
 from django.http import HttpResponse, HttpResponseRedirect
 from django.urls import reverse
 
+from showcase.domain.application import validate_application_description
 from showcase.domain.track_composer_comment_excel import (
     build_track_composer_comment_xlsx,
 )
@@ -77,8 +79,27 @@ class TagAdmin(admin.ModelAdmin):
     ordering = ("category", "name")
 
 
+class ProjectApplicationAdminForm(forms.ModelForm):
+    class Meta:
+        model = ProjectApplication
+        fields = "__all__"
+
+    def clean(self):
+        cleaned = super().clean()
+        kind = cleaned.get("application_kind")
+        if kind:
+            result = validate_application_description(
+                kind, cleaned, require_project_fields=True
+            )
+            for field, message in result.errors.items():
+                self.add_error(field, message)
+        return cleaned
+
+
 @admin.register(ProjectApplication)
 class ProjectApplicationAdmin(admin.ModelAdmin):
+    form = ProjectApplicationAdminForm
+
     class ApplicationInvolvedUserInline(admin.TabularInline):
         model = ApplicationInvolvedUser
         extra = 0
@@ -222,7 +243,16 @@ class ProjectApplicationAdmin(admin.ModelAdmin):
         ),
         (
             "Проблема",
-            {"fields": ("problem_holder", "goal", "barrier", "existing_solutions")},
+            {
+                "fields": (
+                    "application_kind",
+                    "case_description",
+                    "problem_holder",
+                    "goal",
+                    "barrier",
+                    "existing_solutions",
+                )
+            },
         ),
         (
             "Контекст",

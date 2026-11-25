@@ -67,6 +67,8 @@ class TestUserManagementViewSet:
         assert item["authored_projects_count"] == 1
         assert len(item["authored_projects"]) == 1
         assert item["authored_projects"][0]["title"] == "Мой проект"
+        assert item["authored_projects"][0]["application_kind"] == "project"
+        assert item["authored_projects"][0]["case_description"] == ""
         assert item["authored_projects"][0]["status"]["code"] == "approved"
 
     def test_patch_role_and_department(self, make_user, roles, departments):

@@ -300,6 +300,8 @@ class TestStudentShowcaseList:
         assert tracks[showcase_setup["track1"].id]["description"] == "Описание Трек 1"
         projects = {p["id"]: p for p in tracks[showcase_setup["track1"].id]["projects"]}
         assert projects[showcase_setup["app1"].id]["title"] == "A1"
+        assert projects[showcase_setup["app1"].id]["applicationKind"] == "project"
+        assert projects[showcase_setup["app1"].id]["caseDescription"] == ""
         assert projects[showcase_setup["app1"].id]["company"] == "ООО Заказчик"
         assert projects[showcase_setup["app1"].id]["maxTeams"] == 2
         assert projects[showcase_setup["app1"].id]["enrolledTeamsCount"] == 0
@@ -376,6 +378,8 @@ class TestStudentShowcaseDetail:
         assert response.status_code == 200
         data = response.data
         assert data["title"] == "A1"
+        assert data["application_kind"] == "project"
+        assert data["case_description"] == ""
         assert data["company"] == "ООО Заказчик"
         assert data["problem_holder"] == "Носитель"
         assert data["goal"] == "Цель проекта для витрины"
@@ -436,6 +440,8 @@ class TestStudentShowcaseEnroll:
         assert response.data["teamSemesterId"] == ts.id
         assert response.data["projectId"] == showcase_setup["app1"].id
         assert response.data["projectTitle"] == "A1"
+        assert response.data["applicationKind"] == "project"
+        assert response.data["caseDescription"] == ""
 
         ts.refresh_from_db()
         assert ts.project_application_id == showcase_setup["app1"].id

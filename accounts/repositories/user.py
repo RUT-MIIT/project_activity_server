@@ -47,6 +47,8 @@ class UserRepository:
                 .only(
                     "id",
                     "title",
+                    "application_kind",
+                    "case_description",
                     "author_id",
                     "status_id",
                     "status__code",

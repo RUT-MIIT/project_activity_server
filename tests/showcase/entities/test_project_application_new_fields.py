@@ -4,6 +4,7 @@ import pytest
 from rest_framework.test import APIClient
 
 from accounts.models import Semester
+from showcase.admin import ProjectApplicationAdminForm
 from showcase.dto.application import ProjectApplicationCreateDTO
 from showcase.dto.project import ProjectListDTO
 from showcase.models import (
@@ -53,6 +54,122 @@ def _base_create_payload(**overrides):
 
 @pytest.mark.django_db
 class TestProjectApplicationNewFieldsCreateUpdate:
+    @pytest.mark.parametrize("suffix", ["", "simple/"])
+    def test_create_case_without_project_description(self, statuses, make_user, suffix):
+        client = APIClient()
+        if not suffix:
+            client.force_authenticate(
+                user=make_user(role_code="user", with_department=True)
+            )
+        payload = _base_create_payload(application_kind="case", case_description="Кейс")
+        for field in ("problem_holder", "goal", "barrier", "existing_solutions"):
+            payload.pop(field)
+        url = f"/api/showcase/project-applications/{suffix}"
+        response = client.post(url, payload, format="json")
+        assert response.status_code == 201, response.data
+        assert response.data["application_kind"] == "case"
+        assert response.data["case_description"] == "Кейс"
+        assert response.data["goal"] == ""
+
+        response = client.post(
+            url, {**payload, "case_description": "  "}, format="json"
+        )
+        assert response.status_code == 400
+        assert "case_description" in response.data["errors"]
+        response = client.post(
+            url, {**payload, "application_kind": "other"}, format="json"
+        )
+        assert response.status_code == 400
+        assert "application_kind" in response.data["errors"]
+
+    def test_switch_kind_without_erasing_fields(self, statuses, make_user):
+        client = APIClient()
+        client.force_authenticate(
+            user=make_user(role_code="cpds", with_department=True)
+        )
+        base = "/api/showcase/project-applications/"
+        payload = _base_create_payload()
+        response = client.post(base, payload, format="json")
+        assert response.status_code == 201, response.data
+        assert response.data["application_kind"] == "project"
+        assert response.data["case_description"] == ""
+        application_id = response.data["id"]
+        url = f"{base}{application_id}/"
+
+        response = client.patch(
+            url, {"application_kind": "case", "case_description": "Кейс"}, format="json"
+        )
+        assert response.status_code == 200, response.data
+        assert response.data["goal"] == payload["goal"]
+        assert response.data["application_kind"] == "case"
+        response = client.patch(url, {"case_description": ""}, format="json")
+        assert response.status_code == 400
+        assert "case_description" in response.data["errors"]
+        response = client.patch(url, {"application_kind": "other"}, format="json")
+        assert response.status_code == 400
+        assert "application_kind" in response.data["errors"]
+
+        response = client.put(url, {"application_kind": "project"}, format="json")
+        assert response.status_code == 200, response.data
+        for field in ("problem_holder", "goal", "barrier", "existing_solutions"):
+            assert response.data[field] == payload[field]
+        assert response.data["case_description"] == "Кейс"
+        assert client.get(url).data["case_description"] == "Кейс"
+        response = client.get(base)
+        items = (
+            response.data["results"]
+            if isinstance(response.data, dict)
+            else response.data
+        )
+        item = next(item for item in items if item["id"] == application_id)
+        assert item["application_kind"] == "project"
+        assert item["case_description"] == "Кейс"
+
+    def test_case_cannot_switch_to_incomplete_project(self, statuses, make_user):
+        client = APIClient()
+        user = make_user(role_code="cpds", with_department=True)
+        client.force_authenticate(user=user)
+        application = ProjectApplication.objects.create(
+            author=user,
+            status=statuses["approved"],
+            application_kind="case",
+            case_description="Кейс",
+        )
+        url = f"/api/showcase/project-applications/{application.id}/"
+        response = client.patch(url, {"application_kind": "project"}, format="json")
+        assert response.status_code == 400
+        assert {"goal", "barrier", "problem_holder", "existing_solutions"} <= set(
+            response.data["errors"]
+        )
+        response = client.patch(url, {"goal": ""}, format="json")
+        assert response.status_code == 200, response.data
+        assert response.data["application_kind"] == "case"
+        assert response.data["case_description"] == "Кейс"
+
+    def test_admin_case_form(self):
+        data = {
+            "application_kind": "case",
+            "author_lastname": "Иванов",
+            "author_firstname": "Иван",
+            "author_email": "ivan@example.com",
+            "author_phone": "+79991111111",
+            "company": "Компания",
+            "company_contacts": "Контакт",
+            "project_level": "L1",
+            "recommended_teams_count": 3,
+            "min_team_members": 4,
+            "max_team_members": 7,
+            "application_year": 2026,
+            "year_sequence_number": 1,
+            "print_number": "2026-1",
+        }
+        form = ProjectApplicationAdminForm(data={**data, "case_description": "Кейс"})
+        assert form.is_valid(), form.errors
+        assert form.save().case_description == "Кейс"
+        form = ProjectApplicationAdminForm(data={**data, "case_description": "  "})
+        assert not form.is_valid()
+        assert "case_description" in form.errors
+
     def test_create_with_new_fields(self, statuses, make_user):
         user = make_user(role_code="user", with_department=True)
         client = APIClient()
@@ -246,6 +363,8 @@ class TestProjectApplicationNewFieldsLists:
         admin = make_user(role_code="admin")
         app = ProjectApplication.objects.create(
             title="Продолжающийся проект",
+            application_kind="case",
+            case_description="Описание кейса",
             company="ООО",
             author_lastname="Иванов",
             author_firstname="Иван",
@@ -272,6 +391,8 @@ class TestProjectApplicationNewFieldsLists:
 
         assert response.status_code == 200
         item = next(row for row in response.data if row["id"] == app.id)
+        assert item["application_kind"] == "case"
+        assert item["case_description"] == "Описание кейса"
         assert item["is_continuing"] is True
         assert item["track_composer_comment"] == "Комментарий для трека"
         assert item["has_track_composer_comment"] is True
@@ -291,6 +412,8 @@ class TestProjectApplicationNewFieldsLists:
         )
         app = ProjectApplication.objects.create(
             title="Проект трека",
+            application_kind="case",
+            case_description="Описание кейса в треке",
             company="ООО",
             author_lastname="Иванов",
             author_firstname="Иван",
@@ -331,6 +454,8 @@ class TestProjectApplicationNewFieldsLists:
 
         assert response.status_code == 200
         item = response.data[0]
+        assert item["application_kind"] == "case"
+        assert item["case_description"] == "Описание кейса в треке"
         assert item["track_composer_comment"] == "Комментарий для трека"
         assert item["has_track_composer_comment"] is True
         assert item["recommended_teams_count"] == 2

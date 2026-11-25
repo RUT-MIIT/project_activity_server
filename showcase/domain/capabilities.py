@@ -137,13 +137,14 @@ class ApplicationCapabilities:
         user_department_can_save: bool = False,
         is_user_department_involved: bool = False,
         is_external: bool = False,
+        current: dict | None = None,
     ) -> tuple[ValidationResult, bool, str]:
         """Бизнес-операция: обновление заявки.
 
         Чистая функция - проверяет возможность обновления.
         """
         # Валидация данных
-        validation = ProjectApplicationDomain.validate_update(dto)
+        validation = ProjectApplicationDomain.validate_update(dto, current=current)
 
         # Бизнес-правило: нельзя обновлять отклоненные заявки (финальный статус rejected)
         if application_status == "rejected":

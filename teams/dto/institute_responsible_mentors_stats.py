@@ -20,6 +20,8 @@ def _project_name_snapshot(
     return {
         "id": application.id,
         "name": application.title or "",
+        "applicationKind": application.application_kind,
+        "caseDescription": application.case_description,
     }
 
 

@@ -353,7 +353,12 @@ class TestMyStudyGroupViewSet:
         assert my_team["status"] == TeamSemester.Status.ASSEMBLED
         assert my_team["is_captain"] is True
         assert my_team["has_project"] is True
-        assert my_team["project"] == {"id": project.id, "title": "Проект Альфа"}
+        assert my_team["project"] == {
+            "id": project.id,
+            "title": "Проект Альфа",
+            "applicationKind": "project",
+            "caseDescription": "",
+        }
         assert {m["id"] for m in my_team["members"]} == {captain.id, member.id}
         assert response.data["registration"] == {
             "is_open": True,

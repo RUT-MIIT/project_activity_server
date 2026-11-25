@@ -455,6 +455,8 @@ class TestMentorTeamRetrieve:
         assert response.data["project"] == {
             "id": setup["app"].id,
             "title": setup["app"].title,
+            "applicationKind": "project",
+            "caseDescription": "",
         }
 
     def test_unauthenticated_returns_401(
@@ -579,7 +581,12 @@ class TestMentorTeamRetrieveQueryPerformance:
             payload = MentorTeamDetailDTO(loaded).to_dict()
 
         assert payload["membersCount"] == 12
-        assert payload["project"] == {"id": app.id, "title": app.title}
+        assert payload["project"] == {
+            "id": app.id,
+            "title": app.title,
+            "applicationKind": "project",
+            "caseDescription": "",
+        }
 
     def test_retrieve_query_count_does_not_scale_with_members(
         self,
@@ -908,6 +915,8 @@ class TestMentorTeamProjectEnrollmentBlock:
         assert response.data["project"] == {
             "id": setup["app"].id,
             "title": setup["app"].title,
+            "applicationKind": "project",
+            "caseDescription": "",
         }
         assert any(item["userId"] == newcomer.id for item in response.data["members"])
 

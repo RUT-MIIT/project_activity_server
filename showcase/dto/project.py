@@ -13,6 +13,8 @@ class ProjectListDTO:
     def __init__(self, application: ProjectApplication):
         self.id = application.id
         self.title = application.title or ""
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.company = application.company
         self.author_name = (
             f"{application.author_lastname} {application.author_firstname}".strip()
@@ -98,6 +100,8 @@ class ProjectListDTO:
         return {
             "id": self.id,
             "title": self.title,
+            "application_kind": self.application_kind,
+            "case_description": self.case_description,
             "company": self.company,
             "author_name": self.author_name,
             "author_email": self.author_email,

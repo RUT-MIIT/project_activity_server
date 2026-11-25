@@ -89,6 +89,8 @@ class ProjectApplicationRepository:
             goal=dto.goal or "",
             barrier=dto.barrier or "",
             existing_solutions=dto.existing_solutions,
+            application_kind=dto.application_kind,
+            case_description=dto.case_description,
             context=dto.context,
             stakeholders=dto.stakeholders,
             recommended_tools=dto.recommended_tools,
@@ -149,14 +151,19 @@ class ProjectApplicationRepository:
             .get(pk=application_id)
         )
 
-    def get_by_id_simple(self, application_id: int) -> ProjectApplication:
+    def get_by_id_simple(
+        self, application_id: int, *, for_update: bool = False
+    ) -> ProjectApplication:
         """Получение заявки по ID без дополнительных связанных объектов.
 
         Для простых операций, где не нужны все связи.
         """
-        return ProjectApplication.objects.select_related(
+        queryset = ProjectApplication.objects.select_related(
             "status", "author", "main_department", "semester"
-        ).get(pk=application_id)
+        )
+        if for_update:
+            queryset = queryset.select_for_update(of=("self",))
+        return queryset.get(pk=application_id)
 
     def is_accessible_to_mentor(self, user_id: int, application_id: int) -> bool:
         """True, если заявка в треке группы, где user — наставник в том же семестре."""

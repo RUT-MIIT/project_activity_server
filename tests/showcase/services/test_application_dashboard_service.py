@@ -302,6 +302,9 @@ class TestApplicationDashboardService:
             days_raw=None,
         )
         assert len(data["oldest_in_progress"]["items"]) == 1
+        item = data["oldest_in_progress"]["items"][0]
+        assert item["application_kind"] == "project"
+        assert item["case_description"] == ""
 
     def test_institute_validator_forbidden_for_other_institute(
         self, statuses, institute, second_institute, semester, departments, make_user

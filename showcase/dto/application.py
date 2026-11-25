@@ -105,6 +105,8 @@ class ProjectApplicationCreateDTO:
         recommended_teams_count: int = 3,
         min_team_members: int = DEFAULT_MIN_TEAM_MEMBERS,
         max_team_members: int = DEFAULT_MAX_TEAM_MEMBERS,
+        application_kind: str = "project",
+        case_description: str = "",
         **kwargs,
     ):
         self.title = title or ""
@@ -125,6 +127,8 @@ class ProjectApplicationCreateDTO:
         self.goal = goal
         self.barrier = barrier
         self.existing_solutions = existing_solutions
+        self.application_kind = application_kind
+        self.case_description = case_description
         self.context = context
         self.stakeholders = stakeholders
         self.recommended_tools = recommended_tools
@@ -170,6 +174,8 @@ class ProjectApplicationCreateDTO:
             "goal": self.goal,
             "barrier": self.barrier,
             "existing_solutions": self.existing_solutions,
+            "application_kind": self.application_kind,
+            "case_description": self.case_description,
             "context": self.context,
             "stakeholders": self.stakeholders,
             "recommended_tools": self.recommended_tools,
@@ -223,6 +229,8 @@ class ProjectApplicationUpdateDTO:
         recommended_teams_count: Optional[int] = None,
         min_team_members: Optional[int] = None,
         max_team_members: Optional[int] = None,
+        application_kind: str | None = None,
+        case_description: str | None = None,
         **kwargs,
     ):
         self.title = title
@@ -242,6 +250,8 @@ class ProjectApplicationUpdateDTO:
         self.goal = goal
         self.barrier = barrier
         self.existing_solutions = existing_solutions
+        self.application_kind = application_kind
+        self.case_description = case_description
         self.context = context
         self.stakeholders = stakeholders
         self.recommended_tools = recommended_tools
@@ -277,6 +287,8 @@ class ProjectApplicationReadDTO:
     def __init__(self, application):
         self.id = application.id
         self.title = application.title
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.company = application.company
         self.creation_date = application.creation_date
         self.needs_consultation = application.needs_consultation
@@ -454,6 +466,8 @@ class ProjectApplicationReadDTO:
         return {
             "id": self.id,
             "title": self.title,
+            "application_kind": self.application_kind,
+            "case_description": self.case_description,
             "company": self.company,
             "creation_date": self.creation_date.isoformat(),
             "needs_consultation": self.needs_consultation,
@@ -508,6 +522,8 @@ class ProjectApplicationListDTO:
     def __init__(self, application):
         self.id = application.id
         self.title = application.title
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.company = application.company
         self.creation_date = application.creation_date
         self.needs_consultation = application.needs_consultation
@@ -563,6 +579,8 @@ class ProjectApplicationListDTO:
         return {
             "id": self.id,
             "title": self.title,
+            "application_kind": self.application_kind,
+            "case_description": self.case_description,
             "company": self.company,
             "creation_date": self.creation_date.isoformat(),
             "needs_consultation": self.needs_consultation,

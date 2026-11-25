@@ -7,7 +7,7 @@
 from django.conf import settings
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
-from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import permissions, serializers, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import ValidationError as DRFValidationError
@@ -18,6 +18,7 @@ from rest_framework.response import Response
 from accounts.models import Semester
 from accounts.permissions import DenyStudentPermission
 from showcase.constants import DEFAULT_MAX_TEAM_MEMBERS, DEFAULT_MIN_TEAM_MEMBERS
+from showcase.domain.application import PROJECT_DESCRIPTION_FIELDS
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
@@ -121,6 +122,8 @@ class ProjectApplicationListSerializer(serializers.ModelSerializer):
         fields = [
             "id",
             "title",
+            "application_kind",
+            "case_description",
             "company",
             "creation_date",
             "needs_consultation",
@@ -187,11 +190,19 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
         max_length=100, required=False, allow_blank=True
     )
 
-    # Проблема - обязательные поля
-    problem_holder = serializers.CharField(required=True, allow_blank=False)
-    goal = serializers.CharField(required=True, allow_blank=False)
-    barrier = serializers.CharField(required=True, allow_blank=False)
-    existing_solutions = serializers.CharField(required=True, allow_blank=False)
+    application_kind = serializers.ChoiceField(
+        choices=ProjectApplication.Kind.choices,
+        required=False,
+        default=ProjectApplication.Kind.PROJECT,
+        help_text="Тип заявки. При отсутствии используется project.",
+    )
+    case_description = serializers.CharField(
+        required=False, allow_blank=True, help_text="Обязательно для типа case."
+    )
+    problem_holder = serializers.CharField(required=False, allow_blank=True)
+    goal = serializers.CharField(required=False, allow_blank=True)
+    barrier = serializers.CharField(required=False, allow_blank=True)
+    existing_solutions = serializers.CharField(required=False, allow_blank=True)
 
     # Контекст
     context = serializers.CharField(required=False, allow_blank=True)
@@ -216,7 +227,16 @@ class ProjectApplicationCreateSerializer(serializers.Serializer):
     )
 
     def validate(self, attrs: dict) -> dict:
-        """Проверяет, что min_team_members не больше max_team_members."""
+        """Проверяет обязательность полей формы и границы размера команды."""
+        kind = attrs.get("application_kind", ProjectApplication.Kind.PROJECT)
+        if kind == ProjectApplication.Kind.PROJECT:
+            errors = {
+                name: "Это поле обязательно."
+                for name in PROJECT_DESCRIPTION_FIELDS
+                if not attrs.get(name)
+            }
+            if errors:
+                raise serializers.ValidationError(errors)
         min_members = attrs.get("min_team_members", DEFAULT_MIN_TEAM_MEMBERS)
         max_members = attrs.get("max_team_members", DEFAULT_MAX_TEAM_MEMBERS)
         if min_members > max_members:
@@ -266,9 +286,17 @@ class ProjectApplicationUpdateSerializer(serializers.Serializer):
     project_level = serializers.CharField(
         max_length=100, required=False, allow_blank=True
     )
-    problem_holder = serializers.CharField(required=False)
-    goal = serializers.CharField(required=False)
-    barrier = serializers.CharField(required=False)
+    application_kind = serializers.ChoiceField(
+        choices=ProjectApplication.Kind.choices,
+        required=False,
+        help_text="При отсутствии сохраняется текущий тип заявки.",
+    )
+    case_description = serializers.CharField(
+        required=False, allow_blank=True, help_text="Обязательно для типа case."
+    )
+    problem_holder = serializers.CharField(required=False, allow_blank=True)
+    goal = serializers.CharField(required=False, allow_blank=True)
+    barrier = serializers.CharField(required=False, allow_blank=True)
     existing_solutions = serializers.CharField(required=False, allow_blank=True)
     context = serializers.CharField(required=False, allow_blank=True)
     stakeholders = serializers.CharField(required=False, allow_blank=True)
@@ -352,6 +380,51 @@ class SemesterViewSet(viewsets.ViewSet):
             )
 
 
+class ProjectApplicationDetailSerializer(ProjectApplicationListSerializer):
+    """Поля заявки, общие для детальных ответов и ответов записи."""
+
+    class Meta(ProjectApplicationListSerializer.Meta):
+        fields = [
+            *ProjectApplicationListSerializer.Meta.fields,
+            "problem_holder",
+            "goal",
+            "barrier",
+            "existing_solutions",
+        ]
+        read_only_fields = fields
+
+
+_CREATE_KIND_DESCRIPTION = (
+    "Для project (тип по умолчанию) обязательны problem_holder, goal, barrier "
+    "и existing_solutions. Для case обязателен непустой case_description."
+)
+_UPDATE_KIND_DESCRIPTION = (
+    "Если application_kind отсутствует, действует сохранённый тип. При смене "
+    "типа проверяются переданные и сохранённые значения для выбранного типа. "
+    "Смена типа сохраняет все явно не изменённые поля."
+)
+
+
+@extend_schema_view(
+    list=extend_schema(responses=ProjectApplicationListSerializer(many=True)),
+    retrieve=extend_schema(responses=ProjectApplicationDetailSerializer),
+    create=extend_schema(
+        description=_CREATE_KIND_DESCRIPTION,
+        responses={201: ProjectApplicationDetailSerializer},
+    ),
+    update=extend_schema(
+        description=_UPDATE_KIND_DESCRIPTION,
+        responses=ProjectApplicationDetailSerializer,
+    ),
+    partial_update=extend_schema(
+        description=_UPDATE_KIND_DESCRIPTION,
+        responses=ProjectApplicationDetailSerializer,
+    ),
+    simple=extend_schema(
+        description=_CREATE_KIND_DESCRIPTION,
+        responses={201: ProjectApplicationDetailSerializer},
+    ),
+)
 class ProjectApplicationViewSet(viewsets.ModelViewSet):
     """Упрощенный ViewSet - только обработка HTTP запросов.
 
@@ -544,11 +617,14 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             response_dto = self.service.get_application_dto(application)
             return Response(response_dto.to_dict())
 
+        except DRFValidationError as e:
+            return Response({"errors": e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except ValueError as e:
             error_msg = str(e)
             if "не найдена" in error_msg:
                 return Response({"error": error_msg}, status=status.HTTP_404_NOT_FOUND)
-            return Response({"errors": error_msg}, status=status.HTTP_400_BAD_REQUEST)
+            errors = e.args[0] if e.args and isinstance(e.args[0], dict) else error_msg
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except Exception as e:
@@ -576,11 +652,14 @@ class ProjectApplicationViewSet(viewsets.ModelViewSet):
             response_dto = self.service.get_application_dto(application)
             return Response(response_dto.to_dict())
 
+        except DRFValidationError as e:
+            return Response({"errors": e.detail}, status=status.HTTP_400_BAD_REQUEST)
         except ValueError as e:
             error_msg = str(e)
             if "не найдена" in error_msg:
                 return Response({"error": error_msg}, status=status.HTTP_404_NOT_FOUND)
-            return Response({"errors": error_msg}, status=status.HTTP_400_BAD_REQUEST)
+            errors = e.args[0] if e.args and isinstance(e.args[0], dict) else error_msg
+            return Response({"errors": errors}, status=status.HTTP_400_BAD_REQUEST)
         except PermissionError as e:
             return Response({"error": str(e)}, status=status.HTTP_403_FORBIDDEN)
         except ObjectDoesNotExist as e:

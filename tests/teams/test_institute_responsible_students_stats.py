@@ -202,7 +202,12 @@ class TestStudentsStatsList:
         assert with_team["fullName"] == "Командный Капитан"
         assert with_team["isRegistered"] is True
         assert with_team["team"] == {"id": team_semester.id, "name": "Команда А"}
-        assert with_team["project"] == {"id": project.id, "name": "Проект А"}
+        assert with_team["project"] == {
+            "id": project.id,
+            "name": "Проект А",
+            "applicationKind": "project",
+            "caseDescription": "",
+        }
         assert with_team["mentors"] == [
             {"id": mentor.id, "fullName": mentor.get_full_name()}
         ]

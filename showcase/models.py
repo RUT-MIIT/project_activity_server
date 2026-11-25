@@ -89,6 +89,10 @@ class Tag(models.Model):
 
 
 class ProjectApplication(models.Model):
+    class Kind(models.TextChoices):
+        PROJECT = "project", "Проектная заявка"
+        CASE = "case", "Заявка-кейс"
+
     # Базовые поля
     creation_date = models.DateTimeField(
         auto_now_add=True, verbose_name="Дата создания"
@@ -174,13 +178,20 @@ class ProjectApplication(models.Model):
     )
 
     # Раздел "Проблема"
-    problem_holder = models.CharField(
-        max_length=255, verbose_name="Носитель проблемы", default=""
+    application_kind = models.CharField(
+        max_length=7,
+        choices=Kind.choices,
+        default=Kind.PROJECT,
+        verbose_name="Тип заявки",
     )
-    goal = models.TextField(verbose_name="Цель", default="")
-    barrier = models.TextField(verbose_name="Барьер", default="")
+    case_description = models.TextField(blank=True, default="", verbose_name="Кейс")
+    problem_holder = models.CharField(
+        max_length=255, verbose_name="Носитель проблемы", default="", blank=True
+    )
+    goal = models.TextField(verbose_name="Цель", default="", blank=True)
+    barrier = models.TextField(verbose_name="Барьер", default="", blank=True)
     existing_solutions = models.TextField(
-        verbose_name="Существующие решения", default=""
+        verbose_name="Существующие решения", default="", blank=True
     )
 
     # Раздел "Контекст"

@@ -359,7 +359,12 @@ class TestMentorsStatsDetail:
         team = group["teams"][0]
         assert team["id"] == team_semester.id
         assert team["status"] == "assembled"
-        assert team["project"] == {"id": project.id, "name": "Проект Б"}
+        assert team["project"] == {
+            "id": project.id,
+            "name": "Проект Б",
+            "applicationKind": "project",
+            "caseDescription": "",
+        }
         assert team["membersCount"] == 2
         assert len(team["members"]) == 2
         assert team["members"][0]["team"]["id"] == team_semester.id

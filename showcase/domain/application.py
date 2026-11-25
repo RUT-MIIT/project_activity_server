@@ -1,10 +1,34 @@
 """Доменная логика для проектных заявок - чистые функции без эффектов."""
 
+from collections.abc import Mapping
+
 from showcase.dto.application import (
     ProjectApplicationCreateDTO,
     ProjectApplicationUpdateDTO,
 )
 from showcase.dto.validation import ValidationResult
+
+PROJECT_DESCRIPTION_FIELDS = ("problem_holder", "goal", "barrier", "existing_solutions")
+
+
+def validate_application_description(
+    kind: str,
+    fields: Mapping[str, str | None],
+    *,
+    require_project_fields: bool = False,
+) -> ValidationResult:
+    """Проверяет обязательные поля выбранного типа заявки."""
+    result = ValidationResult()
+    if kind == "case":
+        if not (fields.get("case_description") or "").strip():
+            result.add_error("case_description", "Опишите кейс")
+    elif kind != "project":
+        result.add_error("application_kind", "Допустимые типы: project и case")
+    elif require_project_fields:
+        for field in PROJECT_DESCRIPTION_FIELDS:
+            if not (fields.get(field) or "").strip():
+                result.add_error(field, "Это поле обязательно.")
+    return result
 
 
 class ProjectApplicationDomain:
@@ -20,7 +44,7 @@ class ProjectApplicationDomain:
         ВАЖНО: Техническая валидация (типы, форматы, обязательные поля)
         выполняется в сериализаторе DRF. Здесь только бизнес-правила.
         """
-        result = ValidationResult()
+        result = validate_application_description(dto.application_kind, dto.to_dict())
 
         # Бизнес-правило: название проекта обязательно и минимум 5 символов
         if not dto.title or not dto.title.strip():
@@ -42,21 +66,21 @@ class ProjectApplicationDomain:
             )
 
         # Бизнес-правило: цель проекта обязательна и минимум 10 символов
-        if not dto.goal or not dto.goal.strip():
+        if dto.application_kind == "project" and (not dto.goal or not dto.goal.strip()):
             result.add_error("goal", "Цель обязательна")
-        elif len(dto.goal.strip()) < 10:
+        elif dto.application_kind == "project" and len(dto.goal.strip()) < 10:
             result.add_error("goal", "Цель должна содержать минимум 10 символов")
 
         # Бизнес-правило: носитель проблемы и барьер могут быть пустыми на черновых шагах.
         # Проверяем только при наличии значения.
-        if dto.problem_holder not in (None, ""):
+        if dto.application_kind == "project" and dto.problem_holder not in (None, ""):
             if len(dto.problem_holder.strip()) < 5:
                 result.add_error(
                     "problem_holder",
                     "Носитель проблемы должен содержать минимум 5 символов",
                 )
 
-        if dto.barrier not in (None, ""):
+        if dto.application_kind == "project" and dto.barrier not in (None, ""):
             if len(dto.barrier.strip()) < 10:
                 result.add_error(
                     "barrier",
@@ -65,7 +89,10 @@ class ProjectApplicationDomain:
 
         # Бизнес-правило: существующие решения и контакты заказчика допускаются пустыми
         # для упрощённой подачи. Валидируем только если переданы непустые строки.
-        if dto.existing_solutions not in (None, ""):
+        if dto.application_kind == "project" and dto.existing_solutions not in (
+            None,
+            "",
+        ):
             if not dto.existing_solutions.strip():
                 result.add_error(
                     "existing_solutions", "Существующие решения обязательны"
@@ -117,12 +144,23 @@ class ProjectApplicationDomain:
         return result
 
     @staticmethod
-    def validate_update(dto: ProjectApplicationUpdateDTO) -> ValidationResult:
+    def validate_update(
+        dto: ProjectApplicationUpdateDTO, *, current: dict | None = None
+    ) -> ValidationResult:
         """Валидация бизнес-правил для обновления заявки.
 
-        Чистая функция - проверяет только переданные поля.
+        При смене типа проверяет итоговое описание заявки.
         """
-        result = ValidationResult()
+        current = current or {}
+        current_kind = current.get("application_kind", "project")
+        kind = (
+            dto.application_kind if dto.application_kind is not None else current_kind
+        )
+        result = validate_application_description(
+            kind,
+            {**current, **dto.to_dict()},
+            require_project_fields=kind != current_kind,
+        )
 
         # Валидируем только переданные поля
         if dto.title is not None:
@@ -139,15 +177,15 @@ class ProjectApplicationDomain:
         ):
             result.add_error("author_email", "Некорректный email")
 
-        if dto.goal is not None:
+        if kind == "project" and dto.goal is not None:
             if not dto.goal or not dto.goal.strip():
                 result.add_error("goal", "Цель обязательна")
 
-        if dto.problem_holder is not None:
+        if kind == "project" and dto.problem_holder is not None:
             if not dto.problem_holder or not dto.problem_holder.strip():
                 result.add_error("problem_holder", "Носитель проблемы обязателен")
 
-        if dto.barrier is not None:
+        if kind == "project" and dto.barrier is not None:
             if not dto.barrier or not dto.barrier.strip():
                 result.add_error("barrier", "Барьер обязателен")
 

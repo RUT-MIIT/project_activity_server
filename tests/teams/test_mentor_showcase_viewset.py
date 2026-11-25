@@ -351,6 +351,8 @@ class TestMentorShowcaseViewSet:
             p["id"]: p for p in tracks[mentor_showcase_setup["track1"].id]["projects"]
         }
         assert projects[mentor_showcase_setup["app1"].id]["title"] == "A1"
+        assert projects[mentor_showcase_setup["app1"].id]["applicationKind"] == "project"
+        assert projects[mentor_showcase_setup["app1"].id]["caseDescription"] == ""
         assert projects[mentor_showcase_setup["app1"].id]["company"] == "ООО Заказчик"
         assert projects[mentor_showcase_setup["app1"].id]["maxTeams"] == 2
         assert projects[mentor_showcase_setup["app1"].id]["enrolledTeamsCount"] == 0

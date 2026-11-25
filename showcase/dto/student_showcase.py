@@ -27,6 +27,8 @@ class StudentShowcaseProjectListItemDTO:
     ) -> None:
         self.id = application.id
         self.title = application.title or ""
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.company = application.company
         self.max_teams = application.recommended_teams_count
         self.enrolled_teams_count = enrolled_teams_count
@@ -41,6 +43,8 @@ class StudentShowcaseProjectListItemDTO:
         return {
             "id": self.id,
             "title": self.title,
+            "applicationKind": self.application_kind,
+            "caseDescription": self.case_description,
             "company": self.company,
             "maxTeams": self.max_teams,
             "enrolledTeamsCount": self.enrolled_teams_count,
@@ -84,6 +88,8 @@ class StudentShowcaseProjectDetailDTO:
     ) -> None:
         self.id = application.id
         self.title = application.title or ""
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.company = application.company
         self.problem_holder = application.problem_holder or ""
         self.goal = application.goal
@@ -107,6 +113,8 @@ class StudentShowcaseProjectDetailDTO:
         return {
             "id": self.id,
             "title": self.title,
+            "application_kind": self.application_kind,
+            "case_description": self.case_description,
             "company": self.company,
             "problem_holder": self.problem_holder,
             "goal": self.goal,
@@ -135,6 +143,8 @@ class StudentShowcaseEnrollResultDTO:
         self.team_semester_id = team_semester.id
         self.project_id = application.id if application else None
         self.project_title = (application.title or "") if application else ""
+        self.application_kind = application.application_kind if application else None
+        self.case_description = application.case_description if application else ""
 
     def to_dict(self) -> dict[str, Any]:
         """Преобразует DTO в словарь для API."""
@@ -142,4 +152,6 @@ class StudentShowcaseEnrollResultDTO:
             "teamSemesterId": self.team_semester_id,
             "projectId": self.project_id,
             "projectTitle": self.project_title,
+            "applicationKind": self.application_kind,
+            "caseDescription": self.case_description,
         }

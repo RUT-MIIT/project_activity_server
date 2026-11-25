@@ -122,6 +122,8 @@ class ProjectTrackApplicationItemDTO:
     def __init__(self, application) -> None:
         self.id = application.id
         self.title = application.title or ""
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.print_number = application.print_number or ""
         self.teams_count = application.recommended_teams_count
         self.min_team_members = application.min_team_members
@@ -132,6 +134,8 @@ class ProjectTrackApplicationItemDTO:
         return {
             "id": self.id,
             "title": self.title,
+            "applicationKind": self.application_kind,
+            "caseDescription": self.case_description,
             "print_number": self.print_number,
             "teamsCount": self.teams_count,
             "minTeamMembers": self.min_team_members,
@@ -277,6 +281,8 @@ class ProjectTrackGroupProjectDTO:
     def __init__(self, application) -> None:
         self.id = application.id
         self.title = application.title or ""
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.print_number = application.print_number or ""
         self.author_name = (
             f"{application.author_lastname} {application.author_firstname}".strip()
@@ -287,6 +293,8 @@ class ProjectTrackGroupProjectDTO:
         return {
             "id": self.id,
             "title": self.title,
+            "application_kind": self.application_kind,
+            "case_description": self.case_description,
             "print_number": self.print_number,
             "author_name": self.author_name,
         }
@@ -325,6 +333,8 @@ class ProjectTrackProjectListDTO:
     def __init__(self, application) -> None:
         self.id = application.id
         self.title = application.title or ""
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.print_number = application.print_number or ""
         self.author_name = (
             f"{application.author_lastname} {application.author_firstname}".strip()
@@ -341,6 +351,8 @@ class ProjectTrackProjectListDTO:
         return {
             "id": self.id,
             "title": self.title,
+            "application_kind": self.application_kind,
+            "case_description": self.case_description,
             "print_number": self.print_number,
             "author_name": self.author_name,
             "assigned_groups_count": self.assigned_groups_count,
@@ -381,6 +393,8 @@ class ProjectTrackProjectDetailDTO:
     def __init__(self, application, groups: list) -> None:
         self.id = application.id
         self.title = application.title or ""
+        self.application_kind = application.application_kind
+        self.case_description = application.case_description
         self.print_number = application.print_number or ""
         self.author_name = (
             f"{application.author_lastname} {application.author_firstname}".strip()
@@ -397,6 +411,8 @@ class ProjectTrackProjectDetailDTO:
         return {
             "id": self.id,
             "title": self.title,
+            "application_kind": self.application_kind,
+            "case_description": self.case_description,
             "print_number": self.print_number,
             "author_name": self.author_name,
             "track_composer_comment": self.track_composer_comment,

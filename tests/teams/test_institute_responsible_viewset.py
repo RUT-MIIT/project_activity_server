@@ -778,7 +778,12 @@ class TestInstituteResponsibleTeamsAndStudents:
         }
         assert item["status"] == "assembled"
         assert item["membersCount"] == 2
-        assert item["project"] == {"id": project.id, "title": "Проект А"}
+        assert item["project"] == {
+            "id": project.id,
+            "title": "Проект А",
+            "applicationKind": "project",
+            "caseDescription": "",
+        }
         assert item["mentors"] == [
             {"id": mentor.id, "fullName": mentor.get_full_name()}
         ]
@@ -897,7 +902,12 @@ class TestInstituteResponsibleTeamsAndStudents:
         assert registered["isRegistered"] is True
         assert registered["teamName"] == "СтудКоманда"
         assert registered["teamRole"] == "leader"
-        assert registered["project"] == {"id": project.id, "title": "СтудПроект"}
+        assert registered["project"] == {
+            "id": project.id,
+            "title": "СтудПроект",
+            "applicationKind": "project",
+            "caseDescription": "",
+        }
         assert registered["mentors"][0]["id"] == mentor.id
         unregistered = by_name["Незарег"]
         assert unregistered["isRegistered"] is False
@@ -951,7 +961,12 @@ class TestInstituteResponsibleTeamsAndStudents:
         assert student["studyGroup"]["id"] == study_groups["active"].id
         assert student["teamName"] == "ПрямаяКоманда"
         assert student["teamRole"] == "leader"
-        assert student["project"] == {"id": project.id, "title": "ПрямойПроект"}
+        assert student["project"] == {
+            "id": project.id,
+            "title": "ПрямойПроект",
+            "applicationKind": "project",
+            "caseDescription": "",
+        }
         assert student["mentors"][0]["id"] == mentor.id
 
     def test_export_students_returns_xlsx(

@@ -557,7 +557,9 @@ class ProjectApplicationService:
         """Бизнес-операция: обновление заявки."""
         # 1. Получаем заявку (Repository)
         try:
-            application = self.repository.get_by_id_simple(application_id)
+            application = self.repository.get_by_id_simple(
+                application_id, for_update=True
+            )
         except ObjectDoesNotExist as err:
             raise ValueError(f"Заявка с ID {application_id} не найдена") from err
 
@@ -595,6 +597,14 @@ class ProjectApplicationService:
             user_department_can_save=user_department_can_save,
             is_user_department_involved=is_user_department_involved,
             is_external=is_external,
+            current={
+                "application_kind": application.application_kind,
+                "case_description": application.case_description,
+                "problem_holder": application.problem_holder,
+                "goal": application.goal,
+                "barrier": application.barrier,
+                "existing_solutions": application.existing_solutions,
+            },
         )
         if not validation.is_valid:
             raise ValueError(validation.errors)

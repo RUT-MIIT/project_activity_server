@@ -190,6 +190,9 @@ class TestProjectsStatsList:
             is_internal_customer=True,
             company="Кафедра",
         )
+        external.application_kind = "case"
+        external.case_description = "Кейс внешнего заказчика"
+        external.save(update_fields=["application_kind", "case_description"])
         captain = make_user(role_code="student", email="cap-list@example.com")
         captain.study_group = study_group
         captain.save(update_fields=["study_group"])
@@ -214,6 +217,8 @@ class TestProjectsStatsList:
         ext_item = by_id[external.id]
         assert ext_item["name"] == "Внешний проект"
         assert ext_item["type"] == "external"
+        assert ext_item["applicationKind"] == "case"
+        assert ext_item["caseDescription"] == "Кейс внешнего заказчика"
         assert ext_item["customer"] == "ООО Внешний"
         assert ext_item["institute"] == {"id": "INST-1", "name": "Institute 1"}
         assert ext_item["maxTeamsCount"] == 3
@@ -314,6 +319,9 @@ class TestProjectsStatsDetail:
             barrier="Сложный барьер",
             existing_solutions="Есть решения",
         )
+        application.application_kind = "case"
+        application.case_description = "Подробный кейс"
+        application.save(update_fields=["application_kind", "case_description"])
 
         mentor = make_user(role_code="mentor", with_department=True, email="m@ex.com")
         mentor.last_name = "Наставников"
@@ -353,6 +361,8 @@ class TestProjectsStatsDetail:
         assert data["id"] == application.id
         assert data["name"] == "Детальный проект"
         assert data["type"] == "external"
+        assert data["applicationKind"] == "case"
+        assert data["caseDescription"] == "Подробный кейс"
         assert data["maxTeamsCount"] == 5
         assert data["currentTeamsCount"] == 1
         assert data["print_number"] == "42"

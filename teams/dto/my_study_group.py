@@ -111,7 +111,14 @@ class MyStudyGroupTeamDTO:
         self.is_captain = team_semester.captain_id == viewer_id
         self.has_project = project is not None
         self.project = (
-            {"id": project.id, "title": project.title} if project is not None else None
+            {
+                "id": project.id,
+                "title": project.title,
+                "applicationKind": project.application_kind,
+                "caseDescription": project.case_description,
+            }
+            if project is not None
+            else None
         )
         self.members = [MyStudyGroupTeamMemberDTO(m).to_dict() for m in members]
 

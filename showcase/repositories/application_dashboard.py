@@ -911,6 +911,8 @@ class ApplicationDashboardRepository:
             items.append(
                 {
                     "application_number": app.print_number or f"#{app.pk}",
+                    "application_kind": app.application_kind,
+                    "case_description": app.case_description,
                     "days": days,
                     "institute_code": department_obj,
                 }

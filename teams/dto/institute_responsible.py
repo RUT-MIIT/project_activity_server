@@ -33,6 +33,8 @@ def _project_snapshot(application: ProjectApplication | None) -> dict[str, Any] 
     return {
         "id": application.id,
         "title": application.title or "",
+        "applicationKind": application.application_kind,
+        "caseDescription": application.case_description,
     }
 
 
