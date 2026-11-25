@@ -236,7 +236,10 @@ class TestPreRegisteredMentorLookup:
 
 @pytest.mark.django_db
 class TestPreRegisteredStudentRegister:
-    @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
+    @override_settings(
+        EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend",
+        FRONT_END="https://portal.example.com",
+    )
     def test_register_creates_user_and_returns_tokens(
         self,
         api_client: APIClient,
@@ -259,7 +262,12 @@ class TestPreRegisteredStudentRegister:
         assert response.data["user"]["email"] == "student@example.com"
         assert len(mail.outbox) == 1
         assert mail.outbox[0].to == ["student@example.com"]
+        assert mail.outbox[0].subject == "Регистрация завершена"
         assert "Вы успешно зарегистрированы" in mail.outbox[0].body
+        assert "https://portal.example.com" in mail.outbox[0].body
+        assert "student@example.com" in mail.outbox[0].body
+        assert "StrongPass123!" in mail.outbox[0].body
+        assert "Рекомендуем сменить пароль" not in mail.outbox[0].body
 
         pre_registered_student.refresh_from_db()
         assert pre_registered_student.user is not None
