@@ -362,6 +362,7 @@ accounts_folder = folder(
                         "нельзя назначить admin.\n"
                         "institute_validator: только role и department_id для пользователей "
                         "своего института; новое подразделение — того же института. "
+                        "Переданные email и phone игнорируются. "
                         "Нельзя изменять admin/cpds/institute_validator/staff или "
                         "назначать роли admin, cpds, institute_validator."
                     ),

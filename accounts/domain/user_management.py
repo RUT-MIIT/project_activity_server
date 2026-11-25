@@ -26,6 +26,10 @@ class UserManagementDomain:
     """Правила доступа и валидации для управления пользователями."""
 
     @staticmethod
+    def is_institute_actor(user: User) -> bool:
+        return not user.is_staff and get_role_code(user) == "institute_validator"
+
+    @staticmethod
     def can_list_users(user: User) -> tuple[bool, str]:
         """Проверяет, может ли пользователь просматривать список пользователей."""
         if not user or not user.is_authenticated:

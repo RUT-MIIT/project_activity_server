@@ -10,7 +10,6 @@ from django.core.exceptions import ObjectDoesNotExist
 from accounts.domain.user_management import UserManagementDomain
 from accounts.models import Department, Role
 from accounts.repositories.user import UserRepository
-from teams.domain.institute_access import get_role_code
 
 if TYPE_CHECKING:
     from django.db.models import QuerySet
@@ -87,6 +86,10 @@ class UserManagementService:
         if not can_update:
             raise PermissionError(error)
 
+        is_institute_actor = self.domain.is_institute_actor(actor)
+        if is_institute_actor:
+            fields_set = fields_set - {"email", "phone"}
+
         queryset = self.list_users(actor)
         if not self.domain.user_in_accessible_queryset(queryset, user_id):
             raise PermissionError("Нет доступа к этому пользователю")
@@ -129,7 +132,7 @@ class UserManagementService:
         if "phone" in fields_set:
             update_fields.append("phone")
 
-        if not actor.is_staff and get_role_code(actor) == "institute_validator":
+        if is_institute_actor:
             self.domain.validate_institute_update(
                 actor, target, role, department, fields_set
             )

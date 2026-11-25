@@ -109,19 +109,76 @@ def test_protected_role_and_target(scope, make_user, role):
 
 
 @pytest.mark.django_db
-def test_staff_and_contact_fields_are_protected(scope, make_user):
+def test_staff_is_protected(scope, make_user):
     _, target, client = scope
     staff = make_user(with_department=True)
     staff.is_staff = True
     staff.save()
     assert patch_user(client, staff, {"role": "mentor"}).status_code == 403
-    for field, value in [("email", "changed@example.com"), ("phone", "123")]:
-        assert (
-            patch_user(client, target, {"role": "user", field: value}).status_code
-            == 403
-        )
-        target.refresh_from_db()
-        assert target.role_id == "mentor"
+
+
+@pytest.mark.django_db
+def test_institute_ignores_contacts_even_if_invalid(scope, departments):
+    _, target, client = scope
+    old_email, old_phone = target.email, target.phone
+    response = patch_user(
+        client,
+        target,
+        {
+            "role": "department_validator",
+            "department_id": departments["child"].pk,
+            "email": "not-an-email",
+            "phone": "x" * 100,
+        },
+    )
+    assert response.status_code == 200
+    target.refresh_from_db()
+    assert target.role_id == "department_validator"
+    assert target.email == old_email
+    assert target.phone == old_phone
+    assert response.data["email"] == old_email
+    response = patch_user(
+        client, target, {"email": "other@example.com", "phone": "123"}
+    )
+    assert response.status_code == 200
+    target.refresh_from_db()
+    assert (target.email, target.phone) == (old_email, old_phone)
+
+
+@pytest.mark.django_db
+def test_institute_cannot_bypass_protection_with_contacts(scope, make_user):
+    _, target, client = scope
+    protected = make_user(role_code="cpds", with_department=True)
+    assert (
+        patch_user(client, protected, {"email": "other@example.com"}).status_code == 403
+    )
+    assert (
+        patch_user(
+            client, target, {"role": "cpds", "email": "other@example.com"}
+        ).status_code
+        == 403
+    )
+    target.refresh_from_db()
+    assert target.role_id == "mentor"
+
+
+@pytest.mark.django_db
+def test_service_ignores_institute_contact_fields(scope):
+    from accounts.services.user_management_service import UserManagementService
+
+    actor, target, _ = scope
+    old_email, old_phone = target.email, target.phone
+    UserManagementService().update_user(
+        actor,
+        target.pk,
+        role_code="user",
+        email=None,
+        phone="123",
+        fields_set={"role", "email", "phone"},
+    )
+    target.refresh_from_db()
+    assert target.role_id == "user"
+    assert (target.email, target.phone) == (old_email, old_phone)
 
 
 @pytest.mark.django_db

@@ -8,6 +8,7 @@ from rest_framework.request import Request
 from rest_framework.response import Response
 
 from accounts.dto.user_list import UserListDTO
+from accounts.domain.user_management import UserManagementDomain
 from accounts.permissions import UserManagementPermission
 from accounts.serializers import UserUpdateSerializer
 from accounts.services.user_management_service import UserManagementService
@@ -40,7 +41,8 @@ _INCLUDE_PROJECTS = OpenApiParameter(
             "admin/cpds/staff: существующие права на role, department_id, email и phone. "
             "institute_validator: только role и department_id у незащищённых "
             "пользователей своего института; новое подразделение должно относиться "
-            "к тому же институту. Роли admin, cpds и institute_validator защищены."
+            "к тому же институту. Переданные email и phone игнорируются. "
+            "Роли admin, cpds и institute_validator защищены."
         ),
     ),
 )
@@ -95,8 +97,12 @@ class UserManagementViewSet(viewsets.ViewSet):
 
     def partial_update(self, request: Request, pk: str | None = None) -> Response:
         """PATCH /api/accounts/users/{id}/ — частичное обновление."""
+        data = request.data.copy()
+        if UserManagementDomain.is_institute_actor(request.user):
+            data.pop("email", None)
+            data.pop("phone", None)
         serializer = UserUpdateSerializer(
-            data=request.data,
+            data=data,
             partial=True,
             context={"user_id": int(pk)},
         )

@@ -743,7 +743,7 @@
                     ""
                   ]
                 },
-                "description": "admin/cpds/staff: role (код), department_id, email, phone; нельзя назначить admin.\ninstitute_validator: только role и department_id для пользователей своего института; новое подразделение — того же института. Нельзя изменять admin/cpds/institute_validator/staff или назначать роли admin, cpds, institute_validator.",
+                "description": "admin/cpds/staff: role (код), department_id, email, phone; нельзя назначить admin.\ninstitute_validator: только role и department_id для пользователей своего института; новое подразделение — того же института. Переданные email и phone игнорируются. Нельзя изменять admin/cpds/institute_validator/staff или назначать роли admin, cpds, institute_validator.",
                 "body": {
                   "mode": "raw",
                   "raw": "{\n  \"role\": \"department_validator\",\n  \"department_id\": {{departmentId}}\n}"
